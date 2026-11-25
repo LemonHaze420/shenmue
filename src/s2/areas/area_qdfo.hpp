@@ -1,4 +1,24 @@
 #pragma once
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+#include "s2/event_utility_dc.h"
+#define AREA_QDFO SHEN_NAME4('Q', 'D', 'F', 'O')
+#define QDFO_TASK TASK_EVNT
+#define QDFO_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define QDFO_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define QDFO_BACKGROUND (0x34353061U | 0x400U)
+#define QDFO_RETURN_AREA SHEN_NAME4('Q', 'D', 'K', 'J')
+typedef struct QdfoEventWork {
+    HLibTask *task;
+    int state;
+} QdfoEventWork;
+extern const shen_name QDFO_CHARACTERS[];
+void QdfoMain(unsigned int argument);
+void QdfoTaskCallback(void *taskData);
+HLibTask *InitializeQdfoCharacters(HLibTask *task);
+void HideAuthorCharacter(shen_name character);
+void HideAuthorProp(shen_name prop);
+#else
 
 #include "s2/area_event.hpp"
 #include "s2/hlib.hpp"
@@ -23,3 +43,5 @@ HLib::Task *InitializeQdfoCharacters(HLib::Task *task);
 extern const ScriptAreaDefinition qdfoScriptDefinition;
 
 } // namespace shenmue::s2
+
+#endif

@@ -1,3 +1,37 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_utility_dc.h"
+#define KWWT_RYO RYO_CHARACTER
+#define KWWT_SHENHUA SHEN_NAME4('S', 'I', 'N', '_')
+#define KWWT_PROP SHEN_NAME4('a', '6', '3', '6')
+#define KWWT_FIRE_SOURCE SHEN_NAME4('a', '2', '8', '7')
+#define KWWT_FIRE_TARGET SHEN_NAME4('a', '2', '8', '8')
+#define KWWT_RETURN_AREA SHEN_NAME4('K', 'E', 'S', '1')
+#define KWWT_TASK TASK_EVNT
+typedef struct KWWTTaskParameter {
+    HLibTask *self;
+    unsigned int reserved04;
+    int selection;
+    short state;
+    short reserved0e;
+} KWWTTaskParameter;
+typedef struct KWWTLoopParameter {
+    KWWTTaskParameter *parent;
+    short currentFrame;
+    short reserved06;
+} KWWTLoopParameter;
+extern const shen_name KWWT_CHARACTERS[];
+extern const unsigned short KWWT_FIRE_PALETTE[];
+extern const shen_name KWWT_AUTHORS[];
+void AreaKWWTMain(int argument);
+void KWWTAuthorMainCallback(void *parameter);
+void QueueKWWTAuthorLoop(KWWTTaskParameter *parameter);
+void KWWTAuthorLoopCallback(void *parameter);
+void KWWTAdvanceAuthorCallback(void *parameter);
+void InitializeKWWTFires(void);
+void KWWTPrepareAuthorCharacters(void);
+void KWWTRestoreAuthorCharacters(void);
+void KWWTFinishEvent(KWWTTaskParameter *parameter);
+#else
 #pragma once
 
 #include "s2/area_event.hpp"
@@ -12,7 +46,8 @@ inline constexpr shen_name KWWT_FIRE_SOURCE{SHEN_NAME(a287)}, KWWT_FIRE_TARGET{S
 inline constexpr shen_name KWWT_CHARACTERS[]{KWWT_SHENHUA, shen_name{0xffffffffU}};
 inline constexpr shen_name KWWT_AUTHORS[]{SHEN_NAME(AT00), SHEN_NAME(AT01), SHEN_NAME(AT02), SHEN_NAME(AT03)};
 inline constexpr std::uint16_t KWWT_FIRE_PALETTE[]{
-    0x0311, 0x0311, 0x0411, 0x0511, 0x0612, 0x0712, 0x0a32, 0x0b32, 0x0b42, 0x0c50, 0x0d70, 0x0e70, 0x0e80, 0x0fa0, 0x0fc3, 0x0fd6};
+#include "area_kwwt_palette.inc"
+};
 struct KWWTTaskParameter {
     HLib::Task *self;
     std::uint32_t reserved08;
@@ -44,3 +79,5 @@ void KWWTFinishEvent(KWWTTaskParameter *parameter);
 extern const ScriptAreaDefinition areaKWWTScriptDefinition;
 
 } // namespace shenmue::s2::areas
+
+#endif

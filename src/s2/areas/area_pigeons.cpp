@@ -1,6 +1,6 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 
-#include "s2/areas/area_pigeons.hpp"
+#include "area_pigeons.hpp"
 
 double fabs(double value);
 
@@ -8,6 +8,9 @@ static Vector3 areaPigeonPlayerPosition;
 static Vector3i areaPigeonPlayerRotation;
 #if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 static int areaPigeonsActive;
+#if SHENMUE_PIGEON_REVISION >= 40
+static HLibTask *areaPigeonTask;
+#endif
 #endif
 
 void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, shen_name firstCharacter, int count)
@@ -49,15 +52,44 @@ void QueueAreaPigeons(const Vector3 *origin, float radius, AreaPigeon *pigeons, 
     task = FTBL.HLib_EnqueueTaskWithParameter(AreaPigeonsCallback, 3, 11, 4, PIGEON_TASK);
     *(AreaPigeon **)FTBL.HLib_GetTaskParameter(task) = pigeons;
 #if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_PIGEON_REVISION >= 40
+    areaPigeonTask = task;
+#endif
     areaPigeonsActive = 1;
 #endif
 }
+
+#if SHENMUE_PIGEON_REVISION >= 40
+void DestroyCurrentAreaPigeons(void)
+{
+    if (areaPigeonTask)
+        DestroyAreaPigeons(areaPigeonTask);
+}
+
+void DestroyAreaPigeons(HLibTask *task)
+{
+    AreaPigeon **pigeons = FTBL.HLib_GetTaskParameter(task);
+    int count;
+    for (count = (*pigeons)->birdCount; count; --count) {
+        FTBL.SetScenarioCharacterKillMode((*pigeons)->name, 1);
+        ++*pigeons;
+    }
+    FTBL.HLib_DestroyTask(task);
+    areaPigeonTask = 0;
+}
+#endif
 
 void AreaPigeonsCallback(void *taskData)
 {
     AreaPigeon *pigeon;
     int count;
     int i;
+#if SHENMUE_PIGEON_REVISION >= 40
+    if (FTBL.EV_GetShenmueFlag(0x115)) {
+        DestroyAreaPigeons(FTBL.HLib_GetCurrentTask());
+        return;
+    }
+#endif
 #if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     count = (*(AreaPigeon **)taskData)->birdCount;
     pigeon = *(AreaPigeon **)taskData;
@@ -264,7 +296,7 @@ void PigeonHoverBob(AreaPigeon *pigeon)
 
 AreaPigeonStateCallback areaPigeonStateCallbacks[4] = {PigeonWander, PigeonApproach, PigeonHoverBob, PigeonCooldown};
 #else
-#include "s2/areas/area_pigeons.hpp"
+#include "area_pigeons.hpp"
 #include "s2/area_event.hpp"
 #include "s2/character.hpp"
 #include "s2/event_runtime.hpp"

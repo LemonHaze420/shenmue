@@ -7,22 +7,41 @@ void E0007Main(void)
     EventDateTime time;
     HLibTask *task;
     E0007TaskParameter *work;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EventFunction870(0);
+    FTBL.SetScenarioFollowCharacter(0);
+    FTBL.EventFunction857(0);
+#endif
     FTBL.SetPlayerControlEnabled(0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_NPC_NewLoadSw_0(0);
     FTBL.EV_ResetFreeTalkFlags();
+#endif
     FTBL.GetCurrentDateTime((DateTime *)&time);
     task = FTBL.HLib_EnqueueTaskWithParameter(E0007MainCallback, 4, 11, sizeof(E0007TaskParameter), TASK_EVNT);
     work = (E0007TaskParameter *)FTBL.HLib_GetTaskParameter(task);
     work->self = task;
     work->state = 1;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     work->selection = time.hour >= 19;
+#else
+    work->selection = FTBL.EV_GetShenmueFlag(255) != 0;
+#endif
     FTBL.EV_stepSetFlags(1, 0);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EV_SetPlayerFlag(12, 0x8b4, 1);
+#endif
     ConfigureE0007Environment();
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (e0007Characters[work->selection]) {
         EVT_UTL_SetNPCLowQualityHands(0);
         Queue_EVT_UTL_LoadNPCChara_3(e0007Characters[work->selection], work->self);
     } else
         CleanupE0007(work);
+#else
+    EVT_UTL_SetNPCLowQualityHands(0);
+    Queue_EVT_UTL_LoadNPCChara_3(e0007DayCharacters, work->self);
+#endif
 }
 #else
 shen_name e0007DayCharacters[] = {
@@ -48,21 +67,84 @@ void QueueE0007Loop(E0007TaskParameter *parent)
     E0007LoopParameter *work = (E0007LoopParameter *)FTBL.HLib_GetTaskParameter(task);
     work->parent = parent;
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     e0007Audio = FTBL.shenPlayAudioWithFlags("joy", 1);
+#else
+    e0007Audio = FTBL.shenPlayAudioWithFlags("0007C001", 1);
+#endif
     SetupE0007Characters(work->parent->selection);
     FTBL.EV_authSceneCtrl(-14);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (parent->selection)
         FTBL.EV_authSceneCtrl(SHEN_NAME4('H', '0', '1', '0'));
     else
         FTBL.EV_authSceneCtrl(SHEN_NAME4('H', '0', '0', '0'));
+#else
+    if (parent->selection) {
+        FTBL.DebugLogToFileRemoved("NIGHT_AUTH\n");
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('0', '0', '7', 'B'));
+    } else {
+        FTBL.DebugLogToFileRemoved("DEF_AUTH\n");
+        FTBL.EV_authSceneCtrl(SHEN_NAME4('0', '0', '7', 'A'));
+    }
+#endif
     parent->state = 2;
 }
 
 void E0007LoopCallback(void *data)
 {
     E0007LoopParameter *work = (E0007LoopParameter *)data;
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    if (frame == 0) {
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(RYO_CHARACTER), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('J','O','P','_')), 1);
+    }
+    if (work->parent->selection == 0 && frame == 341)
+        FTBL.EV_SetPlayerFlag(12, 0x8b4, 0);
+    else if (work->parent->selection == 0 && frame == 370) {
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('G','O','I','_')), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('H','T','K','_')), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('S','H','I','_')), 1);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('U','N','H','_')), 1);
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('G','O','I','_'));
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('H','T','K','_'));
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('S','H','I','_'));
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('U','N','H','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('G','O','I','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('H','T','K','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('S','H','I','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('U','N','H','_'));
+    } else if (work->parent->selection == 1 && frame == 0) {
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('G','O','I','_'));
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('H','T','K','_'));
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('S','H','I','_'));
+        FTBL.EV_ToggleCharacterFlag(SHEN_NAME4('U','N','H','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('G','O','I','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('H','T','K','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('S','H','I','_'));
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('U','N','H','_'));
+    }
+#endif
     if (FTBL.EV_authSceneCtrl(-1) == 0) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.hsFadeVoice(e0007Audio, 30);
+#else
+        FTBL.EV_EnsureCharacterDraw(SHEN_NAME4('G','O','I','_'));
+        FTBL.EV_EnsureCharacterDraw(SHEN_NAME4('H','T','K','_'));
+        FTBL.EV_EnsureCharacterDraw(SHEN_NAME4('S','H','I','_'));
+        FTBL.EV_EnsureCharacterDraw(SHEN_NAME4('U','N','H','_'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('G','O','I','_'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('H','T','K','_'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('S','H','I','_'));
+        FTBL.EV_EnableCharacterDisplay(SHEN_NAME4('U','N','H','_'));
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(RYO_CHARACTER), 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('J','O','P','_')), 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('G','O','I','_')), 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('H','T','K','_')), 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('S','H','I','_')), 0);
+        FTBL.SetPluralControlFor(FTBL.ctrlGetCharaByName(SHEN_NAME4('U','N','H','_')), 0);
+#endif
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
         RestoreE0007Characters(work->parent->selection);
         work->parent->state = 3;
@@ -90,10 +172,12 @@ void ConfigureE0007Environment(void)
             FTBL.SetLightEntryIndex(0, 1);
         }
     }
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     directory = FTBL.Filepath_Gen(0);
     FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"0007A", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "0007A", 0, 0);
+#endif
     FTBL.EV_FreeAuthorPak(1, "0007");
     FTBL.EV_LoadCutsceneFromCurrentScene("0007A000");
     if (g_currentMap != SHEN_NAME4('A', 'R', '0', '2')) {
@@ -113,11 +197,19 @@ void ConfigureE0007Environment(void)
 
 void CleanupE0007(E0007TaskParameter *parent)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     EVT_UTL_FreeNPCChara(e0007Characters[parent->selection]);
+#else
+    EVT_UTL_FreeNPCChara(e0007DayCharacters);
+    FTBL.EV_SetPlayerFlag(12, 0x8b4, 0);
+#endif
     FTBL.EV_NPC_NewLoadSw_0(1);
     FTBL.EV_FreeAuthorPak(0, "0007");
     FTBL.EV_ControlPackageResources(0, 6, "0007A", 0, 0);
     FTBL.HLib_DestroyTask(parent->self);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.EventFunction857(1);
+#endif
     if (g_currentMap == SHEN_NAME4('A', 'R', '0', '2')) {
         EVT_AT_SetPos(RYO_CHARACTER, INVALID_CHARACTER, 224.88f, 100.0f, 327.6f, 0);
         EVT_AT_SetAng(RYO_CHARACTER, INVALID_CHARACTER, 0.0f, 141.47f, 0.0f, 0);
@@ -133,30 +225,47 @@ void CleanupE0007(E0007TaskParameter *parent)
 
 void SetupE0007Characters(short selection)
 {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    FTBL.SetLowQualityHands(FTBL.ctrlGetCharaByName(SHEN_NAME4('J','O','P','_')));
+#endif
     PrepareE0007Character(RYO_CHARACTER);
     PrepareE0007Character(SHEN_NAME4('J', 'O', 'P', '_'));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    HideE0007Prop(SHEN_NAME4('a','a','7','9'));
+#endif
     if (selection == 0) {
         PrepareE0007Character(SHEN_NAME4('S', 'H', 'I', '_'));
         PrepareE0007Character(SHEN_NAME4('U', 'N', 'H', '_'));
         PrepareE0007Character(SHEN_NAME4('G', 'O', 'I', '_'));
         PrepareE0007Character(SHEN_NAME4('H', 'T', 'K', '_'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         HideE0007Prop(SHEN_NAME4('a', '3', '9', '6'));
     } else
         HideE0007Prop(SHEN_NAME4('a', '4', '5', '6'));
+#else
+    }
+#endif
 }
 
 void RestoreE0007Characters(short selection)
 {
     RestoreE0007Character(RYO_CHARACTER);
     RestoreE0007Character(SHEN_NAME4('J', 'O', 'P', '_'));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    ShowE0007Prop(SHEN_NAME4('a','a','7','9'));
+#endif
     if (selection == 0) {
         RestoreE0007Character(SHEN_NAME4('S', 'H', 'I', '_'));
         RestoreE0007Character(SHEN_NAME4('U', 'N', 'H', '_'));
         RestoreE0007Character(SHEN_NAME4('G', 'O', 'I', '_'));
         RestoreE0007Character(SHEN_NAME4('H', 'T', 'K', '_'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         ShowE0007Prop(SHEN_NAME4('a', '3', '9', '6'));
     } else
         ShowE0007Prop(SHEN_NAME4('a', '4', '5', '6'));
+#else
+    }
+#endif
 }
 
 void PrepareE0007Character(shen_name name)

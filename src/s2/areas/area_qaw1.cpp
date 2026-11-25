@@ -1,3 +1,11 @@
+#include "s2/events/event_api.h"
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+void AreaCleanup(int afternoon);
+void AreaQAW1MainLoop(void *taskData);
+void AreaQAW1LoadAudio(int afternoon);
+#else
 #include "s2/areas/area_qaw1.hpp"
 #include "s2/event_characters.hpp"
 
@@ -11,58 +19,91 @@
 
 namespace shenmue::s2::areas {
 
+
+
 // @verified - p
 void AreaQAW1Init() {
 }
+#endif
 
 // @verified - p
-void AreaQAW1MainLoop(void *) {
-}
-
-// @verified - p
+#if defined(SHENMUE_EVENT_OVERLAY)
+void AreaMain(unsigned int startParameters) {
+#else
 void AreaQAW1Main(std::uint32_t) {
-    (void)SetMapControlStatusFlag(0, 0);
+#endif
+#if defined(SHENMUE_EVENT_OVERLAY)
+    EventDateTime time;
+    FTBL.SetMapControlStatusFlag(0, 0);
+    FTBL.GetCurrentDateTime((DateTime *)&time);
+    if (FTBL.EV_GetShenmueFlag(0xff))
+        AreaCleanup(1);
+    else
+        AreaCleanup(0);
+    FTBL.HLib_EnqueueTaskWithoutParameter(AreaQAW1MainLoop, 4, 0x0b, TASK_EVNT);
+#else
+    (void)FTBL.SetMapControlStatusFlag(0, 0);
     DateTime time;
     shenGetCurrentDateTime(time);
-    if (EV_GetShenmueFlag(0xffU) != 0) {
-        EV_SetWeatherInstruction(0x0cU, 0);
-        EV_SetWeatherInstruction(0x780U, 0);
-        EV_SetWeatherInstruction(0x1800U, 0);
-        EV_SetModelDataDefaultVertexShader();
-        EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
-        PushGlobalLightingProgram();
-        (void)CheckIsArgEquZero(1);
-        (void)SetAreaFogParams();
+    if (FTBL.EV_GetShenmueFlag(0xffU) != 0) {
+        FTBL.EV_SetWeatherInstruction(0x0cU, 0);
+        FTBL.EV_SetWeatherInstruction(0x780U, 0);
+        FTBL.EV_SetWeatherInstruction(0x1800U, 0);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.CheckIsArgEquZero(1, 1);
+        (void)FTBL.SetAreaFogParams();
     } else {
-        EV_SetWeatherInstruction(0x0cU, 0);
-        EV_SetWeatherInstruction(0x780U, 0);
-        EV_SetWeatherInstruction(0x1800U, 0);
-        EV_SetModelDataDefaultVertexShader();
-        EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
-        PushGlobalLightingProgram();
-        (void)CheckIsArgEquZero(1);
-        (void)SetAreaFogParams();
-        SetDefaultVSByIndex(9);
+        FTBL.EV_SetWeatherInstruction(0x0cU, 0);
+        FTBL.EV_SetWeatherInstruction(0x780U, 0);
+        FTBL.EV_SetWeatherInstruction(0x1800U, 0);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+        FTBL.PushGlobalLightingProgram();
+        FTBL.CheckIsArgEquZero(1, 1);
+        (void)FTBL.SetAreaFogParams();
+        FTBL.SetDefaultVSByIndex(9);
     }
-    EV_AssignLightParams(1, 9);
-    HLib::EnqueueTaskWithoutParameter(AreaQAW1MainLoop, 4, 0x0b, static_cast<std::int32_t>(EVENT_CHARACTER_TASK.name));
+    FTBL.AssignLightParams(1, 9);
+    FTBL.HLib_EnqueueTaskWithoutParameter(AreaQAW1MainLoop, 4, 0x0b, TASK_EVNT);
+#endif
 }
 
 // @verified - p
+#if defined(SHENMUE_EVENT_OVERLAY)
+void AreaCleanup(int afternoon) {
+#else
 void AreaQAW1Cleanup(std::int32_t afternoon, std::uint32_t) {
-    EV_SetWeatherInstruction(0x0cU, 0);
-    EV_SetWeatherInstruction(0x780U, 0);
-    EV_SetWeatherInstruction(0x1800U, 0);
-    EV_SetModelDataDefaultVertexShader();
-    EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
-    PushGlobalLightingProgram();
-    (void)CheckIsArgEquZero(1);
-    (void)SetAreaFogParams();
+#endif
+    FTBL.EV_SetWeatherInstruction(0x0cU, 0);
+    FTBL.EV_SetWeatherInstruction(0x780U, 0);
+    FTBL.EV_SetWeatherInstruction(0x1800U, 0);
+    FTBL.SetMapModelDataDefaultVertexShader();
+    FTBL.EV_lightLoad(LIGHT_DEFAULT_DEFINITION);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.CheckIsArgEquZero(1, 1);
+    (void)FTBL.SetAreaFogParams();
+#if defined(SHENMUE_EVENT_OVERLAY)
+    AreaQAW1LoadAudio(afternoon);
+#endif
+#if !defined(SHENMUE_EVENT_OVERLAY)
     if (afternoon == 0)
-        SetDefaultVSByIndex(9);
-    EV_AssignLightParams(1, 9);
+#endif
+        FTBL.SetDefaultVSByIndex(9);
+    FTBL.AssignLightParams(1, 9);
 }
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+void AreaQAW1LoadAudio(int afternoon) {
+}
+#endif
+
+// @verified - p
+void AreaQAW1MainLoop(void *taskData) {
+}
+
+#if !defined(SHENMUE_EVENT_OVERLAY)
 const GameplayAreaDefinition areaQAW1GameplayDefinition{
     .areaId = AREA_QAW1,
     .padding04 = 0,
@@ -72,3 +113,5 @@ const GameplayAreaDefinition areaQAW1GameplayDefinition{
 };
 
 } // namespace shenmue::s2::areas
+
+#endif

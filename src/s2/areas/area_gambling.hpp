@@ -3,6 +3,10 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/events/event_dc.h"
 
+#ifndef SHENMUE_GAMBLING_REVISION
+#define SHENMUE_GAMBLING_REVISION 30
+#endif
+
 typedef struct GamblingFreeBoardPlacement {
     shen_name area;
     Vector3 position;
@@ -40,7 +44,11 @@ void SetupObjects(short index);
 int IsNotInGamblingHouse(void);
 void FreeGambleEvent(void);
 void SetGamblingLocalPlacement(shen_name character, shen_name parent, float x, float y, float z);
+#if SHENMUE_GAMBLING_REVISION <= 5
+void LoadBoardSet(shen_name parent, float x, float y, float z, float angleY, int firstDigits, int secondDigits);
+#else
 void LoadBoardSet(shen_name parent, float x, float y, float z, float angleX, float angleY, float angleZ, int firstDigits, int secondDigits);
+#endif
 #else
 #pragma once
 #include "common/types.hpp"

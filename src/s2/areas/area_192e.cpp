@@ -6,6 +6,10 @@ void Start192E(void)
 {
     HLibTask *task;
     Area192EParameter *parent;
+#if defined(SHENMUE_EVENT_192E_PACKAGED)
+    FTBL.EventFunction870(0);
+    FTBL.SetScenarioFollowCharacter(0);
+#endif
     FTBL.EV_NPC_NewLoadSw_0(0);
     FTBL.EV_ResetFreeTalkFlags();
     FTBL.SetPlayerControlEnabled(0);
@@ -33,9 +37,9 @@ void Update192E(void *taskData)
         } else if (input == 64) {
             parent->selection--;
             if (parent->selection < 0)
-                parent->selection = 1;
+                parent->selection = AREA_192E_LAST_SELECTION;
         } else if (input == 128) {
-            if (++parent->selection > 1)
+            if (++parent->selection > AREA_192E_LAST_SELECTION)
                 parent->selection = 0;
         }
         switch (parent->selection) {
@@ -47,6 +51,12 @@ void Update192E(void *taskData)
             FTBL.SetDebugScreenTextPosition(2, 4);
             FTBL.DebugLogToScreen("0192E010.c\n");
             break;
+#if defined(SHENMUE_EVENT_192E_PACKAGED)
+        case 2:
+            FTBL.SetDebugScreenTextPosition(2, 4);
+            FTBL.DebugLogToScreen("0192E030.c\n");
+            break;
+#endif
         }
         FTBL.SetDebugScreenTextPosition(2, 5);
         FTBL.DebugLogToScreen("seqdata%x.avb\n", parent->selection);
@@ -63,7 +73,11 @@ void Update192E(void *taskData)
 
 void Queue192EAuthor(Area192EParameter *parent)
 {
-    shen_name authors[2] = {SHEN_NAME4('1', '9', '2', 'A'), SHEN_NAME4('1', '9', '2', 'B')};
+    shen_name authors[] = {SHEN_NAME4('1', '9', '2', 'A'), SHEN_NAME4('1', '9', '2', 'B'),
+#if defined(SHENMUE_EVENT_192E_PACKAGED)
+        SHEN_NAME4('1', '9', '2', 'C'),
+#endif
+    };
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(Update192EAuthor, 4, 11, sizeof(Area192EAuthorParameter), TASK_EVNT);
     ((Area192EAuthorParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
     Hide192ECharacters();
@@ -80,11 +94,15 @@ void Select192EPackage(int selection)
     if (selection == 0) {
         FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"WT00", 0);
         FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    #if !defined(SHENMUE_EVENT_192E_PACKAGED)
         FTBL.EV_ControlPackageResources(2, 2, "WT00", 0, 0);
+#endif
     } else {
         FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"WTA0", 0);
         FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    #if !defined(SHENMUE_EVENT_192E_PACKAGED)
         FTBL.EV_ControlPackageResources(2, 2, "WTA0", 0, 0);
+#endif
     }
 }
 
@@ -108,13 +126,17 @@ void Setup192E(void)
     FTBL.EV_SetNewSceneIndex();
     FTBL.EV_FreeAuthorPak(1, "0192");
     FTBL.EV_authSceneCtrl(-8);
+#if !defined(SHENMUE_EVENT_192E_PACKAGED)
     FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0192E", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "0192E", 0, 0);
     FTBL.EV_LoadCutsceneFromCurrentScene("0192E000");
+#endif
 }
 
+#if !defined(SHENMUE_EVENT_192E_PACKAGED)
 const shen_name area192ECharacters[] = {AREA_192E_SYE_, INVALID_CHARACTER};
+#endif
 
 void Cleanup192E(Area192EParameter *parent)
 {
@@ -140,10 +162,18 @@ void Show192ECharacters(void)
     ShowAuthorCharacter(AREA_192E_SYE_);
 }
 
+#if defined(SHENMUE_EVENT_192E_PACKAGED)
+const shen_name area192ECharacters[] = {AREA_192E_SYE_, INVALID_CHARACTER};
+#endif
+
 #include "s2/events/event_author_dc.h"
 #endif
 #if !defined(SHENMUE_EVENT_ENTRY)
+#if defined(SHENMUE_EVENT_192E_PACKAGED)
+#include "s2/event_utility_dc.c"
+#else
 #include "s2/event_utility_v1_dc.c"
+#endif
 #endif
 #else
 #include "s2/areas/area_192e.hpp"

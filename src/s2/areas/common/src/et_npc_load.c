@@ -4,7 +4,16 @@
 
 extern void *memset(void *destination, int value, unsigned int size);
 
+#ifndef SHENMUE_CONDITIONAL_NPC_LOAD_REVISION
+#define SHENMUE_CONDITIONAL_NPC_LOAD_REVISION 1
+#endif
+#if SHENMUE_CONDITIONAL_NPC_LOAD_REVISION >= 2
+#define CONDITIONAL_NPC_LOAD_SLOTS 8
+#define CONDITIONAL_NPC_LOAD_ASSERT_LINE 110
+#else
 #define CONDITIONAL_NPC_LOAD_SLOTS 50
+#define CONDITIONAL_NPC_LOAD_ASSERT_LINE 72
+#endif
 typedef struct ConditionalNpcLoadSlot {
     shen_name character;
     int entryIndex;
@@ -16,8 +25,13 @@ typedef struct ConditionalNpcLoadWork {
     int admitted[CONDITIONAL_NPC_LOAD_SLOTS];
 } ConditionalNpcLoadWork;
 
+#if SHENMUE_CONDITIONAL_NPC_LOAD_REVISION >= 2
+static ConditionalNpcLoadSlot conditionalNpcLoadSlots[CONDITIONAL_NPC_LOAD_SLOTS];
+static int conditionalNpcLoadsReady;
+#else
 static int conditionalNpcLoadsReady;
 static ConditionalNpcLoadSlot conditionalNpcLoadSlots[CONDITIONAL_NPC_LOAD_SLOTS];
+#endif
 
 void ConditionalNpcLoadCheckCallback(void *data);
 void ConditionalNpcLoadCallback(void *data);
@@ -31,7 +45,7 @@ void QueueConditionalNpcLoads(ConditionalNpcLoadEntry *entries)
     int i;
     if (work == 0) {
         FTBL.HLib_DestroyTaskInternal(task);
-        FTBL.EventAssertNullsub(__FILE__, 72);
+        FTBL.EventAssertNullsub(__FILE__, CONDITIONAL_NPC_LOAD_ASSERT_LINE);
     } else {
         memset(work, 0, sizeof(ConditionalNpcLoadWork));
         work->entries = entries;
@@ -49,8 +63,10 @@ void ConditionalNpcLoadCheckCallback(void *data)
     ConditionalNpcLoadWork *work = (ConditionalNpcLoadWork *)data;
     ConditionalNpcLoadEntry *entry;
     int index, switched = 0;
+#if SHENMUE_CONDITIONAL_NPC_LOAD_REVISION < 2
     if (!FTBL.ryoNotBusy())
         return;
+#endif
     for (index = 0, entry = work->entries; entry->character != 0xffffffffU; index++, entry++) {
         if (FindConditionalNpcLoadSlot(entry->character) == -1 && work->admitted[index] == 0) {
             if ((entry->storyFlag <= 0 || FTBL.EV_GetShenmueFlag(entry->storyFlag)) && (entry->condition == 0 || entry->condition())) {

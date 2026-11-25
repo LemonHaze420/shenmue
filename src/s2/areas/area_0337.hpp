@@ -5,8 +5,13 @@
 #include "s2/event_utility_dc.h"
 
 #define AREA_0337_JOP SHEN_NAME4('J', 'O', 'P', '_')
-#define AREA_0337_a516 SHEN_NAME4('a', '5', '1', '6')
-#define AREA_0337_a512 SHEN_NAME4('a', '5', '1', '2')
+#if defined(SHENMUE_EVENT_0337_PACKAGED)
+#define AREA_0337_FIRST_HIDDEN_PROP SHEN_NAME4('a', 'b', '1', '2')
+#define AREA_0337_SECOND_HIDDEN_PROP SHEN_NAME4('a', 'b', '1', '3')
+#else
+#define AREA_0337_FIRST_HIDDEN_PROP SHEN_NAME4('a', '5', '1', '6')
+#define AREA_0337_SECOND_HIDDEN_PROP SHEN_NAME4('a', '5', '1', '2')
+#endif
 #define AREA_0337_a452 SHEN_NAME4('a', '4', '5', '2')
 #define AREA_0337_RETURN SHEN_NAME4('Q', 'F', '3', '9')
 #define AREA_0337_AUTHOR SHEN_NAME4('0', '3', '3', '7')

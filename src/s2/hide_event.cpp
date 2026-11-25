@@ -1,4 +1,6 @@
 #include "s2/hide_event.hpp"
+#include "s2/events/event_api.h"
+#if !defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/author.hpp"
 #include "s2/character.hpp"
 #include "s2/door.hpp"
@@ -12,64 +14,116 @@
 #include "s2/player.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/sound_program.hpp"
-
 namespace shenmue::s2 {
-
 // @verified - p
 void HIDEInit() {
 }
+#endif
 
-// @verified - p
+// @verified - pd
+#if defined(SHENMUE_EVENT_OVERLAY)
+void HIDEMain(unsigned int argument) {
+#else
 void HIDEMain(std::uintptr_t) {
-    SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
-    SetPlayerControlEnabled(0);
+#endif
+    FTBL.SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
+    FTBL.SetPlayerControlEnabled(0);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(HIDE_RYO), 0xf003, 0);
+    FTBL.HLib_EnqueueTaskWithoutParameter(HIDEPlayAuthor, 6, 0x0b, HIDE_TASK);
+#else
     (void)mtwkRequestMotion(scenFindMotionwork(HIDE_RYO), 0xf003, MotionRegion::LowerBody);
-    HLib::EnqueueTaskWithoutParameter(HIDEPlayAuthor, 6, 0x0b, static_cast<std::int32_t>(HIDE_TASK.name));
+    FTBL.HLib_EnqueueTaskWithoutParameter(HIDEPlayAuthor, 6, 0x0b, static_cast<std::int32_t>(HIDE_TASK.name));
+#endif
 }
 
-// @verified - p
-std::uint64_t SetupRyoForHIDE() {
-    const Vector4 values = HIDE_REFBOARD;
-    EV_EnableCharacterDisplay(HIDE_RYO);
-    (void)EV_SetCharaControllerFlags(HIDE_RYO, ApplyGravity, NpcCharacterControllerState::Disabled);
-    (void)EV_SetCharaControllerFlags(HIDE_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
-    EV_SetCharacterAlphaEnabled(HIDE_RYO, 0);
-    EV_SetRefBoardParamsFor(HIDE_RYO, 1);
-    (void)SetScenarioReflectorBoardValues(HIDE_RYO, &values);
-    (void)SetScenarioReflectorBoardValues(HIDE_REN, &values);
-    (void)SetScenarioCharacterFlag40(HIDE_RYO, 0);
-    (void)SetScenarioCharacterFlag40(HIDE_REN, 0);
-    return SetDoorSubjectEnabled(HIDE_DOOR, 0);
-}
-
-// @verified - p
-void HIDEPlayAuthor(void *) {
+// @verified - pd
+void HIDEPlayAuthor(void *taskData) {
     (void)SetupRyoForHIDE();
-    EV_FreeAuthorPak(1, HIDE_PACKAGE);
-    (void)EV_LoadCutsceneFromCurrentScene(HIDE_MEDIA);
-    (void)EV_authSceneCtrl(static_cast<AuthSceneCtrl>(HIDE_AUTHOR.name));
-    EV_lightLoad(HIDE_LIGHT);
-    PushGlobalLightingProgram();
-    HLib::SetCurrentTaskTo(HIDEWaitAuthor);
+    FTBL.EV_FreeAuthorPak(1, HIDE_PACKAGE);
+    (void)FTBL.EV_LoadCutsceneFromCurrentScene(HIDE_MEDIA);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.EV_authSceneCtrl(HIDE_AUTHOR);
+#else
+    (void)FTBL.EV_authSceneCtrl(static_cast<std::int32_t>(HIDE_AUTHOR.name));
+#endif
+    FTBL.EV_lightLoad(HIDE_LIGHT);
+    FTBL.PushGlobalLightingProgram();
+    FTBL.HLib_SetCurrentTaskTo(HIDEWaitAuthor);
 }
 
-// @verified - p
-void HIDEWaitAuthor(void *) {
-    if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) == 0) {
-        SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
-        HLib::SetCurrentTaskTo(HIDEEndRoom);
+// @verified - pd
+void HIDEWaitAuthor(void *taskData) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    if (FTBL.EV_authSceneCtrl(-1) == 0) {
+#else
+    if (static_cast<std::uint32_t>(FTBL.EV_authSceneCtrl(-1)) == 0) {
+#endif
+        FTBL.SetScreenFilmFade(0, 255, 0, 0, 0, 255, 0, 0, 0);
+        FTBL.HLib_SetCurrentTaskTo(HIDEEndRoom);
     }
 }
 
-// @verified - p
-void HIDEEndRoom(void *) {
-    (void)SetDoorSubjectEnabled(HIDE_DOOR, 1);
+// @verified - pd
+void HIDEEndRoom(void *taskData) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    EnableHideDoor();
+    FTBL.EV_ControlPackageResources(0, 6, "HIDE", 0, 0);
+#else
+    (void)FTBL.SetDoorSubjectEnabled(HIDE_DOOR, 1);
     (void)EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("HIDE"), 0, 0);
-    EV_FreeAuthorPak(0, HIDE_PACKAGE);
+#endif
+    FTBL.EV_FreeAuthorPak(0, HIDE_PACKAGE);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.EV_stepSetFlags(0x274, 0);
+#else
     EV_stepSetFlags(0, 0x274);
-    HLib::DestroyCurrentTask();
+#endif
+    FTBL.HLib_DestroyCurrentTask();
 }
 
-const ScriptAreaDefinition hideScriptDefinition{.areaId = HIDE_AREA, .field04 = 0, .init = &HIDEInit, .main = &HIDEMain};
+// @verified - pd
+#if defined(SHENMUE_EVENT_OVERLAY)
+void SetupRyoForHIDE() {
+    const float values[4] = {1.0f, 0.3f, 0.3f, 0.3f};
+#else
+std::uint64_t SetupRyoForHIDE() {
+    const Vector4 values = HIDE_REFBOARD;
+#endif
+    FTBL.EV_EnableCharacterDisplay(HIDE_RYO);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    do {
+        FTBL.EV_SetCharaControllerFlags(HIDE_RYO, 2, 0);
+        FTBL.EV_SetCharaControllerFlags(HIDE_RYO, 3, 0);
+    } while (0);
+#else
+    (void)EV_SetCharaControllerFlags(HIDE_RYO, ApplyGravity, NpcCharacterControllerState::Disabled);
+    (void)EV_SetCharaControllerFlags(HIDE_RYO, UpdateHeight | ApplyGravity, NpcCharacterControllerState::Disabled);
+#endif
+    FTBL.EV_SetCharacterAlphaEnabled(HIDE_RYO, 0);
+    FTBL.SetRefBoardParamsForCharaById(HIDE_RYO, 1);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.SetScenarioReflectorBoardValues(HIDE_RYO, values);
+    FTBL.SetScenarioReflectorBoardValues(HIDE_REN, values);
+#else
+    (void)SetScenarioReflectorBoardValues(HIDE_RYO, &values);
+    (void)SetScenarioReflectorBoardValues(HIDE_REN, &values);
+#endif
+    (void)FTBL.SetScenarioCharacterFlag40(HIDE_RYO, 0);
+    (void)FTBL.SetScenarioCharacterFlag40(HIDE_REN, 0);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.SetDoorSubjectEnabled(HIDE_DOOR, 0);
+#else
+    return FTBL.SetDoorSubjectEnabled(HIDE_DOOR, 0);
+#endif
+}
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+// @verified - d
+void EnableHideDoor() {
+    FTBL.SetDoorSubjectEnabled(HIDE_DOOR, 1);
+}
+#else
+const ScriptAreaDefinition hideScriptDefinition{.areaId = HIDE_AREA, .field04 = 0, .init = &HIDEInit, .main = &HIDEMain};
 } // namespace shenmue::s2
+#endif

@@ -117,11 +117,13 @@ void ConfigureE0025Environment(void)
 {
     const char *directory;
     FTBL.SetPlayerControlEnabled(0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_SetNewSceneIndex();
     directory = FTBL.Filepath_Gen(0);
     FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"0025A", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "0025A", 0, 0);
+#endif
     FTBL.EV_LoadCutsceneFromCurrentScene("0025A000");
     FTBL.EV_FreeAuthorPak(1, "0025");
     if (g_currentMap == SHEN_NAME4('0', '0', '2', '5')) {
@@ -138,7 +140,12 @@ void CleanupE0025(E0025TaskParameter *parent)
     FTBL.EV_ControlPackageResources(0, 6, "0025A", 0, 0);
     FTBL.HLib_DestroyTask(parent->self);
     if (g_currentMap == SHEN_NAME4('W', 'B', '0', '1')) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.LoadCutsceneAndSoundProgramForArea();
+#else
+        FTBL.EV_LoadCutsceneFromCurrentScene("WB01");
+        FTBL.EV_LoadAudio("WB01_000", 0);
+#endif
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
         FTBL.SetPlayerControlEnabled(1);
@@ -162,7 +169,9 @@ void RestoreE0025Characters(void)
     RestoreE0025Character(SHEN_NAME4('S', 'Y', 'P', '_'));
     RestoreE0025Character(SHEN_NAME4('K', 'N', 'K', '_'));
     ShowE0025Prop(SHEN_NAME4('a', '1', '9', '5'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(RYO_CHARACTER), 0xf003, 0);
+#endif
     EVT_AT_SetPos(RYO_CHARACTER, INVALID_CHARACTER, 338.4f, 127.0f, 249.7f, 0);
     EVT_AT_SetAng(RYO_CHARACTER, INVALID_CHARACTER, 0.0f, 202.0f, 0.0f, 0);
 }

@@ -107,6 +107,10 @@ void EVT_AreaBaseInit(void)
         areaBaseState.cleanupState = 0;
     else
         areaBaseState.cleanupState = 1;
+#if defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) && SHENMUE_AREA_BASE_REVISION < AREA_BASE_REVISION_WRS2
+    if (FTBL.flagRelated(g_currentMap))
+        FTBL.DebugLogToFileRemoved("areachk.txt (flagchk.c)\n");
+#endif
     AreaMain(savedStartParameters);
     FTBL.DebugLogToFileRemoved("RESUME START:");
     if (savedStartParameters) {
@@ -242,7 +246,9 @@ void EVT_NightAuthor_Callback(void *taskData)
             FTBL.EV_EnsureCharacterDraw(AREA_BASE_RYO);
             FTBL.camCtrlSetState(0);
             FTBL.camCtrlSetFovTransitionTo(1);
+#if !defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) || SHENMUE_AREA_BASE_REVISION >= AREA_BASE_REVISION_WRS2
             FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
 #if defined(SHENMUE_AREA_BASE_CLOCK_NIGHT) && SHENMUE_AREA_BASE_REVISION < AREA_BASE_REVISION_TBAK
             FTBL.SetPlayerControlEnabled(1);
             FTBL.SetScenarioCharacterKillMode(AREA_BASE_NIGHT, 1);

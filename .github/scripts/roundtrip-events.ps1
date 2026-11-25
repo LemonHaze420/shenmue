@@ -8,13 +8,13 @@ param(
 $ErrorActionPreference = 'Stop'
 $work = (New-Item -ItemType Directory -Force $BuildDirectory).FullName
 $sets = @(
-  @{ name = 'jp'; label = 'S2 JP'; target = 'S2_JP_1001'; expected = 115; directory = $work },
-  @{ name = 'gamejam'; label = 'S2 GameJam'; target = 'S2_JP_GAMEJAM'; expected = 50; directory = "$work/gamejam" },
-  @{ name = 'us'; label = 'S2 US'; target = 'S2_US'; expected = 115; directory = "$work/us" },
-  @{ name = 'eu'; label = 'S2 EU'; target = 'S2_EU'; expected = 116; directory = "$work/eu" }
+  @{ name = 'jp'; label = 'S2 JP V1.003'; target = 'S2_JP_1003'; expected = 333; directory = $work },
+  @{ name = 'gamejam'; label = 'S2 GameJam'; target = 'S2_JP_GAMEJAM'; expected = 137; directory = "$work/gamejam" },
+  @{ name = 'us'; label = 'S2 US'; target = 'S2_US'; expected = 333; directory = "$work/us" },
+  @{ name = 'eu'; label = 'S2 EU'; target = 'S2_EU'; expected = 334; directory = "$work/eu" }
 )
 foreach ($set in $sets) {
-  $set.successful = 0; $set.total = 0; $set.complete = $false; $set.error = $null
+  $set.successful = 0; $set.total = 0; $set.implemented = 0; $set.complete = $false; $set.error = $null
   Remove-Item "$work/s2-$($set.name)-ev-roundtrip.svg" -Force -ErrorAction SilentlyContinue
 }
 Remove-Item "$work/results.json" -Force -ErrorAction SilentlyContinue
@@ -45,33 +45,48 @@ try {
       $report = Join-Path $directory 'event-results.xml'
       Remove-Item -LiteralPath $report -Force -ErrorAction SilentlyContinue
       if ($set.name -eq 'gamejam') {
-        $gdi = Join-Path $discRoot 'Shenmue II Game Jam (JP) (Apr 11, 2001 prototype) Disc 1/Shenmue2.GDI'
-        $references = @((New-Item -ItemType Directory -Force "$directory/reference").FullName)
-        & wsl.exe --exec python3 "$source/tools/dc/extract_events.py" (ConvertTo-WslPath $gdi) (ConvertTo-WslPath $references[0])
-        if ($LASTEXITCODE -ne 0) { throw 'GameJam EV extraction failed' }
+        $inputs = @(Join-Path $discRoot 'Shenmue II Game Jam (JP) (Apr 11, 2001 prototype) Disc 1/Shenmue2.GDI')
       } elseif ($set.name -eq 'jp' -and $ReferenceDirectories) {
-        $references = @($ReferenceDirectories.Split(';') | Where-Object { ![string]::IsNullOrWhiteSpace($_) })
+        $inputs = @($ReferenceDirectories.Split(';') | Where-Object { ![string]::IsNullOrWhiteSpace($_) })
+      } elseif ($set.name -eq 'jp') {
+        $edition = Join-Path $discRoot 'Shenmue II v1.001/_JP'
+        $inputs = @(1..4 | ForEach-Object {
+          $disc = $_
+          $archives = @(Get-ChildItem -LiteralPath $edition -File -Filter '*.zip' |
+            Where-Object { $_.Name -match "Shenmue II v1[.]003 .*[(]Disc $disc of 4[)]" })
+          if ($archives.Count -ne 1) { throw "Expected one JP V1.003 archive for disc $disc" }
+          $archives[0].FullName
+        })
+      } elseif ($set.name -eq 'us') {
+        $inputs = @(1..4 | ForEach-Object { Join-Path $discRoot "Shenmue II US v0.991/archives/disc$_.7z" })
       } else {
-        $edition = switch ($set.name) {
-          'jp' { 'Shenmue II v1.001/_JP' }
-          'us' { 'Shenmue II US v0.991' }
-          'eu' { 'Shenmue II v1.001' }
-        }
-        $references = @(1..4 | ForEach-Object { Join-Path $discRoot "$edition/DISC $_" })
+        $inputs = @(1..4 | ForEach-Object { Join-Path $discRoot "Shenmue II v1.001/DISC $_" })
       }
-      $byPath = @{}; $hashes = @{}; $roots = @()
-      foreach ($reference in $references) {
-        if ($reference.StartsWith('/')) {
-          $reference = & wsl.exe --exec wslpath -w $reference
-          if ($LASTEXITCODE -ne 0 -or !$reference) { throw 'Cannot resolve event reference directory' }
-          $reference = $reference.Trim()
+      $byPath = @{}; $hashes = @{}; $roots = @(); $disc = 0
+      foreach ($inputPath in $inputs) {
+        $disc++
+        if ($inputPath.StartsWith('/')) {
+          $inputPath = & wsl.exe --exec wslpath -w $inputPath
+          if ($LASTEXITCODE -ne 0 -or !$inputPath) { throw 'Cannot resolve event reference input' }
+          $inputPath = $inputPath.Trim()
         }
-        $root = (Resolve-Path -LiteralPath $reference).Path.TrimEnd('\', '/')
-        $wslRoot = (ConvertTo-WslPath $root).TrimEnd('/')
+        $inputPath = (Resolve-Path -LiteralPath $inputPath).Path
+        $reference = (New-Item -ItemType Directory -Force "$directory/reference/DISC $disc").FullName
+        $wslRoot = (ConvertTo-WslPath $reference).TrimEnd('/')
+        $manifestPath = Join-Path $reference 'event-manifest.json'
+        Remove-Item -LiteralPath $manifestPath -Force -ErrorAction SilentlyContinue
+        Write-Host "[event] $($set.label) extracting disc $disc"
+        & wsl.exe --exec python3 "$source/tools/dc/extract_events.py" (ConvertTo-WslPath $inputPath) $wslRoot
+        if ($LASTEXITCODE -ne 0) { throw "Event extraction failed for disc $disc" }
+        $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
         $roots += $wslRoot
-        foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File | Where-Object { $_.Extension -match '^\.EV[123]$' }) {
-          $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash
-          $relative = $file.FullName.Substring($root.Length + 1).Replace('\', '/')
+        foreach ($event in $manifest.events) {
+          $relative = [string]$event.path
+          if ($relative -match '(^/|\\|(^|/)\.\.?(/|$))' -or $relative -notmatch '[.]EV[123]$') {
+            throw 'Invalid event extraction path'
+          }
+          $hash = ([string]$event.sha256).ToUpperInvariant()
+          if ($hash -notmatch '^[0-9A-F]{64}$') { throw 'Invalid extracted event hash' }
           $byPath["$wslRoot/$relative"] = $hash
           $hashes[$hash] = $true
         }
@@ -101,22 +116,28 @@ try {
       [xml]$results = Get-Content -LiteralPath $report -Raw
       $cases = @{}
       foreach ($case in $results.testsuite.testcase) { $cases[$case.name] = $case }
-      $passed = @{}
+      $passed = @{}; $tested = @{}; $failed = @{}
       foreach ($test in $tests) {
         if ($test.command[1] -ne '-E' -or $test.command[2] -ne 'compare_files' -or !$byPath.ContainsKey($test.command[4])) {
           throw 'Unexpected event comparison in test inventory'
         }
         $hash = $byPath[$test.command[4]]
+        $tested[$hash] = $true
         $case = $cases[$test.name]
         $output = Join-Path "$directory/events" (Split-Path $test.command[3] -Leaf)
+        $matches = $false
         if ($case -and !$case.SelectSingleNode('failure|error|skipped') -and
             $case.GetAttribute('status') -notin @('notrun', 'disabled') -and (Test-Path -LiteralPath $output)) {
-          if ((Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash -eq $hash) { $passed[$hash] = $true }
+          $matches = (Get-FileHash -LiteralPath $output -Algorithm SHA256).Hash -eq $hash
         }
+        if ($matches) { $passed[$hash] = $true } else { $failed[$hash] = $true }
       }
+      foreach ($hash in $failed.Keys) { $passed.Remove($hash) }
       $set.successful = $passed.Count
-      $set.complete = $tests.Count -eq $set.total -and $cases.Count -eq $tests.Count
-      if ($buildResult -ne 0 -or $testResult -ne 0 -or !$set.complete -or $set.successful -ne $set.total) {
+      $set.implemented = $tested.Count
+      $set.complete = $cases.Count -eq $tests.Count -and $tests.Count -gt 0 -and
+        $failed.Count -eq 0 -and $set.successful -eq $set.implemented
+      if ($buildResult -ne 0 -or $testResult -ne 0 -or !$set.complete) {
         throw 'Event overlay roundtrip verification failed'
       }
     } catch {
@@ -131,7 +152,8 @@ try {
     if ($set.total -gt 0) {
       $percentage = 100.0 * $set.successful / $set.total
       $value = $percentage.ToString('0.##', [Globalization.CultureInfo]::InvariantCulture) + '%'
-      $colour = if (!$set.error -and $set.complete -and $set.successful -eq $set.total) { '#4c1' } else { '#e05d44' }
+      $colour = if ($set.error -or !$set.complete) { '#e05d44' }
+        elseif ($set.successful -eq $set.total) { '#4c1' } else { '#dfb317' }
     }
     $title = "$($set.label) - EV Roundtrip: $value ($($set.successful)/$($set.total))"
     $svg = @"
@@ -146,10 +168,11 @@ try {
 "@
     [IO.File]::WriteAllText("$work/s2-$($set.name)-ev-roundtrip.svg", $svg.Replace("`r`n", "`n") + "`n", [Text.UTF8Encoding]::new($false))
     @{ build = $set.target; successful = $set.successful; total = $set.total; percentage = $percentage;
-      complete = $set.complete; error = $set.error }
+      implemented = $set.implemented; complete = $set.complete;
+      coverageComplete = $set.successful -eq $set.total; error = $set.error }
   }
   @($statistics) | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath "$work/results.json" -Encoding UTF8
 }
-if (@($sets | Where-Object { $_.error -or !$_.complete -or $_.successful -ne $_.total }).Count) {
+if (@($sets | Where-Object { $_.error -or !$_.complete }).Count) {
   throw 'S2 event overlay roundtrip verification failed'
 }

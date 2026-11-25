@@ -1,4 +1,11 @@
 #include "s2/areas/area_fall_events.hpp"
+#include "s2/events/event_api.h"
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_queued_dc.h"
+extern int g_storyStep;
+void *memset(void *destination, int value, unsigned int size);
+enum { ryo = SHEN_NAME4('R', 'Y', 'O', '_'), shenhua = SHEN_NAME4('S', 'I', 'N', '_'), dummy = SHEN_NAME4('_', 'd', 'u', 'm') };
+#else
 #include "s2/area_event.hpp"
 #include "s2/author.hpp"
 #include "s2/blur_figure_pose.hpp"
@@ -39,35 +46,50 @@ namespace shenmue::s2::areas {
 namespace {
 constexpr shen_name ryo{SHEN_NAME(RYO_)}, shenhua{SHEN_NAME(SIN_)}, dummy{SHEN_NAME(_dum)};
 constexpr shen_name cameraTarget{SHEN_NAME(_dum)}, eventToken{SHEN_NAME(EVNT)}, fallToken{SHEN_NAME(__kf)};
-struct FallDirection {
-    std::uint32_t begin, recover, fail;
-    std::int32_t camera, failureCamera;
-    std::uint32_t qte;
-};
+#endif
+
+typedef struct FallDirection {
+    unsigned int begin, recover, fail;
+    int camera, failureCamera;
+    unsigned int qte;
+} FallDirection;
+#if defined(SHENMUE_EVENT_OVERLAY)
+static FallDirection rockyDirections[] = {
+#else
 static_assert(sizeof(FallDirection) == 24);
-constexpr FallDirection rockyDirections[]{{10625, 10628, 10631, 1000, 2020, 16}, {10635, 10630, 10633, 1010, 2000, 64}, {10634, 10629, 10632, 1020, 2010, 4}};
+constexpr FallDirection rockyDirections[] = {
+#endif
+    {10625, 10628, 10631, 1000, 2020, 16}, {10635, 10630, 10633, 1010, 2000, 64}, {10634, 10629, 10632, 1020, 2010, 4}};
+#if !defined(SHENMUE_EVENT_OVERLAY)
 constexpr FallDirection roomDirections[]{{10625, 10628, 10631, 4000, 3020, 16}, {10635, 10630, 10631, 4010, 3020, 64}, {10634, 10629, 10631, 4020, 3020, 4}};
-struct RockyPlacement {
+#endif
+typedef struct RockyPlacement {
     Vector3 position;
     Vector3i rotation;
-    std::uint32_t story;
+    unsigned int story;
     shen_name field;
-};
+} RockyPlacement;
+#if defined(SHENMUE_EVENT_OVERLAY)
+static RockyPlacement rockyPlacements[] = {
+#else
 static_assert(sizeof(RockyPlacement) == 32);
-constexpr RockyPlacement rockyPlacements[]{
-    {{-21.6200008392334f, -1.0f, -33.599998474121094f}, {0, 54613, 0}, 851, SHEN_NAME(kw1s)},
-        {{-8.260000228881836f, -0.9900000095367432f, -38.41999816894531f}, {0, 52792, 0}, 852, SHEN_NAME(kw1e)},
-            {{-6.920000076293945f, -1.0f, -38.66999816894531f}, {0, 49152, 0}, 853, SHEN_NAME(kw2s)},
-                {{6.099999904632568f, -0.550000011920929f, -36.310001373291016f}, {0, 23665, 0}, 854, SHEN_NAME(kw2e)},
-                    {{2.4600000381469727f, 0.10999999940395355f, -33.959999084472656f}, {0, 20935, 0}, 855, SHEN_NAME(kw3s)},
-                        {{-9.5600004196167f, 1.440000057220459f, -21.43000030517578f}, {0, 20935, 0}, 856, SHEN_NAME(kw3e)},
-                            {{-8.100000381469727f, 1.3899999856948853f, -15.369999885559082f}, {0, 40049, 0}, 1001, SHEN_NAME(kw4s)},
-                                {{-2.059999942779541f, 1.2899999618530273f, -9.25f}, {0, 40049, 0}, 1002, SHEN_NAME(kw4e)},
-                                    {{3.75f, 0.8299999833106995f, -11.0f}, {0, 54613, 0}, 1003, SHEN_NAME(kw5s)},
-                                        {{18.459999084472656f, 1.3300000429153442f, -11.899999618530273f}, {0, 32768, 0}, 1004, SHEN_NAME(kw5e)},
-                                            {{15.899999618530273f, 3.5f, -1.350000023841858f}, {0, 27306, 0}, 1005, SHEN_NAME(kw6s)},
-                                                {{9.220000267028809f, 3.5f, 8.619999885559082f}, {0, 27306, 0}, 0, SHEN_NAME(kw6e)},
-                                            };
+constexpr RockyPlacement rockyPlacements[] = {
+#endif
+
+    {{-21.6200008392334f, -1.0f, -33.599998474121094f}, {0, 54613, 0}, 851, SHEN_NAME4('k', 'w', '1', 's')},
+    {{-8.260000228881836f, -0.9900000095367432f, -38.41999816894531f}, {0, 52792, 0}, 852, SHEN_NAME4('k', 'w', '1', 'e')},
+    {{-6.920000076293945f, -1.0f, -38.66999816894531f}, {0, 49152, 0}, 853, SHEN_NAME4('k', 'w', '2', 's')},
+    {{6.099999904632568f, -0.550000011920929f, -36.310001373291016f}, {0, 23665, 0}, 854, SHEN_NAME4('k', 'w', '2', 'e')},
+    {{2.4600000381469727f, 0.10999999940395355f, -33.959999084472656f}, {0, 20935, 0}, 855, SHEN_NAME4('k', 'w', '3', 's')},
+    {{-9.5600004196167f, 1.440000057220459f, -21.43000030517578f}, {0, 20935, 0}, 856, SHEN_NAME4('k', 'w', '3', 'e')},
+    {{-8.100000381469727f, 1.3899999856948853f, -15.369999885559082f}, {0, 40049, 0}, 1001, SHEN_NAME4('k', 'w', '4', 's')},
+    {{-2.059999942779541f, 1.2899999618530273f, -9.25f}, {0, 40049, 0}, 1002, SHEN_NAME4('k', 'w', '4', 'e')},
+    {{3.75f, 0.8299999833106995f, -11.0f}, {0, 54613, 0}, 1003, SHEN_NAME4('k', 'w', '5', 's')},
+    {{18.459999084472656f, 1.3300000429153442f, -11.899999618530273f}, {0, 32768, 0}, 1004, SHEN_NAME4('k', 'w', '5', 'e')},
+    {{15.899999618530273f, 3.5f, -1.350000023841858f}, {0, 27306, 0}, 1005, SHEN_NAME4('k', 'w', '6', 's')},
+    {{9.220000267028809f, 3.5f, 8.619999885559082f}, {0, 27306, 0}, 0, SHEN_NAME4('k', 'w', '6', 'e')},
+};
+#if !defined(SHENMUE_EVENT_OVERLAY)
 struct RoomExit {
     Vector3 position;
     shen_name scene;
@@ -75,12 +97,12 @@ struct RoomExit {
 };
 constexpr RoomExit roomExits[]{
     {{168.3000030517578f, 100.0f, 102.5999984741211f}, SHEN_NAME(QD01), 4},
-        {{175.5f, 100.0f, 102.5999984741211f}, SHEN_NAME(QD01), 4},
-            {{168.3000030517578f, 100.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
-                {{175.5f, 0.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
-                    {{206.10000610351562f, 0.0f, 76.5f}, SHEN_NAME(QD01), 5},
-                        {{206.10000610351562f, 0.0f, 84.5999984741211f}, SHEN_NAME(QD01), 5},
-                    };
+    {{175.5f, 100.0f, 102.5999984741211f}, SHEN_NAME(QD01), 4},
+    {{168.3000030517578f, 100.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
+    {{175.5f, 0.0f, 91.80000305175781f}, SHEN_NAME(QD01), 4},
+    {{206.10000610351562f, 0.0f, 76.5f}, SHEN_NAME(QD01), 5},
+    {{206.10000610351562f, 0.0f, 84.5999984741211f}, SHEN_NAME(QD01), 5},
+};
 constexpr Vector3 roomLookPositions[]{
     {std::bit_cast<float>(0x432be666U), std::bit_cast<float>(0x42c80000U), std::bit_cast<float>(0x42b7999aU)},
     {std::bit_cast<float>(0x432be666U), std::bit_cast<float>(0x42c80000U), std::bit_cast<float>(0x42cd3333U)},
@@ -90,21 +112,29 @@ constexpr Vector3 roomLookPositions[]{
     {std::bit_cast<float>(0x0000298bU), std::bit_cast<float>(0x00002986U), std::bit_cast<float>(0x00002989U)},
 };
 #pragma pack(push, 4)
-struct RockyFallState {
-    HLib::Task *task;
-    std::int32_t state;
+#endif
+typedef struct RockyFallState {
+    HLibTask *task;
+    int state;
     Vector3 startPosition;
     Vector3i targetRotation;
     Vector3 intersection;
-    std::int16_t intersectionPitch, intersectionYaw;
+    short intersectionPitch, intersectionYaw;
     Vector3 savedPosition;
     Vector3i savedRotation, motionRotation;
-    std::int32_t direction, qteFrames, releaseFrames, cooldown;
+    int direction, qteFrames, releaseFrames, cooldown;
     const FallDirection *configuration;
-    std::int32_t placementIndex, reserved74;
+    int placementIndex;
+#if !defined(SHENMUE_EVENT_OVERLAY)
+    int reserved74;
+#endif
     const RockyPlacement *placements;
-    std::int32_t companionPhase, reserved84;
-};
+    int companionPhase;
+#if !defined(SHENMUE_EVENT_OVERLAY)
+    int reserved84;
+#endif
+} RockyFallState;
+#if !defined(SHENMUE_EVENT_OVERLAY)
 struct RoomFallState {
     HLib::Task *task;
     std::int32_t state;
@@ -142,6 +172,371 @@ struct FallCameraWork {
     std::int32_t frames, totalFrames;
 };
 static_assert(sizeof(FallCameraWork) == 56);
+#else
+static RockyFallState rockyFall;
+typedef struct FixLeafWork {
+    shen_name character;
+    int bone, frames;
+} FixLeafWork;
+void RockyFallCallback(void *);
+void UpdateRockyCompanion(RockyFallState *);
+void FixLeafCallback(void *);
+void QueueFixLeaf(shen_name, int, int, int);
+void SetBagCallback(void *);
+void QueueSetBag(int, int);
+void FallVoiceCallback(void *);
+void QueueFallVoice(const char *, int);
+int GetRockyFallDifficulty(void);
+void AdvanceRockyFallDifficulty(int);
+#endif
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+void QueueRockyAreaFallEvent(void) {
+    RockyFallState *state = &rockyFall;
+    HLibTask *task;
+    FTBL.EV_FreeAuthorPak(1, "0540");
+    FTBL.EV_FreeAuthorPak(1, "0100");
+    FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(7), (int)"FALL", 0);
+    FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+    FTBL.EV_ControlPackageResources(2, 4, "FALL", 0, 0);
+    FTBL.EV_ControlPackageResources(2, 2, "FALL", 0, 0);
+    FTBL.LoadBlurModelForCharacter_0(ryo, "RYO_B.MT7", 1.0f);
+    task = FTBL.HLib_EnqueueTaskWithoutParameter(RockyFallCallback, 4, 11, SHEN_NAME4('_', '_', 'k', 'f'));
+    memset(state, 0, sizeof(*state));
+    state->task = task;
+    state->placements = rockyPlacements;
+    state->placementIndex = 12;
+    state->qteFrames = 6 * GetRockyFallDifficulty() + 18;
+    FTBL.AT_SetLocalBaseChara(dummy, ryo);
+    EVT_AT_SetPos(dummy, ryo, 0.0f, 0.0f, 0.0f, 0);
+    EVT_AT_SetAngY(dummy, ryo, 0.0f, 0);
+}
+void RockyFallCallback(void *data) {
+    RockyFallState *state = &rockyFall;
+    int delay = 0;
+    UpdateRockyCompanion(&rockyFall);
+    if (FTBL.ryoNotBusy())
+        FTBL.CheckHelpIcon(1, 0, 3);
+    switch (state->state) {
+    case 0: {
+        Vector3 probe;
+        int contact = 0;
+        FTBL.AT_SetLocalBaseChara(dummy, ryo);
+        EVT_AT_SetPos(dummy, ryo, 0.0f, 0.0f, 0.0f, 0);
+        EVT_AT_SetAngY(dummy, ryo, 0.0f, 0);
+        FTBL.GetCharaPosition(ryo, 0xffffffff, &state->savedPosition, 0x40000000);
+        FTBL.GetScenarioCharacterEulerAngles(ryo, &state->savedRotation, 0x40000000);
+        FTBL.GetScenarioCharacterEulerAngles(ryo, &state->motionRotation, 0x42000000);
+        probe = state->savedPosition;
+        probe.y += 0.5f;
+        FTBL.flddPushIntersectionFlag(10);
+        if (FTBL.shenFindIntersectionWithScene(&probe) != -3.4028234663852886e38f) {
+            if (state->cooldown <= 0)
+                FTBL.SetPlayerGameFlags(7, 1);
+            FTBL.flddPushIntersectionFlag(3);
+            if (FTBL.IsWithinRadiusFromVector3PolyIntersectTest(&probe, 0.5f))
+                contact = 1;
+        }
+        if (contact) {
+            short delta;
+            FTBL.TransformAgainstIntersectionResult(&state->intersection);
+            FTBL.transformIntersectionResult(&state->intersectionPitch);
+            delta = (short)(state->motionRotation.y - state->intersectionYaw);
+            state->startPosition = state->savedPosition;
+            if (delta > 8192) {
+                state->direction = 1;
+                state->targetRotation.y = state->intersectionYaw + 0x4000;
+            } else if (delta > -8192) {
+                state->direction = 0;
+                state->targetRotation.y = state->intersectionYaw;
+            } else {
+                state->direction = 2;
+                state->targetRotation.y = state->intersectionYaw - 0x4000;
+            }
+            state->configuration = &rockyDirections[state->direction];
+            if (FTBL.ryoNotBusy() && state->cooldown <= 0) {
+                FTBL.SetPlayerControlEnabled(0);
+                SHENMUE_EVENT_CLOBBER("r8");
+                FTBL.SetLoadingBusy();
+                FTBL.EV_SetCharaControllerFlags(ryo, 2, 0);
+                FTBL.EV_SetCharaControllerFlags(ryo, 3, 0);
+                state->state = 1;
+            }
+        }
+        --state->cooldown;
+        break;
+    }
+    case 1:
+        FTBL.SetShowQteFlagForButtonType(state->configuration->qte, (short)state->qteFrames, 2);
+        switch (state->direction) {
+        case 1:
+            FTBL.SetQteButtonState(0x4000);
+            break;
+        case 0:
+            FTBL.SetQteButtonState(0x2000);
+            break;
+        case 2:
+            FTBL.SetQteButtonState(0x8000);
+            break;
+        }
+        state->releaseFrames = 10;
+        FTBL.DebugLogToFileRemoved("---- QTE frame [%d] ----\n", state->qteFrames);
+        FTBL.EV_AT_SetAngY_0(ryo, 0x78000000, &state->targetRotation, 0);
+        FTBL.AT_SetLocalBaseChara(dummy, 0xffffffff);
+        EVT_AT_SetMot(ryo, state->configuration->begin, 0.0f, 1.0f, 0x40000000, 0);
+        EVT_AT_SetCam(state->configuration->camera + FTBL.shenGetRandomInt32(2), dummy, dummy, 0, 0, 1);
+        FTBL.figpSetFlagsBlendForBlur(ryo, 5, 1);
+        FTBL.figpAssignModeFor(ryo, 1);
+        switch (FTBL.shenGetRandomInt32(4)) {
+        case 0:
+            EVT_AT_SetVoice("0540A018", 0);
+            break;
+        case 1:
+            EVT_AT_SetVoice("0540A019", 0);
+            break;
+        case 2:
+            EVT_AT_SetVoice("0540A020", 0);
+            break;
+        case 3:
+            EVT_AT_SetVoice("0540A021", 0);
+            break;
+        }
+        state->state = 2;
+        break;
+    case 2:
+        if (state->releaseFrames <= 0)
+            FTBL.SetQteButtonState(0xffff);
+        --state->releaseFrames;
+        if (!FTBL.GetShouldRenderIcons(3)) {
+            if ((FTBL.GetCurrentQteStatus() & 0xfff) == state->configuration->qte)
+                state->state = 3;
+            else
+                state->state = 4;
+        }
+        break;
+    case 3: {
+        Vector3 origin, position;
+        Vector3i rotation;
+        FTBL.figpAssignModeFor(ryo, 0);
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        if (state->direction == 0) {
+            origin = state->intersection;
+            origin.y = state->savedPosition.y;
+            position.x = 0;
+            position.y = 0;
+            position.z = 0.8f;
+            rotation.x = 0;
+            rotation.y = state->intersectionYaw;
+            rotation.z = 0;
+            FTBL.ApplyScenarioTranslationAndRotation(&origin, &rotation, &position);
+        } else {
+            origin = state->savedPosition;
+            origin.y += 0.5f;
+            FTBL.RaycastInWorldGrid(&position, &origin, 0.55f);
+            position.y -= 0.5f;
+        }
+        FTBL.EV_AT_SetPos(ryo, 0x78000000, &position);
+        state->cooldown = 60;
+        switch (state->direction) {
+        case 1:
+            QueueFixLeaf(ryo, 30, 60, 1);
+            QueueFixLeaf(ryo, 25, 60, 1);
+            FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(ryo), 0);
+            break;
+        case 2:
+            QueueFixLeaf(ryo, 30, 60, 1);
+            QueueFixLeaf(ryo, 25, 60, 1);
+            FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(ryo), 0);
+            break;
+        case 0:
+            FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(ryo), 0);
+            break;
+        }
+        EVT_AT_SetMot(ryo, state->configuration->recover, 0.0f, 1.0f, 0x40000000, 0);
+        delay = 60;
+        state->state = 5;
+        break;
+    }
+    case 5: {
+        register shen_name player __asm__("r9");
+        FTBL.EV_mtwkSetEnabled(FTBL.scenFindMotionwork(player = ryo), 1);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.FinishLoading();
+        FTBL.EV_SetCharaControllerFlags(player, 2, 1);
+        FTBL.EV_SetCharaControllerFlags(player, 3, 1);
+        SHENMUE_EVENT_USE(&FTBL.EV_EventSetUpHelpIcon_0);
+        FTBL.EV_EventSetUpHelpIcon_0(0x3f, 0);
+        state->state = 0;
+        break;
+    }
+    case 4: {
+        if (FTBL.DoesScenarioCharacterExist(shenhua)) {
+            Vector3 position;
+            FTBL.PTYCUtils(shenhua, 3, 1);
+            FTBL.GetCharaPosition(shenhua, 0xffffffff, &position, 0x40000000);
+            position.x = state->startPosition.x - position.x;
+            position.z = state->startPosition.z - position.z;
+            EVT_AT_SetAngY(shenhua, 0xffffffff, FTBL.InverseFixedAtan2(position.x, position.z) / 182.04445f, 0);
+            EVT_AT_SetMot(shenhua, 0xf0a5, 0.0f, 1.0f, 0x40000000, 0);
+            EVT_AT_SetMot(shenhua, 0x298c, 0.0f, 1.0f, 0, 15);
+        }
+        FTBL.SetHighModelAndFaceFlagsForChara(FTBL.ctrlGetCharaByName(ryo), 4, 10, 1.0f);
+        FTBL.SetFacialMouthExpression(FTBL.ctrlGetCharaByName(ryo), 1, 10, 1.0f);
+        FTBL.figpSetFlagsBlendForBlur(ryo, 5, 1);
+        FTBL.figpAssignModeFor(ryo, 1);
+        FTBL.EV_AT_SetPos(ryo, 0x78000000, &state->startPosition);
+        FTBL.EV_AT_SetAngY_0(ryo, 0x78000000, &state->targetRotation, 0);
+        FTBL.AT_SetLocalBaseChara(dummy, 0xffffffff);
+        EVT_AT_SetMot(ryo, state->configuration->fail, 0.0f, 0.6f, 0x40000000, 0);
+        FTBL.EV_ControlPackageResources(2, 4, "FALL", 0, 0);
+        EVT_AT_SetCam(state->configuration->failureCamera, dummy, dummy, 0, 0, 1);
+        EVT_AT_SetVoice("0100A080", delay + 20);
+        QueueFallVoice("0540B018", delay + 70);
+        delay = 100;
+        EVT_AT_MenCtrl(30, 0, 0, 0, 0, 255, 0, 0, 0, delay);
+        EVT_AT_SetSample(0, 1, delay + 30);
+        if (state->direction == 1) {
+            QueueSetBag(0, delay);
+            EVT_AT_CharaDisp(ryo, delay, 1);
+        }
+        delay += 60;
+        QueueSetBag(1, delay);
+        state->state = 6;
+        break;
+    }
+    case 6:
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, 0);
+        AdvanceRockyFallDifficulty(GetRockyFallDifficulty());
+        g_storyStep = 750000;
+        break;
+    }
+    if (delay)
+        FTBL.HLib_SetupTaskDelay(delay);
+}
+void UpdateRockyCompanion(RockyFallState *state) {
+    int changed = 0, index = 11;
+    int i = 0;
+    const RockyPlacement *placement = state->placements;
+    for (; i < 11; ++i) {
+        if (FTBL.EV_GetShenmueFlag(placement->story)) {
+            index = i;
+            break;
+        }
+        ++placement;
+    }
+    if (state->placementIndex != index) {
+        i = 0;
+        placement = state->placements;
+        for (; i < 12;) {
+            if (index == i)
+                FTBL.ToggleFlagOnFieldEntity(placement->field, 1);
+            else
+                FTBL.ToggleFlagOnFieldEntity(placement->field, 0);
+            ++i;
+            ++placement;
+        }
+        changed = 1;
+        FTBL.DebugLogToFileRemoved("----- change bridge %d (et_keirinfall.c) -----\n", index);
+    }
+    state->placementIndex = index;
+    if (FTBL.ryoNotBusy() && FTBL.DoesScenarioCharacterExist(shenhua)) {
+        placement = &state->placements[state->placementIndex];
+        switch (state->companionPhase) {
+        case 0: {
+            Vector3 position;
+            float dx, dz;
+            FTBL.GetCharaPosition(shenhua, 0xffffffff, &position, 0x40000000);
+            dx = placement->position.x - position.x;
+            dz = placement->position.z - position.z;
+            if (dx * dx + dz * dz < 9.0f) {
+                FTBL.PTYCUtils(shenhua, 3, 1);
+                FTBL.CopyMotionTransition(FTBL.scenFindMotionwork(shenhua), &placement->position, placement->rotation.y, 0, 0);
+                state->companionPhase = 1;
+            }
+            break;
+        }
+        case 1:
+            if (FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(shenhua), 58, 1))
+                state->companionPhase = 2;
+            break;
+        case 2:
+            if (changed) {
+                FTBL.PTYCUtils(shenhua, 3, 0);
+                state->companionPhase = 0;
+            }
+            break;
+        }
+    }
+}
+void FixLeafCallback(void *parameter) {
+    FixLeafWork *work = parameter;
+    if (work->frames <= 0)
+        FTBL.HLib_DestroyCurrentTask();
+    else {
+        FTBL.GetParentBoneWrapper(FTBL.scenFindMotionwork(work->character), work->bone | 0x40000000);
+        --work->frames;
+    }
+}
+void QueueFixLeaf(shen_name character, int bone, int frames, int delay) {
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(FixLeafCallback, 4, 11, 12, TASK_EVNT);
+    FixLeafWork *work = FTBL.HLib_GetTaskParameter(task);
+    work->character = character;
+    work->bone = bone;
+    work->frames = frames;
+    if (delay)
+        FTBL.HLib_SetupTimedTask(task, delay);
+    else
+        FTBL.GetParentBoneWrapper(FTBL.scenFindMotionwork(work->character), work->bone | 0x40000000);
+}
+void SetBagCallback(void *parameter) {
+    if (*(int *)parameter)
+        FTBL.SetPlayerGameFlags(4, 1);
+    else
+        FTBL.SetPlayerGameFlags(4, 0);
+    FTBL.HLib_DestroyCurrentTask();
+}
+void QueueSetBag(int enabled, int delay) {
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(SetBagCallback, 4, 11, 4, TASK_EVNT);
+    *(int *)FTBL.HLib_GetTaskParameter(task) = enabled;
+    if (delay)
+        FTBL.HLib_SetupTimedTask(task, delay);
+    else {
+        if (enabled)
+            FTBL.SetPlayerGameFlags(4, 1);
+        else
+            FTBL.SetPlayerGameFlags(4, 0);
+    }
+}
+void FallVoiceCallback(void *parameter) {
+    FTBL.EV_PlayDialogue(parameter);
+    FTBL.HLib_DestroyCurrentTask();
+}
+void QueueFallVoice(const char *voice, int delay) {
+    if (delay) {
+        HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(FallVoiceCallback, 4, 11, 32, TASK_EVNT);
+        strcpy(FTBL.HLib_GetTaskParameter(task), voice);
+        FTBL.HLib_SetupTimedTask(task, delay);
+    } else
+        FTBL.EV_PlayDialogue(voice);
+}
+int GetRockyFallDifficulty(void) {
+    int level = FTBL.EV_GetPlayerFlag(11, 1662) != 0;
+    if (FTBL.EV_GetPlayerFlag(11, 1663))
+        level = 2;
+    return level;
+}
+void AdvanceRockyFallDifficulty(int level) {
+    switch (level) {
+    case 0:
+        FTBL.EV_SetPlayerFlag(12, 1662, 1);
+        break;
+    case 1:
+        FTBL.EV_SetPlayerFlag(12, 1663, 1);
+        break;
+    }
+}
+#else
 void RockyFallCallback(void *);
 void RoomFallCallback(void *);
 void FallControlNullsub() {
@@ -720,3 +1115,4 @@ void ResetAreaFallEvents() {
     rockyFall = {};
 }
 } // namespace shenmue::s2::areas
+#endif

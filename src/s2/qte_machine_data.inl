@@ -1,0 +1,31 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+Vector3 QTE_MACHINE_POSITIONS[] = {
+#else
+inline constexpr Vector3 QTE_MACHINE_POSITIONS[]{
+#endif
+    {0.0f, 1.440000057220459f, 0.0f}, {-0.08341799676418304f, 1.5499999523162842f, 0.0f},
+    {0.004000000189989805f, 1.6019999980926514f, 0.0f}, {0.08302900195121765f, 1.5499999523162842f, 0.0f},
+    {0.0f, 1.3350000381469727f, 0.0f}, {0.0f, 1.3350000381469727f, 0.0f},
+    {0.0f, 1.3350000381469727f, 0.0f}, {0.0f, 1.3350000381469727f, 0.0f},
+    {}, {}, {}, {}, {}, {-0.1303199976682663f, 1.2799999713897705f, 0.0f},
+    {-0.0942699983716011f, 1.2799999713897705f, 0.0f}, {-0.059050001204013824f, 1.2799999713897705f, 0.0f}
+};
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+int QTE_MACHINE_PARTS[] = {
+#else
+inline constexpr std::uint16_t QTE_MACHINE_PARTS[]{
+#endif
+    166, 169, 170, 176, 171, 172, 173, 182, 183, 184, 185, 186, 187, 167, 174, 175,
+#if defined(SHENMUE_EVENT_OVERLAY)
+    0,
+#endif
+};
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+float QTE_MACHINE_SCALES[] = {
+#else
+inline constexpr float QTE_MACHINE_SCALES[]{
+#endif
+    1.0f, 1.3f, 1.3f, 1.3f, 1.0f, 1.0f, 1.0f, 1.0f, 0.53f, 0.53f, 0.53f, 0.53f, 0.53f, 1.0f, 1.0f, 1.0f
+};

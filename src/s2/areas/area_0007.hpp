@@ -8,6 +8,7 @@ typedef struct E0007TaskParameter {
     short selection, state;
 } E0007TaskParameter;
 typedef struct E0007LoopParameter { E0007TaskParameter *parent; } E0007LoopParameter;
+extern shen_name e0007DayCharacters[];
 extern shen_name *e0007Characters[];
 void E0007Main(void);
 void E0007MainCallback(void *data);

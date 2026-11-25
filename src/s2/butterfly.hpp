@@ -1,4 +1,23 @@
 #pragma once
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+typedef struct ButterflyRegion {
+    short flags, totalRuns;
+    Vector3 position;
+} ButterflyRegion;
+typedef struct ButterflyMotion {
+    Vector3 velocity, filteredVelocity, target, position;
+    int regionIndex, phase, phaseStep, flags;
+} ButterflyMotion;
+typedef struct ButterflyTaskData {
+    ButterflyRegion *regions;
+    int butterflyCount;
+    ButterflyMotion motion[16];
+} ButterflyTaskData;
+void EVT_MoveButterfly_Callback(void *taskData);
+void QueueButterflies(ButterflyRegion *regions, int count);
+#else
 #include "shenmue.h"
 #include "s2/event_transform_flags.hpp"
 
@@ -16,7 +35,6 @@
 #include "s2/scenario.hpp"
 
 namespace shenmue::s2 {
-
 
 struct ButterflyRegion {
     std::int16_t flags;
@@ -53,3 +71,4 @@ static_assert(sizeof(ButterflyTaskData) == 0x410);
 void EVT_MoveButterfly_Callback(void *taskData);
 
 } // namespace shenmue::s2
+#endif

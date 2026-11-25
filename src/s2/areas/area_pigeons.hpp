@@ -2,6 +2,13 @@
 
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/events/event_dc.h"
+#ifndef SHENMUE_PIGEON_REVISION
+#define SHENMUE_PIGEON_REVISION 30
+#endif
+#if SHENMUE_PIGEON_REVISION >= 40
+void DestroyCurrentAreaPigeons(void);
+void DestroyAreaPigeons(HLibTask *task);
+#endif
 
 #define PIGEON_TASK SHEN_NAME4('h', 'a', 't', 'o')
 #define PIGEON_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')

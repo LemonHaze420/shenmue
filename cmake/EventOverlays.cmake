@@ -1,8 +1,11 @@
 option(SHENMUE_DC_EVENT_OVERLAYS "Build Shenmue II Dreamcast EV1/EV2/EV3 overlays with the pinned GCC 2.95.2" OFF)
 set(SHENMUE_DC_EVENT_REFERENCE_DIR "" CACHE STRING "Disc data directories (a list) whose EV files the built overlays must match byte-for-byte")
-set(SHENMUE_DC_EVENT_TARGET "S2_JP_1001" CACHE STRING "Dreamcast event build")
-set_property(CACHE SHENMUE_DC_EVENT_TARGET PROPERTY STRINGS S2_JP_1001 S2_JP_GAMEJAM S2_US S2_EU)
-if(NOT SHENMUE_DC_EVENT_TARGET MATCHES "^(S2_JP_1001|S2_JP_GAMEJAM|S2_US|S2_EU)$")
+set(SHENMUE_DC_EVENT_TARGET "S2_JP_1003" CACHE STRING "Dreamcast event build")
+set_property(CACHE SHENMUE_DC_EVENT_TARGET PROPERTY STRINGS S2_JP_1003 S2_JP_GAMEJAM S2_US S2_EU)
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_1001")
+  set(SHENMUE_DC_EVENT_TARGET "S2_JP_1003" CACHE STRING "Dreamcast event build" FORCE)
+endif()
+if(NOT SHENMUE_DC_EVENT_TARGET MATCHES "^(S2_JP_1003|S2_JP_GAMEJAM|S2_US|S2_EU)$")
   message(FATAL_ERROR "Unknown Dreamcast event build: ${SHENMUE_DC_EVENT_TARGET}")
 endif()
 if(NOT SHENMUE_DC_EVENT_OVERLAYS AND NOT SHENMUE_BUILD_S2_DC_COMPILER)
@@ -196,8 +199,15 @@ list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/event_queued_dc.h" "${P
   "${PROJECT_SOURCE_DIR}/src/s2/areas/et_tejo_dc.h" "${PROJECT_SOURCE_DIR}/src/s2/areas/area_knmn.hpp"
   "${PROJECT_SOURCE_DIR}/src/s2/training_seqp.hpp")
 list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/scripts/cwon/area_cwon.hpp")
-file(GLOB_RECURSE _event_common_headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/s2/areas/*.h" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.hpp")
+file(GLOB_RECURSE _event_common_headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/s2/areas/*.h" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.hpp"
+  "${PROJECT_SOURCE_DIR}/src/s2/areas/*.inl" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.inc" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.def")
 list(APPEND _event_headers ${_event_common_headers})
+foreach(header anbd_event dai2_event event_movement event_smoke geto_event hide_event krht_event qkqb_event qt_nj_event qt_nj_obstacles step_event wnpc_event)
+  list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/${header}.hpp")
+endforeach()
+list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/qte_game_entry.hpp"
+  "${PROJECT_SOURCE_DIR}/src/s2/qte_title_data.inl" "${PROJECT_SOURCE_DIR}/src/s2/qte_machine_data.inl"
+  "${PROJECT_SOURCE_DIR}/src/s2/butterfly.hpp")
 foreach(_event_c_header event_queued_dc event_utility_dc event_debug_dc event_library_tail_dc event_sleep_dc sk_event_dc areas/numeric_event_dc)
   list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/${_event_c_header}.h")
 endforeach()
@@ -247,13 +257,17 @@ function(_shenmue_event_object out kind source)
       set(preprocess_source "./src/${CMAKE_MATCH_3}")
     endif()
   endif()
+  set(convert "${SHENMUE_EVENT_ICONV}" -f UTF-8 -t EUC-JP -o "${object}.i" "${object}.i.utf8")
+  set(assemble "${_event_as}" -little --no-pad-sections "${object}.s" -o "${object}")
+  file(CONFIGURE OUTPUT "${object}.args"
+    CONTENT "${preprocess_directory}\n${preprocess};${preprocess_source}\n${convert}\n${compile}\n${assemble}\n" @ONLY)
   add_custom_command(OUTPUT "${object}"
     COMMAND "${CMAKE_COMMAND}" -E make_directory "${object_dir}"
     COMMAND "${CMAKE_COMMAND}" -E chdir "${preprocess_directory}" ${preprocess} "${preprocess_source}" "${object}.i.utf8"
-    COMMAND "${SHENMUE_EVENT_ICONV}" -f UTF-8 -t EUC-JP -o "${object}.i" "${object}.i.utf8"
+    COMMAND ${convert}
     COMMAND ${compile}
-    COMMAND "${_event_as}" -little --no-pad-sections "${object}.s" -o "${object}"
-    DEPENDS "${source}" ${_event_headers} ${dependencies}
+    COMMAND ${assemble}
+    DEPENDS "${source}" "${object}.args" ${_event_headers} ${dependencies}
     VERBATIM)
   set(${out}_object "${object}" PARENT_SCOPE)
 endfunction()
@@ -311,7 +325,19 @@ endfunction()
 set(SHENMUE_DC_EVENT_FUNCTION_TABLE 0x0c020200 CACHE STRING "Event function table (FTBL) address in the selected main executable")
 
 function(shenmue_add_event_overlay name)
-  cmake_parse_arguments(EVENT "C" "TYPE;ENTRY;REFERENCE" "SOURCES;TAIL_SOURCES;RUNTIME;DEFINES;OPTIONS;COMPILER_ENVIRONMENT;COMMON_ORDER" ${ARGN})
+  cmake_parse_arguments(EVENT "C;OPTIONAL" "TYPE;ENTRY;REFERENCE" "SOURCES;TAIL_SOURCES;RUNTIME;DEFINES;OPTIONS;COMPILER_ENVIRONMENT;COMMON_ORDER" ${ARGN})
+  if(EVENT_OPTIONAL AND SHENMUE_DC_EVENT_REFERENCE_DIR)
+    set(found FALSE)
+    foreach(root IN LISTS SHENMUE_DC_EVENT_REFERENCE_DIR)
+      if(EXISTS "${root}/${EVENT_REFERENCE}")
+        set(found TRUE)
+        break()
+      endif()
+    endforeach()
+    if(NOT found)
+      return()
+    endif()
+  endif()
   if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
     if(name STREQUAL "WB00_WBSR")
       set(EVENT_REFERENCE SCENE/01/WB00/WBSR.EV2)
@@ -483,12 +509,15 @@ function(shenmue_add_event_overlay name)
     list(GET SHENMUE_DC_EVENT_REFERENCE_DIR 0 root)
     set(reference "${root}/${EVENT_REFERENCE}")
   endif()
+  set(link "${_event_ld}" -EL -T "${script}" --defsym=__event_base=${address} --defsym=_FTBL=${SHENMUE_DC_EVENT_FUNCTION_TABLE}
+    -Map "${output_dir}/${name}.map" ${objects} "${_event_root}/event_resident.ld" -o "${elf}")
+  file(CONFIGURE OUTPUT "${output}.args"
+    CONTENT "${link}\n${CMAKE_OBJCOPY};-O;binary;${elf};${output}\n${reference}\n" @ONLY)
   add_custom_command(OUTPUT "${output}"
-    COMMAND "${_event_ld}" -EL -T "${script}" --defsym=__event_base=${address} --defsym=_FTBL=${SHENMUE_DC_EVENT_FUNCTION_TABLE}
-      -Map "${output_dir}/${name}.map" ${objects} "${_event_root}/event_resident.ld" -o "${elf}"
+    COMMAND ${link}
     COMMAND "${CMAKE_OBJCOPY}" -O binary "${elf}" "${output}"
     ${compare}
-    DEPENDS ${objects} "${script}" "${_event_root}/event_resident.ld"
+    DEPENDS ${objects} "${script}" "${_event_root}/event_resident.ld" "${output}.args" ${reference}
     VERBATIM)
   add_custom_target(shenmue2_dc_event_${name} ALL DEPENDS "${output}")
   foreach(member IN LISTS EVENT_RUNTIME)
@@ -889,6 +918,555 @@ if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
   shenmue_add_event_overlay(WESM C TYPE EV1 REFERENCE SCENE/01/WESM/WESM.EV1 ENTRY ${_event_area_base}
     SOURCES s2/areas/area_wesm.cpp s2/areas/area_wesm.cpp@SHENMUE_EVENT_WESM_NPCS=1 ${_event_area_base}
     DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10)
+endif()
+
+# EVs stored inside scene packages.
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_EU" OR SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_1003" OR SHENMUE_DC_EVENT_TARGET STREQUAL "S2_US")
+  shenmue_add_event_overlay(PACK_0007 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0007A.PKF/0007.EV3
+    ENTRY s2/areas/area_0007.cpp
+    SOURCES s2/areas/area_0007.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0009 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0009A.PKF/0009.EV3
+    SOURCES s2/areas/area_0009.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_0009_PACKAGED=1 SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0013 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0013A.PKF/0013.EV3
+    ENTRY s2/areas/area_0013.cpp
+    SOURCES s2/areas/area_0013.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0014 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0014A.PKF/0014.EV3
+    ENTRY s2/areas/area_0014.cpp
+    SOURCES s2/areas/area_0014.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0023 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WKA0/0023A.PKF/0023.EV3
+    ENTRY s2/areas/area_0023.cpp
+    SOURCES s2/areas/area_0023.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=28)
+
+  shenmue_add_event_overlay(PACK_0025 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WB01/0025A.PKF/0025.EV3
+    ENTRY s2/areas/area_0025.cpp
+    SOURCES s2/areas/area_0025.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0034 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WTA0/0034A.PKF/0034.EV3
+    ENTRY s2/areas/area_0034.cpp
+    SOURCES s2/areas/area_0034.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_0049 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/02/WB00/0049A.PKF/0049.EV3
+    ENTRY s2/areas/area_0049.cpp
+    SOURCES s2/areas/area_0049.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_0066 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/02/WTA0/0066A.PKF/0066.EV3
+    ENTRY s2/areas/area_0066.cpp
+    SOURCES s2/areas/area_0066.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=30)
+
+  shenmue_add_event_overlay(PACK_0077 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/02/WN00/0077A.PKF/0077.EV3
+    ENTRY s2/areas/area_0077.cpp
+    SOURCES s2/areas/area_0077.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0080 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/02/AK00/0080A.PKF/0080.EV3
+    ENTRY s2/areas/area_0080.cpp
+    SOURCES s2/areas/area_0080.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0139 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR03/0139A.PKF/0139.EV3
+    ENTRY s2/areas/area_0139.cpp
+    SOURCES s2/areas/area_0139.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0140 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0140A.PKF/0140.EV3
+    ENTRY s2/areas/area_0140.cpp
+    SOURCES s2/areas/area_0140.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0173 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WB00/0173A.PKF/0173.EV3
+    ENTRY s2/areas/area_0173.cpp
+    SOURCES s2/areas/area_0173.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=30)
+
+  shenmue_add_event_overlay(PACK_0184 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WS00/0184A.PKF/0184.EV3
+    ENTRY s2/areas/area_0184.cpp
+    SOURCES s2/areas/area_0184.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_0201 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QR00/0201A1.PKF/0201.EV3
+    ENTRY s2/areas/area_0201.cpp
+    SOURCES s2/areas/area_0201.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_0222 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QB00/0222A1.PKF/0222.EV3
+    ENTRY s2/areas/area_0222.cpp
+    SOURCES s2/areas/area_0222.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=20)
+
+  shenmue_add_event_overlay(PACK_0257 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QR00/0257A.PKF/0257.EV3
+    ENTRY s2/areas/area_0257.cpp
+    SOURCES s2/areas/area_0257.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=27)
+
+  shenmue_add_event_overlay(PACK_0262 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QUG0/0262A.PKF/0262.EV3
+    ENTRY s2/areas/area_0262.cpp
+    SOURCES s2/areas/area_0262.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=30)
+
+  shenmue_add_event_overlay(PACK_0265 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QUG0/0265A.PKF/0265.EV3
+    ENTRY s2/areas/area_0265.cpp
+    SOURCES s2/areas/area_0265.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=28)
+
+  shenmue_add_event_overlay(PACK_0297 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QF02/0297A.PKF/0297.EV3
+    ENTRY s2/areas/area_0297.cpp
+    SOURCES s2/areas/area_0297.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=30)
+
+  shenmue_add_event_overlay(PACK_0307 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/Q300/0307A.PKF/0307.EV3
+    ENTRY s2/areas/area_0307.cpp
+    SOURCES s2/areas/area_0307.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_0337 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/0337/0337A.PKF/0337.EV3
+    ENTRY s2/areas/area_0337.cpp
+    SOURCES s2/areas/area_0337.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_0337_PACKAGED=1 SHENMUE_EVENT_LIBRARY_REVISION=27)
+
+  shenmue_add_event_overlay(PACK_0339 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QR00/0339A.PKF/0339.EV3
+    ENTRY s2/areas/area_0339.cpp
+    SOURCES s2/areas/area_0339.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_0361 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QF00/0361A.PKF/0361.EV3
+    ENTRY s2/areas/area_0361.cpp
+    SOURCES s2/areas/area_0361.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_0502 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/04/KRH1/MPK00.PKF/0502.EV3
+    ENTRY s2/areas/area_0502.cpp
+    SOURCES s2/areas/area_0502.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_054E C OPTIONAL TYPE EV3
+    REFERENCE SCENE/02/AR02/0054E.PKF/054E.EV3
+    ENTRY s2/areas/area_054e.cpp
+    SOURCES s2/areas/area_054e.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_192E C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WT00/0192E.PKF/192E.EV3
+    ENTRY s2/areas/area_192e.cpp
+    SOURCES s2/areas/area_192e.cpp
+    DEFINES SHENMUE_EVENT_192E_PACKAGED=1)
+
+  shenmue_add_event_overlay(PACK_329E C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QR00/0329E.PKF/329E.EV3
+    ENTRY s2/areas/area_329e.cpp
+    SOURCES s2/areas/area_329e.cpp s2/event_queued_dc.c s2/event_utility_dc.c
+    RUNTIME memcpy strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_552E C OPTIONAL TYPE EV3
+    REFERENCE SCENE/04/552E/MPK00.PKF/552E.EV3
+    SOURCES s2/areas/area_552e.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_AKA3 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKA3/MPK00.PKF/AKA3.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_aka3.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_AKS0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKS0/MPK00.PKF/AKS0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_aks0.cpp s2/areas/common/src/et_areabase.c s2/event_queued_dc.c s2/areas/common/et_darts.c s2/event_library_tail_dc.c
+      s2/areas/common/src/et_npc_load.c s2/areas/area_entities.cpp
+    RUNTIME memcpy memset strcat strcpy vsprintf memchr strlen sdivsi3_i4 udivsi3_i4
+    DEFINES SHENMUE_AREA_BASE_REVISION=10 SHENMUE_EVENT_LIBRARY_REVISION=40 SHENMUE_ET_DARTS_REVISION=2 SHENMUE_CONDITIONAL_NPC_LOAD_REVISION=2
+    OPTIONS -fno-math-errno)
+
+  shenmue_add_event_overlay(PACK_AKT0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKT0/MPK00.PKF/AKT0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_akt0.cpp s2/areas/common/src/et_areabase.c s2/areas/area_jukebox.cpp s2/areas/common/et_setgamble.c
+    RUNTIME movstr_i4 sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_AKT2 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKT2/MPK00.PKF/AKT2.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_akt2.cpp s2/areas/common/src/et_areabase.c s2/areas/common/et_setgamble.c
+    RUNTIME movstr_i4 sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_AKT3 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKT3/MPK00.PKF/AKT3.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_akt3.cpp s2/areas/common/src/et_areabase.c s2/areas/common/et_setgamble.c
+    RUNTIME movstr_i4 sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_AKY0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKY0/MPK00.PKF/AKY0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_aky0.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_ARM0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/ARM0/MPK00.PKF/ARM0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_arm0.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_ARZ0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/ARZ0/MPK00.PKF/ARZ0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_arz0.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_DAI2 C OPTIONAL TYPE EV2
+    REFERENCE SCENE/01/WESM/MPK00.PKF/DAI2.EV2
+    SOURCES s2/dai2_event.cpp
+    DEFINES SHENMUE_DAI2_HIDE_FILM_BARS=1)
+
+  shenmue_add_event_overlay(PACK_HIDE C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QA00/HIDE.PKF/HIDE.EV3
+    SOURCES s2/hide_event.cpp)
+
+  shenmue_add_event_overlay(PACK_KES1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KES1/MPK00.PKF/KES1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_kes1.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_KRC1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KRC1/MPK00.PKF/KRC1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_krc1.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_KRH1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KRH1/MPK00.PKF/KRH1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_krh1.cpp s2/areas/common/src/et_areabase.c s2/butterfly.cpp
+    RUNTIME sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_KRHT C OPTIONAL TYPE EV2
+    REFERENCE SCENE/04/KRH1/MPK00.PKF/KRHT.EV2
+    ENTRY s2/krht_event.cpp
+    SOURCES s2/krht_event.cpp)
+
+  shenmue_add_event_overlay(PACK_KRK6 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KRK6/MPK00.PKF/KRK6.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_krk6.cpp s2/areas/common/src/et_areabase.c s2/event_queued_dc.c s2/areas/area_fall_events.cpp
+    RUNTIME memcpy memset strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_KRM3 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KRM3/MPK00.PKF/KRM3.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_krm3.cpp s2/areas/common/src/et_areabase.c s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_KSH1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KSH1/MPK00.PKF/KSH1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_ksh1.cpp s2/areas/common/src/et_areabase.c s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_KWM1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KWM1/MPK00.PKF/KWM1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_kwm1.cpp s2/areas/common/src/et_areabase.c s2/butterfly.cpp
+    RUNTIME sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_KWW1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KWW1/MPK00.PKF/KWW1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_kww1.cpp s2/areas/common/src/et_areabase.c s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_KWW4 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/04/KWW4/MPK00.PKF/KWW4.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_kww4.cpp s2/areas/common/src/et_areabase.c s2/event_utility_dc.c s2/areas/area_loop_dc.c@SHENMUE_AREA_LOOP_HAND_POSE_TABLE=1)
+
+  shenmue_add_event_overlay(PACK_KWWT C OPTIONAL TYPE EV2
+    REFERENCE SCENE/04/KWW4/MPK00.PKF/KWWT.EV2
+    ENTRY s2/areas/area_kwwt.cpp
+    SOURCES s2/areas/area_kwwt.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_QA11 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QA11/MPK00.PKF/QA11.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qa11.cpp s2/areas/common/src/et_areabase.c s2/areas/area_pigeons.cpp
+    DEFINES SHENMUE_PIGEON_REVISION=40)
+
+  shenmue_add_event_overlay(PACK_QA22 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QA22/MPK00.PKF/QA22.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qa22.cpp s2/areas/common/src/et_areabase.c s2/event_library_tail_dc.c s2/areas/area_jukebox.cpp
+    RUNTIME vsprintf memchr memcpy strcpy strlen sdivsi3_i4 udivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_QAE1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QAE1/MPK00.PKF/QAE1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qae1.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QAE6 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QAE6/MPK00.PKF/QAE6.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qae6.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QAW1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QAW1/MPK00.PKF/QAW1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qaw1.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QAW6 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QAW6/MPK00.PKF/QAW6.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qaw6.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QB00 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QB00/MPK00.PKF/QB00.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qb00.cpp s2/areas/common/src/et_areabase.c s2/areas/area_jukebox.cpp)
+
+  shenmue_add_event_overlay(PACK_QCAE C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QCAE/MPK00.PKF/QCAE.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qcae.cpp s2/areas/common/src/et_areabase.c s2/areas/area_jukebox.cpp)
+
+  shenmue_add_event_overlay(PACK_QDFO C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QD00/QDFO.PKF/QDFO.EV3
+    ENTRY s2/areas/area_qdfo.cpp
+    SOURCES s2/areas/area_qdfo.cpp s2/event_utility_v1_dc.c)
+
+  shenmue_add_event_overlay(PACK_QDKJ C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QDKJ/MPK00.PKF/QDKJ.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qdkj.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QE01 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QE01/MPK00.PKF/QE01.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qe01.cpp s2/areas/common/src/et_areabase.c s2/areas/area_chime.cpp
+    RUNTIME sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_QE06 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QE06/MPK00.PKF/QE06.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qe06.cpp s2/areas/common/src/et_areabase.c s2/areas/area_chime.cpp
+    RUNTIME sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_QEDJ C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QEDJ/MPK00.PKF/QEDJ.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qedj.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QEHI C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QEHI/MPK00.PKF/QEHI.EV1
+    ENTRY s2/areas/area_qehi.cpp
+    SOURCES s2/areas/area_qehi.cpp s2/qte_game_entry.cpp
+    RUNTIME movstr_i4 sdivsi3_i4)
+
+  shenmue_add_event_overlay(PACK_QF39 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QF39/MPK00.PKF/QF39.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qf39.cpp s2/areas/common/src/et_areabase.c s2/areas/area_elevator_lamp.cpp)
+
+  shenmue_add_event_overlay(PACK_QFRR C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QFRR/MPK00.PKF/QFRR.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qfrr.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QTB4 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QTB4/MPK00.PKF/QTB4.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qtb4.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_TEST C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/MAP0/MPK00.PKS/TEST.EV1
+    SOURCES s2/areas/area_test.cpp)
+
+  shenmue_add_event_overlay(PACK_TOPA C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QA00/TOPA.PKF/TOPA.EV3
+    ENTRY s2/areas/area_topa.cpp
+    SOURCES s2/areas/area_topa.cpp s2/event_utility_v1_dc.c)
+
+  shenmue_add_event_overlay(PACK_TTRP C OPTIONAL TYPE EV3
+    REFERENCE SCENE/03/QA00/TTRP.PKF/TTRP.EV3
+    ENTRY s2/areas/area_ttrp.cpp
+    SOURCES s2/areas/area_ttrp.cpp s2/event_utility_dc.c)
+
+  shenmue_add_event_overlay(PACK_WE00 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WE00/MPK00.PKF/WE00.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_we00.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_WECF C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WECF/MPK00.PKF/WECF.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_wecf.cpp s2/areas/common/src/et_areabase.c s2/areas/area_jukebox.cpp)
+
+  shenmue_add_event_overlay(PACK_WET0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WET0/MPK00.PKF/WET0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_wet0.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_WSG1 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WSG1/MPK00.PKF/WSG1.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_wsg1.cpp s2/areas/common/src/et_areabase.c)
+
+endif()
+
+if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
+  shenmue_add_event_overlay(PACK_0013 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0013A.PKF/0013.EV3
+    ENTRY s2/areas/area_0013.cpp
+    SOURCES s2/areas/area_0013.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_0014 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0014A.PKS/0014.EV3
+    ENTRY s2/areas/area_0014.cpp
+    SOURCES s2/areas/area_0014.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_0139 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR03/0139A.PKS/0139.EV3
+    ENTRY s2/areas/area_0139.cpp
+    SOURCES s2/areas/area_0139.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_0140 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/AR02/0140A.PKF/0140.EV3
+    ENTRY s2/areas/area_0140.cpp
+    SOURCES s2/areas/area_0140.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_0173 C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WB00/0173A.PKS/0173.EV3
+    ENTRY s2/areas/area_0173.cpp
+    SOURCES s2/areas/area_0173.cpp s2/event_queued_dc.c s2/event_utility_v1_dc.c
+    RUNTIME strcat strcpy
+    DEFINES SHENMUE_EVENT_LIBRARY_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_AKA3 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKA3/MPK00.PKS/AKA3.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_aka3.cpp s2/areas/common/src/et_areabase.c
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_AKS0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKS0/MPK00.PKS/AKS0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_aks0.cpp s2/areas/common/src/et_areabase.c s2/event_queued_dc.c s2/areas/common/et_darts.c s2/event_library_tail_dc.c
+      s2/areas/common/src/et_npc_load.c s2/areas/area_entities.cpp
+    RUNTIME memcpy memset strcat strcpy vsprintf memchr strlen sdivsi3_i4 udivsi3_i4
+    DEFINES SHENMUE_AREA_BASE_REVISION=10 SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_EVENT_LIBRARY_REVISION=10 SHENMUE_ET_DARTS_REVISION=1
+      SHENMUE_ET_DARTS_RESET_REQUESTS SHENMUE_AREA_ENTITIES_EARLY_AR03
+    OPTIONS -fno-math-errno)
+
+  shenmue_add_event_overlay(PACK_AKT0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKT0/MPK00.PKS/AKT0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_akt0.cpp s2/areas/common/src/et_areabase.c s2/areas/area_jukebox.cpp@SHENMUE_JUKEBOX_REVISION=10 s2/areas/common/et_setgamble.c
+    RUNTIME movstr_i4 sdivsi3_i4
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=5 SHENMUE_GAMBLING_REVISION=8)
+
+  shenmue_add_event_overlay(PACK_AKT2 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKT2/MPK00.PKS/AKT2.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_akt2.cpp s2/areas/common/src/et_areabase.c s2/areas/common/et_setgamble.c
+    RUNTIME movstr_i4 sdivsi3_i4
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10 SHENMUE_GAMBLING_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_AKT3 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKT3/MPK00.PKF/AKT3.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_akt3.cpp s2/areas/common/src/et_areabase.c s2/areas/common/et_setgamble.c
+    RUNTIME movstr_i4 sdivsi3_i4
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=5 SHENMUE_GAMBLING_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_AKY0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/AKY0/MPK00.PKS/AKY0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_aky0.cpp s2/areas/common/src/et_areabase.c
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=5)
+
+  shenmue_add_event_overlay(PACK_ARM0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/ARM0/MPK00.PKS/ARM0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_arm0.cpp s2/areas/common/src/et_areabase.c
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_ARZ0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/ARZ0/MPK00.PKF/ARZ0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_arz0.cpp s2/areas/common/src/et_areabase.c
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_WE00 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WE00/MPK00.PKF/WE00.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_we00.cpp s2/areas/common/src/et_areabase.c
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=15)
+
+  shenmue_add_event_overlay(PACK_WECF C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WECF/MPK00.PKS/WECF.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_wecf.cpp s2/areas/common/src/et_areabase.c s2/areas/area_jukebox.cpp@SHENMUE_JUKEBOX_REVISION=10
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10)
+
+  shenmue_add_event_overlay(PACK_WET0 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WET0/MPK00.PKF/WET0.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_wet0.cpp s2/areas/common/src/et_areabase.c
+    DEFINES SHENMUE_AREA_BASE_CLOCK_NIGHT SHENMUE_AREA_BASE_REVISION=10)
+
 endif()
 
 get_property(event_targets DIRECTORY PROPERTY SHENMUE_EVENT_TARGETS)

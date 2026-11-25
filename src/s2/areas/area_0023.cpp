@@ -9,8 +9,13 @@ void E0023Main(void)
     work->self = task;
     work->state = 1;
     work->selection = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     Queue_EVT_UTL_LoadNPCChara_3(e0023Characters, work->self);
     ConfigureE0023Environment();
+#else
+    ConfigureE0023Environment();
+    Queue_EVT_UTL_LoadNPCChara_3(e0023Characters, work->self);
+#endif
 }
 #else
 shen_name e0023Characters[] = {SHEN_NAME4('K', 'E', 'K', '_'), INVALID_CHARACTER};
@@ -30,7 +35,9 @@ void QueueE0023Loop(E0023TaskParameter *parent)
     E0023LoopParameter *work = (E0023LoopParameter *)FTBL.HLib_GetTaskParameter(task);
     work->parent = parent;
     work->smoke = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
     SetupE0023Characters();
     FTBL.EV_authSceneCtrl(SHEN_NAME4('0', '0', '2', '3'));
     parent->state = 2;
@@ -77,11 +84,13 @@ void ConfigureE0023Environment(void)
 {
     const char *directory;
     FTBL.SetPlayerControlEnabled(0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_SetNewSceneIndex();
     directory = FTBL.Filepath_Gen(0);
     FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"0023A", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "0023A", 0, 0);
+#endif
     FTBL.EV_FreeAuthorPak(1, "0023");
     FTBL.EV_LoadCutsceneFromCurrentScene("0023A000");
 }
@@ -94,7 +103,12 @@ void CleanupE0023(E0023TaskParameter *parent)
     FTBL.HLib_DestroyTask(parent->self);
     FTBL.EV_stepSetFlags(22, 0);
     if (g_currentMap == SHEN_NAME4('W', 'K', 'A', '0')) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.LoadCutsceneAndSoundProgramForArea();
+#else
+        FTBL.EV_LoadCutsceneFromCurrentScene("WKA0");
+        FTBL.ExecuteCleanupFuncForAreaWithCachedScene();
+#endif
         EVT_AT_SetPos(RYO_CHARACTER, INVALID_CHARACTER, 61.2f, 103.375f, 307.1f, 0);
         EVT_AT_SetAng(RYO_CHARACTER, INVALID_CHARACTER, 0.0f, 140.0f, 0.0f, 0);
         FTBL.SetMapModelDataDefaultVertexShader();
@@ -113,7 +127,9 @@ void SetupE0023Characters(void)
 {
     PrepareE0023Character(RYO_CHARACTER);
     PrepareE0023Character(SHEN_NAME4('K', 'E', 'K', '_'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     HideE0023Prop(SHEN_NAME4('a', '0', '3', '6'));
+#endif
     HideE0023Prop(SHEN_NAME4('a', '0', '3', '7'));
     HideE0023Prop(SHEN_NAME4('a', '0', '0', '9'));
 }
@@ -122,7 +138,9 @@ void RestoreE0023Characters(void)
 {
     RestoreE0023Character(RYO_CHARACTER);
     RestoreE0023Character(SHEN_NAME4('K', 'E', 'K', '_'));
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     ShowE0023Prop(SHEN_NAME4('a', '0', '3', '6'));
+#endif
     ShowE0023Prop(SHEN_NAME4('a', '0', '3', '7'));
     ShowE0023Prop(SHEN_NAME4('a', '0', '0', '9'));
 }

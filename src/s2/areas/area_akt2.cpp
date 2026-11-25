@@ -1,3 +1,16 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/area_akt2.hpp"
+#include "s2/events/event_api.h"
+#include "s2/areas/area_gambling.hpp"
+#include "s2/event_queued_dc.h"
+enum {
+    disableGlobalLightingMask = 15,
+    disableFogEffectMask = 0x780,
+    nightTimeFlag = 0xff,
+    defaultLight = LIGHT_DEFAULT_DEFINITION,
+    eventTaskToken = TASK_EVNT
+};
+#else
 #include "s2/debug.hpp"
 #include "s2/areas/area_akt2.hpp"
 #include "s2/areas/area_akt0.hpp"
@@ -21,19 +34,41 @@ constexpr shen_name qtb1{SHEN_NAME(QTB1)};
 constexpr shen_name qtb3{SHEN_NAME(QTB3)};
 constexpr std::int32_t eventTaskToken = static_cast<std::int32_t>(SHEN_NAME(EVNT));
 
-void AKT2PostUpdateCallback(void *) {
-}
+void AKT2PostUpdateCallback(void *data);
 
-bool UsesQTBLightOverride() {
+bool UsesQTBLightOverride()
+{
     return g_currentMap.name == qtb1.name || g_currentMap.name == qtb3.name;
 }
 
 } // namespace
 
-void AreaAKT2Init() {
-}
+void AreaAKT2Init() {}
 
-void AreaAKT2Main(std::uint32_t) {
+#endif
+#if defined(SHENMUE_EVENT_OVERLAY)
+void AreaMain(unsigned int startParameters)
+{
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    EventDateTime dateTime;
+#endif
+#else
+void AreaAKT2Main(std::uint32_t)
+{
+#endif
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.SetMapControlStatusFlag(0, 0);
+    FTBL.EV_SetWeatherInstruction(disableGlobalLightingMask, 0);
+    FTBL.EV_SetWeatherInstruction(disableFogEffectMask, 0);
+    FTBL.AssignLightParams(1, 1);
+    FTBL.EV_lightLoad(defaultLight);
+    FTBL.AssignLightProgram(0);
+    (void)FTBL.CheckIsArgEquZero(1, 1);
+    (void)FTBL.BeginPrimarySampleExecution(0);
+    (void)FTBL.BeginSecondarySampleExecution(0);
+    FTBL.HLib_EnqueueTaskWithoutParameter(AKT2PostUpdateCallback, 4, 0x0b, eventTaskToken);
+
+#else
     SetMapControlStatusFlag(0, false);
     EV_SetWeatherInstruction(disableGlobalLightingMask, 0);
     EV_SetWeatherInstruction(disableFogEffectMask, 0);
@@ -45,6 +80,19 @@ void AreaAKT2Main(std::uint32_t) {
     (void)BeginSecondarySampleExecution(0);
     HLib::EnqueueTaskWithoutParameter(AKT2PostUpdateCallback, 4, 0x0b, eventTaskToken);
 
+#endif
+
+#if defined(SHENMUE_EVENT_OVERLAY)
+#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM
+    FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+    if ((unsigned char)(dateTime.hour - 19) <= 5)
+#else
+    if (FTBL.EV_GetShenmueFlag(nightTimeFlag))
+#endif
+        AreaCleanup(1);
+    else
+        AreaCleanup(0);
+#else
     if (EV_GetShenmueFlag(nightTimeFlag)) {
         if (UsesQTBLightOverride()) {
             EV_lightLoad(defaultLight);
@@ -58,13 +106,51 @@ void AreaAKT2Main(std::uint32_t) {
         EV_SetIndexForLightEntry(0, 1);
     }
 
+#endif
     SetGamble();
 }
 
-void AreaAKT2Cleanup(std::int32_t afternoon, std::uint32_t) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+void AreaCleanup(int afternoon)
+{
+    if (!IsOutsideQTB()) {
+        if (afternoon) {
+            FTBL.EV_lightLoad(defaultLight);
+            FTBL.PushGlobalLightingProgram();
+            FTBL.CheckIsArgEquZero(1, 1);
+        } else {
+            FTBL.CheckIsArgEquZero(1, 1);
+            FTBL.ReinitializeLights(1);
+            FTBL.SetLightFlagForIndex(0, 2);
+            FTBL.SetLightEntryIndex(0, 1);
+        }
+    }
+    AKTUnusedCleanup(afternoon);
+}
+
+void AKTUnusedCleanup(int afternoon) {}
+#endif
+#if !defined(SHENMUE_EVENT_OVERLAY)
+void AreaAKT2Cleanup(std::int32_t afternoon, std::uint32_t)
+{
     AreaAKTSharedCleanup(afternoon);
 }
 
 const GameplayAreaDefinition areaAKT2GameplayDefinition{SHEN_NAME(AKT2), 0, AreaAKT2Init, AreaAKT2Main, AreaAKT2Cleanup};
 
+namespace {
+void AKT2PostUpdateCallback(void *data) {}
+} // namespace
 } // namespace shenmue::s2::areas
+
+#else
+void AKT2PostUpdateCallback(void *data) {}
+
+int IsOutsideQTB(void)
+{
+    int outside = 1;
+    if (g_currentMap == SHEN_NAME4('Q', 'T', 'B', '1') || g_currentMap == SHEN_NAME4('Q', 'T', 'B', '3'))
+        outside = 0;
+    return outside;
+}
+#endif

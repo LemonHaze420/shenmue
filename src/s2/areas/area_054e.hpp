@@ -1,3 +1,31 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/event_utility_dc.h"
+#define AREA_054E SHEN_NAME4('0', '5', '4', 'E')
+#define AREA_054E_RYO_ RYO_CHARACTER
+#define AREA_054E_AGO_ SHEN_NAME4('A', 'G', 'O', '_')
+#define AREA_054E_a417 SHEN_NAME4('a', '4', '1', '7')
+#define AREA_054E_aa50 SHEN_NAME4('a', 'a', '5', '0')
+#define AREA_054E_a073 SHEN_NAME4('a', '0', '7', '3')
+#define AREA_054E_RETURN SHEN_NAME4('A', 'B', '0', '0')
+#define AREA_054E_CONVERSATION "0054"
+#define AREA_054E_ARCHIVE "0054E"
+#define AREA_054E_AUDIO "0054E000"
+#define AUTHOR_VIEWER_TASK TASK_EVNT
+#define AUTHOR_VIEWER_INVALID_CHARACTER INVALID_CHARACTER
+#define PAD_BUTTON_X 1024
+#define PAD_TRIGGER_LEFT 64
+#define PAD_TRIGGER_RIGHT 128
+typedef struct Area054EParameter { HLibTask *self; short selection, state; } Area054EParameter;
+typedef struct Area054EAuthorParameter { Area054EParameter *parent; } Area054EAuthorParameter;
+extern shen_name AREA_054E_CHARACTERS[];
+void Start054E(const int *argument);
+void Update054E(void *data);
+void Queue054EAuthor(Area054EParameter *parent);
+void Update054EAuthor(void *data);
+void Cleanup054E(Area054EParameter *parent);
+void Prepare054ECharacters(void);
+void Restore054ECharacters(void);
+#else
 #pragma once
 
 #include "s2/area_event.hpp"
@@ -42,3 +70,4 @@ void Restore054ECharacters();
 extern const ScriptAreaDefinition area054EScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

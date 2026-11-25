@@ -2,6 +2,23 @@
 
 #include "s2/areas/area_gambling.hpp"
 
+#if SHENMUE_GAMBLING_REVISION <= 5
+const GamblingBoardPlacement aberdeenBS_0[5] = {
+    {SHEN_NAME4('A', 'K', 'T', '0'), {246.6f, 106.0f, 231.9f}, 202.5f, 10, 50},
+    {SHEN_NAME4('A', 'K', '0', '0'), {272.3f, 96.8f, 264.9f}, 180.0f, 100, 500},
+    {SHEN_NAME4('A', 'K', 'T', '2'), {298.4f, 106.1f, 231.3f}, 112.5f, 50, 200},
+    {SHEN_NAME4('A', 'K', '0', '0'), {285.6f, 100.0f, 224.1f}, 90.0f, 5, 20},
+    {0, {0.0f, 0.0f, 0.0f}, 0.0f, 10, 10},
+};
+#elif SHENMUE_GAMBLING_REVISION <= 8
+const GamblingFreeBoardPlacement aberdeenBS_0[5] = {
+    {SHEN_NAME4('A', 'K', 'T', '0'), {246.2f, 107.2f, 232.5f}, 10.0f, 180.0f, 0.0f, 10, 50},
+    {SHEN_NAME4('A', 'K', '0', '0'), {272.8f, 98.0f, 265.5f}, 10.0f, 180.0f, 0.0f, 100, 500},
+    {SHEN_NAME4('A', 'K', 'T', '2'), {297.6f, 106.1f, 231.3f}, 355.0f, 90.0f, 345.0f, 50, 200},
+    {SHEN_NAME4('A', 'K', '0', '0'), {285.6f, 100.0f, 224.1f}, 90.0f, 0.0f, 0.0f, 5, 20},
+    {0, {0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f, 10, 10},
+};
+#else
 const GamblingFreeBoardPlacement aberdeenBS_0[5] = {
     {SHEN_NAME4('A', 'K', 'T', '0'), {246.2f, 107.2f, 232.5f}, 10.0f, 180.0f, 0.0f, 10, 50},
     {SHEN_NAME4('A', 'K', '0', '0'), {271.7f, 98.0f, 253.7f}, 10.0f, 90.0f, 0.0f, 100, 500},
@@ -9,11 +26,24 @@ const GamblingFreeBoardPlacement aberdeenBS_0[5] = {
     {SHEN_NAME4('A', 'K', '0', '0'), {285.6f, 100.0f, 224.1f}, 0.0f, 90.0f, 0.0f, 5, 20},
     {0, {0.0f, 0.0f, 0.0f}, 0.0f, 0.0f, 0.0f, 10, 10},
 };
-const GamblingTablePlacement aberdeenBS[15] = {
+#endif
+const GamblingTablePlacement aberdeenBS[] = {
     {SHEN_NAME4('A', 'K', 'T', '0'), {253.4f, 106.1f, 228.7f}, 270.0f, 10, 50, {1, 0}},
+#if SHENMUE_GAMBLING_REVISION <= 8
+    {SHEN_NAME4('A', 'K', 'T', '1'), {267.5f, 96.8f, 265.2f}, 90.0f, 100, 500, {5, 0}},
+#else
     {SHEN_NAME4('A', 'K', 'T', '1'), {267.5f, 96.85f, 265.2f}, 90.0f, 100, 500, {5, 0}},
+#endif
+#if SHENMUE_GAMBLING_REVISION <= 10
+    {SHEN_NAME4('A', 'K', 'T', '2'), {301.2f, 106.1f, 238.1f}, 180.0f, 50, 200, {0, 0}},
+#else
     {SHEN_NAME4('A', 'K', 'T', '2'), {301.7f, 106.1f, 238.1f}, 180.0f, 50, 200, {0, 0}},
+#endif
+#if SHENMUE_GAMBLING_REVISION <= 8
+    {SHEN_NAME4('Q', 'R', '0', '0'), {118.2f, 93.0f, 189.5f}, 160.0f, 10, 100, {6, 0}},
+#else
     {SHEN_NAME4('Q', 'R', '0', '0'), {118.2f, 93.025f, 189.5f}, 160.0f, 10, 100, {6, 0}},
+#endif
     {SHEN_NAME4('Q', 'T', 'B', '2'), {251.6f, 94.9f, 248.1f}, 210.0f, 20, 100, {5, 0}},
     {SHEN_NAME4('Q', 'T', 'B', '2'), {245.2f, 94.9f, 238.8f}, 45.0f, 100, 1000, {2, 0}},
     {SHEN_NAME4('Q', 'T', 'B', '2'), {244.9f, 94.9f, 244.7f}, 105.0f, 50, 300, {4, 0}},
@@ -23,10 +53,12 @@ const GamblingTablePlacement aberdeenBS[15] = {
     {SHEN_NAME4('B', 'G', 'S', 'M'), {250.0f, 0.0f, 0.0f}, 0.0f, 10, 50, {3, 0}},
     {SHEN_NAME4('B', 'G', 'S', 'M'), {300.0f, 0.0f, 0.0f}, 0.0f, 10, 50, {4, 0}},
     {SHEN_NAME4('B', 'G', 'S', 'M'), {350.0f, 0.0f, 0.0f}, 0.0f, 10, 50, {5, 0}},
+#if SHENMUE_GAMBLING_REVISION > 10
     {SHEN_NAME4('Q', 'R', '0', '9'), {118.2f, 93.025f, 189.5f}, 160.0f, 10, 100, {6, 0}},
+#endif
     {0, {0.0f, 0.0f, 0.0f}, 0.0f, 0, 0, {0, 0}},
 };
-const GamblingBoardPlacement wanChaiBS[12] = {
+const GamblingBoardPlacement wanChaiBS[] = {
     {GAMBLING_NO_PARENT, {280.74f, 100.03f, 224.22f}, 90.0f, 5, 20},
     {SHEN_NAME4('W', 'N', '0', '0'), {240.6f, 104.5f, 160.7f}, 180.0f, 10, 100},
     {SHEN_NAME4('W', 'R', '0', '0'), {178.6f, 101.3f, 149.6f}, 0.0f, 10, 50},
@@ -37,17 +69,27 @@ const GamblingBoardPlacement wanChaiBS[12] = {
     {SHEN_NAME4('Q', 'R', '0', '0'), {154.6f, 100.0f, 193.8f}, 0.0f, 10, 100},
     {SHEN_NAME4('U', 'E', 'D', 'E'), {0.0f, 0.0f, 0.0f}, 0.0f, 10, 50},
     {SHEN_NAME4('U', 'E', 'D', 'E'), {0.0f, 0.0f, 0.0f}, 0.0f, 10, 50},
+#if SHENMUE_GAMBLING_REVISION > 10
     {SHEN_NAME4('Q', 'R', '0', '9'), {154.6f, 100.0f, 193.8f}, 0.0f, 10, 100},
+#endif
     {0, {0.0f, 0.0f, 0.0f}, 0.0f, 0, 0},
 };
-const GamblingBoardPlacement kowloonBS[8] = {
+const GamblingBoardPlacement kowloonBS[] = {
+#if SHENMUE_GAMBLING_REVISION <= 5
+    {SHEN_NAME4('Q', 'R', '0', '0'), {122.9f, 93.0f, 190.7f}, 175.0f, 5, 20},
+#else
     {SHEN_NAME4('Q', 'R', '0', '0'), {124.0f, 93.0f, 191.0f}, 167.5f, 5, 20},
+#endif
     {SHEN_NAME4('Q', 'R', '0', '0'), {151.3f, 100.0f, 193.8f}, 350.0f, 10, 50},
     {SHEN_NAME4('Q', '3', '0', '0'), {225.9f, 100.0f, 168.8f}, 94.6f, 20, 100},
     {SHEN_NAME4('Q', 'A', '0', '0'), {291.9f, 110.8f, 172.4f}, 0.0f, 10, 100},
     {SHEN_NAME4('Q', 'A', '0', '0'), {292.0f, 125.2f, 172.2f}, 345.0f, 100, 500},
+#if SHENMUE_GAMBLING_REVISION > 10
     {SHEN_NAME4('Q', 'R', '0', '9'), {124.0f, 93.0f, 191.0f}, 167.5f, 5, 20},
+#endif
+#if SHENMUE_GAMBLING_REVISION > 10
     {SHEN_NAME4('Q', 'R', '0', '9'), {151.3f, 100.0f, 193.8f}, 350.0f, 10, 50},
+#endif
     {0, {0.0f, 0.0f, 0.0f}, 0.0f, 0, 0},
 };
 const char *const gamblingDigitModels[10] = {
@@ -77,8 +119,13 @@ void GambleInit(void)
     for (i = 0; aberdeenBS_0[i].area; i++) {
         if (g_currentMap == aberdeenBS_0[i].area) {
             position = aberdeenBS_0[i].position;
+#if SHENMUE_GAMBLING_REVISION <= 5
+            LoadBoardSet(GAMBLING_NO_PARENT, position.x, position.y, position.z, aberdeenBS_0[i].angleY, aberdeenBS_0[i].firstDigits,
+                aberdeenBS_0[i].secondDigits);
+#else
             LoadBoardSet(GAMBLING_NO_PARENT, position.x, position.y, position.z, aberdeenBS_0[i].angleX, aberdeenBS_0[i].angleY,
                 aberdeenBS_0[i].angleZ, aberdeenBS_0[i].firstDigits, aberdeenBS_0[i].secondDigits);
+#endif
         }
     }
     for (i = 0; aberdeenBS[i].area; i++) {
@@ -92,7 +139,13 @@ void GambleInit(void)
             FTBL.EV_AT_SetAngY_0(table, 0x78000000, &rotation, 0);
             SetupObjects(i);
             if (IsNotInGamblingHouse())
+            {
+#if SHENMUE_GAMBLING_REVISION <= 5
+                LoadBoardSet(table, 1.0f, 0.0f, -0.5f, aberdeenBS[i].angleY, aberdeenBS[i].firstDigits, aberdeenBS[i].secondDigits);
+#else
                 LoadBoardSet(table, 1.0f, 0.0f, -0.5f, 0.0f, aberdeenBS[i].angleY, 0.0f, aberdeenBS[i].firstDigits, aberdeenBS[i].secondDigits);
+#endif
+            }
             character = FTBL.CreateEventCharacter(3, "CHRW1T1G", 0);
             FTBL.EV_EnableCharacterDisplay(character);
             SetGamblingLocalPlacement(character, table, 0.0f, 0.0f, -1.1f);
@@ -117,7 +170,13 @@ void GambleInit(void)
             FTBL.EV_EnableCharacterDisplay(character);
             SetGamblingLocalPlacement(character, table, -0.12f, 0.0f, 0.07f);
             if (IsNotInGamblingHouse())
+            {
+#if SHENMUE_GAMBLING_REVISION <= 5
+                LoadBoardSet(table, 1.0f, -0.75f, -0.5f, wanChaiBS[i].angleY, wanChaiBS[i].firstDigits, wanChaiBS[i].secondDigits);
+#else
                 LoadBoardSet(table, 1.0f, -0.75f, -0.5f, 0.0f, wanChaiBS[i].angleY, 0.0f, wanChaiBS[i].firstDigits, wanChaiBS[i].secondDigits);
+#endif
+            }
             character = FTBL.CreateEventCharacter(3, "CHRW1T1G", 0);
             FTBL.EV_EnableCharacterDisplay(character);
             SetGamblingLocalPlacement(character, table, 0.0f, -0.75f, -0.9f);
@@ -137,16 +196,26 @@ void GambleInit(void)
             SetGamblingLocalPlacement(character, table, 0.31f, 0.76f, 0.14f);
             character = FTBL.CreateEventCharacter(3, "KCHG1DBG", 0);
             FTBL.EV_EnableCharacterDisplay(character);
+#if SHENMUE_GAMBLING_REVISION <= 8
+            SetGamblingLocalPlacement(character, table, 0.0f, 0.75f, 0.0f);
+#else
             if (i == 0)
                 SetGamblingLocalPlacement(character, table, 0.0f, 0.75f, -0.1f);
             else
                 SetGamblingLocalPlacement(character, table, 0.0f, 0.75f, 0.0f);
+#endif
             FTBL.AT_SetLocalBaseChara(character, table);
             rotation.y = 8192;
             FTBL.EV_AT_SetAngY_0(character, 0x38000000, &rotation, 0);
             FTBL.AT_SetLocalBaseChara(character, GAMBLING_NO_PARENT);
             if (IsNotInGamblingHouse())
+            {
+#if SHENMUE_GAMBLING_REVISION <= 5
+                LoadBoardSet(table, 1.5f, 0.0f, -0.3f, kowloonBS[i].angleY, kowloonBS[i].firstDigits, kowloonBS[i].secondDigits);
+#else
                 LoadBoardSet(table, 1.5f, 0.0f, -0.3f, 0.0f, kowloonBS[i].angleY, 0.0f, kowloonBS[i].firstDigits, kowloonBS[i].secondDigits);
+#endif
+            }
             character = FTBL.CreateEventCharacter(3, "CHRW1T1G", 0);
             FTBL.EV_EnableCharacterDisplay(character);
             SetGamblingLocalPlacement(character, table, 0.0f, 0.0f, -0.8f);
@@ -244,10 +313,18 @@ void SetGamblingLocalPlacement(shen_name character, shen_name parent, float x, f
     FTBL.EV_AT_SetAngY_0(character, 0x38000000, &rotation, 0);
 }
 
+#if SHENMUE_GAMBLING_REVISION <= 5
+void LoadBoardSet(shen_name parent, float x, float y, float z, float angleY, int firstDigits, int secondDigits)
+#else
 void LoadBoardSet(shen_name parent, float x, float y, float z, float angleX, float angleY, float angleZ, int firstDigits, int secondDigits)
+#endif
 {
     Vector3 scale = {1.5f, 1.5f, 1.5f};
+#if SHENMUE_GAMBLING_REVISION <= 5
+    Vector3i rotation = {0, GAMBLING_ANGLE(angleY), 0};
+#else
     Vector3i rotation = {GAMBLING_ANGLE(angleX), GAMBLING_ANGLE(angleY), GAMBLING_ANGLE(angleZ)};
+#endif
     shen_name name;
     GAMBLING_PACKAGE("BOARDSET")
     name = (g_areaBoardCharacterIndex++ << 24) + GAMBLING_BOARD_BASE;

@@ -4,6 +4,11 @@
 #define AREA_192E_SYE_ SHEN_NAME4('S', 'Y', 'E', '_')
 #define AREA_192E_SOURCE SHEN_NAME4('W', 'T', '0', '0')
 #define AREA_192E_RETURN SHEN_NAME4('W', 'T', 'A', '0')
+#if defined(SHENMUE_EVENT_192E_PACKAGED)
+#define AREA_192E_LAST_SELECTION 2
+#else
+#define AREA_192E_LAST_SELECTION 1
+#endif
 typedef struct Area192EParameter {
     HLibTask *self;
     short selection;

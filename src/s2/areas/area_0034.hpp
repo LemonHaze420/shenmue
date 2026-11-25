@@ -17,7 +17,9 @@ typedef struct E0034TaskParameter {
 } E0034TaskParameter;
 typedef struct E0034LoopParameter {
     E0034TaskParameter *parent;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     short currentFrame;
+#endif
 } E0034LoopParameter;
 
 extern shen_name e0034Characters[], e0034Authors[];

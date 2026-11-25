@@ -1,4 +1,29 @@
 #pragma once
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+#include "s2/event_utility_dc.h"
+#define TTRP_TASK SHEN_NAME4('t', 't', 'r', 'p')
+#define TTRP_RYO SHEN_NAME4('R', 'Y', 'O', '_')
+#define TTRP_REN SHEN_NAME4('R', 'E', 'N', '_')
+#define TTRP_CHR SHEN_NAME4('C', 'H', 'R', '_')
+#define TTRP_SCX SHEN_NAME4('S', 'C', 'X', '_')
+#define TTRP_TGY SHEN_NAME4('T', 'G', 'Y', '_')
+#define TTRP_A202 SHEN_NAME4('a', '2', '0', '2')
+#define TTRP_A203 SHEN_NAME4('a', '2', '0', '3')
+#define TTRP_AUT1 SHEN_NAME4('A', 'U', 'T', '1')
+#define TTRP_AUT2 SHEN_NAME4('A', 'U', 'T', '2')
+#define TTRP_LIGHT SHEN_NAME4('L', 'G', 'T', '1')
+#define TTRP_INVALID 0xffffffffU
+extern const shen_name TTRP_CHARACTERS[];
+extern const shen_name TTRP_FREE_CHARACTERS[];
+void TtrpMain(unsigned int argument);
+void TtrpPlayAuthorCallback(void *taskData);
+void TtrpWaitFirstAuthorCallback(void *taskData);
+void TtrpWaitSecondAuthorCallback(void *taskData);
+void TtrpEndCallback(void *taskData);
+void PrepareTtrpCharacters(void);
+void FreeTtrpCharacters(void);
+#else
 
 #include "s2/area_event.hpp"
 #include "common/math.hpp"
@@ -24,3 +49,5 @@ void TtrpEndCallback(void *taskData);
 extern const ScriptAreaDefinition ttrpScriptDefinition;
 
 } // namespace shenmue::s2
+
+#endif

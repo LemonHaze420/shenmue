@@ -1,4 +1,6 @@
 #include "s2/areas/area_0077.hpp"
+#include "s2/events/event_api.h"
+#if !defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/character.hpp"
 #include "s2/pak.hpp"
 
@@ -27,75 +29,191 @@ namespace shenmue::s2::areas {
 namespace {
 ConversationBuffer *e0077Voice;
 
-void E0077MainCallback(void *taskData);
-void E0077LoopCallback(void *taskData);
-
 // @verified - p
 void E0077Init() {
     e0077Voice = nullptr;
 }
-
-// @verified - p
-void E0077Main(std::uintptr_t) {
-    EV_NPC_NewLoadSw(0);
-    EV_ResetFreeTalkFlags();
-    SetPlayerControlEnabled(0);
-    HLib::Task *const task = HLib::EnqueueTaskWithParameter(E0077MainCallback, 4, 0x0b, 0x10, AREA_AUTHOR_TASK);
-    AreaAuthorTaskParameter *const parent = static_cast<AreaAuthorTaskParameter *>(HLib::GetTaskParameter(task));
+#endif
+#if defined(SHENMUE_EVENT_OVERLAY)
+#define E0077_INLINE
+#define E0077_LOCAL
+typedef shen_name E0077CharacterName;
+#else
+#if defined(_MSC_VER)
+#define E0077_INLINE __forceinline
+#else
+#define E0077_INLINE inline __attribute__((always_inline))
+#endif
+#define E0077_LOCAL static
+typedef const shen_name &E0077CharacterName;
+#endif
+void E0077MainCallback(void *);
+void E0077LoopCallback(void *);
+E0077_LOCAL E0077_INLINE void QueueE0077Loop(AreaAuthorTaskParameter *);
+E0077_LOCAL E0077_INLINE void ConfigureE0077Environment(void);
+E0077_LOCAL E0077_INLINE void CleanupE0077(AreaAuthorTaskParameter *);
+E0077_LOCAL E0077_INLINE void SetupE0077Characters(void);
+E0077_LOCAL E0077_INLINE void RestoreE0077Characters(void);
+E0077_LOCAL E0077_INLINE void PrepareE0077Character(E0077CharacterName);
+E0077_LOCAL E0077_INLINE void RestoreE0077Character(E0077CharacterName);
+E0077_LOCAL E0077_INLINE void HideE0077Prop(E0077CharacterName);
+E0077_LOCAL E0077_INLINE void ShowE0077Prop(E0077CharacterName);
+#if defined(SHENMUE_EVENT_ENTRY) || !defined(SHENMUE_EVENT_OVERLAY)
+// @verified - pd
+void E0077Main(
+#if defined(SHENMUE_EVENT_OVERLAY)
+    void
+#else
+    std::uintptr_t
+#endif
+) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    EventDateTime time;
+#endif
+    HLibTask *task;
+    AreaAuthorTaskParameter *parent;
+    FTBL.EV_NPC_NewLoadSw_0(0);
+    FTBL.EV_ResetFreeTalkFlags();
+    FTBL.SetPlayerControlEnabled(0);
+    task = FTBL.HLib_EnqueueTaskWithParameter(E0077MainCallback, 4, 11, sizeof(AreaAuthorTaskParameter), AREA_AUTHOR_TASK);
+    parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
     parent->self = task;
     parent->state = 1;
+#if defined(SHENMUE_EVENT_OVERLAY)
+    if (g_currentMap == AREA_0077_WN00) {
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        if (time.hour >= 19)
+            parent->selection = 0;
+        else
+            parent->selection = 1;
+#else
     if (g_currentMap.name == AREA_0077_WN00.name) {
         DateTime time;
         shenGetCurrentDateTime(time);
         parent->selection = time.hour < 19;
+#endif
     } else {
-        EV_ReinitLights(1);
-        EV_SetLightFlagForIndex(0, 2);
-        EV_SetIndexForLightEntry(0, 1);
+        FTBL.ReinitializeLights(1);
+        FTBL.SetLightFlagForIndex(0, 2);
+        FTBL.SetLightEntryIndex(0, 1);
         parent->selection = g_entryPoint != 0;
     }
-    EV_stepSetFlags(0, 0x6f);
-    SetPlayerControlEnabled(0);
-    EV_SetNewSceneIndex();
-    EV_LoadCutsceneFromCurrentScene("0077A000");
-    EV_FreeAuthorPak(1, "0077");
+    FTBL.EV_stepSetFlags(0x6f, 0);
+    ConfigureE0077Environment();
     Queue_EVT_UTL_LoadNPCChara_3(AREA_0077_CHARACTERS, parent->self);
 }
-
-// @verified - p
-void SetupE0077Characters() {
-    mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 2);
-    EV_SetCharacterAlphaEnabled(AREA_AUTHOR_RYO, false);
-    mtwkSetExtraFlag(scenFindMotionwork(AREA_0077_JOP_), 6, 2);
-    EV_SetCharacterAlphaEnabled(AREA_0077_JOP_, false);
-    EV_SetCharacterAlphaEnabled(AREA_0077_A396, false);
-    EV_SetCharacterAlphaEnabled(AREA_0077_A456, false);
+#endif
+#if !defined(SHENMUE_EVENT_ENTRY)
+#if defined(SHENMUE_EVENT_OVERLAY)
+static void *e0077Voice;
+#endif
+// @verified - pd
+void E0077MainCallback(void *data) {
+    AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)data;
+#if defined(SHENMUE_EVENT_OVERLAY)
+    switch (parent->state) {
+    case 1:
+        QueueE0077Loop(parent);
+        break;
+    case 3:
+        CleanupE0077(parent);
+        break;
+    }
+#else
+    if (parent->state == 1)
+        QueueE0077Loop(parent);
+    else if (parent->state == 3)
+        CleanupE0077(parent);
+#endif
 }
-
-// @verified - p
-void RestoreE0077Characters() {
-    mtwkSetExtraFlag(scenFindMotionwork(AREA_AUTHOR_RYO), 6, 0);
-    EV_SetCharacterAlphaEnabled(AREA_AUTHOR_RYO, true);
-    mtwkSetExtraFlag(scenFindMotionwork(AREA_0077_JOP_), 6, 0);
-    EV_SetCharacterAlphaEnabled(AREA_0077_JOP_, true);
-    EV_SetCharacterAlphaEnabled(AREA_0077_A396, true);
-    EV_SetCharacterAlphaEnabled(AREA_0077_A456, true);
+E0077_LOCAL E0077_INLINE void QueueE0077Loop(AreaAuthorTaskParameter *parent) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    shen_name authors[2] = {AREA_0077_AUTHOR0, AREA_0077_AUTHOR1};
+#endif
+    HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0077LoopCallback, 4, 11, sizeof(AreaAuthorLoopTaskParameter), AREA_AUTHOR_TASK);
+    ((AreaAuthorLoopTaskParameter *)FTBL.HLib_GetTaskParameter(task))->parent = parent;
+    FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    e0077Voice = FTBL.shenPlayAudioWithFlags("0077C001", 1);
+#else
+    e0077Voice = shenPlayAudioWithFlags("0077C001", 1);
+#endif
+    FTBL.EV_NPC_NewLoadSw_0(1);
+    FTBL.EV_spmBeginSampleExecute(0);
+    SetupE0077Characters();
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.EV_authSceneCtrl(authors[parent->selection]);
+#else
+    EV_authSceneCtrl(static_cast<AuthSceneCtrl>(AREA_0077_AUTHORS[parent->selection].name));
+#endif
+    parent->state = 2;
 }
-
-// @verified - p
-void CleanupE0077(AreaAuthorTaskParameter *parent) {
-    using enum CameraState;
-    SetNpcColdResetMode(1);
-    for (const shen_name *character = AREA_0077_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character) {
+// @verified - pd
+void E0077LoopCallback(void *data) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    AreaAuthorLoopTaskParameter *child = (AreaAuthorLoopTaskParameter *)data;
+    if (!FTBL.EV_authSceneCtrl(-1)) {
+        FTBL.hsFadeVoice(e0077Voice, 30);
+        FTBL.HLib_SetupTimedTask(child->parent->self, 30);
+#else
+    if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)
+        return;
+    if (GetAuthorFlags())
+        ExecuteAicaCommand(0x1100a0, 4, 0);
+    hsFadeVoice(e0077Voice, 30);
+    HLib::SetupTimedTask(static_cast<AreaAuthorLoopTaskParameter *>(data)->parent->self, 30);
+#endif
+        FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
+        RestoreE0077Characters();
+#if defined(SHENMUE_EVENT_OVERLAY)
+        child->parent->state = 3;
+#else
+    static_cast<AreaAuthorLoopTaskParameter *>(data)->parent->state = 3;
+#endif
+        FTBL.HLib_DestroyCurrentTask();
+#if defined(SHENMUE_EVENT_OVERLAY)
+    }
+#endif
+}
+E0077_LOCAL E0077_INLINE void ConfigureE0077Environment(void) {
+    FTBL.SetPlayerControlEnabled(0);
+    FTBL.EV_SetNewSceneIndex();
+    FTBL.EV_LoadCutsceneFromCurrentScene("0077A000");
+    FTBL.EV_FreeAuthorPak(1, "0077");
+}
+E0077_LOCAL E0077_INLINE void CleanupE0077(AreaAuthorTaskParameter *parent) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    EventDateTime time;
+#endif
+    FTBL.EventFunction857(1);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    EVT_UTL_FreeNPCChara(AREA_0077_CHARACTERS);
+#else
+    for (const shen_name *character = AREA_0077_CHARACTERS; character->name != AREA_AUTHOR_INVALID.name; ++character)
         if (ctrlGetScenarioChara(*character)) {
             EV_npcLockUnlock(*character);
             EV_npcFree(*character);
         }
-    }
-    EV_FreeAuthorPak(0, AREA_0077_CONVERSATION);
-    EV_pakUtils(PakCategory::Package, PakPackageOp::Free, reinterpret_cast<std::uintptr_t>("0077A"), 0);
+#endif
+    FTBL.EV_FreeAuthorPak(0, AREA_0077_CONVERSATION);
+    FTBL.EV_ControlPackageResources(0, 6, "0077A", 0, 0);
+#if !defined(SHENMUE_EVENT_OVERLAY)
     EV_CleanupMapControlTask();
-    HLib::DestroyTask(parent->self);
+#endif
+    FTBL.HLib_DestroyTask(parent->self);
+#if defined(SHENMUE_EVENT_OVERLAY)
+    if (g_currentMap == AREA_0077_WN00) {
+        FTBL.GetCurrentDateTime((DateTime *)&time);
+        FTBL.SetMapModelDataDefaultVertexShader();
+        if (time.hour >= 19) {
+            FTBL.EV_lightLoad(AREA_0077_LIGHT);
+            FTBL.PushGlobalLightingProgram();
+        } else {
+            FTBL.ReinitializeLights(1);
+            FTBL.SetLightFlagForIndex(0, 2);
+            FTBL.SetLightEntryIndex(0, 1);
+        }
+#else
     if (g_currentMap.name == AREA_0077_WN00.name) {
         DateTime time;
         shenGetCurrentDateTime(time);
@@ -108,59 +226,66 @@ void CleanupE0077(AreaAuthorTaskParameter *parent) {
             EV_lightLoad(AREA_0077_LIGHT);
             PushGlobalLightingProgram();
         }
-        sbtLoadProgram();
+#endif
+        FTBL.LoadCutsceneAndSoundProgramForArea();
+#if defined(SHENMUE_EVENT_OVERLAY)
+        EVT_AT_SetPos(AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, 246.4f, 104.5f, 195.2f, 0);
+        EVT_AT_SetAng(AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, 0.0f, 85.5f, 0.0f, 0);
+#else
         EVT_AT_SetPos(AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3{246.4f, 104.5f, 195.2f}, 0);
         EventSetRawAngle angle{0, AREA_AUTHOR_RYO, AREA_AUTHOR_INVALID, Vector3i{0, 15564, 0}, 0};
         EVT_AT_SetAng_Callback(&angle);
-        camCtrlSetFovTransitionTo(true);
-        camCtrlSetState(Init);
-        SetPlayerControlEnabled(1);
-        EV_spmBeginSampleExecute();
-        SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#endif
+        FTBL.camCtrlSetFovTransitionTo(1);
+        FTBL.camCtrlSetState(0);
+        FTBL.SetPlayerControlEnabled(1);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     } else
-        EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
+        FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
 }
-
-// @verified - p
-void QueueE0077Loop(AreaAuthorTaskParameter *parent) {
-    HLib::Task *const task = HLib::EnqueueTaskWithParameter(E0077LoopCallback, 4, 0x0b, 0x8, AREA_AUTHOR_TASK);
-    AreaAuthorLoopTaskParameter *const child = static_cast<AreaAuthorLoopTaskParameter *>(HLib::GetTaskParameter(task));
-    child->parent = parent;
-    SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
-    e0077Voice = shenPlayAudioWithFlags("0077C001", 1);
-    EV_NPC_NewLoadSw(1);
-    EV_spmBeginSampleExecute();
-    SetupE0077Characters();
-    EV_authSceneCtrl(static_cast<AuthSceneCtrl>(AREA_0077_AUTHORS[parent->selection].name));
-    parent->state = 2;
+E0077_LOCAL E0077_INLINE void SetupE0077Characters(void) {
+    PrepareE0077Character(AREA_AUTHOR_RYO);
+    PrepareE0077Character(AREA_0077_JOP_);
+    HideE0077Prop(AREA_0077_A396);
+    HideE0077Prop(AREA_0077_A456);
 }
-
-// @verified - p
-void E0077MainCallback(void *taskData) {
-    AreaAuthorTaskParameter *const parent = static_cast<AreaAuthorTaskParameter *>(taskData);
-    if (parent->state == 1) {
-        QueueE0077Loop(parent);
-    } else if (parent->state == 3) {
-        CleanupE0077(parent);
-    }
+E0077_LOCAL E0077_INLINE void RestoreE0077Characters(void) {
+    RestoreE0077Character(AREA_AUTHOR_RYO);
+    RestoreE0077Character(AREA_0077_JOP_);
+    ShowE0077Prop(AREA_0077_A396);
+    ShowE0077Prop(AREA_0077_A456);
 }
-
-// @verified - p
-void E0077LoopCallback(void *taskData) {
-    if (static_cast<std::uint32_t>(EV_authSceneCtrl(AuthSceneCtrl::IsLoaded)) != 0)
-        return;
-    if (GetAuthorFlags())
-        ExecuteAicaCommand(0x1100a0, 4, 0);
-    hsFadeVoice(e0077Voice, 30);
-    HLib::SetupTimedTask(static_cast<AreaAuthorLoopTaskParameter *>(taskData)->parent->self, 30);
-    SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
-    RestoreE0077Characters();
-    static_cast<AreaAuthorLoopTaskParameter *>(taskData)->parent->state = 3;
-    HLib::DestroyCurrentTask();
+E0077_LOCAL E0077_INLINE void PrepareE0077Character(E0077CharacterName name) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 2);
+#else
+    mtwkSetExtraFlag(scenFindMotionwork(name), 6, 2);
+#endif
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
 }
-
+E0077_LOCAL E0077_INLINE void RestoreE0077Character(E0077CharacterName name) {
+#if defined(SHENMUE_EVENT_OVERLAY)
+    FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 0);
+#else
+    mtwkSetExtraFlag(scenFindMotionwork(name), 6, 0);
+#endif
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+E0077_LOCAL E0077_INLINE void HideE0077Prop(E0077CharacterName name) {
+    FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+}
+E0077_LOCAL E0077_INLINE void ShowE0077Prop(E0077CharacterName name) {
+    FTBL.EV_SetCharacterAlphaEnabled(name, 1);
+}
+#if defined(SHENMUE_EVENT_OVERLAY)
+shen_name AREA_0077_CHARACTERS[] = {AREA_0077_JOP_, AREA_AUTHOR_INVALID};
+#endif
+#endif
+#if !defined(SHENMUE_EVENT_OVERLAY)
 } // namespace
-
 const ScriptAreaDefinition area0077ScriptDefinition{.areaId = AREA_0077_AREA, .field04 = 0, .init = E0077Init, .main = E0077Main};
-
 } // namespace shenmue::s2::areas
+#endif
+#undef E0077_INLINE
+#undef E0077_LOCAL

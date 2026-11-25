@@ -5,7 +5,7 @@ static char eventVoicePrefix[8];
 #elif SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0337
 #elif SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0009
 static char eventVoicePrefix[8];
-#elif SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_4BTL
+#elif SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0337_PACKAGED
 static char eventVoicePrefix[16];
 #else
 static char eventVoicePrefix[32];
@@ -486,7 +486,7 @@ void QueueEventVoiceList(HLibTask *parent, const char **voices, int voiceDelayFr
     work->parent = parent;
     work->index = 0;
     work->skipPressFrames = 0;
-#if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_4BTL
+#if SHENMUE_EVENT_LIBRARY_REVISION < EVENT_LIBRARY_REVISION_0337_PACKAGED
     for (i = 0; i < EVENT_VOICE_LIST_COUNT; i++, voices++) {
 #else
     for (i = 0; i < 32; i++, voices++) {

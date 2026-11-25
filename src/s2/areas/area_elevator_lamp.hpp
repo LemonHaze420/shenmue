@@ -1,10 +1,23 @@
 #pragma once
 
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+enum { ELEVATOR_LAMP_CHARACTER = SHEN_NAME4('T', 'L', 'I', 'G') };
+enum { AREA_QF39 = SHEN_NAME4('Q', 'F', '3', '9') };
+typedef struct ElevatorLampChoice {
+    shen_name elevator;
+    int flag;
+} ElevatorLampChoice;
+static ElevatorLampChoice ELEVATOR_LAMP_CHOICES[3] = {
+    {SHEN_NAME4('R', '5', '9', '9'), 627}, {SHEN_NAME4('R', '5', '9', '8'), 629}, {SHEN_NAME4('R', '5', '9', '7'), 630}};
+int SetElevatorLamp(shen_name elevator, int enabled);
+int ConfigureAreaElevatorLamp(int enabled);
+#else
 #include "common/math.hpp"
 #include "common/types.hpp"
+#include "s2/area_names.hpp"
 #include <array>
 #include <cstdint>
-#include "s2/area_names.hpp"
 
 namespace shenmue::s2::areas {
 
@@ -27,3 +40,5 @@ void AreaElevatorLampMainLoop(void *data);
 void AreaElevatorLampCleanup(std::int32_t afternoon, std::uint32_t areaIndex);
 
 } // namespace shenmue::s2::areas
+
+#endif

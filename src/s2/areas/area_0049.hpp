@@ -1,3 +1,15 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/numeric_event_dc.h"
+#define AREA_0049_AREA SHEN_NAME4('0', '0', '4', '9')
+#define AREA_0049_SYE_ SHEN_NAME4('S', 'Y', 'E', '_')
+#define AREA_0049_A092 SHEN_NAME4('a', '0', '9', '2')
+#define AREA_0049_WB00 SHEN_NAME4('W', 'B', '0', '0')
+#define AREA_AUTHOR_TASK TASK_EVNT
+#define AREA_AUTHOR_RYO RYO_CHARACTER
+#define AREA_AUTHOR_INVALID INVALID_CHARACTER
+#define AREA_0049_CONVERSATION "0049"
+extern shen_name AREA_0049_CHARACTERS[];
+#else
 #pragma once
 
 #include "s2/area_event.hpp"
@@ -15,3 +27,4 @@ inline constexpr char AREA_0049_MOTION[] = "0049A.MOT", AREA_0049_CONVERSATION[]
 extern const ScriptAreaDefinition area0049ScriptDefinition;
 
 } // namespace shenmue::s2::areas
+#endif

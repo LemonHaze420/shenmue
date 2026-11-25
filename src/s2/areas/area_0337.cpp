@@ -51,9 +51,11 @@ void Setup0337(void)
 {
     FTBL.SetPlayerControlEnabled(0);
     FTBL.EV_SetNewSceneIndex();
+#if !defined(SHENMUE_EVENT_0337_PACKAGED)
     FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0337A", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "0337A", 0, 0);
+#endif
     FTBL.EV_FreeAuthorPak(1, "0337");
     FTBL.EV_SetWeatherInstruction(12, 0);
     FTBL.EV_lightLoad(AREA_0337_LIGHT);
@@ -94,8 +96,8 @@ void Prepare0337Characters(void)
 {
     HideAuthorCharacter(RYO_CHARACTER);
     HideAuthorCharacter(AREA_0337_JOP);
-    HideAuthorProp(AREA_0337_a516);
-    HideAuthorProp(AREA_0337_a512);
+    HideAuthorProp(AREA_0337_FIRST_HIDDEN_PROP);
+    HideAuthorProp(AREA_0337_SECOND_HIDDEN_PROP);
     HideAuthorProp(AREA_0337_a452);
 }
 
@@ -103,8 +105,8 @@ void Restore0337Characters(void)
 {
     ShowAuthorCharacter(RYO_CHARACTER);
     ShowAuthorCharacter(AREA_0337_JOP);
-    ShowAuthorProp(AREA_0337_a516);
-    ShowAuthorProp(AREA_0337_a512);
+    ShowAuthorProp(AREA_0337_FIRST_HIDDEN_PROP);
+    ShowAuthorProp(AREA_0337_SECOND_HIDDEN_PROP);
     ShowAuthorProp(AREA_0337_a452);
 }
 

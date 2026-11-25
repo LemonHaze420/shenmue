@@ -80,7 +80,11 @@ AreaEntityPlacement areaEntityPlacements[22] = {
     {SHEN_NAME4('W', 'T', '0', '0'), {264.35f, 115.3f, 330.3f}, 16384, 0, 0, SHEN_NAME4('c', 'w', '9', '0')},
     {SHEN_NAME4('W', 'R', '0', '0'), {178.6f, 102.25f, 192.3f}, 60074, 0, 1, SHEN_NAME4('c', 'w', 'A', '0')},
     {SHEN_NAME4('A', 'R', '0', '2'), {257.42f, 101.0f, 398.32f}, 64807, 0, 0, SHEN_NAME4('c', 'w', 'B', '0')},
+#if defined(SHENMUE_AREA_ENTITIES_EARLY_AR03)
+    {SHEN_NAME4('A', 'R', '0', '3'), {303.42f, 100.15f, 479.28f}, 0, 0, 0, SHEN_NAME4('c', 'w', 'C', '0')},
+#else
     {SHEN_NAME4('A', 'R', '0', '3'), {303.42f, 100.15f, 478.38f}, 0, 0, 0, SHEN_NAME4('c', 'w', 'C', '0')},
+#endif
     {SHEN_NAME4('A', 'R', '0', '2'), {244.8f, 100.0f, 425.1f}, 32768, 0, 1, SHEN_NAME4('c', 'w', 'D', '0')},
     {SHEN_NAME4('A', 'K', 'S', '0'), {268.7f, 100.0f, 260.7f}, 32768, 0, 0, SHEN_NAME4('c', 'w', 'E', '0')},
     {SHEN_NAME4('A', 'K', 'S', '1'), {269.2f, 106.075f, 262.75f}, 32768, 0, 0, SHEN_NAME4('c', 'w', 'F', '0')},

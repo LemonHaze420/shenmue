@@ -1,7 +1,6 @@
 #if defined(SHENMUE_EVENT_OVERLAY)
 #include "s2/areas/area_0009.hpp"
 
-static const shen_name scenes0009[] = {SHEN_NAME4('A', 'U', '0', '1'), SHEN_NAME4('A', 'U', '0', '2')};
 static shen_name characters0009[] = {SHEN_NAME4('C', 'L', 'J', '_'), SHEN_NAME4('L', 'L', 'Y', '_'), SHEN_NAME4('S', 'A', 'M', '_'),
     SHEN_NAME4('W', 'O', 'N', '_'), INVALID_CHARACTER};
 
@@ -9,13 +8,21 @@ void Main0009(void)
 {
     HLibTask *task;
     AreaAuthorTaskParameter *parent;
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+    FTBL.EventFunction870(0);
+    FTBL.SetScenarioFollowCharacter(0);
+#endif
     FTBL.SetPlayerControlEnabled(0);
     FTBL.EV_NPC_NewLoadSw_0(0);
     FTBL.EV_ResetFreeTalkFlags();
     task = FTBL.HLib_EnqueueTaskWithParameter(MainCallback0009, 4, 11, sizeof(AreaAuthorTaskParameter), TASK_EVNT);
     parent = (AreaAuthorTaskParameter *)FTBL.HLib_GetTaskParameter(task);
     parent->self = task;
+#if !defined(SHENMUE_EVENT_0009_PACKAGED)
     parent->state = 1;
+#else
+    parent->state = 2;
+#endif
     parent->selection = (unsigned int)g_entryPoint > 1 ? 0 : g_entryPoint;
     ConfigureEnvironment0009();
     Queue_EVT_UTL_LoadNPCChara_3(characters0009, parent->self);
@@ -25,15 +32,38 @@ void MainCallback0009(void *data)
 {
     AreaAuthorTaskParameter *parent = (AreaAuthorTaskParameter *)data;
     switch (parent->state) {
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+    case 0:
+        FTBL.EV_NPC_NewLoadSw_0(1);
+        FTBL.EV_LoadCutsceneFromCurrentScene("AR02");
+        FTBL.EV_LoadAudio("AR02_000", 2);
+        FTBL.EV_spmBeginSampleExecute(0);
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SetRenderClockAndCompassTo(0);
+        parent->state = 1;
+        break;
+#endif
     case 1:
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+        if (!FTBL.filmCheckFadeTrackColour())
+            parent->state = 4;
+        break;
+    case 2:
+#endif
         QueueLoop0009(parent);
         break;
+#if !defined(SHENMUE_EVENT_0009_PACKAGED)
     case 3:
         FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(AREA_0009_RYO_), 0xf003, 0);
+#else
+    case 4:
+#endif
         Cleanup0009(parent);
         break;
     }
 }
+
+static const shen_name scenes0009[] = {SHEN_NAME4('A', 'U', '0', '1'), SHEN_NAME4('A', 'U', '0', '2')};
 
 void QueueLoop0009(AreaAuthorTaskParameter *parent)
 {
@@ -49,7 +79,11 @@ void QueueLoop0009(AreaAuthorTaskParameter *parent)
     FTBL.EV_spmBeginSampleExecute(0);
     SetupCharacters0009();
     FTBL.EV_authSceneCtrl(scenes0009[parent->selection]);
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+    parent->state = 3;
+#else
     parent->state = 2;
+#endif
 }
 
 void LoopCallback0009(void *data)
@@ -60,10 +94,22 @@ void LoopCallback0009(void *data)
         if (child->parent->selection == 1) {
             FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
             RestoreCharacters0009();
+#if !defined(SHENMUE_EVENT_0009_PACKAGED)
             child->parent->state = 3;
+#else
+            child->parent->state = 0;
+            FTBL.mtwkRequestMotion(FTBL.scenFindMotionwork(AREA_0009_RYO_), 0xf003, 0);
+            EVT_AT_SetPos(AREA_0009_RYO_, EVENT_CHARACTER_INVALID, 250.2f, 100.0f, 434.8f, 0);
+            EVT_AT_SetAng(AREA_0009_RYO_, EVENT_CHARACTER_INVALID, 0.0f, 230.0f, 0.0f, 0);
+            FTBL.camCtrlSetFovTransitionTo(1);
+            FTBL.camCtrlSetState(0);
+#endif
             FTBL.HLib_DestroyCurrentEventTask();
         } else {
             child->parent->selection++;
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+            SetupCharacters0009();
+#endif
             FTBL.EV_authSceneCtrl(scenes0009[1]);
         }
     }
@@ -72,6 +118,9 @@ void LoopCallback0009(void *data)
 void ConfigureEnvironment0009(void)
 {
     EventDateTime dateTime;
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+    FTBL.SetRenderClockAndCompassTo(1);
+#endif
     FTBL.EV_stepSetFlags(5, 0);
     FTBL.SetPlayerStat(2, 0);
     FTBL.SetPlayerGameFlags(4, 0);
@@ -93,9 +142,17 @@ void ConfigureEnvironment0009(void)
             FTBL.EV_nlSetVertexColourType(2);
         }
     }
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+    else {
+        FTBL.GetCurrentDateTime((DateTime *)&dateTime);
+        if (dateTime.hour >= 23 || (dateTime.hour == 22 && dateTime.minute >= 30))
+            FTBL.shenSetTimeSimulationTo(0);
+    }
+#else
     FTBL.EV_SetNewSceneIndex();
     FTBL.EV_ControlPackageResources(0, 0, FTBL.Filepath_Gen(0), (int)"0009A", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+#endif
     FTBL.EV_LoadCutsceneFromCurrentScene("0009A010");
     FTBL.EV_FreeAuthorPak(1, "0009");
 }
@@ -103,9 +160,13 @@ void ConfigureEnvironment0009(void)
 void Cleanup0009(AreaAuthorTaskParameter *parent)
 {
     EVT_UTL_FreeNPCChara(characters0009);
+#if defined(SHENMUE_EVENT_0009_PACKAGED)
+    FTBL.shenSetTimeSimulationTo(1);
+#endif
     FTBL.EV_FreeAuthorPak(0, "0009");
     FTBL.EV_ControlPackageResources(0, 6, "0009A", 0, 0);
     FTBL.HLib_DestroyTask(parent->self);
+#if !defined(SHENMUE_EVENT_0009_PACKAGED)
     FTBL.SetScenarioFollowCharacter(0);
     if (g_currentMap == AREA_0009_AR02) {
         FTBL.EV_NPC_NewLoadSw_0(1);
@@ -115,10 +176,17 @@ void Cleanup0009(AreaAuthorTaskParameter *parent)
         EVT_AT_SetAng(AREA_0009_RYO_, EVENT_CHARACTER_INVALID, 0.0f, 230.0f, 0.0f, 0);
         FTBL.camCtrlSetFovTransitionTo(1);
         FTBL.camCtrlSetState(0);
+#else
+    if (g_currentMap == AREA_0009_AR02)
+#endif
         FTBL.SetPlayerControlEnabled(1);
+#if !defined(SHENMUE_EVENT_0009_PACKAGED)
         FTBL.EV_spmBeginSampleExecute(0);
         FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
     } else
+#else
+    else
+#endif
         FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
 }
 

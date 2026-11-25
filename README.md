@@ -2,7 +2,7 @@
 
 [![S1 - Roundtrip](docs/s1-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
 [![WS - Roundtrip](docs/ws-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
-[![S2 JP - EV Roundtrip](docs/s2-jp-ev-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
+[![S2 JP V1.003 - EV Roundtrip](docs/s2-jp-ev-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
 [![S2 GameJam - EV Roundtrip](docs/s2-gamejam-ev-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
 [![S2 US - EV Roundtrip](docs/s2-us-ev-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)
 [![S2 EU - EV Roundtrip](docs/s2-eu-ev-roundtrip.svg)](https://github.com/LemonHaze420/shenmue/actions/workflows/windows.yml)

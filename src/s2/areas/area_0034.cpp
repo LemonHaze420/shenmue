@@ -15,20 +15,30 @@ void E0034Main(const short *selection)
     E0034TaskParameter *work = (E0034TaskParameter *)FTBL.HLib_GetTaskParameter(task);
     work->self = task;
     work->state = 1;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     Queue_EVT_UTL_LoadNPCChara_3(e0034Characters, work->self);
+#endif
     ConfigureE0034Environment();
     if (g_currentMap == AREA_0034_WTA0)
         work->selection = *selection;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     else {
         work->selection = g_entryPoint;
         LoadE0034ScenePackages(work->selection);
     }
     if (work->selection > 2)
         CleanupE0034(work);
+#else
+    else
+        work->selection = (unsigned int)g_entryPoint > 1 ? 0 : g_entryPoint;
+    Queue_EVT_UTL_LoadNPCChara_3(e0034Characters, work->self);
+#endif
 }
 #else
 shen_name e0034Characters[] = {AREA_0034_KUN, INVALID_CHARACTER};
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 shen_name e0034Authors[] = {SHEN_NAME4('i', '0', '0', '0'), SHEN_NAME4('i', '0', '2', '0')};
+#endif
 
 void E0034MainCallback(void *taskData)
 {
@@ -48,31 +58,77 @@ void QueueE0034Loop(E0034TaskParameter *parent)
     HLibTask *task = FTBL.HLib_EnqueueTaskWithParameter(E0034LoopCallback, 4, 11, sizeof(E0034LoopParameter), TASK_EVNT);
     E0034LoopParameter *work = (E0034LoopParameter *)FTBL.HLib_GetTaskParameter(task);
     work->parent = parent;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     work->currentFrame = 0;
     if (parent->selection == 2)
         FTBL.EV_authSceneCtrl(2);
+#else
+    SetupE0034Characters();
+    if (g_currentMap == AREA_0034_AREA)
+        LoadE0034ScenePackages(parent->selection);
+    else if (parent->selection == 0)
+        FTBL.EV_DisableCharacterDisplay(SHEN_NAME4('T', 'E', 'L', 'S'));
+    if (parent->selection == 0)
+        FTBL.EV_authSceneCtrl(AREA_0034_AREA);
+#endif
     else
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.EV_authSceneCtrl(e0034Authors[parent->selection]);
     FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+#else
+        FTBL.EV_authSceneCtrl(parent->selection);
+#endif
     parent->state = 2;
 }
 
 void LoadE0034ScenePackages(int selection)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (selection == 2)
         E0034_LOAD_PACKAGE("WB00");
     else
         E0034_LOAD_PACKAGE("WTA0");
     FTBL.SetObjectFlagByIndex(2, 0);
+#else
+    if (selection == 0) {
+        const char *directory = FTBL.Filepath_Gen(0);
+        FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"WTA0", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.SetObjectFlagByIndex(1, 0);
+        FTBL.SetObjectFlagByIndex(2, 1);
+    } else {
+        const char *directory = FTBL.Filepath_Gen(0);
+        FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"WB00", 0);
+        FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
+        FTBL.SetObjectFlagByIndex(2, 0);
+        FTBL.SetObjectFlagByIndex(4, 0);
+    }
+#endif
 }
 
 void E0034LoopCallback(void *taskData)
 {
     E0034LoopParameter *work = (E0034LoopParameter *)taskData;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     work->currentFrame = FTBL.EV_authSceneCtrl(-6);
     if (work->currentFrame == 1)
         SetupE0034Characters();
+#else
+    short frame = FTBL.EV_authSceneCtrl(-6);
+    switch (frame) {
+    case 1:
+        FTBL.SetScreenFilmFade(30, 255, 0, 0, 0, 0, 0, 0, 0);
+        FTBL.SetChildObjectFlagByIndex(FTBL.ctrlGetCharaByName(AREA_0034_RYO), 1);
+        break;
+    case 221:
+        FTBL.SetChildObjectFlagByIndex(FTBL.ctrlGetCharaByName(AREA_0034_RYO), 0);
+        break;
+    }
+#endif
     if (FTBL.EV_authSceneCtrl(-1) == 0) {
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        FTBL.SetChildObjectFlagByIndex(FTBL.ctrlGetCharaByName(AREA_0034_RYO), 0);
+#endif
         RestoreE0034Characters();
         work->parent->state = 3;
         FTBL.SetScreenFilmFade(0, 0, 0, 0, 0, 255, 0, 0, 0);
@@ -82,17 +138,29 @@ void E0034LoopCallback(void *taskData)
 
 void ConfigureE0034Environment(void)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     const char *directory;
+#endif
     FTBL.SetPlayerControlEnabled(0);
     FTBL.EV_SetNewSceneIndex();
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     directory = FTBL.Filepath_Gen(0);
     FTBL.EV_ControlPackageResources(0, 0, (void *)directory, (int)"0034A", 0);
     FTBL.EV_ControlPackageResources(0, 7, 0, 0, 0);
     FTBL.EV_ControlPackageResources(2, 2, "0034A", 0, 0);
+#else
+    FTBL.SetRenderClockAndCompassTo(1);
+#endif
     FTBL.EV_FreeAuthorPak(1, "0034");
     FTBL.EV_LoadCutsceneFromCurrentScene("0034A000");
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (g_currentMap != AREA_0034_WTA0) {
         if (g_entryPoint == 2) {
+#else
+    if (g_currentMap == AREA_0034_AREA) {
+        FTBL.SetMapModelDataDefaultVertexShader();
+        if (g_entryPoint == 1) {
+#endif
             FTBL.ReinitializeLights(1);
             FTBL.SetLightFlagForIndex(0, 2);
             FTBL.SetLightEntryIndex(0, 1);
@@ -107,23 +175,38 @@ void CleanupE0034(E0034TaskParameter *parent)
 {
     EventDateTime time;
     FTBL.GetCurrentDateTime((DateTime *)&time);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     time.hour = 8;
+#else
+    time.hour = 9;
+#endif
     time.minute = 0;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     time.day++;
+#endif
     FTBL.Shenmue_SetCurrentDateTimeTo((DateTime *)&time);
     EVT_UTL_FreeNPCChara(e0034Characters);
     FTBL.EV_ControlPackageResources(0, 6, "0034A", 0, 0);
     FTBL.EV_FreeAuthorPak(0, "0034");
     FTBL.HLib_DestroyTask(parent->self);
     if (g_currentMap == AREA_0034_WTA0) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         FTBL.EV_scenQueueLoad(g_actNumber, AREA_0034_WB00, 1);
+#else
+        FTBL.EV_scenQueueLoad(g_actNumber, SHEN_NAME4('W','B','B','K'), 1);
+#endif
     } else {
         if (FTBL.EV_ControlPackageResources(0, 5, "WTA0", 0, 0))
             FTBL.EV_ControlPackageResources(0, 6, "WTA0", 0, 0);
         else if (FTBL.EV_ControlPackageResources(0, 5, "WB00", 0, 0))
             FTBL.EV_ControlPackageResources(0, 6, "WB00", 0, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         if (g_entryPoint == 2)
             FTBL.EV_scenQueueLoad(g_actNumber, AREA_0034_WB00, 1);
+#else
+        if (g_entryPoint == 1)
+            FTBL.EV_scenQueueLoad(g_actNumber, SHEN_NAME4('W','B','B','K'), 1);
+#endif
         else
             FTBL.EV_scenQueueLoad(g_actNumber, g_currentMap, g_entryPoint);
     }
@@ -141,7 +224,11 @@ void SetupE0034Characters(void)
     HideE0034Prop(AREA_0034_PROP('5', '2'));
     HideE0034Prop(AREA_0034_PROP('5', '3'));
     if (g_currentMap != AREA_0034_WTA0)
+        #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         HideE0034Prop(AREA_0034_PROP('4', '8'));
+#else
+        HideE0034Prop(SHEN_NAME4('a', 'b', '2', '7'));
+#endif
     FTBL.TelCode_Enqueue();
 }
 
@@ -157,49 +244,63 @@ void RestoreE0034Characters(void)
     ShowE0034Prop(AREA_0034_PROP('5', '2'));
     ShowE0034Prop(AREA_0034_PROP('5', '3'));
     if (g_currentMap != AREA_0034_WTA0)
+        #if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
         ShowE0034Prop(AREA_0034_PROP('4', '8'));
+#else
+        ShowE0034Prop(SHEN_NAME4('a', 'b', '2', '7'));
+#endif
     FTBL.UpdateTelephoneState();
 }
 
 void PrepareE0034Character(shen_name name)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_EnableCharacterDisplay(name);
     FTBL.EV_SetCharaControllerFlags(name, 1, 0);
     FTBL.EV_SetCharaControllerFlags(name, 3, 0);
+#endif
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 2);
     FTBL.EV_SetCharacterAlphaEnabled(name, 0);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(name), 0, 8, 16);
     FTBL.hmdlSetFlagsFor(FTBL.ctrlGetCharaByName(name), 1, 8, 16);
+#endif
 }
 
 void RestoreE0034Character(shen_name name)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_EnableCharacterDisplay(name);
     do {
         FTBL.EV_SetCharaControllerFlags(name, 1, 1);
         FTBL.EV_SetCharaControllerFlags(name, 2, 1);
         FTBL.EV_SetCharaControllerFlags(name, 3, 1);
     } while (0);
+#endif
     FTBL.mtwkSetExtraFlag(FTBL.scenFindMotionwork(name), 6, 0);
     FTBL.EV_SetCharacterAlphaEnabled(name, 1);
 }
 
 void HideE0034Prop(shen_name name)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_EnableCharacterDisplay(name);
     FTBL.EV_SetCharaControllerFlags(name, 1, 0);
     FTBL.EV_SetCharaControllerFlags(name, 3, 0);
+#endif
     FTBL.EV_SetCharacterAlphaEnabled(name, 0);
 }
 
 void ShowE0034Prop(shen_name name)
 {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     FTBL.EV_EnableCharacterDisplay(name);
     do {
         FTBL.EV_SetCharaControllerFlags(name, 1, 1);
         FTBL.EV_SetCharaControllerFlags(name, 2, 1);
         FTBL.EV_SetCharaControllerFlags(name, 3, 1);
     } while (0);
+#endif
     FTBL.EV_SetCharacterAlphaEnabled(name, 1);
 }
 #endif

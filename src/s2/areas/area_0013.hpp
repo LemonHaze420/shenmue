@@ -1,3 +1,33 @@
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/areas/numeric_event_dc.h"
+#include "s2/event_queued_dc.h"
+typedef struct E0013LoopParameter {
+    AreaImmediateAuthorTaskParameter *parent;
+} E0013LoopParameter;
+#define AREA_AUTHOR_TASK TASK_EVNT
+#define AREA_AUTHOR_RYO RYO_CHARACTER
+#define AREA_AUTHOR_INVALID INVALID_CHARACTER
+#define AREA_0013_AREA SHEN_NAME4('0', '0', '1', '3')
+#define AREA_0013_AR02 SHEN_NAME4('A', 'R', '0', '2')
+#define AREA_0013_WON SHEN_NAME4('W', 'O', 'N', '_')
+#define AREA_0013_CLJ SHEN_NAME4('C', 'L', 'J', '_')
+#define AREA_0013_A014 SHEN_NAME4('a', '0', '1', '4')
+#define AREA_0013_ANP1 SHEN_NAME4('A', 'N', 'P', '1')
+extern shen_name AREA_0013_CHARACTERS[];
+void E0013Main(void);
+void E0013MainCallback(void *);
+void QueueE0013Loop(AreaImmediateAuthorTaskParameter *);
+void E0013LoopCallback(void *);
+void SetupE0013Environment(void);
+void CleanupE0013(AreaImmediateAuthorTaskParameter *);
+void SetupE0013Characters(void);
+void RestoreE0013Characters(void);
+void Prepare0013Character(shen_name);
+void Restore0013Character(shen_name);
+void Hide0013Prop(shen_name);
+void Show0013Prop(shen_name);
+void E0013WaveCallback(void *);
+#else
 #pragma once
 #include "s2/area_event.hpp"
 #include "s2/areas/numeric_event.hpp"
@@ -8,3 +38,5 @@ inline constexpr shen_name AREA_0013_A014{SHEN_NAME(a014)}, AREA_0013_ANP1{SHEN_
 inline constexpr shen_name AREA_0013_CHARACTERS[]{AREA_0013_WON, AREA_0013_CLJ, AREA_AUTHOR_INVALID};
 extern const ScriptAreaDefinition area0013ScriptDefinition;
 } // namespace shenmue::s2::areas
+
+#endif

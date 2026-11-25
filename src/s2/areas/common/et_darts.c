@@ -438,18 +438,27 @@ void EventDartsEasyCallback(void *taskData)
             EndDartsEvent();
         }
         if (FTBL.EV_GetPlayerFlag(11, 1419)) {
+#if defined(SHENMUE_ET_DARTS_RESET_REQUESTS)
+            DARTS_CLEAR_REQUESTS(1419)
+#endif
             work->state = 4;
             BeginDartsEvent(0);
             work->game.mode = 0;
             work->game.opponent = 0;
             DARTS_ENTER_GAME(work)
         } else if (FTBL.EV_GetPlayerFlag(11, 1420)) {
+#if defined(SHENMUE_ET_DARTS_RESET_REQUESTS)
+            DARTS_CLEAR_REQUESTS(1420)
+#endif
             work->state = 4;
             BeginDartsEvent(0);
             work->game.mode = 1;
             work->game.opponent = 0;
             DARTS_ENTER_GAME(work)
         } else if (FTBL.EV_GetPlayerFlag(11, 1422)) {
+#if defined(SHENMUE_ET_DARTS_RESET_REQUESTS)
+            DARTS_CLEAR_REQUESTS(1422)
+#endif
             work->state = 4;
             BeginDartsEvent(0);
             work->game.mode = 2;
@@ -671,6 +680,9 @@ void EventEnemyDartsCallback(void *taskData)
             SetDartsPosition(work->game.placement->character, work->game.enemy->name, 0.0f, -10.0f, 0.0f, 0, 0);
             FTBL.HLib_DestroyCurrentTask();
         } else if (FTBL.EV_GetPlayerFlag(11, 1423)) {
+#if defined(SHENMUE_ET_DARTS_RESET_REQUESTS)
+            DARTS_CLEAR_REQUESTS(1423)
+#endif
             work->state = 3;
             BeginDartsEvent(DARTS_MATCH_OPPONENT);
             SetDartsTemporaryCharacter(work->game.enemy->name);
