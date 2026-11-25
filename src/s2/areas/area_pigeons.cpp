@@ -398,14 +398,14 @@ void PigeonWander(AreaPigeon *pigeon) {
     if (pigeon->distanceToOrigin > pigeon->roamRadius) {
         AssignImageModuleParameters(ctrlGetCharaByName(pigeon->name), 1, -1, 0.5f, 0);
         Execute3DSoundCommand(839, pigeon->position, 4.0f, 40.0f, pigeon->distanceToOrigin);
-        pigeon->state = PigeonState::Cooldown;
+        pigeon->state = PigeonState::HoverBob;
         pigeon->bobPhase = 0;
     } else if (pigeon->distanceToPlayer < 2.5f) {
         AssignImageModuleParameters(ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 1);
         pigeon->state = PigeonState::Approach;
     } else if (--pigeon->randomWaitFrames < 10) {
         AssignImageModuleParameters(ctrlGetCharaByName(pigeon->name), 1, -1, 3.0f, 2);
-        pigeon->state = PigeonState::HoverBob;
+        pigeon->state = PigeonState::Cooldown;
         pigeon->randomWaitFrames = 30;
     }
 }
@@ -434,7 +434,7 @@ void PigeonApproach(AreaPigeon *pigeon) {
         if (pigeon->distanceToPlayer < 1.5f || (context = pigeon->distanceToOrigin, context > pigeon->roamRadius)) {
             AssignImageModuleParameters(ctrlGetCharaByName(pigeon->name), 1, -1, 0.5f, 0);
             Execute3DSoundCommand(839, pigeon->position, 4.0f, 40.0f, context);
-            pigeon->state = PigeonState::Cooldown;
+            pigeon->state = PigeonState::HoverBob;
             pigeon->bobPhase = 0;
         }
     }
