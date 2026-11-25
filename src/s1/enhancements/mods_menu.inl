@@ -41,6 +41,7 @@ std::vector<UIOption> g_modOptions = [] {
     }
     if (result.empty())
         result.push_back({.type = UIOptionType::Heading, .name = "No enhancements compiled"});
+    result.push_back({.type = UIOptionType::Heading, .name = SHENMUE_BUILD_LABEL});
     return result;
 }();
 bool ModsInGame() { return g_isInGame != 0; }

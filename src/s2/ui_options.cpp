@@ -1,5 +1,6 @@
 #include "s2/ui.hpp"
 #include "enhancements/misc_mods.hpp"
+#include "build_info.hpp"
 #include "s2/easy_option.hpp"
 #include "s2/opening_staff_roll.hpp"
 #include "s2/magic_room.hpp"
@@ -335,6 +336,7 @@ void BindModsTabSelector(d3t::UIWindow **windows, d3t::UILabelWidget **labels, s
 }
 #include "enhancements/mods_tab.inl"
 constexpr char NoModOptions[] = "No enhancements compiled";
+constexpr char ModBuildInfo[] = SHENMUE_BUILD_LABEL;
 std::vector<OptionSpec> ModSpecs() {
     std::vector<OptionSpec> result;
     for (std::size_t category = 0; category < mods::categoryLabels.size(); ++category) {
@@ -359,6 +361,7 @@ std::vector<OptionSpec> ModSpecs() {
     }
     if (result.empty())
         result.push_back({OptionKind::Heading, NoModOptions, NoModOptions, 0});
+    result.push_back({OptionKind::Heading, ModBuildInfo, "", 0});
     return result;
 }
 const std::vector<OptionSpec> modOptions = ModSpecs();
@@ -444,7 +447,7 @@ void WriteOptionFraction(const OptionSpec &spec, float value) {
 }
 std::string_view LocalizedOption(const char *token) {
 #if SHENMUE_MODS_ENABLED
-    if (token == NoModOptions)
+    if (token == NoModOptions || token == ModBuildInfo)
         return token;
     for (const char *heading : mods::categoryLabels)
         if (token == heading)

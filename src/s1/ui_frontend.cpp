@@ -1,5 +1,6 @@
 #include "auto_test.hpp"
 #include "enhancements/misc_mods.hpp"
+#include "build_info.hpp"
 #include "s1/ui_internal.hpp"
 #include "s1/archive_data.hpp"
 
