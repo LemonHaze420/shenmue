@@ -172,7 +172,7 @@ add_library(shenmue2_dc_core STATIC
   src/s2/motion_registry_dc.cpp src/s1/motion_file_dc.cpp src/s2/map_chunk.cpp src/s2/npc_data_dc.cpp src/s2/lighting.cpp src/s2/aica_dma_dc.cpp src/s2/legacy_sprite.cpp src/s2/load_title_dc.cpp src/s2/load_title_draw_dc.cpp src/s2/legacy_sprite_slot.cpp src/s2/conversation.cpp src/platform/dc/audio.cpp src/platform/dc/aica.cpp src/platform/dc/aica_stream.cpp src/platform/dc/runtime_arithmetic.cpp
   src/s2/load_title.cpp
   src/platform/dc/sdk.cpp src/platform/dc/cache.cpp src/platform/dc/matrix.S src/platform/dc/package.cpp src/platform/dc/screen.cpp src/common/matrix_stack.cpp src/common/math.cpp)
-if(SHENMUE_DC_TARGET STREQUAL "S2_JP_GAMEJAM")
+if(SHENMUE_DC_TARGET MATCHES "^S2_")
   target_sources(shenmue2_dc_core PRIVATE
     src/s2/fight_reaction.cpp
     src/s2/fight_action.cpp
@@ -231,11 +231,11 @@ set_source_files_properties("${_s2_debug_font_object}" PROPERTIES GENERATED TRUE
 target_sources(shenmue2_dc PRIVATE "${_s2_debug_font_object}")
 target_compile_options(shenmue2_dc PRIVATE -ffunction-sections -fdata-sections -fno-math-errno)
 target_link_options(shenmue2_dc PRIVATE -nostartfiles -nostdlib
-  "-Wl,-EL,-T,${_shenmue_dc_linker},--gc-sections,-Map,${CMAKE_CURRENT_BINARY_DIR}/shenmue2_dc.map")
+  "-Wl,-EL,--defsym,__dc_segment=${_shenmue_dc_segment},-T,${_shenmue_dc_linker},--gc-sections,-Map,${CMAKE_CURRENT_BINARY_DIR}/shenmue2_dc.map")
 target_link_libraries(shenmue2_dc PRIVATE shenmue2_dc_core)
 set_target_properties(shenmue2_dc PROPERTIES SUFFIX ".elf" LINK_DEPENDS "${_shenmue_dc_linker}")
 add_custom_command(TARGET shenmue2_dc POST_BUILD
-  COMMAND "${CMAKE_OBJCOPY}" -O binary --gap-fill 0 --pad-to 0x0c30411c
+  COMMAND "${CMAKE_OBJCOPY}" -O binary --gap-fill 0 --pad-to ${_s2_image_end}
     "$<TARGET_FILE:shenmue2_dc>" "${CMAKE_CURRENT_BINARY_DIR}/1ST_READ.BIN"
   BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/1ST_READ.BIN"
   VERBATIM)

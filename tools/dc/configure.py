@@ -147,7 +147,7 @@ def main():
                        ld_script_path=str(build / "s2-sections.ld"), section_order=["." + name for name, _ in patterns])
         segments = []
         for index, (name, pattern) in enumerate(patterns):
-            group = {"name": name, "type": "code", "start": 0x29000 if not index else "auto", "align": 32,
+            group = {"name": name, "type": "code", "start": options["ld_rom_start"] - config["reference"]["base"] if not index else "auto", "align": 32,
                      "section_order": ["." + name], "subsegments": []}
             if not index:
                 group["vram"] = options["ld_rom_start"]

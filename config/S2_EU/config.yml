@@ -1,0 +1,28 @@
+options:
+  basename: shenmue2
+  platform: sh4
+  is_unsupported_platform: true
+  compiler: GCC
+  endianness: little
+  auto_link_sections: []
+  ld_wildcard_sections: false
+  ld_discard_section: false
+  ld_fill_value: null
+  emit_subalign: false
+  ld_rom_start: 0x8c039000
+reference:
+  sha256: 4004da908c85d358b3c92c888501c8e872e70afcc6141141bff05bfe9e255fe3
+  base: 0x8c010000
+  end: 0x8c31c628
+  entry: 0x8c020000
+  game: {start: 0x8c053fa0, end: 0x8c1d562a}
+  sections:
+    - {name: .header, kind: data, start: 0x8c010000, end: 0x8c039000}
+    - {name: .text, kind: code, start: 0x8c039000, end: 0x8c2247c0}
+    - {name: .data, kind: data, start: 0x8c2247c0, end: 0x8c261980}
+    - {name: .bss, kind: bss, start: 0x8c261980, end: 0x8c31c628}
+objects: objects.txt
+constructors: ctors.txt
+function_order: function_order.txt
+data_order: data_order.txt
+symbols: symbols.txt

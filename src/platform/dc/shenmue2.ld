@@ -1,14 +1,14 @@
 OUTPUT_FORMAT("elf32-shl")
 OUTPUT_ARCH(sh)
 ENTRY(_dc_disc_start)
-PROVIDE(__dc_image_limit = 0x0c328000);
-__dc_stack_top = 0x0c039000;
+PROVIDE(__dc_image_limit = __dc_segment + 0x328000);
+__dc_stack_top = __dc_segment + 0x39000;
 
 SECTIONS
 {
-    . = 0x0c010000;
+    . = __dc_segment + 0x10000;
     .disc_boot : { KEEP(*(.text.dc_disc_start)) }
-    . = 0x0c020000;
+    . = __dc_segment + 0x20000;
     .boot :
     {
         KEEP(*(.text.dc_start))
@@ -50,7 +50,7 @@ SECTIONS
         . = 0x1a0;
         KEEP(*(.data.dc_event_task_flags3))
     }
-    . = 0x0c020200;
+    . = __dc_segment + 0x20200;
     .event_functions : { KEEP(*(.data.dc_event_functions)) }
     __dc_stack_bottom = .;
 }
@@ -75,10 +75,10 @@ SECTIONS
     __dc_bss_size = __dc_bss_end - __dc_bss_begin;
     __dc_crt_heap_begin = ALIGN(__dc_bss_end, 32);
     __dc_crt_heap_end = __dc_image_limit;
-    ASSERT(__dc_loader_word_begin == 0x0c020114 && __dc_loader_word_end == 0x0c020118, "S2 loader sentinel changed layout")
-    ASSERT(__dc_loaded_act_begin == 0x0c020118 && __dc_loaded_act_end == 0x0c02011c, "S2 loaded act changed layout")
+    ASSERT(__dc_loader_word_begin == ADDR(.boot) + 0x114 && __dc_loader_word_end == ADDR(.boot) + 0x118, "S2 loader sentinel changed layout")
+    ASSERT(__dc_loaded_act_begin == ADDR(.boot) + 0x118 && __dc_loaded_act_end == ADDR(.boot) + 0x11c, "S2 loaded act changed layout")
     ASSERT(__dc_loader_word_end <= __dc_loaded_act_begin && __dc_loaded_act_end <= __dc_file_directory_begin, "S2 header words overlap")
-    ASSERT(__dc_story_step_begin == 0x0c020178 && __dc_story_step_end == 0x0c02017c, "S2 story step changed layout")
+    ASSERT(__dc_story_step_begin == ADDR(.boot) + 0x178 && __dc_story_step_end == ADDR(.boot) + 0x17c, "S2 story step changed layout")
     ASSERT(SIZEOF(.event_functions) == 850 * 4, "S2 event function table changed layout")
     ASSERT(__dc_stack_bottom < __dc_stack_top, "S2 boot header overlaps its native stack")
     ASSERT(__dc_bss_end <= __dc_image_limit, "S2 image overlaps the native heap or validation output")

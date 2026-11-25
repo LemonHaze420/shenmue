@@ -181,6 +181,66 @@ def reference_object(data, config, symbol_path, flags):
     return Elf(make_elf(sections, flags)).function_view(), names
 
 
+def literal_mask(blob, address):
+    mask = set()
+    for offset in range(0, len(blob) - 1, 2):
+        op = struct.unpack_from("<H", blob, offset)[0]
+        pc = address + offset
+        if op >> 12 == 0xD:
+            target = (pc & ~3) + 4 + (op & 0xff) * 4 - address
+            mask.update(range(target, target + 4))
+        elif op >> 12 == 0x9:
+            target = pc + 4 + (op & 0xff) * 2 - address
+            mask.update((target, target + 1))
+    return mask
+
+
+def compare_functions(reference, candidate, base, symbol_path, elf, lo=0, hi=1 << 32):
+    starts, sized = {}, {}
+    for _, name, symbol in elf.symbols():
+        if symbol[3] & 15 == 2 and symbol[5] < len(elf.sections) and elf.sections[symbol[5]][2] & 4:
+            starts.setdefault(symbol[5], set()).add(symbol[1])
+            sized.setdefault(name, (symbol[1], symbol[2], symbol[5]))
+    ordered = {index: sorted(values) for index, values in starts.items()}
+    ours = {}
+    for name, (address, size, index) in sized.items():
+        if not size:
+            section = elf.sections[index]
+            later = [value for value in ordered[index] if value > address]
+            size = (later[0] if later else section[3] + section[5]) - address
+        ours[name] = (address, size)
+    pad = (b"\x09\x00", b"\x00\x00")
+
+    def trim(blob):
+        while len(blob) >= 2 and blob[-2:] in pad:
+            blob = blob[:-2]
+        return blob
+
+    counts = {"exact": 0, "instruction_equivalent": 0, "different": 0, "unpaired": 0}
+    for line in symbol_path.read_text().splitlines():
+        match = re.fullmatch(r"(\S+) = (0x[0-9a-fA-F]+); // type:func size:(0x[0-9a-fA-F]+)", line.strip())
+        if not match or not lo <= int(match[2], 16) < hi:
+            continue
+        name, address, size = match[1], int(match[2], 16), int(match[3], 16)
+        if name not in ours:
+            counts["unpaired"] += 1
+            continue
+        at, our_size = ours[name]
+        expected = trim(reference[address - base:address - base + size])
+        actual = trim(candidate[at - base:at - base + our_size])
+        if expected == actual:
+            counts["exact"] += 1
+            continue
+        mask = literal_mask(expected, address) | literal_mask(actual, at)
+        same = len(expected) == len(actual) and all(expected[k:k + 2] == actual[k:k + 2] for k in range(0, len(expected) - 1, 2) if k not in mask)
+        counts["instruction_equivalent" if same else "different"] += 1
+    total = sum(counts.values())
+    counts.update(total=total, exact_percent=round(100 * counts["exact"] / total, 2) if total else 0.0,
+                  instruction_equivalent_percent=round(100 * (counts["exact"] + counts["instruction_equivalent"]) / total, 2) if total else 0.0,
+                  instruction_comparison="Excludes PC-relative literal data; referenced addresses and constant values are not verified")
+    return counts
+
+
 def check_source_image(elf, candidate, config):
     sections = sorted((section for section in elf.sections if section[2] & 2 and section[1] != 8 and section[5]), key=lambda s: s[3])
     if not sections or sections[0][3] != config["base"]:
@@ -246,6 +306,10 @@ def main():
         result.update(reference_sha256=hashlib.sha256(reference).hexdigest(), candidate_sha256=hashlib.sha256(candidate).hexdigest(),
                       native_functions=len(names), paired_function_names=len(names.intersection(name for _, name, _ in elf.symbols())),
                       objdiff_scope="functions; all image bytes are checked in image.json")
+        symbols = args.config.parent / config["symbols"]
+        result["functions"] = compare_functions(reference, candidate, native["base"], symbols, elf)
+        if "game" in native:
+            result["game_functions"] = compare_functions(reference, candidate, native["base"], symbols, elf, native["game"]["start"], native["game"]["end"])
         result["sections"] = []
         for section in native["sections"]:
             start, end = section["start"] - native["base"], section["end"] - native["base"]
@@ -254,6 +318,13 @@ def main():
                                     for name, section in zip(elf.names, elf.sections) if section[2] & 2]
         write(output / "image.json", json.dumps(result, indent=2) + "\n")
         state = "MATCH" if result["match"] else "MISMATCH"
+        for label in ("functions", "game_functions"):
+            if label in result:
+                functions = result[label]
+                print(f"[match] {label.replace('_', ' ')}: {functions['exact']}/{functions['total']} byte-exact "
+                      f"({functions['exact_percent']}%); {functions['exact'] + functions['instruction_equivalent']}/{functions['total']} "
+                      f"instruction-equivalent excluding literal data ({functions['instruction_equivalent_percent']}%); "
+                      f"{functions['unpaired']} unpaired", flush=True)
         print(f"[match] 1ST_READ.BIN: {state}; {result['equal_bytes']}/{max(len(reference), len(candidate))} identical bytes; no masks", flush=True)
         print(f"[match] comparing {len(names)} native functions", flush=True)
         subprocess.run([str(args.objdiff.resolve()), "report", "generate", "-p", str(output), "-o", str(output / "report.json"),
