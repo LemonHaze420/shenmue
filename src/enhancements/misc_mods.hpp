@@ -16,9 +16,12 @@ enum class Id : std::uint8_t {
     SkipSplash, SkipCutscenes, QteSuccess, InfiniteStamina, FullShadows, SunLatitude, CrateArrows, CameraDistance, MapSeams, WeatherOverride, TaiChi, Count
 };
 enum class Kind : std::uint8_t { Toggle, List, Slider };
+enum class Category : std::uint8_t { General, Gameplay, Camera, Graphics, Weather };
+inline constexpr std::array<const char *, 5> categoryLabels{"General", "Gameplay", "Camera", "Graphics", "Weather"};
 struct Option {
     Id id;
     Kind kind;
+    Category category;
     const char *key;
     const char *label;
     const char *description;

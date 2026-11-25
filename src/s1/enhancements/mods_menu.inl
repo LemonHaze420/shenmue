@@ -18,12 +18,31 @@ UIOption ModOption() {
     }
     return option;
 }
-UIOption g_modOptions[]{
+std::vector<UIOption> g_modOptions = [] {
+    const UIOption options[]{
 #define SHEN_MOD(id, ...) ModOption<mods::Id::id>(),
 #include "enhancements/misc_mods.def"
 #undef SHEN_MOD
-    {.type = UIOptionType::Heading, .name = "No enhancements compiled", .available = [] { return mods::Options().empty() ? 1 : 0; }}
-};
+        {}
+    };
+    std::vector<UIOption> result;
+    const auto specs = mods::Options();
+    for (std::size_t category = 0; category < mods::categoryLabels.size(); ++category) {
+        bool heading = false;
+        for (std::size_t index = 0; index < specs.size(); ++index) {
+            if (static_cast<std::size_t>(specs[index].category) != category)
+                continue;
+            if (!heading) {
+                result.push_back({.type = UIOptionType::Heading, .name = mods::categoryLabels[category]});
+                heading = true;
+            }
+            result.push_back(options[index]);
+        }
+    }
+    if (result.empty())
+        result.push_back({.type = UIOptionType::Heading, .name = "No enhancements compiled"});
+    return result;
+}();
 bool ModsInGame() { return g_isInGame != 0; }
 bool ModsInputBlocked() { return g_uiElements[kUiSubMenuOptions].isHandledExternally != 0; }
 nk_context &ModsUiContext() { return GNuklearWindow; }
@@ -48,7 +67,7 @@ void ResetMods(UIRetry70ManBattlePromptResult result) {
         return;
     mods::Defaults();
     ReadSettingsFile();
-    Options_ReadSettings(g_modOptions, static_cast<std::int32_t>(std::size(g_modOptions)));
+    Options_ReadSettings(g_modOptions.data(), static_cast<std::int32_t>(std::size(g_modOptions)));
     Options_RedescribeOption();
 }
 

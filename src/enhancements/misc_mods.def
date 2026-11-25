@@ -1,72 +1,79 @@
 #if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
-SHEN_MOD(FrameRate, List, "FrameRate", "Frame rate", "Choose the gameplay frame-rate limit. Authored sequences retain their original timing.", 30, 30, 200)
+SHEN_MOD(FrameRate, List, General, "FrameRate", "Frame rate",
+    "Choose the gameplay frame-rate limit. Authored sequences retain their original timing.", 30, 30, 200)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_S1_SKY_FIX
-SHEN_MOD(SkyMovement, Toggle, "SkyMovement", "Sky movement fix", "Correct the sky's movement as the camera turns.", 1, 0, 1)
+SHEN_MOD(SkyMovement, Toggle, Graphics, "SkyMovement", "Sky movement fix", "Correct the sky's movement as the camera turns.", 1, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE
-SHEN_MOD(EnemyGauge, Toggle, "EnemyHealthGauge", "Enemy health gauge", "Show the targeted enemy's health during fights.", 1, 0, 1)
+SHEN_MOD(EnemyGauge, Toggle, Gameplay, "EnemyHealthGauge", "Enemy health gauge", "Show the targeted enemy's health during fights.", 1, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE
-SHEN_MOD(Cassettes, Toggle, "PortableCassettes", "Portable cassette player", "Continue listening to cassettes after closing the inventory.", 1, 0, 1)
+SHEN_MOD(Cassettes, Toggle, Gameplay, "PortableCassettes", "Portable cassette player", "Continue listening to cassettes after closing the inventory.", 1, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_MISC_MODS_CROUCH
-SHEN_MOD(Crouch, Toggle, "Crouch", "Crouching", "Click the right stick (R3) or press V to crouch/stand. V must be unassigned in Controls.", 0, 0, 1)
+SHEN_MOD(Crouch, Toggle, Gameplay, "Crouch", "Crouching", "Click the right stick (R3) or press V to crouch/stand. V must be unassigned in Controls.", 0, 0, 1)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_DRAW_DISTANCE
-SHEN_MOD(DrawDistance, Toggle, "DrawDistance", "Extended draw distance", "Increase character and model draw distances and reduce premature disappearance.", 0, 0, 1)
+SHEN_MOD(DrawDistance, Toggle, Graphics, "DrawDistance", "Extended draw distance",
+    "Increase character and model draw distances and reduce premature disappearance.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_MISC_MODS_WIDESCREEN
-SHEN_MOD(Widescreen, Toggle, "Widescreen", "Widescreen cutscenes", "Use the full screen during cutscenes and remove their letterbox bars.", 0, 0, 1)
+SHEN_MOD(Widescreen, Toggle, Graphics, "Widescreen", "Widescreen cutscenes", "Use the full screen during cutscenes and remove their letterbox bars.", 0, 0, 1)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
-SHEN_MOD(FirstPerson, Toggle, "FirstPerson", "First-person toggle", "Press F during normal gameplay to toggle first-person view.", 0, 0, 1)
-SHEN_MOD(PhotoMode, Toggle, "PhotoMode", "Free camera", "Use WASD to move, Q/E for height and the arrow keys to look. Press F7 or the controller cancel button to return to Ryo.", 0, 0, 1)
-SHEN_MOD(CameraDistance, List, "CameraDistance", "Camera distance", "Override the follow-camera distance, or keep the original setting.", 0, 0, 10)
+SHEN_MOD(FirstPerson, Toggle, Camera, "FirstPerson", "First-person toggle", "Press F during normal gameplay to toggle first-person view.", 0, 0, 1)
+SHEN_MOD(PhotoMode, Toggle, Camera, "PhotoMode", "Free camera",
+    "Use WASD to move, Q/E for height and the arrow keys to look. Press F7 or the controller cancel button to return to Ryo.", 0, 0, 1)
+SHEN_MOD(CameraDistance, List, Camera, "CameraDistance", "Camera distance", "Override the follow-camera distance, or keep the original setting.", 0, 0, 10)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_HUD
-SHEN_MOD(HideHud, Toggle, "HideHud", "Hide gameplay HUD", "Hide the normal gameplay HUD. Menus and prompts remain available.", 0, 0, 1)
+SHEN_MOD(HideHud, Toggle, Gameplay, "HideHud", "Hide gameplay HUD", "Hide the normal gameplay HUD. Menus and prompts remain available.", 0, 0, 1)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_TIME
-SHEN_MOD(FreezeTime, Toggle, "FreezeTime", "Freeze time", "Stop the in-game clock without pausing gameplay.", 0, 0, 1)
-SHEN_MOD(TimeSpeed, Slider, "TimeSpeed", "Clock speed", "Adjust the in-game clock speed. 100% is normal.", 100, 0, 1000)
+SHEN_MOD(FreezeTime, Toggle, Gameplay, "FreezeTime", "Freeze time", "Stop the in-game clock without pausing gameplay.", 0, 0, 1)
+SHEN_MOD(TimeSpeed, Slider, Gameplay, "TimeSpeed", "Clock speed", "Adjust the in-game clock speed. 100% is normal.", 100, 0, 1000)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_BEDTIME
-SHEN_MOD(NoBedtime, Toggle, "NoBedtime", "No bedtime restriction", "Continue exploring after the normal bedtime restriction.", 0, 0, 1)
+SHEN_MOD(NoBedtime, Toggle, Gameplay, "NoBedtime", "No bedtime restriction", "Continue exploring after the normal bedtime restriction.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_MISC_MODS_WEATHER
-SHEN_MOD(WeatherOverride, Toggle, "WeatherOverride", "Override weather", "Use the cloud, rain and snow levels below instead of scheduled weather.", 0, 0, 1)
-SHEN_MOD(DisableWeather, Toggle, "DisableWeather", "Disable weather", "Disable clouds, rain and snow while keeping the original weather simulation.", 0, 0, 1)
-SHEN_MOD(RainDensity, Slider, "RainDensity", "Rain density", "Scale the number of rain particles. 100% is normal.", 100, 0, 100)
-SHEN_MOD(RainOpacity, Slider, "RainOpacity", "Rain opacity", "Scale the opacity of rain particles. 100% is normal.", 100, 0, 200)
-SHEN_MOD(CloudLevel, Slider, "CloudLevel", "Cloud override", "Cloud intensity when Override weather is enabled.", 0, 0, 100)
-SHEN_MOD(RainLevel, Slider, "RainLevel", "Rain override", "Rain intensity when Override weather is enabled.", 0, 0, 100)
-SHEN_MOD(SnowLevel, Slider, "SnowLevel", "Snow override", "Snow intensity when Override weather is enabled.", 0, 0, 100)
+SHEN_MOD(WeatherOverride, Toggle, Weather, "WeatherOverride", "Override weather",
+    "Use the cloud, rain and snow levels below instead of scheduled weather.", 0, 0, 1)
+SHEN_MOD(DisableWeather, Toggle, Weather, "DisableWeather", "Disable weather",
+    "Disable clouds, rain and snow while keeping the original weather simulation.", 0, 0, 1)
+SHEN_MOD(RainDensity, Slider, Weather, "RainDensity", "Rain density", "Scale the number of rain particles. 100% is normal.", 100, 0, 100)
+SHEN_MOD(RainOpacity, Slider, Weather, "RainOpacity", "Rain opacity", "Scale the opacity of rain particles. 100% is normal.", 100, 0, 200)
+SHEN_MOD(CloudLevel, Slider, Weather, "CloudLevel", "Cloud override", "Cloud intensity when Override weather is enabled.", 0, 0, 100)
+SHEN_MOD(RainLevel, Slider, Weather, "RainLevel", "Rain override", "Rain intensity when Override weather is enabled.", 0, 0, 100)
+SHEN_MOD(SnowLevel, Slider, Weather, "SnowLevel", "Snow override", "Snow intensity when Override weather is enabled.", 0, 0, 100)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_SKIP_SPLASH
-SHEN_MOD(SkipSplash, Toggle, "SkipSplash", "Skip startup logos", "Skip startup logos on subsequent launches.", 0, 0, 1)
+SHEN_MOD(SkipSplash, Toggle, General, "SkipSplash", "Skip startup logos", "Skip startup logos on subsequent launches.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_MISC_MODS_SKIP_CUTSCENES
-SHEN_MOD(SkipCutscenes, Toggle, "SkipCutscenes", "Skip cutscenes", "Automatically request a skip for skippable cutscenes.", 0, 0, 1)
+SHEN_MOD(SkipCutscenes, Toggle, Gameplay, "SkipCutscenes", "Skip cutscenes", "Automatically request a skip for skippable cutscenes.", 0, 0, 1)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_QTE
-SHEN_MOD(QteSuccess, Toggle, "QteSuccess", "Automatic QTE success", "Automatically succeed at supported quick-time events.", 0, 0, 1)
+SHEN_MOD(QteSuccess, Toggle, Gameplay, "QteSuccess", "Automatic QTE success", "Automatically succeed at supported quick-time events.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_MISC_MODS_FIGHT_STAMINA
-SHEN_MOD(InfiniteStamina, Toggle, "InfiniteStamina", "Unlimited fight stamina", "Remove the stamina limit during fights.", 0, 0, 1)
+SHEN_MOD(InfiniteStamina, Toggle, Gameplay, "InfiniteStamina", "Unlimited fight stamina", "Remove the stamina limit during fights.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S1 && SHENMUE_ENHANCEMENT_MISC_MODS_SHADOWS
-SHEN_MOD(FullShadows, Toggle, "FullShadows", "Full character shadows", "Use full character shadows where a simplified shadow would normally be selected.", 0, 0, 1)
+SHEN_MOD(FullShadows, Toggle, Graphics, "FullShadows", "Full character shadows",
+    "Use full character shadows where a simplified shadow would normally be selected.", 0, 0, 1)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_SUN
-SHEN_MOD(SunLatitude, Toggle, "SunLatitude", "Correct sun latitude", "Use the location's geographical latitude for the sun direction.", 0, 0, 1)
+SHEN_MOD(SunLatitude, Toggle, Graphics, "SunLatitude", "Correct sun latitude", "Use the location's geographical latitude for the sun direction.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_MISC_MODS_CRATE_ARROWS
-SHEN_MOD(CrateArrows, Toggle, "CrateArrows", "Hide crate-job arrows", "Hide the directional arrows during the crate-carrying job.", 0, 0, 1)
+SHEN_MOD(CrateArrows, Toggle, Gameplay, "CrateArrows", "Hide crate-job arrows", "Hide the directional arrows during the crate-carrying job.", 0, 0, 1)
 #endif
 #if SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_MAP_SEAMS
-SHEN_MOD(MapSeams, Toggle, "MapSeams", "Map seam fix", "Expand map-tile edges to cover visible seams.", 1, 0, 1)
+SHEN_MOD(MapSeams, Toggle, Graphics, "MapSeams", "Map seam fix", "Expand map-tile edges to cover visible seams.", 1, 0, 1)
 #endif
 #if SHENMUE_IS_S2 && SHENMUE_ENHANCEMENT_S2_TAI_CHI
-SHEN_MOD(TaiChi, Toggle, "TaiChi", "Tai Chi practice", "Press Q near the Tai Chi group in Wise Men's Quarter to practise. Press Q or move to stop.", 0, 0, 1)
+SHEN_MOD(TaiChi, Toggle, Gameplay, "TaiChi", "Tai Chi practice",
+    "Press Q near the Tai Chi group in Wise Men's Quarter to practise. Press Q or move to stop.", 0, 0, 1)
 #endif

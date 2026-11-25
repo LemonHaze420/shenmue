@@ -337,16 +337,25 @@ void BindModsTabSelector(d3t::UIWindow **windows, d3t::UILabelWidget **labels, s
 constexpr char NoModOptions[] = "No enhancements compiled";
 std::vector<OptionSpec> ModSpecs() {
     std::vector<OptionSpec> result;
-    for (const auto &mod : mods::Options()) {
-        OptionSpec spec{};
-        spec.kind = mod.kind == mods::Kind::Toggle ? OptionKind::Toggle : mod.kind == mods::Kind::List ? OptionKind::List : OptionKind::Slider;
-        spec.token = mod.label;
-        spec.description = mod.description;
-        spec.choices = mod.kind == mods::Kind::Toggle ? OptionChoices::OffOn : OptionChoices::None;
-        spec.minimum = static_cast<std::int16_t>(mod.minimum);
-        spec.maximum = static_cast<std::int16_t>(mod.maximum);
-        spec.mod = mod.id;
-        result.push_back(spec);
+    for (std::size_t category = 0; category < mods::categoryLabels.size(); ++category) {
+        bool heading = false;
+        for (const auto &mod : mods::Options()) {
+            if (static_cast<std::size_t>(mod.category) != category)
+                continue;
+            if (!heading) {
+                result.push_back({OptionKind::Heading, mods::categoryLabels[category], "", 0});
+                heading = true;
+            }
+            OptionSpec spec{};
+            spec.kind = mod.kind == mods::Kind::Toggle ? OptionKind::Toggle : mod.kind == mods::Kind::List ? OptionKind::List : OptionKind::Slider;
+            spec.token = mod.label;
+            spec.description = mod.description;
+            spec.choices = mod.kind == mods::Kind::Toggle ? OptionChoices::OffOn : OptionChoices::None;
+            spec.minimum = static_cast<std::int16_t>(mod.minimum);
+            spec.maximum = static_cast<std::int16_t>(mod.maximum);
+            spec.mod = mod.id;
+            result.push_back(spec);
+        }
     }
     if (result.empty())
         result.push_back({OptionKind::Heading, NoModOptions, NoModOptions, 0});
@@ -437,6 +446,9 @@ std::string_view LocalizedOption(const char *token) {
 #if SHENMUE_MODS_ENABLED
     if (token == NoModOptions)
         return token;
+    for (const char *heading : mods::categoryLabels)
+        if (token == heading)
+            return token;
     for (const auto &option : mods::Options())
         if (token == option.label || token == option.description)
             return token;
@@ -793,7 +805,7 @@ std::int64_t OptionChildInput() {
         ProcessMovesGridInput(child.grid, uiPointer, GetFrameTime());
         auto row = GetUIGridSelection(child.grid);
         if (row >= 0 && row < child.count && OptionSpecs(options.current)[child.dictionary[row]].kind == OptionKind::Heading) {
-            const auto direction = (g_inputBuffer[0].repeatedPresses & 0x1000U) ? -1 : 1;
+            const auto direction = row > 0 && (g_inputBuffer[0].repeatedPresses & 0x1000U) ? -1 : 1;
             child.grid.row = std::clamp(child.grid.row + direction, 0, child.count - 1);
         }
         return 1;

@@ -8,11 +8,11 @@
 namespace shenmue::mods {
 namespace {
 constexpr Option options[]{
-#define SHEN_MOD(id, kind, key, label, description, initial, minimum, maximum) \
-    {Id::id, Kind::kind, key, label, description, initial, minimum, maximum},
+#define SHEN_MOD(id, kind, category, key, label, description, initial, minimum, maximum) \
+    {Id::id, Kind::kind, Category::category, key, label, description, initial, minimum, maximum},
 #include "enhancements/misc_mods.def"
 #undef SHEN_MOD
-    {Id::Count, Kind::Toggle, "", "", "", 0, 0, 0}
+    {Id::Count, Kind::Toggle, Category::General, "", "", "", 0, 0, 0}
 };
 using State = std::array<float, static_cast<std::size_t>(Id::Count)>;
 State InitialState() {

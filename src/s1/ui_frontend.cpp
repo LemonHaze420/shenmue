@@ -1958,7 +1958,7 @@ namespace shenmue::s1::ui_runtime_detail {
 UIOption *Options_GraphicsTable() {
 #if SHENMUE_MODS_ENABLED
     if (ModsTabSelected())
-        return g_modOptions;
+        return g_modOptions.data();
 #endif
     return g_optionsGraphicsTable.data();
 }
@@ -2273,7 +2273,7 @@ void Options_RevertSettings() {
     Options_ReadSettings(g_optionsAudioTable.data(), static_cast<std::int32_t>(g_optionsAudioTable.size()));
     Options_ReadSettings(g_optionsGraphicsTable.data(), static_cast<std::int32_t>(g_optionsGraphicsTable.size()));
 #if SHENMUE_MODS_ENABLED
-    Options_ReadSettings(g_modOptions, static_cast<std::int32_t>(std::size(g_modOptions)));
+    Options_ReadSettings(g_modOptions.data(), static_cast<std::int32_t>(std::size(g_modOptions)));
 #endif
 }
 
@@ -2608,8 +2608,8 @@ void Options_SkipHeading(UIGrid &grid, UIOption *table, std::int32_t count) {
         previous = grid.previousSelectedColumn + grid.columns * row;
     }
     const UIOption *const option = Options_FindOption(selected, table, count);
-    if (option && !g_keyboardActive && option->type == UIOptionType::Heading)
-        UIGrid_SelectElement(grid, selected <= previous ? selected - 1 : selected + 1);
+    if (option && !g_keyboardActive && option->type == UIOptionType::Heading && count > 1)
+        UIGrid_SelectElement(grid, selected > 0 && selected <= previous ? selected - 1 : selected + 1);
 }
 
 
