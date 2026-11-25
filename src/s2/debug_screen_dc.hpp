@@ -40,7 +40,7 @@ extern float g_debugScreenPrintDepth;
 extern char g_debugScreenText[kDebugScreenTextBytes];
 void InitializeDebugScreenPrint();
 void SetDebugScreenFontPixels(const std::uint16_t *pixels);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetDebugScreenTextColour(std::uint32_t colour);
 #endif
 void SetDebugScreenPrintDepth(float depth);

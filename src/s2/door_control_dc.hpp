@@ -1,7 +1,7 @@
 #pragma once
 
 #include "s2/model_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_node_dc.hpp"
 #endif
 
@@ -20,7 +20,7 @@ struct DoorDefinitionTable {
 struct DoorTaskEntry {
     const shen_name *sourcePair;
     std::uint16_t flags;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint16_t animationId;
     MT7Node *primary, *secondary;
     shen_name claimant;
@@ -32,7 +32,7 @@ struct DoorTaskEntry {
     std::byte retained0c[0x68];
 #endif
     DoorSubjectCallback callback;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Matrix4x4 worldTransform;
     shen_name routeCondition, requiredEntry;
     std::int32_t routeMode;
@@ -52,7 +52,7 @@ typedef char Layout_door_control_dc_2[(sizeof(DoorTaskEntry) == 0x1e4) ? 1 : -1]
 typedef char Layout_door_control_dc_3[(offsetof(DoorTaskEntry, flags) == 4) ? 1 : -1];
 typedef char Layout_door_control_dc_4[(offsetof(DoorTaskEntry, primary) == 8) ? 1 : -1];
 typedef char Layout_door_control_dc_5[(offsetof(DoorTaskEntry, callback) == 0x74) ? 1 : -1];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct DoorAreaMetadata {
     std::uint8_t number, flags;
     std::int16_t opens, closes;
@@ -135,7 +135,7 @@ DoorTaskEntry *FindDoorEntry(shen_name subject);
 void SetDoorNodeHierarchyHidden(MT7Node *node, std::uint32_t hidden);
 std::uint32_t SetDoorSubjectEnabled(shen_name subject, std::int32_t enabled);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SetDoorSubjectCallback(shen_name subject, DoorSubjectCallback callback);
 DoorSubjectCallback GetDoorSubjectCallback(shen_name subject);
 void ApplyDoorSceneStateToSiblings(MT7Node *node, std::int32_t sceneId);

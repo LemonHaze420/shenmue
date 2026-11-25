@@ -76,7 +76,7 @@ void SetRainGroupCountImmediate(WeatherParticleGroup *group, float pressure);
 void BeginRainGroupCountTransition(WeatherParticleGroup *group, float pressure, std::int32_t frames);
 Vector3 weatherParticleGroundCameraPosition;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 inline bool WeatherPointInsideClipPlanes(const WeatherClipQuadPlanes &clip, const Vector3 &position) {
     const float x = position.x, z = position.z;
     return (x - clip.x[0]) * clip.edgeZ[0] - (z - clip.z[0]) * clip.edgeZ[1] < 0.0f &&
@@ -154,7 +154,7 @@ void ReadWeatherRipplePvrTexture(const void *data) {
     CreateWeatherTextureSurface(64, 64, 0x302, reinterpret_cast<const std::byte *>(data) + 0x1c, 1);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetRippleGroupUpdatesEnabled(WeatherParticleGroup *group, std::int32_t enabled) {
     if (group) {
@@ -184,7 +184,7 @@ void SetWeatherParticleDrawingEnabled(std::int32_t enabled) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetRainGroupUpdatesEnabled(WeatherParticleGroup *group, std::int32_t enabled) {
     if (group)
@@ -248,7 +248,7 @@ void SetWeatherRippleDepthEnabled(WeatherParticleGroup *group, std::int32_t enab
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetWeatherRippleFilteringEnabled(WeatherParticleGroup *group, std::int32_t enabled) {
     if (!group)
         return;
@@ -261,7 +261,7 @@ void SetWeatherRippleFilteringEnabled(WeatherParticleGroup *group, std::int32_t 
 
 // @verified - d
 std::int32_t BindWeatherRippleTexture(WeatherParticleGroup *group) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t texture = 0;
     NJS_TEXSURFACE *const reference = GetEffectTextureReference(1);
     group->rippleDrawState.texture = reference;
@@ -354,7 +354,7 @@ void InitializeWeatherRainRenderState(WeatherParticleGroup *group, WeatherRainPa
     group->rainPacket.tcw = 0;
     group->rainFlags = 0x82000000U;
     SetWeatherRainDepthEnabled(group, 1);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t *word = reinterpret_cast<std::uint32_t *>(group->rainParticles);
     for (std::int32_t index = 0; index < group->rainCapacity; ++index) {
         *word++ = 0x40000000U;
@@ -425,7 +425,7 @@ void ResetWeatherRainParticle_Mode0(WeatherRainParticle *particle) {
     particle->update = SpawnWeatherRainParticle_Mode0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SpawnWeatherRainParticle_Mode1WCCP(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (group->rainCurrentCount <= 0)
         return;
@@ -531,7 +531,7 @@ reset:
     --group->rainLiveCount;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void WeatherRainParticleUpdate_Mode1WCCP(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (group->boundsMinY > particle->position.y)
         goto reset;
@@ -603,7 +603,7 @@ void InitializeWeatherRippleRenderState(WeatherParticleGroup *group, WeatherRipp
     group->ripplePacket.tsp = 0x208000c0U;
     group->ripplePacket.tcw = 0;
     group->rippleFlags = 0x82000000U;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t *word = reinterpret_cast<std::uint32_t *>(group->rippleParticles);
     for (std::int32_t index = 0; index < group->rippleCapacity; ++index) {
         *word++ = 0x40000000U;
@@ -634,7 +634,7 @@ void InitializeWeatherRippleRenderState(WeatherParticleGroup *group, WeatherRipp
 #endif
     BindWeatherRippleTexture(group);
     SetWeatherRippleDepthEnabled(group, 1);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     do {
         WeatherRippleDrawState *const drawState = &group->rippleDrawState;
         drawState->flags = 0;
@@ -663,7 +663,7 @@ void InitializeWeatherRippleRenderState(WeatherParticleGroup *group, WeatherRipp
 
 namespace {
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ProbeWeatherRippleGround(WeatherRippleParticle *particle) {
     Vector3 query = {
         SHEN_FIELD(x) particle->position.x, SHEN_FIELD(y) weatherParticleGroundCameraPosition.y + 50.0f, SHEN_FIELD(z) particle->position.z + 0.25f};
@@ -751,7 +751,7 @@ void WeatherRippleParticleRespawnOrAge(WeatherRippleParticle *particle, WeatherP
     }
 }
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void WeatherRippleParticleSpawn_Direct(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount)
@@ -772,7 +772,7 @@ void WeatherRippleParticleSpawn_Direct(WeatherRippleParticle *particle, WeatherP
 void WeatherRippleParticleSpawn_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount)
         return;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     particle->position.x = dc::sdk::RandomFloat() * group->frustumDistance + group->boundsMinX;
     particle->position.z = dc::sdk::RandomFloat() * group->clipA.clipY1 + group->boundsMinZ;
 #else
@@ -788,7 +788,7 @@ void WeatherRippleParticleSpawn_Mode0(WeatherRippleParticle *particle, WeatherPa
     SpawnWeatherRippleAtGround(particle, group, WeatherRippleParticleUpdate_Mode0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void WeatherRippleParticleUpdate_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     WeatherRippleParticle *const visible = particle;
@@ -815,7 +815,7 @@ void WeatherRippleParticleSpawn_Mode1(WeatherRippleParticle *particle, WeatherPa
     SpawnWeatherRippleAtGround(particle, group, WeatherRippleParticleUpdate_Mode1);
 }
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void WeatherRippleParticleReprobe_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount || !ProbeWeatherRippleGround(particle)) {
@@ -827,7 +827,7 @@ void WeatherRippleParticleReprobe_Mode0(WeatherRippleParticle *particle, Weather
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void WeatherRippleParticleReprobe_Mode1(WeatherRippleParticle *ripple, WeatherParticleGroup *group) {
     WeatherRippleParticle *const particle = ripple;
     if (group->rippleLiveCount >= group->rippleCurrentCount)
@@ -878,7 +878,7 @@ void WeatherRippleParticleReprobe_Mode1(WeatherRippleParticle *particle, Weather
 }
 #endif
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void WeatherRippleParticleUpdate_Direct(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (particle->age > particle->lifetime) {
@@ -926,7 +926,7 @@ void WeatherRippleParticleUpdate_Mode0(WeatherRippleParticle *particle, WeatherP
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void WeatherRippleParticleUpdate_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     WeatherRippleParticle *const ripple = particle;
@@ -991,7 +991,7 @@ void WeatherRippleParticleUpdate_Mode1(WeatherRippleParticle *particle, WeatherP
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void WeatherRippleParticleSpawn_Direct(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount)

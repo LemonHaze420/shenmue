@@ -3,7 +3,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "platform/dc/stack_spline.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/matrix.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "platform/dc/sdk.hpp"
@@ -17,7 +17,7 @@
 #include "s2/camera_conversation_dc.hpp"
 #include "s2/camera_dc.hpp"
 #include <cstring>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/frame_dc.hpp"
 #include "s2/scalar_math_dc.hpp"
 #include "s2/character_dc.hpp"
@@ -94,7 +94,7 @@
 #include "s2/math.hpp"
 #include "s2/scenario_flags_dc.hpp"
 #include "s2/conversation_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #endif
 #include "s2/startup_assets_dc.hpp"
@@ -104,7 +104,7 @@
 #include <cri_adxt.h>
 #include "s2/camera_roll_dc.hpp"
 #include "s2/author_controller_dc.hpp"
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/air_dc.hpp"
 #include "s2/author_doors_dc.hpp"
 #include "s2/author_table_dc.hpp"
@@ -143,7 +143,7 @@
 #include "s2/cold_archive_dc.hpp"
 #include "s2/string_utility.hpp"
 #include "s2/scene_assets_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/story_state.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
@@ -176,7 +176,7 @@
 #include "s2/inventory_dc.hpp"
 #include "s2/game_save_area.hpp"
 #include "s2/system_modules_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include <cstdarg>
 #endif
 #include "s2/scene_data.hpp"
@@ -237,14 +237,14 @@ std::int32_t camCtrlSetContextMode(std::int32_t mode);
 Vector3 *camCtrlGetNextCamPos(Vector3 *position);
 Vector3 *camCtrlGetTargetPosition(Vector3 *position);
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t *pakFindEventCam(std::int32_t name);
 #endif
 
 CameraSplineState g_cameraSplineStorage;
 CameraSplineState *g_currentCameraSplines = &g_cameraSplineStorage;
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t CubicHermiteEvaluate(float *out, float time, std::int32_t count, const float *times, const float *values, const float *coefficients) {
     if (time < times[0] || count < 2) {
         *out = values[0];
@@ -272,7 +272,7 @@ static std::int32_t CubicHermiteEvaluate(float *out, float time, std::int32_t co
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetSplineMaxDistinctKeyRun(const CameraSplineTrack &track) {
     std::int32_t longest;
     if (track.count <= 1) {
@@ -298,7 +298,7 @@ std::int32_t GetSplineMaxDistinctKeyRun(const CameraSplineTrack &track) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetSplineSegmentBufferSize(const CameraSplineTrack &track) {
     std::int32_t run = GetSplineMaxDistinctKeyRun(track);
     if (run <= 1)
@@ -307,7 +307,7 @@ std::int32_t GetSplineSegmentBufferSize(const CameraSplineTrack &track) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t InitializeAuthorSplineTrack(
     CameraSplineTrack &track, float *coefficients, std::int32_t count, const float *times, const float *values, const float *tangents, std::int32_t) {
     if (!coefficients) {
@@ -327,7 +327,7 @@ std::int32_t InitializeAuthorSplineTrack(
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t DoKeyframeCubicHermiteInterpolation(CameraSplineTrack &track, float time, float *out) {
     for (;;) {
         const std::int32_t result = CubicHermiteEvaluate(
@@ -349,7 +349,7 @@ void camCtrlInitSplines() {
     g_cameraSplineStorage.state = 0;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlBuildScriptCamSpline(std::int32_t name, const void *eye, const void *target) {
     CameraSplineState *spline = g_currentCameraSplines;
@@ -362,7 +362,7 @@ void camCtrlBuildScriptCamSpline(std::int32_t name, const void *eye, const void 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlCreateSpline(const std::uint32_t *record, const void *eye, const void *target) {
     CameraSplineState *spline = g_currentCameraSplines;
@@ -374,7 +374,7 @@ void camCtrlCreateSpline(const std::uint32_t *record, const void *eye, const voi
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlCreateSpline_0(CameraSplineState &spline) {
     Vector3 eye;
     Vector3 target;
@@ -547,7 +547,7 @@ static void camCtrlCreateSpline_0(CameraSplineState &spline) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DoCameraSplineInterpolation(CameraSplineState &spline) {
     const std::int32_t frame = spline.currentFrame;
@@ -600,7 +600,7 @@ void DoCameraSplineInterpolation(CameraSplineState &spline) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlHandleQueuedSpline() {
     Vector3 eye, target, previousEye, intersection;
     CameraSplineState &spline = *g_currentCameraSplines;
@@ -626,7 +626,7 @@ void camCtrlHandleQueuedSpline() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void spliEvaluate2(Vector3 &value, std::uint32_t mode, const void *node, const Vector3 &fallbackPosition, const Vector3i &fallbackRotation,
     const Vector3 &basePosition, const Vector3i &baseRotation) {
     if (mode & 0x10U) {
@@ -665,7 +665,7 @@ static void spliEvaluate2(Vector3 &value, std::uint32_t mode, const void *node, 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void spliEvaluate2_Wrapper(CameraSplineState &spline) {
     spline.eyeMode &= 0xff7fU;
     spline.targetMode &= 0xff7fU;
@@ -679,7 +679,7 @@ static void spliEvaluate2_Wrapper(CameraSplineState &spline) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint16_t SplineModeFromFlags(std::uint32_t flags, std::uint32_t polar, std::uint32_t translate, std::uint32_t base, std::uint32_t heightOnly,
     std::uint32_t bone, std::uint32_t entity, std::uint32_t rotate, bool worldSpace) {
     std::uint16_t mode = flags & polar ? 0x10U : 0U;
@@ -701,7 +701,7 @@ static std::uint16_t SplineModeFromFlags(std::uint32_t flags, std::uint32_t pola
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void BindCameraSplineTrack(CameraSplineTrack &track, std::uint32_t *&cursor) {
     const std::uint32_t count = *cursor++;
     track.count = static_cast<std::int32_t>(count);
@@ -715,7 +715,7 @@ static void BindCameraSplineTrack(CameraSplineTrack &track, std::uint32_t *&curs
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void GetPosRotUtil(
     Vector3 &position, Vector3i &rotation, std::uint32_t mode, const void *node, const Vector3 &fallbackPosition, const Vector3i &fallbackRotation) {
     if (mode & 1U) {
@@ -754,7 +754,7 @@ static void GetPosRotUtil(
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void spliEvaluate(Vector3 &value, std::uint32_t mode, const Vector3 &position, const Vector3i &rotation) {
     if (mode & 1U) {
@@ -779,7 +779,7 @@ static void spliEvaluate(Vector3 &value, std::uint32_t mode, const Vector3 &posi
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t TestScriptCameraSplineCollision(std::int32_t name, const void *eye, const void *target, Character *obstacle) {
     Vector3 obstaclePosition, previousEye, intersection;
     std::int32_t frame;
@@ -846,7 +846,7 @@ std::uint32_t AllocSpline(CameraSplineTrack &track) {
         track.values + track.firstKey, track.tangents ? track.tangents + track.firstKey : 0));
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // Arc-length position spline.
 struct PositionSpline {
     std::int32_t count;
@@ -902,8 +902,8 @@ std::int32_t camCtrlCheckIsEventCam() {
     return (g_currentCameraSplines->state & 2U) && camCtrlGetState() == 6;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t *camCtrlFindEventCamera(std::int32_t index) {
     return pakFindEventCam(index);
@@ -964,7 +964,7 @@ std::int32_t EVS_LoopCamera(std::int32_t cameraId, shen_name eye, shen_name targ
     return camCtrlSetState(6);
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetSplineCheckEyeCollision(std::int32_t enabled) {
     if (enabled)
         g_currentCameraSplines->state |= 0x10U;
@@ -1000,7 +1000,7 @@ std::int32_t camCtrlHandleContextSwitch(std::int32_t mode) {
     return camCtrlSetContextMode(mode);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlIsLookAroundActive() {
     const CameraRuntime *const camera = g_cameraControl;
     if (camera->state == 0 && camera->collisionPhase == 1)
@@ -1009,25 +1009,25 @@ std::int32_t camCtrlIsLookAroundActive() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t camCtrlGetBasePitchBias() {
     return g_cameraControl->basePitchBias;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetDefaultOrbitDistance(float distance) {
     g_cameraControl->defaultOrbitDistance = distance;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t camCtrlIsFlag21Set() {
     return (static_cast<std::int32_t>(g_cameraControl->flags) >> 21) & 1;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t camCtrlComputeOrbitCameraFromTarget(const Vector3 *target, std::int16_t yaw, Vector3 *position, Vector3 *lookAt) {
     CameraRuntime camera = *g_cameraControl;
@@ -1067,7 +1067,7 @@ std::int32_t camCtrlComputeOrbitCameraFromTarget(const Vector3 *target, std::int
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlNullQueryA() {
     return 0;
 }

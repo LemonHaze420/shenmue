@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/elevator.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "s2/camera_dc.hpp"
@@ -51,7 +51,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -69,7 +69,7 @@ constexpr std::size_t SourceCount = 3;
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 ElevatorTaskPayload *FindElevator(shen_name elevator) noexcept;
@@ -98,7 +98,7 @@ std::int32_t SetElevatorDisplayMode(shen_name elevator, std::int32_t selector, s
 std::int32_t SetElevatorIndicatorFlag(shen_name elevator, std::int32_t index, std::int32_t enabled) noexcept;
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -110,7 +110,7 @@ constexpr float FloatBits(std::uint32_t bits) noexcept {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -242,7 +242,7 @@ std::size_t elevatorCount{};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -258,7 +258,7 @@ ElevatorTableView FindMapTable(shen_name map) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void PublishElevatorTransforms(ElevatorTaskPayload *payload);
 
@@ -308,7 +308,7 @@ ElevatorModelSource g_elevatorModelSources[3] = {{0, "ELVTTOUG.MT7", {1.0f, 1.17
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateAllElevatorTransforms();
 void PublishElevatorTransforms(ElevatorTaskPayload *payload);
 ElevatorTaskPayload *FindElevator(shen_name elevator);
@@ -385,7 +385,7 @@ std::int32_t ArriveAndOpenElevator(float soundContext, shen_name elevator) noexc
 std::int32_t CloseAndResumeElevator(shen_name elevator) noexcept;
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void elevator_task_Enqueue() {
@@ -503,7 +503,7 @@ void elevator_task_Enqueue() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void UpdateAllElevatorTransforms() {
@@ -525,7 +525,7 @@ void UpdateAllElevatorTransforms() noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void PublishElevatorTransforms(ElevatorTaskPayload *payload) {
     ElevatorResourceRecord *const resource = payload->resource;
@@ -604,7 +604,7 @@ void PublishElevatorTransforms(ElevatorTaskPayload &payload) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 ElevatorTaskPayload *FindElevator(shen_name elevator) {
@@ -633,7 +633,7 @@ ElevatorTaskPayload *FindElevator(shen_name elevator) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SetFloorRequest(ElevatorTaskPayload *payload, std::int32_t floor, std::int32_t bank, std::int32_t enabled) {
@@ -671,7 +671,7 @@ std::int32_t SetFloorRequest(ElevatorTaskPayload &payload, std::int16_t floor, s
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t IsFloorRequested(const ElevatorTaskPayload *payload, std::int32_t floor, std::int32_t bank) {
@@ -701,7 +701,7 @@ bool IsFloorRequested(const ElevatorTaskPayload &payload, std::int16_t floor, st
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t GetFloorBit(const ElevatorTaskPayload *payload, std::int32_t floor) {
     std::int32_t index, bit;
@@ -731,7 +731,7 @@ bool GetFloorBit(const ElevatorResourceRecord &resource, std::int16_t floor, std
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t OpenElevatorDoor(ElevatorTaskPayload *payload) {
@@ -751,7 +751,7 @@ std::int32_t OpenElevatorDoor(ElevatorTaskPayload *payload) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t CloseElevatorDoor(ElevatorTaskPayload *payload) {
@@ -770,7 +770,7 @@ std::int32_t CloseElevatorDoor(ElevatorTaskPayload *payload) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ElevatorTaskCallback(void *parameter) {
@@ -801,7 +801,7 @@ void ElevatorTaskCallback(void *taskData) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -825,7 +825,7 @@ bool LoadSharedModel(std::size_t index) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -869,7 +869,7 @@ void InitializePayload(ElevatorTaskPayload &payload, ElevatorResourceRecord &res
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void QueueElevatorTasks() {
     elevatorRegistry.fill(nullptr);
@@ -900,7 +900,7 @@ void QueueElevatorTasks() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ReleaseElevatorRuntime() {
     for (std::size_t index = 0; index < elevatorCount; ++index) {
@@ -934,7 +934,7 @@ void ReleaseElevatorRuntime() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SelectElevatorDirection(ElevatorTaskPayload *payload) {
@@ -1059,7 +1059,7 @@ void SelectElevatorDirection(ElevatorTaskPayload &payload) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void StepElevatorFloor(ElevatorTaskPayload *payload) {
     std::int32_t duration = 30;
@@ -1113,7 +1113,7 @@ void StepElevatorFloor(ElevatorTaskPayload &payload) noexcept {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1127,7 +1127,7 @@ void ClearCurrentFloorRequests(ElevatorTaskPayload &payload) noexcept {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1150,7 +1150,7 @@ std::int32_t UpdateOpeningDoor(ElevatorTaskPayload &payload, float soundContext)
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void DrawElevatorNode(MT7Node *root, std::int32_t id) {
@@ -1161,7 +1161,7 @@ void DrawElevatorNode(MT7Node *root, std::int32_t id) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void DrawElevator(void *parameter) {
@@ -1319,7 +1319,7 @@ void DrawElevator(void *parameter) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t UpdateElevatorDoor(ElevatorTaskPayload *payload) {
@@ -1358,7 +1358,7 @@ std::int16_t UpdateElevatorDoor(ElevatorTaskPayload &payload, float soundContext
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1377,7 +1377,7 @@ void DrawNode(MT7Model &model, const void *placement, std::uint16_t id, bool dir
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1394,7 +1394,7 @@ void DrawModelRoot(MT7Model &model) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1412,7 +1412,7 @@ void DrawFloorDigits(MT7Model &model, const void *placement, std::int16_t floor,
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1450,7 +1450,7 @@ void DrawPrimaryDisplay(ElevatorTaskPayload &payload, MT7Model &model, const voi
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1483,7 +1483,7 @@ void DrawSecondaryDisplay(ElevatorTaskPayload &payload, MT7Model &model, const v
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1499,7 +1499,7 @@ bool ReadModelWord(const SharedElevatorModel &source, std::size_t offset, std::u
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1514,7 +1514,7 @@ void WriteModelFloat(SharedElevatorModel &source, std::size_t offset, float valu
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1555,7 +1555,7 @@ void SetFloorListRootIntensity(SharedElevatorModel &source, bool dimmed) noexcep
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1604,7 +1604,7 @@ void DrawFloorList(ElevatorTaskPayload &payload, MT7Model &model, const void *pl
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1657,7 +1657,7 @@ void DrawElevatorSource(ElevatorTaskPayload &payload, std::size_t sourceIndex, c
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1678,7 +1678,7 @@ void DrawElevatorGroup(ElevatorTaskPayload &payload) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1706,7 +1706,7 @@ void DrawElevatorSingle(ElevatorTaskPayload *payload) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1728,7 +1728,7 @@ void DrawElevatorCallback(void *taskData) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t IsElevatorFloorValid(shen_name elevator, std::int32_t floor) {
@@ -1751,7 +1751,7 @@ bool IsElevatorFloorValid(shen_name elevator, std::int16_t floor) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetCurrentElevatorFloor(shen_name elevator) {
@@ -1768,7 +1768,7 @@ std::int32_t GetCurrentElevatorFloor(shen_name elevator) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SetCurrentElevatorFloor(shen_name elevator, std::int32_t floor) {
@@ -1792,7 +1792,7 @@ std::int32_t SetCurrentElevatorFloor(shen_name elevator, std::int16_t floor) noe
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t SetElevatorIndicatorFlag(shen_name elevator, std::int32_t index, std::int32_t enabled) {
     ElevatorTaskPayload *const payload = FindElevator(elevator);
@@ -1838,7 +1838,7 @@ std::int32_t SetElevatorIndicatorFlag(shen_name elevator, std::int32_t index, st
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void CaptureElevatorPersistentState(std::span<std::byte, ElevatorPersistentStateSize> output) noexcept {
     output[0] = std::byte{1};
@@ -1852,7 +1852,7 @@ void CaptureElevatorPersistentState(std::span<std::byte, ElevatorPersistentState
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void RestoreElevatorPersistentState(std::span<const std::byte, ElevatorPersistentStateSize> input) noexcept {
     if (input[0] == std::byte{0})
@@ -1868,7 +1868,7 @@ void RestoreElevatorPersistentState(std::span<const std::byte, ElevatorPersisten
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SetElevatorDisplayMode(shen_name elevator, std::int32_t selector, std::int32_t value) {
@@ -1929,7 +1929,7 @@ std::int32_t SetElevatorDisplayMode(shen_name elevator, std::int32_t selector, s
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t GetElevatorTransform(shen_name elevator, Vector3 *position, std::uint32_t *yaw) {
     ElevatorTaskPayload *const payload = FindElevator(elevator);
@@ -1962,7 +1962,7 @@ std::int32_t GetElevatorTransform(shen_name elevator, Vector3 &position, std::ui
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t RequestElevatorFloor(shen_name elevator, std::int32_t floor, std::int32_t requestBank) {
@@ -2010,7 +2010,7 @@ std::int32_t RequestElevatorFloor(shen_name elevator, std::int16_t floor, std::u
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t BeginElevatorTravel(shen_name actor, shen_name elevator, std::int32_t sourceFloor, std::int32_t destinationFloor) {
@@ -2083,7 +2083,7 @@ std::int32_t BeginElevatorTravel(float soundContext, shen_name elevator, shen_na
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ArriveAndOpenElevator(shen_name, shen_name elevator) {
@@ -2126,7 +2126,7 @@ std::int32_t ArriveAndOpenElevator(float soundContext, shen_name elevator) noexc
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t CloseAndResumeElevator(shen_name elevator) {
@@ -2160,7 +2160,7 @@ std::int32_t CloseAndResumeElevator(shen_name elevator) noexcept {
 } // namespace s2
 } // namespace shenmue
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_GetAnimatedObjectState(std::uint32_t elevator, std::int32_t floor) {
     return shenmue::s2::IsElevatorFloorValid(shenmue::shen_name(elevator), floor);
 }

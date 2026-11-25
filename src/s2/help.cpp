@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/help_icon_dc.hpp"
 #include "s2/help_data_dc.hpp"
 #include "s2/legacy_sprite_dc.hpp"
@@ -62,7 +62,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -108,7 +108,7 @@ std::byte *helpTextWindow{};
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 void CtrlHelpIcon_Callback_1(void *);
@@ -122,7 +122,7 @@ std::uint32_t GetHelpIconEnabled() noexcept;
 const char *GetLocationLabelId(std::uint32_t mapCode);
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -133,7 +133,7 @@ void HelpNullsub(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -145,7 +145,7 @@ bool NameMatches(std::uint32_t name, const char *code) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -158,7 +158,7 @@ std::uint32_t RasterizeHelpPauseNullsub(std::byte *, std::int32_t, const char *,
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -176,7 +176,7 @@ void helpTextReset() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -198,7 +198,7 @@ void helpTextSetBody(std::string_view text) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -210,7 +210,7 @@ void helpTextSetLocation(const char *label) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -223,7 +223,7 @@ bool helpIsMoveButtonOption() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -239,7 +239,7 @@ bool helpIsFreeQuestGuideActive() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -258,7 +258,7 @@ bool helpIsInArea(std::uint32_t name) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -270,7 +270,7 @@ std::int64_t GetLoadingFlagState() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -310,7 +310,7 @@ void helpDrawLegacyIcon(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -326,7 +326,7 @@ void helpPrepareWindow(bool setWindowFlag) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -367,7 +367,7 @@ void helpUpdateMenuRequest() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -470,7 +470,7 @@ void helpSelectTopic() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -546,7 +546,7 @@ void helpShowWidget() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -576,7 +576,7 @@ void helpUpdateTail() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -636,7 +636,7 @@ void CtrlHelpIcon_Callback_1(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -684,7 +684,7 @@ void CtrlHelpIcon_Callback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -705,7 +705,7 @@ void helpCommitLine() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -718,7 +718,7 @@ void helpAppend(std::string_view bytes) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -791,7 +791,7 @@ std::int32_t helpIconCode(char code) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::size_t DecodeHelpCodepoint(std::string_view text, std::uint32_t &codepoint) {
@@ -830,7 +830,7 @@ std::size_t DecodeHelpCodepoint(std::string_view text, std::uint32_t &codepoint)
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // FormatHelpTopicText: splits the topic text into lines ('&'), button icons
 // ('^' + code, at most 16) and escaped characters ('@').
@@ -891,13 +891,13 @@ void FormatHelpTopicText(std::string_view text) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint8_t helpIconIndex, helpPreviousIconIndex = 0, helpIconMode = 0;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void EV_EventSetUpHelpIcon_0(std::uint8_t topic, std::uint8_t mode) {
@@ -920,7 +920,7 @@ void EV_EventSetUpHelpIcon_0(std::uint8_t topic, std::uint8_t mode) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetCurrentHelpString(std::uint8_t topic) {
     helpEnabled = 1;
@@ -932,7 +932,7 @@ void SetCurrentHelpString(std::uint8_t topic) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void DisableHelpIcon() {
     helpEnabled = 0;
@@ -940,7 +940,7 @@ void DisableHelpIcon() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static std::uint8_t helpState, helpStringIndex;
 
@@ -961,7 +961,7 @@ static const std::uint32_t helpButtonColours[11] = {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void PrepareHelpWindow(std::uint8_t close) {
     switch (helpIconIndex) {
@@ -984,7 +984,7 @@ static void PrepareHelpWindow(std::uint8_t close) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void DrawLegacyColourRectAspect(const LegacyColourRect &rect);
 void DrawMainIconOverlay(std::uint32_t colour, float depth);
@@ -1046,7 +1046,7 @@ static void DrawHelpFrame(std::int8_t verticalMode, std::int8_t palette, std::in
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void DrawHelpButton(std::int8_t row, std::int8_t icon, float x) {
@@ -1070,7 +1070,7 @@ static void DrawHelpButton(std::int8_t row, std::int8_t icon, float x) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void DrawHelpMarker(std::int32_t row, float x, float offset) {
@@ -1089,7 +1089,7 @@ static void DrawHelpMarker(std::int32_t row, float x, float offset) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static const std::uint32_t helpAreaTopics[16][2] = {{SHEN_NAME4('A', 'R', 'P', '0'), 29}, {SHEN_NAME4('W', 'S', 'P', '0'), 29},
     {SHEN_NAME4('W', 'K', 'P', '0'), 29}, {SHEN_NAME4('W', 'K', 'P', '1'), 29}, {SHEN_NAME4('W', 'T', 'P', '0'), 29}, {SHEN_NAME4('W', 'T', 'P', '1'), 29},
@@ -1108,14 +1108,14 @@ static void SelectHelpTopicForArea() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void HelpUnusedNullsub() {
 }
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void DrawNativeHelpPanel(void *) {
     std::int32_t index, row;
@@ -1706,7 +1706,7 @@ static void DrawNativeHelpPanel(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void FormatNativeHelpText(const char *text) {
@@ -1734,7 +1734,7 @@ static void FormatNativeHelpText(const char *text) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static const char *FindHelpLocationLabel(int name) {
@@ -1758,7 +1758,7 @@ static const char *FindHelpLocationLabel(int name) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t GetHelpIconEnabled() {
@@ -1773,7 +1773,7 @@ std::uint32_t GetHelpIconEnabled() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint8_t helpGetCurrentHelp() {
     return helpStringIndex;
@@ -1781,7 +1781,7 @@ std::uint8_t helpGetCurrentHelp() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint8_t helpGetCurrentIconIdx(std::int32_t slot) {
     return slot == 1 ? helpPreviousIconIndex : helpIconMode;
@@ -1789,7 +1789,7 @@ std::uint8_t helpGetCurrentIconIdx(std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetupCurrentHelpIcon() {
     helpLineCursor = helpLine.data();
@@ -1805,7 +1805,7 @@ void SetupCurrentHelpIcon() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const char *GetLocationLabelId(std::uint32_t mapCode) {
     for (const HelpLocationLabel &entry : helpLocationLabels) {
@@ -1825,7 +1825,7 @@ const char *GetLocationLabelId(std::uint32_t mapCode) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void HelpPanelCallback(void *) {
     switch (helpState) {
@@ -1961,7 +1961,7 @@ static void HelpPanelCallback(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void InitializeHelpPanel(void *) {
     helpLegacyTextSprite.flags = 0;
@@ -1988,7 +1988,7 @@ static void InitializeHelpPanel(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 HLib::Task *HP_SetUpHelpIcon() {

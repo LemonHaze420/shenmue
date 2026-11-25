@@ -1,7 +1,7 @@
 #include "shenmue.h"
 #include "s2/legacy_sprite_types.hpp"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/ui_state_dc.hpp"
 #include "s2/money_icon.hpp"
 #include "s2/legacy_sprite_dc.hpp"
@@ -69,9 +69,7 @@
 #include "s2/input.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/moves_scroll.hpp"
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/item_wf.hpp"
@@ -91,11 +89,9 @@
 #include "s2/title.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/scene_data.hpp"
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/sound_dc.hpp"
 #include "s2/camera_dc.hpp"
 #include "s2/camera_state_query_dc.hpp"
@@ -117,11 +113,9 @@
 #include "s2/inventory.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/date_time.hpp"
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/save_screen_state_dc.hpp"
 #include "s2/easy_option_state_dc.hpp"
 #endif
@@ -133,11 +127,9 @@
 #include "s2/navigation.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/pawn_shop.hpp"
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/file_loader_dc.hpp"
 #include "s2/model_dc.hpp"
 #include "s2/camera_conversation_dc.hpp"
@@ -155,7 +147,7 @@
 #include <cstring>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #include "s2/model_image_component_dc.hpp"
 #include "s2/motion_registry_dc.hpp"
@@ -195,11 +187,9 @@
 #include <cctype>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cmath>
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SHENMUE_MOTION_NULL 0
 #define SHENMUE_MOTION_CONST_CAST(type, value) static_cast<type *>(value)
 #define INV_NOEXCEPT
@@ -260,12 +250,12 @@
 #include "s2/pak_dc.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #include "s2/field_collision_dc.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_model_dc.hpp"
 #include "s2/lighting_dc.hpp"
 #include "s2/object_light_dc.hpp"
@@ -276,14 +266,14 @@
 namespace shenmue {
 namespace dc {
 namespace sdk {
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMirroredModelDrawMode(std::int32_t enabled);
 #endif
 
 } // namespace sdk
 } // namespace dc
 } // namespace shenmue
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/event_character_state_dc.hpp"
 #include "s2/map_visibility_dc.hpp"
 #include "s2/character_alpha_dc.hpp"
@@ -291,11 +281,11 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/reflector_board_dc.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_transparency_dc.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_state_dc.hpp"
 #include "s2/model_image_dc.hpp"
 #include "s2/cloth_dc.hpp"
@@ -328,7 +318,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 namespace shenmue {
 namespace s2 {
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct NativeItemSelectorContext {
     std::uint8_t helpTopic, selected;
     std::uint16_t visible;
@@ -411,11 +401,11 @@ void InitializeMoneyIconParameters();
 bool ToggleItemEffect(std::uint32_t item, std::int32_t amount);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetCurrentCalendarRecord(DateTime &record);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ApplyItemSelectorDelayedResult();
 void RenderLegacyItemSelector(void *parameter);
 static void SetupMoneyIconForRendering(void *);
@@ -660,11 +650,11 @@ std::int32_t LoadAndFindTEXN_Wrapper(const TextureChunk *texture);
 ConversationBuffer *shenPlayAudioWithFlags(const char *code, std::uint32_t flags);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer) UI_NOEXCEPT;
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
 void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
 std::int32_t camCtrlGetPerspectiveWrapper();
@@ -1551,23 +1541,23 @@ std::uint8_t g_pawnStock[16] INV_ZERO;
 std::uint8_t *const inventoryStockBanks[6] INV_INIT{g_keyItemStock, g_capsuleStock, g_photoStock, g_mapStock, g_moveStock, g_pawnStock};
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t g_keyItemStateFlags[kKeyItemStateCount] INV_ZERO;
 NativeItemSelectorState g_itemSelectorState;
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t GetParentMenu();
 std::uint32_t shenOpenFile(const char *directory, const char *filename);
 std::int32_t shenLoadFile(const char *directory, const char *filename, void *destination, std::uint32_t size);
 void *shenLoadFile(const char *directory, const char *filename, shen_name allocationName);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SPRITE_BITS(type, value) SpriteBits<type>(value)
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawLegacyColourPacket(const LegacySpritePacket &packet, float depth);
 void PrepareDrawSimple(const LegacyIconSprite &sprite, std::uint32_t colour);
 
@@ -1575,11 +1565,11 @@ void TransformScreenSpace(LegacyScreenQuad &quad, ScreenAlignment alignment, std
     float scaleX, float scaleY, std::int32_t rotation);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SPRITE_BITS(type, value) SpriteBits<type>(value)
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t currentItemSelectState;
 std::int32_t moneyIconMaximum, moneyIconStepAmount;
 std::uint32_t moneyIconFlags;
@@ -1599,25 +1589,25 @@ std::uint16_t ctrlSpeakDefaultChoiceId;
 float ctrlSpeakSpecialLabelWidthScale = 0.0f, ctrlSpeakHalfWidthExpansion = 0.0f, ctrlSpeakLeftOriginX = 0.0f, ctrlSpeakRightOriginX = 0.0f;
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacyIconSprite ctrlSpeakLabelSprites[4] = {};
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t renderIconFlags, activeIconFlags = 0;
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t mainIconPhase;
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 IconPadControls g_iconPads;
 static const Vector2 helpButtonPositions[4] = {{601.0f, 441.0f}, {561.0f, 457.0f}, {545.0f, 425.0f}, {505.0f, 441.0f}};
 static const std::int32_t helpButtonHints[4] = {1, 0, 3, 2};
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AllocateGuiPtxBacking() {
     guiPtxBacking = static_cast<std::byte *>(HLib::AllocateTaskData(0x2034, SHEN_NAME(ITPH)));
@@ -1626,7 +1616,7 @@ void AllocateGuiPtxBacking() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const InventoryItemDefinition *FindInventorySlot(std::uint32_t item, std::int32_t &bank, std::int32_t &index) INV_NOEXCEPT {
     const std::int32_t type = itemTypeByThousands[item / 1000];
@@ -1645,7 +1635,7 @@ const InventoryItemDefinition *FindInventorySlot(std::uint32_t item, std::int32_
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint8_t UpdateItemStateFlags(std::uint32_t item, std::uint8_t mask, std::int32_t enabled) {
     std::uint8_t previous = 0;
@@ -1662,7 +1652,7 @@ std::uint8_t UpdateItemStateFlags(std::uint32_t item, std::uint8_t mask, std::in
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint8_t GetItemStateFlags(std::uint32_t item) {
     std::int32_t bank, index;
@@ -1676,7 +1666,7 @@ std::uint8_t GetItemStateFlags(std::uint32_t item) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetItemStateFlags() {
     for (std::int32_t index = 0; index < kKeyItemStateCount; ++index)
@@ -1684,14 +1674,14 @@ void ResetItemStateFlags() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetInventoryItemId(std::uint32_t category, std::uint32_t index) INV_NOEXCEPT {
     return category < 6 && index < static_cast<std::uint32_t>(inventoryItemCounts[category]) ? itemBanks[category][index].id : 0xffffffffU;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t AddInventoryItem(std::uint32_t item, std::uint8_t amount, std::uint32_t flags) {
     std::int32_t result = 0;
     if (GetItemState(item) <= 254) {
@@ -1719,7 +1709,7 @@ std::int32_t AddInventoryItem(std::uint32_t item, std::uint8_t amount, std::uint
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RemoveInventoryItem(std::uint32_t item, std::uint8_t amount) {
     std::int32_t result = -1;
@@ -1744,7 +1734,7 @@ std::int32_t RemoveInventoryItem(std::uint32_t item, std::uint8_t amount) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetItemState(std::uint32_t item) INV_NOEXCEPT {
     std::int32_t bank;
@@ -1767,13 +1757,13 @@ std::int16_t GetInventoryItemIconById(std::uint32_t item) INV_NOEXCEPT {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const char *GetInventoryItemLabelByIndex(std::uint32_t category, std::uint32_t index, std::int32_t) {
     return category < 6 && index < static_cast<std::uint32_t>(inventoryItemCounts[category]) ? itemBanks[category][index].label : 0;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const char *shenGetAmtOf(std::uint32_t item, std::int32_t) {
     std::int32_t bank, index;
@@ -1782,13 +1772,13 @@ const char *shenGetAmtOf(std::uint32_t item, std::int32_t) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const char *GetInventoryItemModelByIndex(std::uint32_t category, std::uint32_t index) {
     return category < 6 && index < static_cast<std::uint32_t>(inventoryItemCounts[category]) ? itemBanks[category][index].model : 0;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const char *GetInventoryItemModel(std::uint32_t item) {
     std::int32_t bank, index;
@@ -1798,7 +1788,7 @@ const char *GetInventoryItemModel(std::uint32_t item) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetInventoryItemDistances(std::uint32_t item, float *minimum, float *maximum) {
     std::int32_t bank, index;
@@ -1813,7 +1803,7 @@ void GetInventoryItemDistances(std::uint32_t item, float *minimum, float *maximu
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t CountOwnedInventoryItems(std::uint32_t category) {
     std::int32_t count = 0;
     if (category < 6) {
@@ -1826,7 +1816,7 @@ std::int32_t CountOwnedInventoryItems(std::uint32_t category) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t hasItemRegistered(std::uint32_t item) INV_NOEXCEPT {
     std::int32_t bank;
@@ -1843,7 +1833,7 @@ std::uint32_t GetInventoryItemFlags(std::uint32_t category, std::uint32_t index)
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t GetItemEffectIcon(std::uint32_t item) {
     static const std::int32_t itemEffectIcons[10] = {5, 5, 5, 2, 8, 8, 6, 5, 7, 4};
     const std::uint32_t group = item / 1000U;
@@ -1853,7 +1843,7 @@ static std::int32_t GetItemEffectIcon(std::uint32_t item) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ImportInheritedInventory(const std::uint8_t *items) {
     const std::int16_t mappings[12][2] = {
         {4, 3}, {3, 2}, {5, 4}, {6, 5}, {8, 8005}, {7, 6}, {10, 8006}, {11, 8007}, {12, 8008}, {13, 8009}, {14, 8010}, {15, 8011}};
@@ -1863,7 +1853,7 @@ void ImportInheritedInventory(const std::uint8_t *items) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ImportCapsuleStock(const std::uint8_t *capsules) {
     std::int32_t destination = 0;
     for (std::int32_t index = 0; index < 256; ++index) {
@@ -1884,7 +1874,7 @@ void ImportCapsuleStock(const std::uint8_t *capsules) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RegisterItems() {
     for (std::int32_t index = 0; index < 4; ++index) {
@@ -1898,7 +1888,7 @@ void RegisterItems() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeInventoryStock() {
     for (std::int32_t index = 0; initialItems[index] != UINT16_MAX; ++index)
@@ -1912,7 +1902,7 @@ void InitializeInventoryStock() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetMaxItemsForItemType(std::uint32_t category) INV_NOEXCEPT {
     std::uint32_t result;
@@ -1924,38 +1914,38 @@ std::uint32_t GetMaxItemsForItemType(std::uint32_t category) INV_NOEXCEPT {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetItemSelectorDelayedResult(std::int16_t result) {
     g_itemSelectorDelayedResult = result;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t GetItemSelectorDelayedResult() {
     return g_itemSelectorDelayedResult;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SetItemSelectorPhase(std::uint8_t phase) {
     g_itemSelectorState.phase = phase;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint16_t GetItemSelectorTemporaryStatus(std::int8_t index) {
     return g_itemSelectorTemporaryStatus[index];
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetItemSelectorTemporaryStatus(std::int8_t index, std::int16_t status) {
     g_itemSelectorTemporaryStatus[index] = status;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 TextureChunk *SetupPtxTexture(std::int32_t width, std::uint32_t idLow, std::uint32_t idHigh) {
     TextureChunk *const texture = reinterpret_cast<TextureChunk *>(guiPtxBacking);
@@ -1965,7 +1955,7 @@ TextureChunk *SetupPtxTexture(std::int32_t width, std::uint32_t idLow, std::uint
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t PublishLegacyItemLabel(const char *text, std::int32_t width, std::int32_t texture, std::int32_t mode) {
     const std::int32_t result = RasterizeWindowTextLine4bpp(guiPtxBacking + 0x2c, width, text, mode, 1);
@@ -1974,7 +1964,7 @@ std::int32_t PublishLegacyItemLabel(const char *text, std::int32_t width, std::i
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawItemEffectWindow(std::int32_t columns, float x, float y, float depth) {
     const ScreenMode mode = static_cast<ScreenMode>(0);
@@ -1986,7 +1976,7 @@ void DrawItemEffectWindow(std::int32_t columns, float x, float y, float depth) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ItemEffectRender_Callback(void *) {
     std::int32_t columns = itemEffectColumns;
@@ -2013,14 +2003,14 @@ void ItemEffectRender_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void KeepMoneyIconOpen() {
     moneyIconFlags &= ~0x10U;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetDefaultMotionTableIndex(std::uint32_t rig) {
     switch (rig) {
     case 0:
@@ -2060,7 +2050,7 @@ std::uint32_t GetDefaultMotionTableIndex(std::uint32_t rig) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t mtwkSetTimeRelated(MotionWork *work, std::uint32_t mode, std::uint16_t slot, std::uint16_t motionId) {
     if (!work)
         return 0;
@@ -2091,7 +2081,7 @@ std::uint32_t mtwkSetTimeRelated(MotionWork *work, std::uint32_t mode, std::uint
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawItemSelectorInventory(std::int32_t columns, std::int32_t maximum, float x, float y, float depth, std::int32_t first, std::uint32_t bank) {
     std::int32_t column = 0;
@@ -2118,7 +2108,7 @@ void DrawItemSelectorInventory(std::int32_t columns, std::int32_t maximum, float
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawItemSelectorLowerActions(const Vector2 &position, float depth) {
     static const std::uint16_t icons[8] = {0, 1, 2, 8, 7, 6, 4, 9};
@@ -2135,7 +2125,7 @@ static void DrawItemSelectorLowerActions(const Vector2 &position, float depth) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void RefreshItemSelectorLabel() {
     static const char *const itemSelectorLabels[8] = {"\xa5\xbb\xa1\xbc\xa5\xd6", "\xc0\xdf\xc4\xea", "\xc1\xb4\xb5\xbb\xb4\xac\xca\xaa",
         "\xa5\xb3\xa5\xec\xa5\xaf\xa5\xb7\xa5\xe7\xa5\xf3", "\xa5\xa2\xa5\xeb\xa5\xd0\xa5\xe0", "\xa5\xde\xa5\xc3\xa5\xd7",
@@ -2152,7 +2142,7 @@ static void RefreshItemSelectorLabel() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CtrlItemSelectIcon_Callback(void *) {
     NativeItemSelectorState &state = g_itemSelectorState;
@@ -2244,7 +2234,7 @@ void CtrlItemSelectIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ProcessLegacyItemSelectorInput() {
     NativeItemSelectorState &state = g_itemSelectorState;
@@ -2280,7 +2270,7 @@ void ProcessLegacyItemSelectorInput() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static bool NavigateLegacyItemSelector(NativeItemSelectorState &state, std::uint16_t pressed) {
     static const std::int32_t menuActions[8] = {4, 5, 6, 7, 8, 9, 10, 11};
     if (state.activeMenu == 8) {
@@ -2330,7 +2320,7 @@ static bool NavigateLegacyItemSelector(NativeItemSelectorState &state, std::uint
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void NavigateItemSelectorInventory(NativeItemSelectorState &state, std::uint16_t pressed) {
     if (pressed & 0x4000U) {
         --state.column;
@@ -2363,7 +2353,7 @@ static void NavigateItemSelectorInventory(NativeItemSelectorState &state, std::u
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool InitializeCommonItemTexture() {
     commonItemTexture = -1;
@@ -2377,7 +2367,7 @@ bool InitializeCommonItemTexture() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitItemSelectIcon_Callback(void *) {
     HLib::EnqueueTaskWithoutParameterWrapper(ICSU_InitItemLook_Callback, 0, SHEN_NAME(ICLI));
@@ -2420,7 +2410,7 @@ void InitItemSelectIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint8_t helpGetCurrentIconIdx(std::int32_t slot) {
     std::uint8_t index;
@@ -2432,7 +2422,7 @@ std::uint8_t helpGetCurrentIconIdx(std::int32_t slot) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static Character *ItemSelectorPlayer() {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -2440,7 +2430,7 @@ static Character *ItemSelectorPlayer() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BeginItemSelector() {
     if (GetShouldRenderIcons(ItemSelect) || !g_itemSelectTask)
@@ -2456,7 +2446,7 @@ void BeginItemSelector() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void FinishItemSelector() {
     NativeItemSelectorState &state = g_itemSelectorState;
@@ -2474,21 +2464,21 @@ static void FinishItemSelector() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorWatch() {
     return OpenWristwatch(1);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorWatch() {
     return IsWristwatchOpenable();
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CancelSelectorFullMap(std::int32_t) {
     CloseFullMapMenu();
@@ -2496,21 +2486,21 @@ static std::int32_t CancelSelectorFullMap(std::int32_t) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorItemLook() {
     return OpenItemLook(g_itemSelectorState.selectedItem);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorItemLook() {
     return (GetCurrentItemSelectState() & 1U) != 0;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CancelSelectorItemLook(std::int32_t force) {
     if ((GetCurrentItemSelectState() & 1U) && force)
@@ -2518,7 +2508,7 @@ static void CancelSelectorItemLook(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorSave() {
     if (IsSaveAllowed() || !EV_CanDoAreaJump())
@@ -2530,14 +2520,14 @@ static std::int32_t BeginSelectorSave() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorSave() {
     return static_cast<std::int32_t>(IsSaveAllowed());
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CompleteSelectorSave() {
     shenSetTimeSimulationTo(1);
@@ -2548,7 +2538,7 @@ static void CompleteSelectorSave() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorEasyOptions() {
     SetNewEasyOptionState(0);
@@ -2556,21 +2546,21 @@ static std::int32_t BeginSelectorEasyOptions() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorEasyOptions() {
     return IsEasyOptionActive();
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorMoves() {
     return UpdateWazamakiMenu() == false;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CancelSelectorMoves(std::int32_t force) {
     if (force) {
@@ -2581,48 +2571,48 @@ static std::int32_t CancelSelectorMoves(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorCollection() {
     return OpenLegacyCollectionMenu(0);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorPhotos() {
     return OpenLegacyCollectionMenu(2);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorCollection() {
     return UpdateLegacyCollectionMenu() == 0;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t UpdateSelectorPhotos() {
     return UpdateLegacyCollectionMenu() == 0;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorPawn() {
     return OpenPawnWindow(0.0f);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t UpdateSelectorPawn() {
     return IsPawnWindowOpen();
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t FindUniqueItemActionIndex(std::int32_t item) {
     static const std::int32_t uniqueItems[3] = {0, 2, 20};
     for (std::int32_t index = 0; index < 3; ++index)
@@ -2632,7 +2622,7 @@ static std::int32_t FindUniqueItemActionIndex(std::int32_t item) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResolveUniqueItemAction(std::uint32_t mode) {
     NativeUniqueItemAction *const action = static_cast<NativeUniqueItemAction *>(HLib::GetTaskParameter(g_uniqueItemActionTask));
@@ -2648,7 +2638,7 @@ void ResolveUniqueItemAction(std::uint32_t mode) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ICIT_UniqAction_Callback(void *) {
     NativeUniqueItemAction &action = *static_cast<NativeUniqueItemAction *>(HLib::GetTaskParameter(g_uniqueItemActionTask));
@@ -2684,28 +2674,28 @@ void ICIT_UniqAction_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReturnToItemSelectorList() {
     iconToggleStateFor(1, true);
     RefreshItemSelectorLabel();
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t BeginSelectorMemo() {
     return RefreshPadTask(1, 1);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CancelNativeSelectorMemo(std::int32_t force) {
     CancelSelectorMemo(force);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CancelUniqueItemAction() {
     if (!g_uniqueItemActionTask)
@@ -2724,7 +2714,7 @@ void CancelUniqueItemAction() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void PrepareItemSelectorCamera(NativeItemSelectorCamera *camera) {
     Character *const player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
@@ -2768,7 +2758,7 @@ static void PrepareItemSelectorCamera(NativeItemSelectorCamera *camera) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CloseItemSelectorCamera(NativeItemSelectorCamera *camera) {
     Character *const player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
@@ -2796,7 +2786,7 @@ static void CloseItemSelectorCamera(NativeItemSelectorCamera *camera) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static bool AdvanceItemSelectorCamera(NativeItemSelectorCamera *camera) {
     Character *const player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
@@ -2858,7 +2848,7 @@ static bool AdvanceItemSelectorCamera(NativeItemSelectorCamera *camera) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool CloseItemSelectIcon(std::int32_t force) {
     if (GetShouldRenderIcons(ItemSelect) && force) {
@@ -2883,7 +2873,7 @@ bool CloseItemSelectIcon(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t PrepareLegacyInventoryItemLabel(std::int16_t *label, std::uint32_t item) {
     const char *text = shenGetAmtOf(item);
@@ -2897,7 +2887,7 @@ std::int32_t PrepareLegacyInventoryItemLabel(std::int16_t *label, std::uint32_t 
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacyItemLabel(const std::int16_t *texture, const Vector2 *position, float depth, std::uint32_t secondaryColour) {
     if (*texture == -1)
@@ -2920,14 +2910,14 @@ void DrawLegacyItemLabel(const std::int16_t *texture, const Vector2 *position, f
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetLegacyItemSelectorExitFlag() {
     g_itemSelectorState.exitFlags |= 1U;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static bool UpdateMoneyCash() {
     bool complete = false;
@@ -2957,7 +2947,7 @@ static bool UpdateMoneyCash() {
             complete = true;
         }
     }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     SetCashOrSegaCoins();
     ExecuteAicaCommand(0xd00ab, 0, 0);
 #else
@@ -2973,7 +2963,7 @@ static bool UpdateMoneyCash() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void UpdateMoneySettle() {
     bool complete = true;
     if (moneyIconFlags & 0x10U)
@@ -2988,7 +2978,7 @@ static void UpdateMoneySettle() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t MoneyIconStep(std::int32_t delta) {
     std::int32_t sign = 1;
@@ -3008,7 +2998,7 @@ static std::int32_t MoneyIconStep(std::int32_t delta) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void PrepareMoneyIconCurrency() {
     LegacyIconSprite *sprite = &moneyIconSprite;
     if (moneyIconDrawMode) {
@@ -3027,10 +3017,10 @@ static void PrepareMoneyIconCurrency() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateMoneySelection() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t pressed = GetPadControlData(1), repeated = GetPadControlData(2), hints = 0x600;
     if (static_cast<std::int16_t>(moneyIconPosition.selectedDirection) != 4)
         pressed = repeated = 0;
@@ -3165,7 +3155,7 @@ static void UpdateMoneySelection() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CtrlMoneyIcon_Callback(void *) {
     switch (moneyIconPhase) {
@@ -3251,7 +3241,7 @@ void CtrlMoneyIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool AbortMoneyIcon(std::int32_t force) {
     if (!GetShouldRenderIcons(MoneyMessage) || !force)
         return false;
@@ -3275,11 +3265,11 @@ bool AbortMoneyIcon(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern const std::uint16_t itemQuantityDigitIcons[10];
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawSelectorDate(const Vector2 &position, float depth, const DateTime &date) {
     static const std::uint16_t weekdayIcons[7] = {0x507, 0x508, 0x50b, 0x50a, 0x509, 0x50c, 0x50d};
     selectorDateWeekday.depth = selectorDateDigit.depth = depth;
@@ -3319,7 +3309,7 @@ void DrawSelectorDate(const Vector2 &position, float depth, const DateTime &date
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void *SafeTryLoadFile(const char *directory, const char *filename, shen_name allocationName, std::uint32_t requiredHeapBytes) {
     const std::uint32_t npcLoading = GetNpcNewLoadState();
@@ -3341,7 +3331,7 @@ void *SafeTryLoadFile(const char *directory, const char *filename, shen_name all
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GUI_Tasks_Enqueue() {
     for (std::int32_t slot = 0; slot < 2; ++slot)
@@ -3374,13 +3364,13 @@ void GUI_Tasks_Enqueue() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t GetCommonIconTextureCount() {
     return g_commonIconTextureCount;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t FindLegacyCollectionSpriteSlot(std::int32_t owner) {
     for (std::int32_t slot = 0; slot < 2; ++slot)
         if (collectionSpriteOwners[slot] == owner)
@@ -3389,7 +3379,7 @@ std::int32_t FindLegacyCollectionSpriteSlot(std::int32_t owner) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t HasLegacyCollectionSpriteSlot() {
     for (std::int32_t slot = 0; slot < 2; ++slot)
         if (collectionSpriteOwners[slot])
@@ -3398,7 +3388,7 @@ std::int32_t HasLegacyCollectionSpriteSlot() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint16_t GetPadControlData(std::uint8_t mode) {
     std::uint16_t result = 0;
@@ -3419,7 +3409,7 @@ std::uint16_t GetPadControlData(std::uint8_t mode) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void PlayQuickIconResult(std::uint16_t flags, std::int32_t success) {
     if ((flags & 1U) == 0)
         return;
@@ -3438,7 +3428,7 @@ static void PlayQuickIconResult(std::uint16_t flags, std::int32_t success) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateQuickIconBlink() {
     std::int32_t voiced;
@@ -3462,7 +3452,7 @@ static void UpdateQuickIconBlink() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateQuickIconSingleButton() {
     std::uint16_t pressed = GetPadControlData(1);
@@ -3531,7 +3521,7 @@ static void UpdateQuickIconSingleButton() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateQuickIconSplitDirections() {
     std::uint32_t pressed = GetPadControlData(1);
@@ -3569,7 +3559,7 @@ static void UpdateQuickIconSplitDirections() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawQuickIcon(void *) {
     g_quickIconSprite.x = quickIconPosition.x;
@@ -3592,7 +3582,7 @@ static void DrawQuickIcon(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static inline void RetireQuickIcon() {
     padcRefreshCurrentInputs(0);
@@ -3601,7 +3591,7 @@ static inline void RetireQuickIcon() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CtrlQuickIcon_Callback(void *) {
     switch (g_quickIconState.phase) {
@@ -3652,7 +3642,7 @@ void CtrlQuickIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitQuickIcon_Callback(void *) {
     g_quickIconState.phase = 0;
@@ -3666,7 +3656,7 @@ void InitQuickIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ResetQuickIconState(std::int32_t force) {
     if (GetShouldRenderIcons(Qte) && force) {
@@ -3681,7 +3671,7 @@ bool ResetQuickIconState(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint8_t DecodeSelectorInput(std::uint16_t pressed, std::uint8_t allowed) {
     static const std::uint8_t selectorInputDirections[16] = {13, 0, 4, 13, 6, 7, 5, 13, 2, 1, 3, 13, 13, 13, 13, 13};
     std::uint8_t direction = selectorInputDirections[static_cast<std::uint16_t>(pressed >> 12U)];
@@ -3706,7 +3696,7 @@ static std::uint8_t DecodeSelectorInput(std::uint16_t pressed, std::uint8_t allo
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitSpeakIcon(HLib::Task *parent, std::uint8_t queue) {
     const std::int8_t signedQueue = static_cast<std::int8_t>(queue);
@@ -3715,7 +3705,7 @@ void InitSpeakIcon(HLib::Task *parent, std::uint8_t queue) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializeCtrlSpeakIconState() {
     std::int8_t slot;
     ctrlSpeakIconState = 0;
@@ -3758,7 +3748,7 @@ void InitializeCtrlSpeakIconState() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ProcessSpeakSelection() {
     const std::uint16_t pressed = GetPadControlData(1);
     std::uint8_t input = DecodeSelectorInput(pressed, 0x55);
@@ -3834,7 +3824,7 @@ static void ProcessSpeakSelection() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void PrepareDrawWithUVOffsets(const LegacyIconSprite &sprite, float u, float v, float width, float height, std::uint32_t colour) {
     const std::int8_t *const uv = GetCommonIconRect(sprite.icon);
@@ -3854,7 +3844,7 @@ static void PrepareDrawWithUVOffsets(const LegacyIconSprite &sprite, float u, fl
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void PrepareSpeakTextSlots() {
     for (std::int8_t slot = 0; slot < 4; ++slot) {
@@ -3866,7 +3856,7 @@ static void PrepareSpeakTextSlots() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void PrepareSpeakTextSlot(std::int8_t slot) {
     static const CtrlSpeakLabel alternate[2] = {{"\xa4\xcf\xa4\xa4", "\xa5\xcf\xa5\xa4"}, {"\xa4\xa4\xa4\xa4\xa4\xa8", "\xa5\xa4\xa5\xa4\xa5\xa8"}};
     const CtrlSpeakLabel *label;
@@ -3896,7 +3886,7 @@ static void PrepareSpeakTextSlot(std::int8_t slot) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t FindFreeSpeakTextSlot() {
     for (std::int32_t slot = 0; slot < 4; ++slot)
         if ((ctrlSpeakTexturePoolFlags[slot] & 1U) == 0)
@@ -3905,7 +3895,7 @@ static std::int32_t FindFreeSpeakTextSlot() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t AcquireCtrlSpeakTextHandle(const char *text, std::int32_t centered) {
     std::int32_t handle = -1;
     const std::int32_t slot = FindFreeSpeakTextSlot();
@@ -3918,14 +3908,14 @@ std::int32_t AcquireCtrlSpeakTextHandle(const char *text, std::int32_t centered)
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetMoneyIconPhase(std::uint8_t phase) {
     moneyIconPhase = phase;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void InitializeMoneyIconSelector() {
     moneyIconSelectorPosition.x = -176.0f;
@@ -3966,13 +3956,13 @@ static void InitializeMoneyIconSelector() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int8_t GetMoneyIconCurrency() {
     return static_cast<std::int8_t>(moneyIconCurrency);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void InitializeMoneyIconSprites() {
     moneyIconPosition.x = -516.0f;
     moneyIconPosition.y = 340.0f;
@@ -4049,7 +4039,7 @@ static void InitializeMoneyIconSprites() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeMoneyIconParameters() {
     moneyIconDisplay = 0;
@@ -4064,7 +4054,7 @@ void InitializeMoneyIconParameters() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CtrlItemEffectIcon_Callback(void *) {
     switch (static_cast<std::int8_t>(itemEffectIconPhase)) {
@@ -4108,14 +4098,14 @@ void CtrlItemEffectIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool GiveItemOf(std::uint32_t item) {
     return ToggleItemEffect(item, 1);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ToggleItemEffect(std::uint32_t item, std::int32_t amount) {
     if (GetShouldRenderIcons(UI_ICON(Any)) || !itemEffectIconTask)
@@ -4143,7 +4133,7 @@ bool ToggleItemEffect(std::uint32_t item, std::int32_t amount) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ApplyItemSelectorDelayedResult() {
     NativeItemSelectorState *state = &g_itemSelectorState;
     switch (GetItemSelectorDelayedResult()) {
@@ -4163,7 +4153,7 @@ static void ApplyItemSelectorDelayedResult() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RenderLegacyItemSelector(void *parameter) {
     NativeItemSelectorState &state = *static_cast<NativeItemSelectorState *>(parameter);
     DateTime date;
@@ -4247,7 +4237,7 @@ void RenderLegacyItemSelector(void *parameter) {
     cursor.y = itemSelectorHeadingSprite.y + 10.0f;
     Vector2 datePosition = cursor;
     datePosition.x += 48.0f;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     GetCurrentCalendarRecord(date);
 #else
     date = g_currentDateTime;
@@ -4261,7 +4251,7 @@ void RenderLegacyItemSelector(void *parameter) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SetupMoneyIconForRendering(void *) {
     std::int32_t visible[4];
     visible[0] = 1;
@@ -4318,7 +4308,7 @@ static void SetupMoneyIconForRendering(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawNativeMoneyAmount(const LegacyMoneyLayout *layout, std::int32_t amount, std::int8_t currency, std::uint32_t colour, std::uint32_t fullPrefix) {
     LegacyIconSprite &symbol = moneyIconCurrencySprite;
     symbol.depth = layout->depth;
@@ -4355,7 +4345,7 @@ static void DrawNativeMoneyAmount(const LegacyMoneyLayout *layout, std::int32_t 
         symbol.y = layout->position.y - layout->scale * verticalOffset;
         PrepareDrawSimple(symbol, colour);
     }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     DrawMoneyDigits(digitX, layout->position.y, layout->scale, layout->depth, amount, colour);
 #else
     DrawNativeMoneyDigits(digitX, layout->position.y, layout->scale, layout->depth, amount, colour);
@@ -4363,7 +4353,7 @@ static void DrawNativeMoneyAmount(const LegacyMoneyLayout *layout, std::int32_t 
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawMoneyAmount(const Vector2 *position, float depth, std::int32_t amount, std::int8_t currency, std::uint32_t colour, float scale) {
     LegacyMoneyLayout layout;
@@ -4375,7 +4365,7 @@ void DrawMoneyAmount(const Vector2 *position, float depth, std::int32_t amount, 
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void AnimateMoneyUiElement(void *) {
     if (!(moneyIconFlags & 4U))
@@ -4400,7 +4390,7 @@ static void AnimateMoneyUiElement(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ChooseMoneyOptions(std::uint32_t flags) {
     static const char *const moneyOptionLabels[2] = {"\xa5\xad\xa5\xe3\xa5\xf3\xa5\xbb\xa5\xeb", "\xa3\xcd\xa3\xc1\xa3\xd8\xa3\xc2\xa3\xc5\xa3\xd4"};
     for (std::int32_t index = 0; index < 2; ++index) {
@@ -4413,7 +4403,7 @@ static void ChooseMoneyOptions(std::uint32_t flags) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReleaseMoneyTextSlots() {
     for (std::int32_t index = 0; index < 2; ++index) {
         if (static_cast<std::int16_t>(moneyIconTextSprites[index].icon) != -1)
@@ -4423,7 +4413,7 @@ static void ReleaseMoneyTextSlots() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawMoneyOptionText(std::int32_t text, std::int32_t direction) {
     LegacyIconSprite &sprite = moneyIconTextSprites[text];
     const LegacyIconSprite &source = moneyIconDirections[direction];
@@ -4436,7 +4426,7 @@ static void DrawMoneyOptionText(std::int32_t text, std::int32_t direction) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AdvanceMoneySelectionScale() {
     if (static_cast<std::int16_t>(moneyIconPosition.selectedDirection) == 4)
         return;
@@ -4446,7 +4436,7 @@ static void AdvanceMoneySelectionScale() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t GetSelectorNumberDigits(std::int32_t amount) {
     if (amount > 0)
@@ -4457,21 +4447,21 @@ static std::int32_t GetSelectorNumberDigits(std::int32_t amount) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetNumBet() UI_NOEXCEPT {
     return static_cast<std::uint32_t>(moneyIconResult ? moneyIconResult : moneyIconAmount);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetMoneyRelatedUIElement(std::int16_t maximum, std::int16_t duration, std::int16_t step) {
     SetMoneyRelatedUIElement_0(maximum & 0x7fff, static_cast<std::int16_t>(duration & 0x7fff), step & 0x7fff, 15);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t AnimateMoneyAmount(std::int32_t initial, std::int32_t target, std::int32_t modeIndex) UI_NOEXCEPT {
     moneyIconFlags = 0x34;
@@ -4484,7 +4474,7 @@ std::uint32_t AnimateMoneyAmount(std::int32_t initial, std::int32_t target, std:
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool SetSleepActionIcon(std::int32_t flags) {
     if (GetShouldRenderIcons(UI_ICON(Any)))
@@ -4506,21 +4496,21 @@ bool SetSleepActionIcon(std::int32_t flags) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetSleepActionIconResult() {
     return g_sleepAction.result;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ShowSleepActionSaveIcon() {
     const std::int32_t shown = SetSleepActionIcon(0x10f);
     return shown || IsSaveAllowed();
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool SetSleepActionIconMode(std::uint8_t mode) {
     std::int32_t flags;
     if (mode == 0xff)
@@ -4547,13 +4537,13 @@ bool SetSleepActionIconMode(std::uint8_t mode) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t GetSleepActionIconSelection() {
     return g_sleepAction.result;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetHelpIconState() UI_NOEXCEPT {
     g_helpIconState = 1;
@@ -4625,13 +4615,13 @@ std::int32_t GetCurrentQteStatus() UI_NOEXCEPT {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetQuickIconLoadingReleaseState() {
     return g_quickIconLoadingReleaseFlag;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool AdvanceIconPosition(ItemEffectPosition *position, float target) {
     bool done = false;
@@ -4658,7 +4648,7 @@ bool AdvanceIconPosition(ItemEffectPosition *position, float target) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool RetreatIconPosition(ItemEffectPosition *position, float target) {
     bool done = false;
@@ -4685,7 +4675,7 @@ bool RetreatIconPosition(ItemEffectPosition *position, float target) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t GetParentMenu() {
     if (GetShouldRenderIcons(UI_ICON(ItemSelect)))
         return 0;
@@ -4699,13 +4689,13 @@ std::uint8_t GetParentMenu() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetNativeGuiActive(std::int32_t active) {
     nativeGuiActive = active;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void iconToggleStateFor(std::uint8_t slot, std::uint8_t enabled) {
     if (!slot) {
@@ -4720,14 +4710,14 @@ void iconToggleStateFor(std::uint8_t slot, std::uint8_t enabled) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetItemSelectionMode(std::uint8_t slot) {
     return activeIconFlags & (1U << slot);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool GetShouldRenderIcons(RenderIconSlot slot) {
     const std::uint32_t index = static_cast<std::uint32_t>(slot);
@@ -4744,7 +4734,7 @@ bool GetShouldRenderIcons(RenderIconSlot slot) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ToggleRenderIcons(RenderIconSlot slot, bool enabled) {
     bool previous = false;
@@ -4760,7 +4750,7 @@ bool ToggleRenderIcons(RenderIconSlot slot, bool enabled) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t RetireIconInputSlots(std::uint32_t mask, std::int32_t force) {
     std::uint32_t closed = 0;
@@ -4772,14 +4762,14 @@ std::uint32_t RetireIconInputSlots(std::uint32_t mask, std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::uint32_t RetireAllIconInputSlots(std::int32_t force) {
     return RetireIconInputSlots(0xffffffffU, force);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RetireIconInputSlot(std::uint32_t slot, std::int32_t force) {
     std::int32_t result = 0;
@@ -4791,7 +4781,7 @@ std::int32_t RetireIconInputSlot(std::uint32_t slot, std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool padcRefreshCurrentInputs(std::int32_t bind) {
     if (g_iconPads.current) {
@@ -4808,7 +4798,7 @@ bool padcRefreshCurrentInputs(std::int32_t bind) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t CloseWristwatchTransitionIcons() {
     if (IsHandWatchActive()) {
@@ -4821,14 +4811,14 @@ std::int32_t CloseWristwatchTransitionIcons() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t CloseHeldStateIcons() {
     return RetireIconInputSlot(0, 1);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareDrawTextureWithSecondaryColour(const LegacyIconSprite &sprite, std::uint32_t secondaryColour) {
     LegacySpritePacket packet;
     INIT_LEGACY_SPRITE_PACKET(packet);
@@ -4840,7 +4830,7 @@ void PrepareDrawTextureWithSecondaryColour(const LegacyIconSprite &sprite, std::
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareDrawTextureWithColour(const LegacyIconSprite &sprite, std::uint32_t colour) {
     LegacySpritePacket packet;
     INIT_LEGACY_SPRITE_PACKET(packet);
@@ -4852,20 +4842,20 @@ void PrepareDrawTextureWithColour(const LegacyIconSprite &sprite, std::uint32_t 
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PrepareDrawSimpleOpaque(const LegacyIconSprite &sprite, std::uint32_t colour) {
     PrepareDrawSimple(sprite, (colour & 0x00ffffffU) | 0xff000000U);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareDrawSimpleBlack(const LegacyIconSprite &sprite, std::uint32_t colour) {
     PrepareDrawSimple(sprite, colour & 0xff000000U);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawMainIconOverlay(std::uint32_t colour, float depth) {
     LegacySpritePacket packet;
@@ -4884,7 +4874,7 @@ void DrawMainIconOverlay(std::uint32_t colour, float depth) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CtrlMainIcon_Callback(void *) {
     HLib::ExecuteCallbackNow(reinterpret_cast<HLib::TaskCallback>(TickScenarioFlagNotification), 0);
@@ -4920,7 +4910,7 @@ void CtrlMainIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RefreshItemSelectorOwnedMask() {
     const std::uint32_t limit = GetMaxItemsForItemType(0);
@@ -4933,7 +4923,7 @@ void RefreshItemSelectorOwnedMask() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CountItemSelectorOwnedItems() {
     RefreshItemSelectorOwnedMask();
@@ -4946,7 +4936,7 @@ static std::int32_t CountItemSelectorOwnedItems() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ReleaseCtrlSpeakTextHandle(std::int32_t handle) {
     for (std::int32_t slot = 0; slot < 4; ++slot)
@@ -4956,7 +4946,7 @@ std::int32_t ReleaseCtrlSpeakTextHandle(std::int32_t handle) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReleaseSpeakTextSlots() {
     for (std::int8_t slot = 0; slot < 4; ++slot) {
@@ -4966,7 +4956,7 @@ void ReleaseSpeakTextSlots() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void UpdateSpeakLabelTransition() {
     const std::int8_t phase = ctrlSpeakLabelPhase;
     for (std::int8_t slot = 0; slot < 4; ++slot) {
@@ -4994,7 +4984,7 @@ static void UpdateSpeakLabelTransition() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void UpdateSpeakLabelReverseTransition() {
     const std::int8_t phase = ctrlSpeakLabelPhase;
     for (std::int8_t slot = 0; slot < 4; ++slot) {
@@ -9105,14 +9095,12 @@ std::int64_t CloseSpeakIcon(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 std::uint32_t shenGetCtrlSpeakIconFlag() {
     return ctrlSpeakResultChoiceId;
 }
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SetupControlSpeakAndUI_Internal(std::int16_t *choices, std::int32_t, std::uint16_t defaultChoice, std::uint16_t mode, std::int32_t style) {
     ctrlSpeakResultChoiceId = 0xffff;
     ctrlSpeakOpenRequested = 1;
@@ -9168,13 +9156,13 @@ std::int32_t SetupControlSpeakAndUI_Internal(std::int16_t *choices, std::int32_t
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SetupControlSpeakAndUI(std::int16_t *choices, std::int16_t timeout, std::uint16_t defaultChoice, std::uint16_t mode) {
     return static_cast<std::uint8_t>(SetupControlSpeakAndUI_Internal(choices, timeout, defaultChoice, mode, 0));
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t IsCtrlSpeakIconInactive() {
     if (ctrlSpeakIconState == 0)
@@ -9183,7 +9171,7 @@ std::int32_t IsCtrlSpeakIconInactive() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsSpeakIconCancellable() {
     const std::int32_t mode = static_cast<std::int16_t>(ctrlSpeakMode);
     if (mode == 2 || mode == 5)
@@ -9192,7 +9180,7 @@ std::int32_t IsSpeakIconCancellable() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool CloseSpeakIcon(std::int32_t force) {
     if (GetShouldRenderIcons(ActionSelector) && force) {
@@ -9208,7 +9196,7 @@ bool CloseSpeakIcon(std::int32_t force) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CloseSpeakIcon() {
     if (GetParentMenu() != 4)
@@ -9227,7 +9215,7 @@ void CloseSpeakIcon() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InspectCtrlSpeakChoicesNullsub(const std::int16_t *choices) {
     for (std::int32_t index = 0; index < 4; ++index, ++choices) {
         if (*choices) {
@@ -9236,7 +9224,7 @@ void InspectCtrlSpeakChoicesNullsub(const std::int16_t *choices) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetCtrlSpeakChoiceWidth(const std::uint16_t *choice, std::int32_t form) {
     std::int32_t characterWidths[2] = {28, 14};
     std::int16_t width = 128;
@@ -9264,7 +9252,7 @@ float GetCtrlSpeakChoiceWidth(const std::uint16_t *choice, std::int32_t form) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawActionSelectorTextFrame(const Vector2 &position, float depth, std::int32_t width, std::int32_t height, std::uint32_t selected) {
     static const std::int32_t textFrameIcons[4] = {1284, 1283, 1282, 1281};
     static const std::int32_t *textFramePair;
@@ -9301,7 +9289,7 @@ static void DrawActionSelectorTextFrame(const Vector2 &position, float depth, st
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawActionSelectorRadial(const Vector2 &position, const std::int32_t *handles, float depth, float scale, const std::int16_t *widths,
     std::int32_t selected, std::int32_t marker, std::int32_t forceText) {
     float radialX[4] = {0.0f, -1.0f, 0.0f, 1.0f}, radialY[4] = {-1.0f, 0.0f, 1.0f, 0.0f};
@@ -9410,7 +9398,7 @@ static void DrawActionSelectorRadial(const Vector2 &position, const std::int32_t
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawCtrlSpeakSelector(void *) {
     float offset = 0.0f;
     if (ctrlSpeakChoiceTextHandles[0] == -1 && ctrlSpeakChoiceTextHandles[2] != -1)
@@ -9423,7 +9411,7 @@ static void DrawCtrlSpeakSelector(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CtrlSpeakIcon_Callback(void *) {
     ctrlSpeakPulseAngle = (ctrlSpeakPulseAngle + 1638U) & 0xffffU;
@@ -9527,7 +9515,7 @@ void CtrlSpeakIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ReleaseSleepActionLabels() {
     for (std::int8_t slot = 0; slot < 4; ++slot) {
@@ -9538,12 +9526,12 @@ static void ReleaseSleepActionLabels() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const char *const sleepActionTextLabels[4] = {"\xec\xa8\xea\xc7", "\xda\xce\xea\xc3", "\xd6\xdb\xef\xd5\xea\xc7", "\xec\xa7\xed\xe1"};
 static const std::int32_t sleepActionTextBits[4] = {0, 1, 4, 3};
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ChooseSleepActionText(std::uint32_t flags) {
     for (std::int32_t slot = 0; slot < 4; ++slot) {
@@ -9557,7 +9545,7 @@ static void ChooseSleepActionText(std::uint32_t flags) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawSleepActionSelector(void *) {
     std::int32_t handles[4];
@@ -9577,7 +9565,7 @@ static void DrawSleepActionSelector(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CtrlSleepActionIcon_Callback(void *) {
     std::uint16_t pressed = ctrlGetPadInputBuffer0(g_sleepActionPads.current)->pressedPriority;
@@ -9699,7 +9687,7 @@ static void CtrlSleepActionIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void InitializeSleepActionIcon() {
     g_sleepActionPads.current = AllocatePadControlEntry();
@@ -9738,7 +9726,7 @@ static void InitializeSleepActionIcon() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 HLib::Task *CtrlSleepActionIcon(std::int8_t queue) {
     InitializeSleepActionIcon();
@@ -9746,7 +9734,7 @@ HLib::Task *CtrlSleepActionIcon(std::int8_t queue) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t PulseHelpBlinkCounter(std::int32_t *counter, std::int32_t onFrames, std::int32_t offFrames) {
     std::int32_t result;
@@ -9763,7 +9751,7 @@ static std::int32_t PulseHelpBlinkCounter(std::int32_t *counter, std::int32_t on
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint8_t GetSleepActionIconFlags() {
     std::int32_t menu, sleeping;
@@ -9776,7 +9764,7 @@ std::uint8_t GetSleepActionIconFlags() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t ResolveHelpHintForButton(std::uint32_t button) {
     switch (GetMediatedButtonOwner(button)) {
@@ -9859,13 +9847,13 @@ static std::int32_t ResolveHelpHintForButton(std::uint32_t button) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ResolveFirstHelpHint() {
     return ResolveHelpHintForButton(0);
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void UpdateHelpIconHints() {
     std::int32_t forced = 0;
     if (GetShouldRenderIcons(ItemSelect) || IsItemSelectable()) {
@@ -10015,7 +10003,7 @@ static void UpdateHelpIconHints() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::uint32_t GetHelpPulseColour(std::int32_t icon, std::uint32_t value) {
     std::uint32_t colour = value | (value << 8U) | (value << 16U);
@@ -10041,7 +10029,7 @@ static std::uint32_t GetHelpPulseColour(std::int32_t icon, std::uint32_t value) 
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void GetHelpButtonLayout(std::int32_t button, LegacyIconSprite &sprite, LegacyIconSprite &label) {
     if (static_cast<std::uint32_t>(button - 1) < 4) {
         sprite.x = (helpButtonPositions + button - 1)->x;
@@ -10051,7 +10039,7 @@ static void GetHelpButtonLayout(std::int32_t button, LegacyIconSprite &sprite, L
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawHelpDirectionGlows(std::int32_t x, std::int32_t y, std::uint16_t visible) {
     static const std::int32_t offsets[4][2] = {{0, -12}, {0, 12}, {-12, 0}, {12, 0}};
     static const std::int32_t (*positions)[2];
@@ -10086,7 +10074,7 @@ static void DrawHelpDirectionGlows(std::int32_t x, std::int32_t y, std::uint16_t
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawHelpItemPrompt(const LegacyIconSprite &source) {
     LegacyIconSprite sprite = source;
@@ -10099,7 +10087,7 @@ static void DrawHelpItemPrompt(const LegacyIconSprite &source) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawHelpIconShadow(const LegacyIconSprite &source) {
     LegacyIconSprite sprite = source;
@@ -10117,7 +10105,7 @@ static void DrawHelpIconShadow(const LegacyIconSprite &source) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DoQteDraw(void *) {
     static const std::uint16_t icons[12] = {0x801, 0x603, 0x601, 0x607, 0x605, 0x300, 0x305, 0x306, 0x304, 12, 0, 0};
     static const std::int16_t angles[4] = {0, 180, 270, 90};
@@ -10269,7 +10257,7 @@ static void DoQteDraw(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void NQ_CtrlButtonIcon(void *) {
     if (helpIconItemPromptFrames >= 0 && (--helpIconItemPromptFrames < 0 || UpdateSelectorMemo())) {
@@ -10310,7 +10298,7 @@ static void NQ_CtrlButtonIcon(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitNowQte(std::int8_t queue) {
     g_quickIconSavedLoadingFlags = 0;
     helpIconItemPromptFrames = -1;
@@ -10333,7 +10321,7 @@ void InitNowQte(std::int8_t queue) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void BufferItemSelectorInput(std::uint32_t pressed) {
     const std::int16_t pending = pressed & 0x202U;
@@ -10351,7 +10339,7 @@ static void BufferItemSelectorInput(std::uint32_t pressed) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void MarkItemSelectorPlayerMoved() {
     Character *const player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
     if (player)
@@ -10359,7 +10347,7 @@ static void MarkItemSelectorPlayerMoved() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeItemSelectorWindow() {
     const std::int16_t edgeIcons[4] = {1025, 1026, 1027, 1028};
@@ -10412,7 +10400,7 @@ void InitializeItemSelectorWindow() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawLegacyColourRectAspect(const LegacyColourRect &rect) {
     LegacySpritePacket packet;
     INIT_LEGACY_SPRITE_PACKET(packet);
@@ -10424,7 +10412,7 @@ void DrawLegacyColourRectAspect(const LegacyColourRect &rect) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacyColourRect(const LegacyColourRect &rect) {
     LegacySpritePacket packet;
@@ -10444,7 +10432,7 @@ void DrawLegacyColourRect(const LegacyColourRect &rect) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void shenSubmitQuadsUI(float x, float y, std::uint32_t fill, std::uint32_t border, std::int32_t width, std::int32_t height, float depth) {
     LegacySpritePacket packet;
@@ -10476,7 +10464,7 @@ void shenSubmitQuadsUI(float x, float y, std::uint32_t fill, std::uint32_t borde
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CheckMainIconItemSelection() {
     if (btnCheck(SHEN_NAME4('B', 'T', 'I', 'L')) && helpGetCurrentIconIdx(1) == 67) {
@@ -10496,7 +10484,7 @@ static std::int32_t CheckMainIconItemSelection() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CheckMainIconShortcut() {
     static const std::int32_t shortcuts[4][2] = {{532, 6025}, {533, 6026}, {534, 6018}, {535, 6017}};
@@ -10518,7 +10506,7 @@ static std::int32_t CheckMainIconShortcut() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t IsMainIconInputAdmitted() {
     if (!nativeGuiActive || !plymIsSearchable() || plymIsSearchBlocked() || (g_loadingFlag & 2U) || GetShouldRenderIcons(Any) || IsScenarioBusyForMainIcon() ||
@@ -10530,7 +10518,7 @@ static std::int32_t IsMainIconInputAdmitted() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetMainIconState() {
     g_iconPads.current = 0;
@@ -10541,7 +10529,7 @@ void ResetMainIconState() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitMainIcon_Callback(void *) {
     g_iconPads.current = AllocatePadControlEntry();
@@ -10549,13 +10537,13 @@ void InitMainIcon_Callback(void *) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetItemSelectorClosingState() {
     mainIconPhase = 5;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RequestTitleMenu() {
     if (!GetShouldRenderIcons(Any) && nativeGuiActive == 1) {
@@ -10567,7 +10555,7 @@ std::int32_t RequestTitleMenu() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static NativeItemSelectorContext *CaptureItemSelectorContext() {
     NativeItemSelectorContext &context = itemSelectorContext;
@@ -10588,7 +10576,7 @@ static NativeItemSelectorContext *CaptureItemSelectorContext() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void RestoreItemSelectorContext(NativeItemSelectorState *state) {
     NativeItemSelectorContext *const context = static_cast<NativeItemSelectorContext *>(state->context);
@@ -10611,7 +10599,7 @@ static void RestoreItemSelectorContext(NativeItemSelectorState *state) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t GetItemSelectorSelectedItem(std::int32_t itemId) {
     std::int32_t found = 0;
@@ -10632,7 +10620,7 @@ static std::int32_t GetItemSelectorSelectedItem(std::int32_t itemId) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t RefreshItemSelectorInventory(std::uint32_t bank) {
     std::int32_t restricted = 0;
@@ -10654,7 +10642,7 @@ std::uint32_t RefreshItemSelectorInventory(std::uint32_t bank) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t icsToggleIconState(std::uint32_t index, std::int32_t enabled) {
     const std::uint32_t value = currentItemSelectState;
@@ -10745,14 +10733,12 @@ const std::uint8_t *GetPublishedItemSelectorOwnedMask() noexcept {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 std::uint32_t GetCurrentItemSelectState() {
     return currentItemSelectState;
 }
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t ConsumeItemMenuRequest() {
     if (GetParentMenu()) {
@@ -10764,7 +10750,7 @@ std::uint32_t ConsumeItemMenuRequest() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RefreshItemSelectorSelection() {
     const std::uint8_t *stock = g_keyItemStock;
@@ -10789,7 +10775,7 @@ void RefreshItemSelectorSelection() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ClampItemSelectorSelection() {
     NativeItemSelectorState &state = g_itemSelectorState;
@@ -10816,7 +10802,7 @@ static void ClampItemSelectorSelection() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 HLib::Task *QueueItemEffectIconTask(std::uint8_t queue) {
     itemEffectIconTask = HLib::EnqueueTaskWithoutParameter(CtrlItemEffectIcon_Callback, queue, 0, SHEN_NAME(IEET));
@@ -10828,7 +10814,7 @@ HLib::Task *QueueItemEffectIconTask(std::uint8_t queue) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool CloseItemEffect(std::int32_t force) {
     if (!GetShouldRenderIcons(UI_ICON(ItemEffectMessage)) || !force)
@@ -11511,17 +11497,24 @@ HLib::Task *GUI_Tasks_Enqueue() {
 #endif
 
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t GetMainIconInputAdmitted() {
+    return IsMainIconInputAdmitted();
+}
+
+#endif
+
 } // namespace s2
 } // namespace shenmue
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #undef INV_NOEXCEPT
 #undef INV_NULL
 #undef INV_INIT
 #undef INV_ZERO
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_GiveItemOf(std::uint32_t item) {
     return shenmue::s2::GiveItemOf(item);
 }
@@ -11535,7 +11528,7 @@ extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_UpdateItemSta
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #undef UI_ICON
 #undef UI_NOEXCEPT
 #undef UI_STRLEN

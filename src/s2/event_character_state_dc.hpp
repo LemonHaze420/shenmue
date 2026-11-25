@@ -17,7 +17,7 @@ std::int32_t DoesScenarioCharacterExist(shen_name name);
 std::int32_t EV_SetCharacterAlphaEnabled(shen_name name, std::int32_t enabled);
 void SetScenarioCharacterTransparency(shen_name name, float alpha);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ReflectorBoardWork;
 Character *ctrlGetCharaByName(shen_name name);
 std::int32_t CheckIsArgEquZero(std::int32_t value);

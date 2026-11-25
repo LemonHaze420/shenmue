@@ -1,6 +1,6 @@
 #pragma once
 #include "platform/dc/particles.hpp"
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 #include "platform/dc/ninja.hpp"
 namespace shenmue {
 namespace dc {
@@ -58,7 +58,7 @@ void InitializeParticleChannelParticles(std::int32_t index, std::int32_t count, 
 void InitializeParticleChannelSpawnParticles(std::int32_t index, std::int32_t count, std::int32_t compact, void *particles, std::int32_t spawnMode);
 #endif
 void SetParticleChannelCallback(std::int32_t index, ParticleUpdate callback);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetParticleChannelColour(std::int32_t index, std::uint32_t colour);
 #endif
 void SetParticleChannelPositionRange(std::int32_t index, float x, float y, float z, float rangeX, float rangeY, float rangeZ);

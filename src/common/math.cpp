@@ -134,11 +134,11 @@ std::uint16_t atan_fixed16(float value) {
 
 #endif
 
-#if SHENMUE_IS_DC && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && (SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 float CalculatePlanarMagnitude(float x, float z) {
     float magnitude = x * x + z * z;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     magnitude = SHENMUE_MATH_SQRT(magnitude);
 #else
     magnitude = __builtin_sqrtf(magnitude);
@@ -369,13 +369,13 @@ float fast_ldexpf(float value, std::int32_t exponent) {
     if (value == 0.0f)
         return 0.0f;
     std::uint32_t bits = SHENMUE_MATH_BITS<std::uint32_t>(value);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int32_t biased = SHENMUE_MATH_BITS<std::int32_t>(((bits >> 23U) & 0xffU) + static_cast<std::uint32_t>(exponent));
 #else
     const std::int32_t biased = static_cast<std::int32_t>((bits >> 23U) & 0xffU) + exponent;
 #endif
     if (biased < 1) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         const std::uint32_t shift = static_cast<std::uint32_t>(biased) - 1U;
         const std::uint32_t mantissa = (bits & 0x7fffffU) | 0x800000U;
         std::uint32_t shifted;
@@ -414,7 +414,7 @@ float fast_expf_approx(float value) {
 float fast_powf_approx(float base, float exponent) {
     std::int32_t whole = TruncateToInt32(exponent);
     if (base == 0.0f)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         return exponent > 0.0f ? 0.0f : 1.0f;
 #else
         return exponent <= 0.0f ? 1.0f : 0.0f;

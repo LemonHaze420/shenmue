@@ -1,6 +1,6 @@
 #include "platform/dc/particle_renderer.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include "common/types.hpp"
 #include "platform/dc/matrix.hpp"

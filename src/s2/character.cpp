@@ -4,7 +4,7 @@
 
 #include "s2/character_draw_tasks_dc.hpp"
 #include "s2/event_matrix_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_work_dc.hpp"
 #include "s2/model_image_component_dc.hpp"
 #include "s2/character_model_dc.hpp"
@@ -56,12 +56,10 @@
 #include "s2/osage.hpp"
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/pause.hpp"
-#endif
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/model_render_dc.hpp"
 #include "platform/dc/matrix.hpp"
@@ -102,11 +100,11 @@ namespace shenmue {
 namespace s2 {
 
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_motionVertexLinkDistance = 12.0f;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkSetVertexLinkDistance(float distance) {
     const float previous = g_motionVertexLinkDistance;
     g_motionVertexLinkDistance = distance;
@@ -114,7 +112,7 @@ float mtwkSetVertexLinkDistance(float distance) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkGetVertexLinkDistance() {
     return g_motionVertexLinkDistance;
 }
@@ -1216,9 +1214,8 @@ CharacterCoreCallback charaAssignDummyCore(Character *character) {
 #endif
 
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void mtwkDrawCharacterCore(Character *character) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     MotionWork *work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
     IKRig &rig = reinterpret_cast<MotionWorkBindings *>(work)->rig;
     g_characterSkinBoneSources[0] = &rig.chest.upperChestWorld;
@@ -1383,7 +1380,6 @@ void mtwkDrawCharacterCore(Character *character) {
     }
 #endif
 }
-#endif
 
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)

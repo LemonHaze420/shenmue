@@ -58,6 +58,16 @@ add_library(shenmue_dc_zlib STATIC
   "${_dc_zlib_dir}/inffast.c" "${_dc_zlib_dir}/inftrees.c" "${_dc_zlib_dir}/zutil.c")
 target_include_directories(shenmue_dc_zlib PUBLIC "${_dc_zlib_dir}")
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+if(SHENMUE_DC_MATCH_REFERENCE AND NOT SHENMUE_DC_DEBUG_FONT_SOURCE)
+  execute_process(COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/dc/match_image.py"
+    --config "${_s2_config_dir}/config.yml" --reference "${SHENMUE_DC_MATCH_REFERENCE}"
+    --output-dir "${CMAKE_CURRENT_BINARY_DIR}/resources" --prepare-reference
+    RESULT_VARIABLE _s2_reference_result)
+  if(NOT _s2_reference_result EQUAL 0)
+    message(FATAL_ERROR "Cannot prepare the ${SHENMUE_DC_TARGET} reference resources")
+  endif()
+endif()
 include("${CMAKE_CURRENT_LIST_DIR}/DreamcastS2.cmake")
 
 option(SHENMUE_DC_BUILD_HASH "Draw the source commit with the Dreamcast debug font" OFF)
@@ -106,7 +116,6 @@ target_include_directories(${_shenmue_dc_core} PUBLIC "${SHENMUE_DC_SDK_LIBRARY_
 target_link_libraries(${_shenmue_dc_executable} PRIVATE "${SHENMUE_DC_SDK_LIBRARY_DIR}/syscalls.obj" -Wl,--start-group ${_sdk_archives} ${_dc_runtime_libraries} -Wl,--end-group)
 
 if(SHENMUE_DC_TARGET MATCHES "^S2_")
-find_package(Python3 REQUIRED COMPONENTS Interpreter)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(SHENMUE_DC_SPLAT_ROOT "" CACHE PATH "Optional splat64 source checkout")
 set(_s2_link_tool "${PROJECT_SOURCE_DIR}/tools/dc/configure.py")
@@ -140,12 +149,17 @@ if(SHENMUE_DC_MATCH_REFERENCE)
   if(NOT EXISTS "${SHENMUE_DC_MATCH_REFERENCE}")
     message(FATAL_ERROR "Missing reference: ${SHENMUE_DC_MATCH_REFERENCE}")
   endif()
-  find_program(SHENMUE_DC_OBJDIFF objdiff-cli HINTS "${CMAKE_CURRENT_BINARY_DIR}/tools" REQUIRED)
+  find_program(SHENMUE_DC_OBJDIFF objdiff-cli HINTS "${CMAKE_CURRENT_BINARY_DIR}/tools")
+  if(SHENMUE_DC_OBJDIFF)
+    set(_s2_objdiff_args --objdiff "${SHENMUE_DC_OBJDIFF}")
+  else()
+    set(_s2_objdiff_args --summary-only)
+  endif()
   add_custom_target(shenmue2_dc_match
     COMMAND "${Python3_EXECUTABLE}" "${PROJECT_SOURCE_DIR}/tools/dc/match_image.py"
       --config "${_s2_config_dir}/config.yml" --reference "${SHENMUE_DC_MATCH_REFERENCE}"
       --elf "$<TARGET_FILE:shenmue2_dc>" --candidate "${CMAKE_CURRENT_BINARY_DIR}/1ST_READ.BIN"
-      --output-dir "${CMAKE_CURRENT_BINARY_DIR}/matching" --objdiff "${SHENMUE_DC_OBJDIFF}"
+      --output-dir "${CMAKE_CURRENT_BINARY_DIR}/matching" ${_s2_objdiff_args}
     DEPENDS shenmue2_dc
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/matching/objdiff.json"
       "${CMAKE_CURRENT_BINARY_DIR}/matching/report.json" "${CMAKE_CURRENT_BINARY_DIR}/matching/image.json"

@@ -1,7 +1,7 @@
 #include "shenmue.h"
 #include "s2/legacy_sprite_types.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/extra_telop.hpp"
 #include "s2/conversation_playback_dc.hpp"
 #include "s2/file_loader_dc.hpp"
@@ -67,7 +67,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HLib::Task *g_extraTelopTask{};
 
@@ -93,7 +93,7 @@ const char *g_extraTelopDisplayedText{};
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 void PublishExtraTelopGlyph(std::int32_t index, std::uint32_t colour);
@@ -109,7 +109,7 @@ std::int64_t ShowBigKanjiText(const char *text);
 void QueueExtraTelop(const char *text, std::int32_t mode);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -144,7 +144,7 @@ std::int32_t extraTelopRevealFrames;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -184,7 +184,7 @@ void PublishExtraTelopGlyph(std::int32_t index, std::uint32_t colour) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -225,7 +225,7 @@ void PositionExtraTelopGlyphs() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -296,7 +296,7 @@ std::int32_t UpdateProgressiveExtraTelop() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void QueueExtraTelop(const char *text, std::int32_t mode) {
@@ -351,7 +351,7 @@ void QueueExtraTelop(const char *text, std::int32_t mode) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -448,7 +448,7 @@ std::int32_t UpdateFadingExtraTelop() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -560,7 +560,7 @@ std::int32_t UpdateSixGlyphExtraTelop() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -648,7 +648,7 @@ std::int32_t UpdateFiveGlyphExtraTelop() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -730,7 +730,7 @@ void ExtraTelopControl_Callback(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ShowBigKanjiText(const char *text) {

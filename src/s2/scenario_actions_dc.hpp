@@ -29,7 +29,7 @@ typedef char Layout_scenario_actions_dc_4[(offsetof(ScenarioActionQueue, storage
 extern ScenarioActionQueue *scenarioActionQueueStorage;
 void InitializeScenarioActionQueues(void *storage);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int8_t g_scenarioLookCameraState;
 extern std::uint32_t g_scenarioParticipantFaceLooks[8];
 extern Vector3 g_scenarioDefaultLookLocation;

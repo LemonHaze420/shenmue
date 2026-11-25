@@ -5,7 +5,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/player_stats_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "common/types.hpp"
 #include "common/math.hpp"
 #include "s2/hlib.hpp"
@@ -14,7 +14,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define TASK_VCDS shen_name(SHEN_NAME4('V', 'C', 'D', 'S'))
 #define TASK_VCDW shen_name(SHEN_NAME4('V', 'C', 'D', 'W'))
 #define FIGHT_DEAD SHEN_NAME4('D', 'E', 'A', 'D')
@@ -175,7 +175,7 @@ typedef char FightStageCountCheck[offsetof(FGST_t, enemySlotCount) == 0x85 ? 1 :
 typedef char FightStageFlagsCheck[offsetof(FGST_t, battleFlags) == 0x98 ? 1 : -1];
 extern FGST_t *g_pFightStage;
 extern std::uint8_t g_vfFormationGroupIndex, g_FGEN_count, g_battleQteCommandSelection;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateFGST();
 #else
 FGST_t *AllocateFGST();
@@ -329,7 +329,7 @@ typedef char FightActorFormationFlagsOffsetCheck[offsetof(FightActorRuntimePrefi
 typedef char FightActorModeOffsetCheck[offsetof(FightActorRuntimePrefix, retainedMode) == 0x3a5 ? 1 : -1];
 typedef char FightActorFlagsOffsetCheck[offsetof(FightActorRuntimePrefix, runtimeFlags) == 0x92c ? 1 : -1];
 typedef char FightActorMotionValuesOffsetCheck[offsetof(FightActorRuntimePrefix, retainedMotionValues) == 0x9e4 ? 1 : -1];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char FightActorSizeCheck[sizeof(FightActorRuntimePrefix) == 0x9f4 ? 1 : -1];
 typedef char FightActorGroundHeightCheck[offsetof(FightActorRuntimePrefix, groundHeights) == 0x888 ? 1 : -1];
 typedef char FightActorGroundSampleCheck[offsetof(FightActorRuntimePrefix, previousGroundSamples) == 0x8e4 ? 1 : -1];
@@ -363,7 +363,7 @@ struct FightRuntimePrefix {
     HLib::Task *task, *collisionTask, *gameInfoTask;
     std::uint32_t retained10, stateFlags;
     std::uint32_t frame;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t savedUiFlags;
     std::int32_t state;
     std::uint32_t elapsedTicks;
@@ -423,7 +423,7 @@ struct FightRuntimePrefix {
 };
 typedef char Layout_fight_11[(offsetof(FightRuntimePrefix, stateFlags) == 0x14) ? 1 : -1];
 typedef char Layout_fight_12[(offsetof(FightRuntimePrefix, frame) == 0x18) ? 1 : -1];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char Layout_fight_13[(offsetof(FightRuntimePrefix, cameraDialogue) == 0x448) ? 1 : -1];
 typedef char FightStateOffsetCheck[(offsetof(FightRuntimePrefix, state) == 0x20) ? 1 : -1];
 typedef char FightControlOffsetCheck[(offsetof(FightRuntimePrefix, controlFlags) == 0x3c) ? 1 : -1];
@@ -439,7 +439,7 @@ typedef char FightSpawnPointsOffsetCheck[offsetof(FightRuntimePrefix, spawnPoint
 typedef char FightMaximumEnemiesOffsetCheck[offsetof(FightRuntimePrefix, maximumActiveEnemies) == 0x192 ? 1 : -1];
 std::uint32_t vfclControlRuntimeFlags(FightCollisionRuntimePrefix *collision, std::uint32_t mask, std::int32_t action);
 std::uint32_t EV_vfBattleUtil(std::uint8_t operation, shen_name name, std::int32_t value);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t vfFindCharaIndex(const FightRuntimePrefix *game, const Character *character);
 #else
 std::uint32_t vfFindCharaIndex(const FightRuntimePrefix *game, const Character *character);
@@ -488,7 +488,7 @@ std::uint32_t IsFightActive();
 std::uint32_t GetFightModeFlags();
 std::uint32_t SetFightModeFlags(std::uint16_t flags);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t AllocatePeriodicBattleDialogue(
     std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::uint32_t period, float probability, std::uint16_t flags);
 std::uint32_t AllocateBattleDialogueCondition15(

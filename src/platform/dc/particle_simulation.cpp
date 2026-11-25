@@ -1,6 +1,6 @@
 #include "platform/dc/particle_simulation.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include "platform/dc/ninja.hpp"
 #include "common/types.hpp"
@@ -163,7 +163,7 @@ void SetParticleChannelCallback(std::int32_t index, ParticleUpdate callback) {
     g_particleChannels[index].callback = reinterpret_cast<Callback>(callback);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetParticleClipDepthThreshold(float threshold) {
     g_particleClipDepthThreshold = threshold;
 }
@@ -305,7 +305,7 @@ std::int32_t SetParticleChannelTexture(std::int32_t index, std::int32_t width, s
 
 #endif
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 namespace shenmue {
 namespace dc {
 namespace sdk {

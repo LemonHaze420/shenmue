@@ -19,7 +19,7 @@ WeatherFixcNode *AllocateWeatherFixcNode(std::int32_t index, void *payload) {
     return node;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetWeatherFixcNodeIndex(const WeatherFixcNode *node) {
     return node->index;
 }
@@ -37,7 +37,7 @@ WeatherFixcNode *FindWeatherFixcNode(WeatherFixcNode *node, const void *payload)
     return node;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 WeatherFixcNode *FindPreviousWeatherFixcNode(WeatherFixcNode *node, const void *payload) {
     while (node && node->payload.pointer != payload)
         node = node->previous;

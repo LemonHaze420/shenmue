@@ -282,7 +282,7 @@ void ExecuteAudioMiddleware() asm("_ADXT_ExecServer");
 std::uint32_t RandomInt();
 float RandomFloat();
 void SeedRandom(std::uint32_t seed);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float TruncateFloat(float value);
 #endif
 float SinFixed(std::int32_t angle);

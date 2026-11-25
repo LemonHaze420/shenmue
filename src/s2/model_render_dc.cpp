@@ -75,7 +75,7 @@ void DrawAlphaCharacterModelBranch(MT7Node *node, float alpha) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawMT7ProceduralBranch(MT7Node *node, std::int16_t stop, float alpha) {
     if (!node)

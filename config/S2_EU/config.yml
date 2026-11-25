@@ -16,6 +16,7 @@ reference:
   end: 0x8c31c628
   entry: 0x8c020000
   game: {start: 0x8c053fa0, end: 0x8c1d562a}
+  debug_font: {address: 0x8c234380, size: 16384, sha256: 75d9d5f8b6873d3582857a2e7b84c3a040ee2a776b15fbbefda77d9e0002cef1}
   sections:
     - {name: .header, kind: data, start: 0x8c010000, end: 0x8c039000}
     - {name: .text, kind: code, start: 0x8c039000, end: 0x8c2247c0}

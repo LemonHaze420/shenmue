@@ -3,7 +3,7 @@
 #include "s2/conversation_dc.hpp"
 
 #include "s2/hlib.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #include "s2/conversation_playback_dc.hpp"
 #endif
@@ -12022,7 +12022,7 @@ void scenCvsCtrlFree(ConversationBuffer *buffer, std::int32_t frames);
 void ConversationFadeOutCallback(ConversationBuffer &buffer);
 void SetConversationBufferVolume(ConversationBuffer *buffer, std::int32_t volume);
 void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer);
 #else
 bool cvsHasValidConverseData(const ConversationBuffer *buffer);
@@ -12458,7 +12458,7 @@ void SetConversationStreamVolume(ConversationStream &stream, std::int32_t volume
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
 
@@ -12533,7 +12533,7 @@ void SetSoundPaused(std::int32_t enabled) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SOND_PlayCdAudio(std::uint32_t command, std::int32_t repeatCount) {
     const std::int16_t volume = static_cast<std::int16_t>(command >> 16U);
     const std::int32_t track = static_cast<std::int32_t>(command & 255U);
@@ -13250,7 +13250,7 @@ void ReleaseConversationBuffersIfPlaybackDisabled(std::int32_t releaseBuffers) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void scenCvsCtrlFree(ConversationBuffer *input, std::int32_t frames) {
     if (!input) {
         ConversationBuffer *candidate = g_conversationTaskData->buffers;
@@ -13426,7 +13426,7 @@ void SetConversationBaseAttenuation(ConversationBuffer *buffer, std::int32_t att
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch) {
     if (!buffer) {
@@ -13472,7 +13472,7 @@ void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer) {
     const ConversationBuffer *candidate = g_conversationTaskData->buffers;
     std::int32_t remaining;
@@ -13672,7 +13672,7 @@ void ReleaseConversationResources() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyConversationPacket(void *packet, ConversationBuffer &buffer) {
     MapInfoChunk *const first = static_cast<MapInfoChunk *>(packet);
     MapInfoChunk *chunk;
@@ -13973,7 +13973,7 @@ void SetCameraCode(ConversationBuffer &buffer, const std::array<char, 12> &voice
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool cvsGet() {
     const ConversationBuffer *buffer = g_conversationTaskData->buffers;
@@ -14000,7 +14000,7 @@ bool cvsGet() noexcept {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PauseConversation(ConversationBuffer *buffer, std::int32_t paused) {
     if (!buffer) {
         ConversationBuffer *current = g_conversationTaskData->buffers;
@@ -14252,7 +14252,7 @@ void QueueScenarioRecordAction(ScenarioFreeTalkRecord &record, std::int32_t acti
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetConversationPaused(const ConversationBuffer *buffer) {
     const ConversationBuffer *candidate = g_conversationTaskData->buffers;
@@ -14296,7 +14296,7 @@ float GetConversationPlaybackSeconds(const ConversationBuffer *buffer) noexcept 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetConversationsPaused(std::int32_t paused) {
     ConversationBuffer *buffer = g_conversationTaskData->buffers;
     std::int32_t remaining = 2;
@@ -14345,7 +14345,7 @@ void SetConversationsPaused(std::int32_t paused) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 ConversationBuffer *GetConverseDataForChara(shen_name speaker) {
     ConversationBuffer *buffer = g_conversationTaskData->buffers;
@@ -14372,7 +14372,7 @@ ConversationBuffer *GetConverseDataForChara(shen_name speaker) noexcept {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer) {
     const ConversationBuffer *candidate = g_conversationTaskData->buffers;
@@ -14436,7 +14436,7 @@ bool RegisterConversationSpeakerAlias(shen_name target, shen_name source, std::u
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool RemoveConversationSpeakerAlias(shen_name target) {
     for (std::int32_t index = 0; index < 8; ++index) {
@@ -14517,7 +14517,7 @@ void UpdateConversationDucking(ConversationBuffer &buffer) {
 } // namespace shenmue
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_ClearConversationTaskRegistration(std::uint32_t target) {
     return shenmue::s2::RemoveConversationSpeakerAlias(shenmue::shen_name(target));
 }

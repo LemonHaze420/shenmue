@@ -207,6 +207,10 @@ target_compile_options(shenmue2_dc_core PRIVATE -ffunction-sections -fdata-secti
 
 add_executable(shenmue2_dc EXCLUDE_FROM_ALL
   src/platform/dc/start.S src/platform/dc/runtime.cpp src/s2/startup_dc.cpp src/s2/event_function_table_dc.cpp)
+if(NOT SHENMUE_DC_TARGET STREQUAL "S2_JP_GAMEJAM")
+  target_sources(shenmue2_dc_core PRIVATE src/s2/hiki_model.cpp)
+endif()
+
 set(_s2_debug_font "${CMAKE_CURRENT_BINARY_DIR}/resources/debug_screen_font.bin")
 set(_s2_debug_font_object "${CMAKE_CURRENT_BINARY_DIR}/resources/debug_screen_font.obj")
 set(SHENMUE_DC_DEBUG_FONT_SOURCE "" CACHE FILEPATH "External Dreamcast debug font binary")
@@ -230,8 +234,15 @@ add_custom_command(OUTPUT "${_s2_debug_font_object}"
 set_source_files_properties("${_s2_debug_font_object}" PROPERTIES GENERATED TRUE EXTERNAL_OBJECT TRUE)
 target_sources(shenmue2_dc PRIVATE "${_s2_debug_font_object}")
 target_compile_options(shenmue2_dc PRIVATE -ffunction-sections -fdata-sections -fno-math-errno)
+if(SHENMUE_DC_TARGET STREQUAL "S2_JP_GAMEJAM")
+  set(_s2_event_function_count 850)
+elseif(SHENMUE_DC_TARGET STREQUAL "S2_EU")
+  set(_s2_event_function_count 895)
+else()
+  set(_s2_event_function_count 893)
+endif()
 target_link_options(shenmue2_dc PRIVATE -nostartfiles -nostdlib
-  "-Wl,-EL,--defsym,__dc_segment=${_shenmue_dc_segment},-T,${_shenmue_dc_linker},--gc-sections,-Map,${CMAKE_CURRENT_BINARY_DIR}/shenmue2_dc.map")
+  "-Wl,-EL,--defsym,__dc_segment=${_shenmue_dc_segment},--defsym,__dc_event_function_count=${_s2_event_function_count},-T,${_shenmue_dc_linker},--gc-sections,-Map,${CMAKE_CURRENT_BINARY_DIR}/shenmue2_dc.map")
 target_link_libraries(shenmue2_dc PRIVATE shenmue2_dc_core)
 set_target_properties(shenmue2_dc PROPERTIES SUFFIX ".elf" LINK_DEPENDS "${_shenmue_dc_linker}")
 add_custom_command(TARGET shenmue2_dc POST_BUILD

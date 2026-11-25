@@ -1,6 +1,7 @@
+#include "shenmue.h"
 #include "s2/shadow_cast_dc.h"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 /* @verified - d */
 float ComputeShadowLightSource(const Vector3 *position, Vector3 *source, float strength, unsigned long lightIndex) {

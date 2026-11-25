@@ -38,7 +38,7 @@ NativeArcadeSession *GetArcadeSessionContext();
 void EncodeArcadeRankingScore(std::int32_t score, std::uint8_t *digits);
 std::int32_t emuSetNextState(std::int32_t state, std::int32_t argument);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 struct NativeArcadeRanking {
     std::uint8_t scoreBcd[4];

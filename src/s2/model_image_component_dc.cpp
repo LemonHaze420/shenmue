@@ -23,7 +23,7 @@
 #include "s2/file_loader_dc.hpp"
 #include "s2/scene_data.hpp"
 #include <cstdio>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include <ctype.h>
 #endif
 
@@ -35,7 +35,7 @@ void ReleaseImageIndex(HLib::Task *task, const char *name);
 void ImageModuleUpdate(Character *character, void *data);
 void ImageModuleCleanup(Character *character, void *data);
 void SetupImageModuleVariants(Character *character, HLib::Task *manager, const char *name, std::int32_t count);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AssignImageModuleParameters(Character *character, std::int32_t mode, std::int32_t remaining, float step, std::uint32_t group);
 #else
 void AssignImageModuleParameters(Character *character, std::uint8_t mode, std::int32_t remaining, float step, std::uint32_t group);
@@ -190,7 +190,7 @@ void QueueModelImageFileRead(MT7Model **destination, const char *directory, cons
 }
 
 bool ModelImageReadComesAfter(const ModelImageFileRead *first, const ModelImageFileRead *second) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int8_t a, b;
     const char *left = first->directory, *right = second->directory;
     a = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*left++)));
@@ -470,7 +470,7 @@ void UpdateImageDistance(HLib::Task *task, ModelManagerEntry *entry, Vector3 *po
         } else {
             distance = std::sqrt(distance);
             distance = 1000000.0f / distance;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             SetImageDistance(task, entry, distance > 2147483648.0f ? 0x7fffffffU : static_cast<std::uint32_t>(static_cast<std::int32_t>(distance)));
 #else
             std::int32_t value;
@@ -670,7 +670,7 @@ void SetImageModuleEntrySelection(ImageModuleComponent *image, std::int32_t entr
     SetImageEntrySelection(image->entries[entry], child, group, variant);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ConfigureImageModuleAnimation(ImageModuleComponent *image, std::int32_t mode, std::int32_t remaining, float step) {
 #else
 void ConfigureImageModuleAnimation(ImageModuleComponent *image, std::uint8_t mode, std::int32_t remaining, float step) {
@@ -745,7 +745,7 @@ void AssignCharacterTableImage(Character *character, HLib::Task *manager, const 
             switch (record.tokenIndex) {
             case 0: {
                 const float value = record.arguments[0].value.floating;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 variants = static_cast<std::int32_t>(value);
 #else
                 asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(variants) : "f"(value) : "fpul");
@@ -755,7 +755,7 @@ void AssignCharacterTableImage(Character *character, HLib::Task *manager, const 
             }
             case 1: {
                 const float value = record.arguments[0].value.floating;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 remaining = static_cast<std::int32_t>(value);
 #else
                 asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(remaining) : "f"(value) : "fpul");
@@ -810,7 +810,7 @@ void SetCharacterImageEntrySelection(Character *character, std::int32_t entry, s
     SetImageModuleEntrySelection(static_cast<ImageModuleComponent *>(charFindComp(character, CHARACTER_IMAGE)), entry, child, group, variant);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AssignImageModuleParameters(Character *character, std::int32_t mode, std::int32_t remaining, float step, std::uint32_t group) {
 #else
 void AssignImageModuleParameters(Character *character, std::uint8_t mode, std::int32_t remaining, float step, std::uint32_t group) {

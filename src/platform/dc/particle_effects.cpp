@@ -1,6 +1,6 @@
 #include "platform/dc/particle_effects.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include <cmath>
 
@@ -13,6 +13,58 @@ TerrainEffect g_terrainEffects[2]{};
 TerrainChannel g_terrainChannels[4]{};
 Vector2 g_fftForwardTwiddles[32]{};
 Vector2 g_fftBackwardTwiddles[32]{};
+
+#endif
+
+#if SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+TerrainChannel g_terrainChannels[4] = {};
+
+std::uint32_t GetTerrainTextureSize(std::uint32_t size) {
+    switch (size) {
+    case 8: return 0;
+    case 16: return 1;
+    case 32: return 2;
+    case 64: return 3;
+    case 128: return 4;
+    case 256: return 5;
+    case 512: return 6;
+    case 1024: return 7;
+    default: return size;
+    }
+}
+
+std::uint32_t *SetTerrainChannelTexture(std::int32_t index, std::uint32_t format, std::int32_t width, std::int32_t height,
+    std::uint32_t *pixels, std::uint32_t flags) {
+    const std::int32_t offset = index * 0x3c;
+    TerrainChannel &channel = *reinterpret_cast<TerrainChannel *>(reinterpret_cast<std::byte *>(g_terrainChannels) + offset);
+    if (kmCreateTextureSurface(&channel.surface, width, height, static_cast<KMTEXTURETYPE>(format)) || kmLoadTexture(&channel.surface, pixels, 0, 0))
+        return 0;
+    const std::uint32_t widthBits = GetTerrainTextureSize(channel.surface.Width);
+    const std::uint32_t heightBits = GetTerrainTextureSize(channel.surface.Height);
+    channel.flags = flags;
+    if (flags & 1U) {
+        channel.context[0] = 0x808c000eU;
+        channel.context[1] = 0xca800000U;
+        channel.context[2] = (widthBits << 3) | heightBits | 0x20002440U;
+    } else {
+        channel.context[0] = 0x8200000eU;
+        channel.context[1] = 0xcb800000U;
+        channel.context[2] = (widthBits << 3) | heightBits | 0x94002440U;
+    }
+    const std::uint32_t surfaceFlags = channel.surface.fSurfaceFlags;
+    channel.context[3] = ((surfaceFlags & 1U) << 31) | ((surfaceFlags & 8U) << 27) | (channel.surface.PixelFormat & 0x38000000U) |
+        ((~surfaceFlags & 4U) << 24) | ((surfaceFlags & 0x10U) << 21) | ((surfaceFlags & 2U) << 23) |
+        (reinterpret_cast<std::uintptr_t>(channel.surface.pSurface) >> 3);
+    if (flags & 2U)
+        channel.context[2] &= 0xff3fffffU;
+    else
+        channel.context[2] |= 0x00800000U;
+    if (flags & 4U)
+        channel.context[2] |= 0x001000c0U;
+    else
+        channel.context[2] = (channel.context[2] & 0xffefffffU) | 0x40U;
+    return channel.context;
+}
 
 #endif
 
@@ -479,7 +531,7 @@ void InitializeTerrainEffects() {
 #endif
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateFftEffect(FftEffectHandle handle) {
     FftEffect &effect =

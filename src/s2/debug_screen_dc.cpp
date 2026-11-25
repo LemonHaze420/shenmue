@@ -30,7 +30,7 @@ void SetDebugScreenFontPixels(const std::uint16_t *pixels) {
     g_debugScreenFontPixels = pixels;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetDebugScreenTextColour(std::uint32_t colour) {
     g_debugScreenPrintHeader.colour = colour;

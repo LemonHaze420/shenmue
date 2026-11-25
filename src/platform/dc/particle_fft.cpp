@@ -1,6 +1,6 @@
 #include "platform/dc/particle_effects.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include "common/types.hpp"
 #include <cmath>
@@ -153,7 +153,7 @@ void FftReverse16(Vector2 *values) {
 
 // @verified - d
 void FftInverseHalves(Vector2 *values, std::int32_t logSize) {
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     const std::int32_t size = static_cast<std::int16_t>(1 << logSize);
     const std::int16_t quarter = static_cast<std::int16_t>(size >> 2);
     Vector2 *upper = values + quarter;
@@ -278,7 +278,7 @@ void FftForwardFinal(Vector2 *values, std::int32_t logSize) {
 
 // @verified - d
 void FftInverseScale(Vector2 *values, std::int32_t logSize, const float *scale) {
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     const float factor = *scale;
     const std::uint32_t size = 1U << logSize;
     Vector2 *upper = values + (size >> 1);
@@ -392,7 +392,7 @@ void FftReverseBits(Vector2 *values, std::int32_t size) {
 }
 #endif
 
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FftRadix4(Vector2 *values, std::int32_t logSize, const Vector2 *twiddles) {
     const std::int32_t size = static_cast<std::int32_t>(1U << logSize);
     std::int32_t remaining = size >> 2;
@@ -613,7 +613,7 @@ void FftReverse32(Vector2 *values) {
 }
 
 void FftInverseStages(Vector2 *values, std::int32_t logSize, const Vector2 *twiddles) {
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     std::int32_t groups = (1 << logSize) >> 3, span = 4;
     for (std::int32_t stage = logSize - 4; stage; --stage) {
         Vector2 *first = values;

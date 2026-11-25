@@ -5,7 +5,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "common/types.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include <cstddef>
 #endif
 
@@ -13,7 +13,7 @@ namespace shenmue {
 namespace s2 {
 
 #define TASK_SUPP SHEN_NAME4('S', 'U', 'P', 'P')
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct SupportTaskData {
     std::int32_t flagIndex, markedFlag;
 };
@@ -23,13 +23,13 @@ std::uint32_t DebugMenuInputBlockedNullsub();
 #endif
 
 extern std::int32_t g_currentShenmue1SaveAreaId;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint32_t gameSysActivityFlags, supportIptMaximum, supportIptMinimum;
 #else
 extern std::uint32_t gameSysActivityFlags, gameSysUnusedColour;
 #endif
 extern std::int32_t gameSysActivityCounters[5];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int32_t currentDebugMenuPage, inputSuppressionFrames;
 #else
 extern std::int32_t gameSysUnusedState, currentDebugMenuPage, inputSuppressionFrames;

@@ -164,7 +164,7 @@ float GetCharacterDisplayRadius(const Character *character);
 std::int32_t GetCharacterLayer(const Character *character);
 void SetCharacterType(Character *character, std::int32_t type);
 void SetCharacterUnknownFlag(Character *character, std::uint32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetCharacterShadowOffset(const Character *character, Vector3 *offset);
 void GetFacialOsageDisplacement(void *face, Vector3 *output);
 void FacialDisplacement(Character *character, Vector3 *displacement);
@@ -183,7 +183,7 @@ extern Matrix4x4 g_characterNodeSavedTransform;
 extern Matrix4x4 characterMirrorMatrix;
 extern std::int32_t g_characterMirroredTransformEnabled;
 CharacterUpdateCallback GetMotionCallback(const Character *character);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef void (*CharacterDrawCallback)(void *);
 CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDrawCallback callback);
 #endif
@@ -195,7 +195,7 @@ CharacterUpdateCallback charaAssignPrepareForDrawCallback(Character *character, 
 void charaSetDisplayEnabledFlag(Character *character, std::int32_t enabled);
 void SetCharacterModelName(Character *character, shen_name name);
 void SetCharacterRadius(Character *character, float radius);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern float g_motionVertexLinkDistance;
 float mtwkSetVertexLinkDistance(float distance);
 float mtwkGetVertexLinkDistance();
@@ -210,7 +210,7 @@ float GetCharacterAlpha(const Character *character);
 void SetCharacterAlpha(Character *character, float alpha);
 std::int32_t SetPluralControlFor(Character *character, std::int16_t state);
 const Matrix4x4 *GetCharacterMirrorMatrix();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct CharacterMirrorPlane {
     Vector3 position, normal;
 };
@@ -230,11 +230,11 @@ void GetNodeWorldRotation(const CharacterNode *node, Vector3i *rotation);
 void GetCharacterWorldRotation(const Character *character, Vector3i *rotation);
 void GetCharacterLocalRotation(const Character *character, Vector3i *rotation);
 void SetCharacterLocalRotation(Character *character, const Vector3i *rotation);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void shenSetRotY(Character *character, std::int32_t yaw);
 #endif
 void GetCharacterScale(const Character *character, Vector3 *scale);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetCharacterScale(Character *character, const Vector3 *scale);
 #endif
 void shenApplyTranslationToAll(CharacterNode *node, const Vector3 &position);

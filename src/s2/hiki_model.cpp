@@ -1,18 +1,37 @@
 #include "s2/hiki.hpp"
 
+#if !SHENMUE_IS_DC
 #include <bit>
+#endif
 #include <cstdlib>
 #include <cstring>
+#if !SHENMUE_IS_DC
 #include <limits>
+#else
+#include "platform/dc/particle_effects.hpp"
+#endif
 #if defined(_M_X64) || defined(__x86_64__)
 #include <emmintrin.h>
 #endif
 
-namespace shenmue::s2 {
+namespace shenmue { namespace s2 {
 
+#if SHENMUE_IS_DC
+float g_hikiOpacity;
+HikiWaveVertex g_hikiWaveVertices[HIKI_ALPHA_GRID_SIZE];
+std::uint32_t g_effectDiffuseMask;
+struct HikiTextureRecord {
+    KMSURFACEDESC surface;
+    std::byte retained20[8];
+    HikiTextureHeader header;
+    std::uint32_t flags;
+};
+typedef char HikiTextureLayout[sizeof(HikiTextureRecord) == sizeof(dc::sdk::TerrainChannel) ? 1 : -1];
+#else
 float g_hikiOpacity{};
 std::array<HikiWaveVertex, HIKI_ALPHA_GRID_SIZE> g_hikiWaveVertices{};
 std::array<HikiTextureRecord, 4> g_hikiTextures{};
+#endif
 
 // @verified - p
 void RelocateHikiModel(HikiModelNode &node, const void *image) {
@@ -42,7 +61,11 @@ void RelocateHikiModel(HikiModelNode &node, const void *image) {
 }
 
 // @verified - p
+#if SHENMUE_IS_DC
+void InitializeHikiWaveHeights(const float *heights, std::uint32_t diffuse) {
+#else
 void InitializeHikiWaveHeights(std::span<const float, HIKI_ALPHA_GRID_SIZE> heights, std::uint32_t diffuse) {
+#endif
     std::size_t destination = 0;
     for (std::size_t row = 1; row < 17; ++row) {
         for (std::size_t column = 0; column < 17; ++column) {
@@ -70,7 +93,9 @@ void InitializeHikiWaveHeights(std::span<const float, HIKI_ALPHA_GRID_SIZE> heig
 
 namespace {
 std::int64_t TruncateHikiOpacity(float value) {
-#if defined(_M_X64) || defined(__x86_64__)
+#if SHENMUE_IS_DC
+    return static_cast<std::int32_t>(value);
+#elif defined(_M_X64) || defined(__x86_64__)
     return _mm_cvttss_si64(_mm_set_ss(value));
 #else
     return value >= -0x1p63f && value < 0x1p63f ? static_cast<std::int64_t>(value) : std::numeric_limits<std::int64_t>::min();
@@ -79,7 +104,11 @@ std::int64_t TruncateHikiOpacity(float value) {
 }
 
 // @verified - p
+#if SHENMUE_IS_DC
+void ParseHikiData(const std::uint8_t *alpha) {
+#else
 void ParseHikiData(std::span<const std::uint8_t, HIKI_ALPHA_GRID_SIZE> alpha) {
+#endif
     const float opacityScale = g_hikiOpacity;
     std::size_t destination = 0;
     for (std::size_t row = 0; row < 17; ++row) {
@@ -150,8 +179,13 @@ void InitializeHikiTextureCoordinates(std::int32_t repeatU, std::int32_t repeatV
 
 // @verified - p
 void ApplyHikiTexture(std::int32_t textureIndex, HikiModelEntity &entity) {
+#if SHENMUE_IS_DC
+    const HikiTextureRecord &texture = *reinterpret_cast<const HikiTextureRecord *>(&dc::sdk::g_terrainChannels[textureIndex]);
+    const HikiWaveVertex *vertex = g_hikiWaveVertices;
+#else
     const HikiTextureRecord &texture = g_hikiTextures[textureIndex];
     const HikiWaveVertex *vertex = g_hikiWaveVertices.data();
+#endif
     std::uint32_t *command = static_cast<std::uint32_t *>(HLib::GetPointerFromDynamicHeapOffsetBase(entity.chunkOffset));
     while (static_cast<std::uint8_t>(*command) != 255) {
         const std::int32_t bytes = static_cast<std::int32_t>(*command) >> 8;
@@ -164,7 +198,11 @@ void ApplyHikiTexture(std::int32_t textureIndex, HikiModelEntity &entity) {
                 std::uint32_t count = static_cast<std::uint32_t>(std::abs(static_cast<std::int32_t>(*data++)));
                 while (count--) {
                     if (*data++ & 1U) {
+#if SHENMUE_IS_DC
+                        data[0] = *reinterpret_cast<const std::uint32_t *>(&vertex->height);
+#else
                         data[0] = std::bit_cast<std::uint32_t>(vertex->height);
+#endif
                         data[6] = vertex->diffuse;
                         data[7] = vertex->specular;
                         data += 8;
@@ -179,8 +217,13 @@ void ApplyHikiTexture(std::int32_t textureIndex, HikiModelEntity &entity) {
 
 // @verified - p
 void ScrollHikiTexture(std::int32_t textureIndex, std::int16_t u, std::int16_t v, HikiModelEntity &entity) {
+#if SHENMUE_IS_DC
+    const HikiTextureRecord &texture = *reinterpret_cast<const HikiTextureRecord *>(&dc::sdk::g_terrainChannels[textureIndex]);
+    const HikiWaveVertex *vertex = g_hikiWaveVertices;
+#else
     const HikiTextureRecord &texture = g_hikiTextures[textureIndex];
     const HikiWaveVertex *vertex = g_hikiWaveVertices.data();
+#endif
     std::int32_t period = 0;
     std::uint32_t *command = static_cast<std::uint32_t *>(HLib::GetPointerFromDynamicHeapOffsetBase(entity.chunkOffset));
     for (;;) {
@@ -200,7 +243,11 @@ void ScrollHikiTexture(std::int32_t textureIndex, std::int16_t u, std::int16_t v
                 std::uint32_t count = static_cast<std::uint32_t>(std::abs(static_cast<std::int32_t>(*data++)));
                 while (count--) {
                     if (*data++ & 1U) {
+#if SHENMUE_IS_DC
+                        data[0] = *reinterpret_cast<const std::uint32_t *>(&vertex->height);
+#else
                         data[0] = std::bit_cast<std::uint32_t>(vertex->height);
+#endif
                         const std::uint16_t shiftedV = static_cast<std::uint16_t>(v + data[5] - period * signV);
                         const std::uint16_t shiftedU = static_cast<std::uint16_t>(u + (data[5] >> 16U) - period * signU);
                         data[5] = (static_cast<std::uint32_t>(shiftedU) << 16U) | shiftedV;
@@ -208,7 +255,11 @@ void ScrollHikiTexture(std::int32_t textureIndex, std::int16_t u, std::int16_t v
                         data[7] = vertex->specular;
                         ++vertex;
                         if (paired > 0) {
+#if SHENMUE_IS_DC
+                            data[9] = *reinterpret_cast<const std::uint32_t *>(&vertex->height);
+#else
                             data[9] = std::bit_cast<std::uint32_t>(vertex->height);
+#endif
                             const std::uint16_t secondV = static_cast<std::uint16_t>(v + data[14] - period * signV);
                             const std::uint16_t secondU = static_cast<std::uint16_t>(u + (data[14] >> 16U) - period * signU);
                             data[14] = (static_cast<std::uint32_t>(secondU) << 16U) | secondV;
@@ -237,4 +288,11 @@ void ScrollHikiTexture(std::int32_t textureIndex, std::int16_t u, std::int16_t v
     }
 }
 
-} // namespace shenmue::s2
+#if SHENMUE_IS_DC
+HikiModelEntity *g_hikiCurrentEntity;
+void DrawLegacyEffectEntity(HikiModelEntity &entity) {
+    g_hikiCurrentEntity = &entity;
+}
+#endif
+
+} } // namespace shenmue::s2

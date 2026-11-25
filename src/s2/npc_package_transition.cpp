@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #include "s2/character_dc.hpp"
 #include "s2/character_control_dc.hpp"
@@ -85,7 +85,7 @@
 #define UI_NOEXCEPT
 #define UI_ICON(name) name
 #define UI_ZERO
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #include "s2/motion_stream_dc.hpp"
 #include "s2/model_transform_dc.hpp"
@@ -166,13 +166,13 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 using namespace npc_package_detail;
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace npc_package_detail {
 
 void NpcTransitionDrawNullsub(void *);
@@ -183,7 +183,7 @@ void InterpolateNpcActiveHumans();
 } // namespace npc_package_detail
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void DrawNpcActiveHumans();
 
@@ -273,7 +273,7 @@ std::int32_t InterpolateNpcSplineNormalized(const Vector3 *points, std::int32_t 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void NpcTransitionDrawNullsub(void *) {
@@ -482,7 +482,7 @@ void DrawNpcTransitions() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void InitializeNpcRouteResetGroups(NpcRouteResetGroupHeader *groups) {
@@ -493,7 +493,7 @@ void InitializeNpcRouteResetGroups(NpcRouteResetGroupHeader *groups) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void DrawNpcTransitions() {
@@ -506,7 +506,7 @@ void DrawNpcTransitions() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ReleaseNpcTransitionHumanPackages() {
@@ -521,7 +521,7 @@ void ReleaseLoadedNpcTransitionPackages() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void DrawNpcActiveHumans() {
     Vector3 view;
@@ -593,7 +593,7 @@ void DrawNpcActiveHumans() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ReleaseNpcTransitionSlotPackages() {
@@ -616,7 +616,7 @@ void ReleaseLoadedNpcTransitionSlotPackages() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void PrepareNpcRouteResetGroups(NpcRouteResetGroupHeader *groups) {
@@ -645,7 +645,7 @@ void PrepareNpcRouteResetGroups(NpcRouteResetGroupHeader *groups) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void InterpolateNpcActiveHumans() {
@@ -751,7 +751,7 @@ void InterpolateNpcActiveHumans() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ReleaseNpcTransitionRoutePackages() {
@@ -793,7 +793,7 @@ void ReleaseLoadedNpcTransitionRoutePackages() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ComputeNpcRouteResetPitch(const Vector3 *previous, const Vector3 *next, std::int32_t yaw) {

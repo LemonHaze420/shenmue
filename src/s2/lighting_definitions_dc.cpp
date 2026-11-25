@@ -343,6 +343,17 @@ void InitializeMapLighting() {
     LightTask_Enqueue();
 }
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t g_lightPriorityCount;
+std::int16_t g_lightPriority[5];
+
+void AddLightPriority(std::int32_t light) {
+    if (g_lightPriorityCount <= 4)
+        g_lightPriority[g_lightPriorityCount++] = static_cast<std::int16_t>(light);
+}
+
+#endif
+
 } // namespace s2
 } // namespace shenmue
 

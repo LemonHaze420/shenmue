@@ -8,7 +8,7 @@
 #include "s2/qron_dc.hpp"
 #include "s2/search_dc.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/date_time.hpp"
 #include "s2/camera_dc.hpp"
 #include "s2/camera_state_query_dc.hpp"
@@ -60,7 +60,7 @@
 #include "s2/weather.hpp"
 #include "s2/weather_instruction_dc.hpp"
 #include "s2/hlib.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_area_route.hpp"
 #endif
 #define SHENMUE_NPC_NULL 0
@@ -103,7 +103,7 @@ extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_EV_LoadAudio(
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct DoorAreaScript {
     void (*eventCallback)(std::int32_t);
     std::int32_t eventId;
@@ -112,15 +112,15 @@ struct DoorAreaScript {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char DoorSetupLayout0[(sizeof(DoorAreaScript) == 0x10) ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char DoorSetupLayout1[(offsetof(DoorTaskEntry, digits) == 0xc4) ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char DoorSetupLayout2[(offsetof(DoorTaskEntry, motionScale) == 0x1d8) ? 1 : -1];
 #endif
 
@@ -196,7 +196,7 @@ std::int32_t shenLoadFile(const char *directory, const char *filename, void *des
 
 void *shenLoadFile(const char *directory, const char *filename, shen_name allocationName);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int shenFileExists(const char *directory, const char *filename);
 #else
 bool shenFileExists(const char *directory, const char *filename);
@@ -208,7 +208,7 @@ void DrawMainIconOverlay(std::uint32_t colour, float depth);
 
 std::int32_t SelectDiscDirectory(const char *directory, std::int32_t mode);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int shenFileExists(const char *directory, const char *filename);
 #else
 bool shenFileExists(const char *directory, const char *filename);
@@ -256,115 +256,115 @@ std::int32_t AllocateTempSprites(std::int32_t index);
 
 bool BindTempSprite(std::int32_t index, std::int32_t texture, std::int32_t slot, const std::uint16_t *rectangles);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DoorTaskEntry *g_doorEntryHead = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DoorIngressState g_doorIngress = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name g_doorEntrySubject;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_doorEntryAction, g_doorEntryState;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static MT7Node *g_doorNumberModels[10];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static MapEventCallbackEntry g_doorMapCallbacks[32] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static DoorTaskEntry *g_doorEntryTail = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static char g_doorAuthorName[5];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static shen_name g_doorCrossingSubject;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float g_doorPreviousCrossingZ;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_doorCrossingZ;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t g_doorNearbyCharacterCount = 0, g_doorAutomaticOpeningAllowed = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t g_doorAutomaticExitSide = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const Matrix4x4 *g_doorAutomaticTransform = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_doorCurrentStream = 1;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_doorEntryMotion, g_doorEntryWait;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t g_doorAnswerSide, g_doorAnswerMotion = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t g_doorAnswerDoorMotion;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float g_doorAnswerFrame;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 g_doorAnswerPosition;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3i g_doorAnswerRotation;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t g_doorCameraFrame = 0, g_doorCameraDuration = 0;
 static std::uint32_t g_doorPreviousCameraState = 0;
 static std::int32_t g_doorMessageFrames = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 g_doorCameraStartPosition = {}, g_doorCameraStartTarget = {}, g_doorCameraEndPosition = {}, g_doorCameraEndTarget = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DoorAreaCleanupCallback g_doorAreaCleanupCallback = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t titleWarningPhase, titleWarningTailFrames = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t titleWarningBaseColour, titleWarningCurrentColour, titleWarningDesiredColour;
 #endif
 
 DoorTaskEntry *g_doorTaskEntries = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t SetQeDoorSceneState(std::int32_t mode) {
     switch (mode) {
@@ -383,7 +383,7 @@ std::uint32_t SetQeDoorSceneState(std::int32_t mode) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t drInitEnter_Enqueue(const MapInfoChunk *chunk) {
     g_doorDefinitionTable = 0;
     g_doorTaskEntries = 0;
@@ -485,7 +485,7 @@ std::int32_t drInitEnter_Enqueue(const MapInfoChunk *chunk) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const Matrix4x4 *doorFindEntryTransform(shen_name subject) {
     const DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -495,7 +495,7 @@ const Matrix4x4 *doorFindEntryTransform(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsDoorSecondaryNodeEnabled(shen_name subject) {
     const DoorTaskEntry *const entry = FindDoorEntry(subject);
     if (!entry || !entry->secondary)
@@ -541,7 +541,7 @@ std::uint32_t SetDoorSubjectEnabled(shen_name subject, std::int32_t enabled) {
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::uint16_t IsDoorSubjectEnabled(shen_name subject) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -557,7 +557,7 @@ static std::uint16_t IsDoorSubjectEnabled(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool HasDoorEntry(shen_name door) {
     if (FindDoorEntry(door))
@@ -566,7 +566,7 @@ bool HasDoorEntry(shen_name door) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 shen_name GetNearbyDoorForNpc(const Vector3 *position) {
     if (!position)
@@ -584,7 +584,7 @@ shen_name GetNearbyDoorForNpc(const Vector3 *position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool drIsDoorButtonAvailable(shen_name subject) {
     const DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -601,7 +601,7 @@ bool drIsDoorButtonAvailable(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsDoorAvailableForNpcRoute(shen_name door, const Vector3 *position) {
     const DoorTaskEntry *const entry = FindDoorEntry(door);
@@ -625,7 +625,7 @@ failed:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ComputeDoorIngress(std::int32_t doorId, const Vector3 *currentPosition, Vector3 *targetPosition) {
     g_doorIngress.selectedDoor = 0;
@@ -699,7 +699,7 @@ bool ComputeDoorIngress(std::int32_t doorId, const Vector3 *currentPosition, Vec
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ComputeDoorEgress(std::int32_t doorId, const Vector3 *currentPosition, Vector3 *targetPosition) {
     g_doorIngress.selectedDoor = 0;
@@ -765,7 +765,7 @@ bool ComputeDoorEgress(std::int32_t doorId, const Vector3 *currentPosition, Vect
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ClaimDoor(shen_name subject, shen_name claimant) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -791,7 +791,7 @@ std::int32_t ClaimDoor(shen_name subject, shen_name claimant) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ReleaseDoor(shen_name subject, shen_name claimant) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -807,7 +807,7 @@ std::int32_t ReleaseDoor(shen_name subject, shen_name claimant) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReleaseActiveDoorClaims(shen_name claimant) {
     DoorTaskEntry *entry = g_doorTaskEntries;
     if (!g_doorDefinitionTable || !entry)
@@ -820,7 +820,7 @@ std::int32_t ReleaseActiveDoorClaims(shen_name claimant) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void drBeginEntry(shen_name subject) {
     g_doorEntryState = 0;
@@ -835,14 +835,14 @@ void drBeginEntry(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t BeginDoorAnimation(std::int32_t doorId, shen_name claimant, std::int32_t animationId) {
     return BeginDoorAnimation(doorId, claimant, animationId, 0.0f, 1.0f);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t BeginDoorAnimation(std::int32_t doorId, shen_name claimant, std::int32_t animationId, float frame, float speed) {
     DoorTaskEntry *const entry = FindDoorEntry(shen_name(static_cast<std::uint32_t>(doorId)));
@@ -863,7 +863,7 @@ std::int32_t BeginDoorAnimation(std::int32_t doorId, shen_name claimant, std::in
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t doorTriggerTransition(shen_name subject, shen_name claimant) {
     std::int32_t result = 0;
@@ -907,7 +907,7 @@ finish:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t doorPlayRigidMotionRange(shen_name subject, std::int32_t motionId, float startFrame, float speed, float endFrame) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -926,7 +926,7 @@ std::int32_t doorPlayRigidMotionRange(shen_name subject, std::int32_t motionId, 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t doorPlayRigidMotion(shen_name subject, std::int32_t motionId, float startFrame, float speed) {
     if (!ClaimDoor(subject, SHEN_NAME(DOOR)))
@@ -935,7 +935,7 @@ std::int32_t doorPlayRigidMotion(shen_name subject, std::int32_t motionId, float
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t doorLoopRigidMotion(shen_name subject, std::int32_t motionId, float startFrame, float speed) {
     ClaimDoor(subject, SHEN_NAME(DOOR));
@@ -943,7 +943,7 @@ std::int32_t doorLoopRigidMotion(shen_name subject, std::int32_t motionId, float
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetDoorSubjectCallback(shen_name subject, DoorSubjectCallback callback) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -954,7 +954,7 @@ std::int32_t SetDoorSubjectCallback(shen_name subject, DoorSubjectCallback callb
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 DoorSubjectCallback GetDoorSubjectCallback(shen_name subject) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -962,14 +962,14 @@ DoorSubjectCallback GetDoorSubjectCallback(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetDoorAreaCleanupCallback(DoorAreaCleanupCallback callback) {
     g_doorAreaCleanupCallback = callback;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ExecuteCleanupFuncForAreaWithCachedScene() {
     if (g_doorAreaCleanupCallback)
@@ -977,7 +977,7 @@ void ExecuteCleanupFuncForAreaWithCachedScene() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ExecuteDoorAreaCleanup(std::int32_t sceneId, std::int32_t apply) {
     if (g_doorAreaCleanupCallback)
@@ -996,7 +996,7 @@ void ResetNpcScheduleSeeds() {
     hasPendingNpcScheduleSeeds = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetNpcDoorAnimation(std::int32_t doorId, Character *character, const Vector3 *position) {
     const std::int32_t rig = charGetMotionRigType(character);
@@ -1221,7 +1221,7 @@ std::int32_t GetNpcDoorAnimation(std::int32_t doorId, Character *character, cons
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t drGetAnswerSide(std::uint32_t *subject) {
     const std::int32_t side = g_doorAnswerSide;
@@ -1235,7 +1235,7 @@ std::int32_t drGetAnswerSide(std::uint32_t *subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DoorDefinitionTable *GetDoorDefinitionTable() {
     return g_doorDefinitionTable;
 }
@@ -1254,7 +1254,7 @@ shen_name FindDoorSecondaryName(shen_name primary) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const DoorAreaMetadata *GetDataForCurrentMapAndScene(shen_name subject) {
     typedef std::uint32_t(__attribute__((renesas)) * DoorDataHeader)(std::uint32_t map);
@@ -1278,7 +1278,7 @@ const DoorAreaMetadata *GetDataForCurrentMapAndScene(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetDoorAreaFlags(shen_name subject) {
     const DoorAreaMetadata *const metadata = GetDataForCurrentMapAndScene(subject);
@@ -1286,7 +1286,7 @@ std::uint32_t GetDoorAreaFlags(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetDoorOpeningState(shen_name subject) {
     const DoorAreaMetadata *const metadata = GetDataForCurrentMapAndScene(subject);
@@ -1314,14 +1314,14 @@ std::int32_t GetDoorOpeningState(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t IsDoorOpeningAllowed(shen_name subject) {
     return GetDoorOpeningState(subject) != 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetDoorInteractionAction(shen_name subject) {
     const DoorAreaMetadata *const metadata = GetDataForCurrentMapAndScene(subject);
@@ -1365,20 +1365,20 @@ std::int32_t GetDoorInteractionAction(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetDoorExitSide(shen_name subject) {
     return GetDoorAreaFlags(subject) & 3U;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t GetDoorAnswerFlag(shen_name subject) {
     return GetDoorAreaFlags(subject) & 4U;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UnlinkDoorEntry(shen_name subject) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -1396,7 +1396,7 @@ static void UnlinkDoorEntry(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UnlinkExcludedDoors() {
     const shen_name map = g_currentMap;
@@ -1410,7 +1410,7 @@ static void UnlinkExcludedDoors() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::uint32_t FindDoorNameByNumber(std::int8_t number) {
     DoorTaskEntry *entry = g_doorTaskEntries;
@@ -1427,7 +1427,7 @@ static std::uint32_t FindDoorNameByNumber(std::int8_t number) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void SetDoorEntrySortKey(float key, DoorTaskEntry *entry) {
     DoorTaskEntry *cursor = entry;
@@ -1493,7 +1493,7 @@ DoorTaskEntry *FindDoorByAuthor(shen_name author) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t SetDoorSecondaryNodeEnabled(shen_name subject, std::int32_t enabled) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -1505,7 +1505,7 @@ static std::int32_t SetDoorSecondaryNodeEnabled(shen_name subject, std::int32_t 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetDoorAuthorSecondaryNodes(shen_name author, std::int32_t visible) {
     typedef std::uint32_t(__attribute__((renesas)) * DoorTableHeader)(std::uint32_t);
@@ -1530,7 +1530,7 @@ std::int32_t SetDoorAuthorSecondaryNodes(shen_name author, std::int32_t visible)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DoorAdmission_Callback(void *) {
     typedef std::uint32_t(__attribute__((renesas)) * DoorTableHeader)(std::uint32_t);
     DoorTableHeader header;
@@ -1592,7 +1592,7 @@ void SetDoorNodeHierarchyHidden(MT7Node *node, std::uint32_t hidden) {
         SetDoorNodeHierarchyHidden(node->sibling, hidden);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyDoorSceneStateToSiblings(MT7Node *node, std::int32_t sceneId) {
     const std::uint32_t marker = GetModelMarker(node);
@@ -1607,7 +1607,7 @@ void ApplyDoorSceneStateToSiblings(MT7Node *node, std::int32_t sceneId) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ApplyDoorSceneState(std::int32_t sceneId) {
     DoorTaskEntry *entry = g_doorTaskEntries;
@@ -1620,7 +1620,7 @@ std::int32_t ApplyDoorSceneState(std::int32_t sceneId) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawDoorMotionNodes(MT7Node *node, float alpha) {
     if (node->sibling)
@@ -1641,7 +1641,7 @@ static void DrawDoorMotionNodes(MT7Node *node, float alpha) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void PublishDoorMotionNodes(void *) {
     DoorTaskEntry *entry = g_doorTaskEntries;
@@ -1667,7 +1667,7 @@ static void PublishDoorMotionNodes(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CountDoorNearbyCharacter(Character *character, void *context) {
     Vector3 position;
@@ -1692,7 +1692,7 @@ static std::int32_t CountDoorNearbyCharacter(Character *character, void *context
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DoorTask_Callback(void *) {
     DoorTaskEntry *entry = g_doorTaskEntries;
@@ -1768,7 +1768,7 @@ void DoorTask_Callback(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t drRunEntryScripts(std::int32_t bits) {
     if (bits) {
@@ -1795,7 +1795,7 @@ std::int32_t drRunEntryScripts(std::int32_t bits) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlSwitchToEventCam(std::int32_t frames, const Vector3 *target, std::int32_t yaw) {
     g_doorCameraFrame = 0;
@@ -1808,14 +1808,14 @@ void camCtrlSwitchToEventCam(std::int32_t frames, const Vector3 *target, std::in
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RestoreDoorCameraState() {
     camCtrlSetState(g_doorPreviousCameraState);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlApplyNextAndTargetPos() {
     ++g_doorCameraFrame;
@@ -1837,7 +1837,7 @@ void camCtrlApplyNextAndTargetPos() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t ManageDoorEntryAlpha(std::int32_t nextState, std::int32_t scriptBits) {
     switch (g_doorEntryState) {
@@ -1876,7 +1876,7 @@ static std::int32_t ManageDoorEntryAlpha(std::int32_t nextState, std::int32_t sc
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
     switch (g_doorEntryState) {
     case 0x20: {
@@ -1946,7 +1946,7 @@ static std::int32_t drTryDoor(std::int32_t nextState, std::int32_t scriptBits) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static float GetDoorWalkMotionStart(std::int32_t motion) {
     switch (motion) {
@@ -1965,7 +1965,7 @@ static float GetDoorWalkMotionStart(std::int32_t motion) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scriptBits) {
     Vector3 position, target;
@@ -2055,7 +2055,7 @@ static std::int32_t drWalkThroughDoor(std::int32_t nextState, std::int32_t scrip
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t drKnockOnDoor(std::int32_t nextState, std::int32_t variant, std::int32_t scriptBits) {
     const MapControlData *control;
     std::int32_t motion = 0;
@@ -2138,7 +2138,7 @@ static std::int32_t drKnockOnDoor(std::int32_t nextState, std::int32_t variant, 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t drSetAnswerMotion(std::int32_t motion) {
     std::int32_t side = 0;
@@ -2309,7 +2309,7 @@ static std::int32_t drSetAnswerMotion(std::int32_t motion) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t drOccupantAnswers(std::int32_t nextState) {
     const MapControlData *control;
@@ -2485,7 +2485,7 @@ static std::int32_t drOccupantAnswers(std::int32_t nextState) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t drFinishEntry(std::int32_t nextState) {
     const std::int32_t state = g_doorEntryState;
@@ -2509,7 +2509,7 @@ static std::int32_t drFinishEntry(std::int32_t nextState) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t drPlayAnswerDialogue(std::int32_t nextState) {
     static const char message[] = "\244\242\244\253\244\312\244\244\244\312\241\252";
@@ -2533,7 +2533,7 @@ static std::int32_t drPlayAnswerDialogue(std::int32_t nextState) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void drUpdateEntry() {
     CheckHelpIcon(0x100000U, 0, CheckHelpIconOp_FrameOverlay);
@@ -2572,21 +2572,21 @@ void drUpdateEntry() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetSelectedNpcDoorId() {
     return static_cast<std::int32_t>(g_doorIngress.selectedDoor);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const Vector3 &GetDoorIngressOrigin() {
     return g_doorIngress.position;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t SetDoorRouteCondition(shen_name subject, shen_name condition, std::int32_t mode, std::int32_t sense) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -2599,7 +2599,7 @@ static std::int32_t SetDoorRouteCondition(shen_name subject, shen_name condition
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t SetDoorRequiredEntry(shen_name subject, shen_name required, std::int32_t mode) {
     DoorTaskEntry *const entry = FindDoorEntry(subject);
@@ -2611,13 +2611,13 @@ static std::int32_t SetDoorRequiredEntry(shen_name subject, shen_name required, 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DoorMapEventNullsub(std::int32_t) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EmitDoorMotionSound(DoorTaskEntry *entry) {
     std::int32_t flags = 0;
@@ -2689,7 +2689,7 @@ void EmitDoorMotionSound(DoorTaskEntry *entry) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint16_t GetDoorLeafAnimation(std::int32_t animationId) {
     switch (animationId) {
@@ -2815,13 +2815,13 @@ std::uint16_t GetDoorLeafAnimation(std::int32_t animationId) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DoorTransitionNullsub(shen_name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const char *GetDoorAuthorName(shen_name name) {
     *reinterpret_cast<shen_name *>(g_doorAuthorName) = name;
@@ -2896,7 +2896,7 @@ void UpdateDoorAuthorController() {
         if (PakLoadWait())
             return;
         const char *const name = GetDoorAuthorName(g_doorRuntimeState.temporaryAuthor);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         if (FindPakByEntryName(name) || !RequestMapPackage(Filepath_Gen(FilepathGenMode::SceneDirectory), name))
             return;
 #else
@@ -3020,7 +3020,7 @@ void UpdateDoorDestinationController() {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t IsDoorAuthorActive() {
     return g_doorRuntimeState.transitionState != 0 && g_doorRuntimeState.transitionState != 0x26;
@@ -3050,7 +3050,7 @@ std::int32_t LoadDoorAuthor(shen_name author) {
     const char *const name = GetDoorAuthorName(g_doorRuntimeState.temporaryAuthor);
     if (FindPakByEntryName(name))
         return 0;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     RequestMapPackage(Filepath_Gen(FilepathGenMode::SceneDirectory), name);
 #else
     LoadMapPackage(Filepath_Gen(FilepathGenMode::SceneDirectory), name);
@@ -3105,7 +3105,7 @@ std::int32_t RestoreDoorAuthor(std::int32_t restoreAudio) {
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TitleWarningCallback(void *) {
     switch (titleWarningPhase) {
@@ -3149,7 +3149,7 @@ void TitleWarningCallback(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitTitleWarningTaskData(TitleWarningTaskData *data);
 std::uint32_t SetTitleWarningBaseColour(std::uint32_t colour);
 
@@ -3173,7 +3173,7 @@ std::uint32_t SetTitleWarningBaseColour(std::uint32_t colour) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t IsDoorTransitionActive() {
     return g_doorDestination.phase != 0;
@@ -3256,7 +3256,7 @@ void RestoreDoorAreaCallbacks() {
     mapSetupLighting(1);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t AdvanceDoorMotion(DoorTaskEntry *entry) {
     std::int32_t completed = 0;
@@ -3354,7 +3354,7 @@ void FinishDoorAuthorLeaf(shen_name subject) {
     entry->flags &= ~0x20U;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void LoadDoorNumberModels() {
     MT7Model *const model = InitializeMT7Model(shenLoadFile("misc", "QRRNWA0G.MT7", shen_name(SHEN_NAME4('d', 'r', 'r', 'n'))));
@@ -3366,7 +3366,7 @@ static void LoadDoorNumberModels() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CompleteDoorPlayerPlacement(const Matrix4x4 *transform) {
     Vector3 position, first, last;
@@ -3441,7 +3441,7 @@ void CompleteAutomaticDoorPlayerPlacement(const Matrix4x4 *transform) {
     GetCharacterWorldPosition(player, &position);
     matrix_stack::PushUnitMatrix();
     InverseTransformPointByMatrix(transform, &position);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     matrix_stack::LoadMatrix(transform);
 #else
     Matrix4x4::SetActiveTransform(transform);
@@ -3457,7 +3457,7 @@ void CompleteAutomaticDoorPlayerPlacement(const Matrix4x4 *transform) {
     Matrix4x4::TransformPoint(position, position);
     PopCurrentMatrix(1);
     mtwkSetRegionFlag(motion, 71, 0, LowerBody);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     SetCharacterWorldPosition(player, &position);
 #else
     shenApplyTranslationToAll(&player->node, position);
@@ -3465,7 +3465,7 @@ void CompleteAutomaticDoorPlayerPlacement(const Matrix4x4 *transform) {
     mtwkRequestMotion(motion, 0xf002, LowerBody);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t GetDoorNumber(shen_name subject) {
     static const std::int8_t qa[32] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 1, 2, 3, 4, 5, 6, 7, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 10, 11};
@@ -3490,7 +3490,7 @@ static std::int32_t GetDoorNumber(shen_name subject) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateDoorNumberModels(DoorTaskEntry *entry) {
     float offset = 0.0f;
@@ -3534,7 +3534,7 @@ static void UpdateDoorNumberModels(DoorTaskEntry *entry) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void TransformDoorPropNode(MT7Node *node) {
     if (node->sibling)
@@ -3561,7 +3561,7 @@ static void TransformDoorPropNode(MT7Node *node) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TransformPropObject() {
     matrix_stack::PushUnitMatrix();
@@ -3573,7 +3573,7 @@ void TransformPropObject() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RefreshDoorSceneStateForCurrentStep() {
     if ((g_currentMap & 0xffffU) != SHEN_NAME4('Q', 'E', 0, 0))
@@ -3591,7 +3591,7 @@ void RefreshDoorSceneStateForCurrentStep() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 bool __attribute__((renesas)) shenmue_s2_event_ComputeDoorIngress(std::int32_t doorId, const shenmue::Vector3 *position, shenmue::Vector3 *target) {
     return shenmue::s2::ComputeDoorIngress(doorId, position, target);

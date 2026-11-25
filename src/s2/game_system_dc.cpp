@@ -15,7 +15,7 @@
 #include "s2/screen_film.hpp"
 #include "s2/texture_dc.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -38,7 +38,7 @@ void UpdateGameInputSuppression();
 
 SystemModule UpdateCurrentSceneInfoFromTask(std::int32_t &actNumber, shen_name &areaId, std::int32_t &entryId);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CloseAllAudioFiles();
 #endif
 
@@ -55,7 +55,7 @@ void GameSys_Callback(void *) {
     if (ctrlGetActive()) {
         const SystemModule module = UpdateCurrentSceneInfoFromTask(g_actNumber, g_currentMap, g_entryPoint);
         StopConversationBuffers(0);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         CloseAllAudioFiles();
         HLib::MarkCurrentTaskForCleanup();
         if (static_cast<std::uint32_t>(GetIsWaitingFlag()) && (module == SystemModule_Game || module == SystemModule_OutRun || module == SystemModule_HangOn)) {

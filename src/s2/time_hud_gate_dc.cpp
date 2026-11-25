@@ -11,7 +11,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t UpdateSelectorMemo();
 
 bool CheckTimeHudVisibility() {

@@ -1,10 +1,8 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/weather.hpp"
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/weather_air_dc.hpp"
 #include "s2/weather_data_dc.hpp"
 #include "s2/file_loader_dc.hpp"
@@ -16,9 +14,7 @@
 #include "s2/particle_effects.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/date_time.hpp"
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/fog.hpp"
@@ -47,14 +43,14 @@
 namespace shenmue {
 namespace s2 {
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 WeatherTableSample *GetInterpolatedWeatherValues() {
     return &g_interpolatedWeatherSample;
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BeginWeatherRainTransition(float pressure, std::int32_t frames);
 
 void BeginWeatherRippleTransition(float pressure, std::int32_t frames);

@@ -5,7 +5,7 @@
 #include "s2/screen_film_dc.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/scenario_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/motion_work_dc.hpp"
 #endif
@@ -21,7 +21,7 @@
 #include "s2/character_dc.hpp"
 #include "s2/hlib.hpp"
 #include "platform/dc/ninja.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/matrix.hpp"
 #include "platform/dc/sdk.hpp"
 #include "s2/modifier_volume_dc.hpp"
@@ -32,7 +32,7 @@
 #include "s2/flag_wind_dc.hpp"
 #include "s2/search_dc.hpp"
 #include "s2/object_draw_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #include "s2/map_models_dc.hpp"
 #include "s2/math.hpp"
@@ -53,7 +53,7 @@
 #include "s2/effect_fft.hpp"
 #include "common/math.hpp"
 #include <cmath>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/maze_dc.hpp"
 #include "s2/motion_rig.hpp"
 #endif
@@ -87,7 +87,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/character_alpha_dc.hpp"
 #include "s2/character_state_flags_dc.hpp"
 #include "s2/reflector_board_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hand_dc.hpp"
 #include "s2/pause.hpp"
 #endif
@@ -127,7 +127,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/area_event.hpp"
 #include "s2/game_save_area.hpp"
 #include "s2/system_modules_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -147,7 +147,7 @@ bool GetShouldRenderIcons(RenderIconSlot slot);
 std::int32_t IsItemSelectable();
 std::int32_t PlayerBusyCheckNullsub();
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool shenGetIsPlayerInMenu() {
     if (plymIsSearchBlocked() || GetParentMenu() == 0 || UpdateSelectorMemo() || !IsCtrlSpeakIconInactive() || IsSaveAllowed())
         return false;
@@ -167,7 +167,7 @@ bool shenCheckIsBusy() {
         UpdateSelectorMemo() || !IsCtrlSpeakIconInactive() || IsSaveAllowed() != 0)
         return false;
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const bool filmClear = IsScreenFilmNotShowing(control->filmTask);
     if (filmClear) {
         if (IsScenarioBusy() == 0)
@@ -187,7 +187,7 @@ bool ryoNotBusy() {
         !IsCtrlSpeakIconInactive() || IsSaveAllowed() != 0)
         return false;
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const bool filmClear = IsScreenFilmNotShowing(control->filmTask);
     if (filmClear) {
         if (HasScenarioCharacterControl() == 0)

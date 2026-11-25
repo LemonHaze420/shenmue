@@ -57,7 +57,7 @@ std::uint32_t DecodeArcadeRankingScore(const std::uint8_t *digits);
 void ResetHangOnRankings();
 void ResetSpaceHarrierRankings();
 void HangOnVblankNullsub();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void HarrierVblankNullsub();
 #endif
 void ResetOutRunRankings();
@@ -145,7 +145,7 @@ void EncodeArcadeRankingScore(std::int32_t score, std::uint8_t *digits) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 namespace {
 
 // @verified - d
@@ -640,7 +640,7 @@ void GameHangOnModuleCallback(void *taskData) {
     ChangeSystemModule(module->previousModule, 0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t emuSetNextState(std::int32_t state, std::int32_t argument) {
     const SystemModule modules[4] = {
         SHENMUE_SYSTEM_MODULE(HangOn), SHENMUE_SYSTEM_MODULE(SpaceHarrier), SHENMUE_SYSTEM_MODULE(HangOn), SHENMUE_SYSTEM_MODULE(SpaceHarrier)};
@@ -1008,6 +1008,59 @@ std::uint32_t DecodeArcadeRankingScore(const std::uint8_t *digits) {
     }
     return score;
 }
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" void ConfigureCpuCache(std::uint32_t control) asm("_shenmue_dc_configure_cpu_cache");
+extern "C" void njSetBorderColor(std::uint32_t colour);
+namespace HLib { void DisableMemoryMonitor(); }
+
+static std::uint32_t MovieFileSize(const char *directory, const char *filename) {
+    DiscFileLocation *const location = FindDiscFileLocation(directory, filename);
+    const std::uint32_t size = GetDiscFileLocationSize(location);
+    ReleaseDiscFileLocation(location);
+    return size;
+}
+
+static void ResetMovieInterrupts() {
+    typedef void (*CacheConfigurator)(std::uint32_t);
+    const CacheConfigurator configure = reinterpret_cast<CacheConfigurator>(reinterpret_cast<std::uintptr_t>(&ConfigureCpuCache) | 0xa0000000U);
+    configure(0);
+    *reinterpret_cast<volatile std::uint32_t *>(0xa05f6914) = 0;
+    *reinterpret_cast<volatile std::uint32_t *>(0xa05f6910) = 0;
+    *reinterpret_cast<volatile std::uint32_t *>(0xa05f6900) = 0x1fffffU;
+    *reinterpret_cast<volatile std::uint32_t *>(0xa05f6908) = 0xffffffffU;
+}
+
+void ChangeToMovieTask(std::int32_t movie) {
+    *reinterpret_cast<std::uint32_t **>(0x8c0201f8) = &g_nativePlayerStats.gameConfigurationFlags;
+    HLib::FreeUnusedHeapMem();
+    HLib::DisableMemoryMonitor();
+    const std::uint32_t soundMode = GetSystemAudioOutputMode();
+    const char *const directory = "/scene/04/movie";
+    const std::uint32_t movieSize = MovieFileSize(directory, "movie.bin");
+    HLib::AllocateHeapSpace(reinterpret_cast<void *>(0x8ca00000), movieSize, SHEN_NAME4('M', 'O', 'V', 'I'));
+    shenLoadFile(directory, "movie.bin", reinterpret_cast<void *>(0x8ca00000), movieSize);
+    const std::uint32_t monitorSize = MovieFileSize(directory, "MON.BIN");
+    void *const monitor = HLib::AllocateTaskData(monitorSize, SHEN_NAME4('M', 'O', 'V', 'I'));
+    void *const monitorSource = reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(monitor) | 0x80000000U);
+    shenLoadFile(directory, "MON.BIN", monitorSource, monitorSize);
+    dc::sdk::njSetBackColor(0, 0, 0);
+    njSetBorderColor(0);
+    *reinterpret_cast<volatile std::uint32_t *>(0xa05f80e8) |= 8;
+    ResetMovieInterrupts();
+    std::memcpy(reinterpret_cast<void *>(0x8c010000), monitorSource, monitorSize);
+    volatile std::uint32_t *const entry = reinterpret_cast<volatile std::uint32_t *>(0xac020000);
+    entry[0] = 0x400bd002U;
+    entry[1] = entry[2] = 0x00090009U;
+    entry[3] = 0x8ca00000U;
+    entry[4] = 0;
+    typedef void (*CacheConfigurator)(std::uint32_t);
+    reinterpret_cast<CacheConfigurator>(reinterpret_cast<std::uintptr_t>(&ConfigureCpuCache) | 0xa0000000U)(0);
+    *reinterpret_cast<volatile std::uint32_t *>(0xac02011c) = (soundMode << 4) | static_cast<std::uint32_t>(movie) | 0x12345600U;
+    reinterpret_cast<void (*)()>(0x8c010000)();
+}
+
+#endif
 
 } // namespace s2
 } // namespace shenmue

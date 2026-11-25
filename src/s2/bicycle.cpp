@@ -2,7 +2,7 @@
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/am2_vector.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "common/native_sqrt.hpp"
 #endif
 
@@ -449,7 +449,7 @@ static float ComputeBicycleTurnRadius(const Vector3 *previousPosition, std::int1
     axis.x = CalculateFixedSine(static_cast<std::uint32_t>(angle));
     axis.y = 0.0f;
     axis.z = CalculateFixedCosine(static_cast<std::uint32_t>(angle));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (player_detail::SimdSolveVectorProjection(centre, *previousPosition, previousAxis, *position, axis) == 0.0f)
         return 1000.0f;
 #else
@@ -459,7 +459,7 @@ static float ComputeBicycleTurnRadius(const Vector3 *previousPosition, std::int1
 #endif
     const float x = centre.x - previousPosition->x;
     const float z = centre.z - previousPosition->z;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float radius = shenmue::NativeSqrt(x * x + z * z);
 #else
     float radius = std::sqrt(x * x + z * z);

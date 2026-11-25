@@ -30,7 +30,7 @@ SHENMUE_MOTION_BANK_ARRAY(MotionPropBank, g_motionPropBanks, kMotionPropBankCoun
 std::int8_t g_motionBankCount = 0;
 std::uint32_t g_registeredMotionBytes = 0;
 std::byte *g_fallbackMotionTable = SHENMUE_MOTION_BANK_NULL;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t *g_fallbackMotionSection3 = SHENMUE_MOTION_BANK_NULL, *g_fallbackMotionSection1 = SHENMUE_MOTION_BANK_NULL;
 std::int32_t *g_fallbackMotionSection2 = SHENMUE_MOTION_BANK_NULL, *g_fallbackMotionSection0 = SHENMUE_MOTION_BANK_NULL;
 #else
@@ -39,7 +39,7 @@ SHENMUE_MOTION_BANK_ARRAY(std::int32_t *, g_fallbackMotionSections, 4) SHENMUE_M
 MotionSnapshot *g_motionSnapshots = SHENMUE_MOTION_BANK_NULL;
 std::uint32_t g_motionSnapshotState = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t *AllocateMotionFileData(std::uint32_t size) {
     std::uint32_t *const data = static_cast<std::uint32_t *>(HLib::AllocateTaskData(size, MOTION_SNAPSHOT_STORAGE));
@@ -159,7 +159,7 @@ std::uint32_t RegisterMotionBank(void *data) {
     g_registeredMotionBytes += entry->dataSize;
     return entry->handle;
 }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetMotionBankEntry(MotionRegistryEntry *entry) {
     std::size_t index = static_cast<std::uint8_t>(g_motionBankCount);
@@ -184,13 +184,13 @@ std::intptr_t FreeMotionFileData(void *data) {
 #endif
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t ReleaseMotionBank(std::uint32_t handle) {
 #else
 void ReleaseMotionBank(std::uint32_t handle) {
 #endif
     if (static_cast<std::uint8_t>(g_motionBankCount) > static_cast<std::int32_t>(handle))
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         return 0;
 #else
         return;
@@ -198,7 +198,7 @@ void ReleaseMotionBank(std::uint32_t handle) {
     MotionRegistryEntry *entry = &g_motionRegistry[static_cast<std::uint8_t>(g_motionBankCount) - 1];
     while (entry->handle != handle) {
         if (!entry->next)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             return 0;
 #else
             return;
@@ -216,7 +216,7 @@ void ReleaseMotionBank(std::uint32_t handle) {
         ++range;
     range->endAnimation = entry->endAnimation;
     range->firstAnimation = entry->firstAnimation;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ResetMotionBankEntry(entry);
     return 1;
 #else
@@ -363,7 +363,7 @@ shen_name GetMotionSnapshotCharacter(std::uint32_t index) {
 // @verified - d
 void AllocateMotionBanks(std::int32_t, std::uint32_t) {
     InitializeUNFO();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t index;
     for (index = static_cast<std::uint8_t>(g_motionBankCount); index < 32; ++index) {
         g_motionRegistry[index].handle = UINT32_MAX;
@@ -420,7 +420,7 @@ void AllocateMotionBanks(std::int32_t, std::uint32_t) {
 void BindFallbackMotionTable(std::byte *data) {
     g_fallbackMotionTable = data;
     const std::int32_t *const offsets = reinterpret_cast<const std::int32_t *>(data);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_fallbackMotionSection0 = reinterpret_cast<std::int32_t *>(data + offsets[0]);
     g_fallbackMotionSection1 = reinterpret_cast<std::int32_t *>(data + offsets[1]);
     g_fallbackMotionSection2 = reinterpret_cast<std::int32_t *>(data + offsets[2]);
@@ -438,14 +438,14 @@ std::byte *GetFallbackMotionTable() {
 }
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateAndLoadMOTFiles() {
 #else
 std::byte *AllocateAndLoadMOTFiles() {
 #endif
     AllocateAndSetUNFOFlag();
     InitializeUNFO();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t index;
     for (index = 0; index < 32; ++index) {
         g_motionRegistry[index].handle = UINT32_MAX;

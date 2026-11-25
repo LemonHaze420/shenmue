@@ -3,7 +3,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include <cstring>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/frame_dc.hpp"
 #include "s2/scalar_math_dc.hpp"
 #include "s2/character_dc.hpp"
@@ -93,7 +93,7 @@
 #include "s2/math.hpp"
 #include "s2/scenario_flags_dc.hpp"
 #include "s2/conversation_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #endif
 #include "s2/startup_assets_dc.hpp"
@@ -523,141 +523,141 @@ Vector3 *camCtrlGetNextCamPos(Vector3 *position);
 
 Vector3 *camCtrlGetTargetPosition(Vector3 *position);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool IsCharacterInCurrentMap(const Character *character);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymCheckAuthorTargetRequested();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymHasRyoBag(std::int32_t mode);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool CheckCharacterSphereIntersection(const Vector3 &point, float radius);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ccmUpdateEntityFlag(Character *character);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t conversationPacketScratch[0x60] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlBuildScriptCamSpline(std::int32_t name, const void *eye, const void *target);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlCreateSpline(const std::uint32_t *record, const void *eye, const void *target);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlHandleQueuedSpline();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t cameraMotionMode;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float cameraMotionPlayerAlpha = 1.0f;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float fightCameraSelfHeight = 1.35000002f, fightCameraOtherHeight = 1.3f;
 static float fightCameraMinimumDistance = 2.6600001f;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t fightCameraBoneHeightEnabled = -1;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float fightCameraEyeScale = 0.8f, fightCameraFocusEyeScale = 0.8f, fightCameraLeadScale = 1.0f;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t fightCameraTargetOwnBone, fightCameraFirstPersonEyeMode = 2, fightCameraFirstPersonEyeOrbit;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float cameraMotionDistance, cameraMotionDoubleDistance, cameraMotionDistanceSquared;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float cameraMotionDoubleDistanceSquared, cameraMotionSecondaryDistance, cameraMotionSecondaryDoubleDistance;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t cameraMotionPatternSet;
 static std::int32_t fightCameraLinkedKind;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 fightCameraEye, fightCameraTarget, fightCameraDesiredEye, fightCameraDesiredTarget;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 fightCameraEyeDirection, fightCameraTargetDirection, fightCameraOffset, fightCameraGoalOffset;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t fightCameraFocusFrames, fightCameraSpeedDown, fightCameraSpeedUp, fightCameraGoalLift;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t fightCameraRayHit, fightCameraSide, fightCameraLinkedSide, fightCameraLinkedFrames, fightCameraHasIntersectionTest;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Character *fightMotionCameraTarget;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 fightMotionCameraSavedEye, fightMotionCameraSavedTarget, fightMotionCameraSegmentTarget;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 fightMotionCameraWaypoints[6];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t fightMotionCameraWaypointCount, fightMotionCameraWaypointIndex, fightMotionCameraState, fightMotionCameraUpdateState;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t fightMotionCameraTime, fightMotionCameraPreviousPerspective, fightMotionCameraInitializeEye;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Character *fightCameraLinkedCharacter;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static FightActorRuntimePrefix *fightCameraLinkedActor;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float fightCameraDistanceSetting, fightCameraHeightSetting, fightCameraCurrentSpeed, fightCameraHeightOffset;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static FightCameraVelocity fightCameraVelocity;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct FightCameraPatternState {
     std::uint32_t flags;
     std::int32_t frame;
@@ -670,14 +670,14 @@ struct FightCameraPatternState {
 static FightCameraPatternState fightCameraPattern;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const float fightCameraPhaseTargets[8][2] = {{0, 0}, {-0.2f, 0.2f}, {-0.30000001f, 0.1f}, {0, 0.5f}, {1.5f, 0}, {2, 0.5f}, {3.5f, 0.5f}, {6, 0.5f}};
 static const float fightCameraPatternSpeeds[5][3] = {{80, 160, 240}, {80, 120, 160}, {80, 160, 240}, {80, 180, 300}, {80, 140, 200}};
 static const std::uint8_t fightCameraPatterns[5][8] = {
     {0, 0, 0, 2, 3, 3, 4, 5}, {0, 0, 0, 2, 2, 2, 4, 5}, {0, 0, 0, 2, 3, 4, 4, 5}, {0, 0, 2, 2, 5, 5, 6, 7}, {0, 0, 2, 2, 2, 2, 4, 4}};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_cameraMathWork = 0;
 #endif
 
@@ -697,7 +697,7 @@ std::int32_t SetConversationCameraEnabled(std::int32_t enabled) {
     return g_conversationCameraState->flags & 0x100U ? 0 : 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int16_t ConversationBlendAngle(std::int16_t first, std::int16_t last, float amount) {
     const std::int16_t difference = static_cast<std::int16_t>(last - first);
     if (::fabsf(amount) < FLT_EPSILON || ::fabsf(static_cast<float>(difference)) < FLT_EPSILON)
@@ -706,7 +706,7 @@ static std::int16_t ConversationBlendAngle(std::int16_t first, std::int16_t last
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 ConversationBlendPosition(const Vector3 &first, const Vector3 &last, float amount) {
     Vector3 result;
     result.x = CameraTransitionValue(first.x, last.x, amount);
@@ -716,7 +716,7 @@ static Vector3 ConversationBlendPosition(const Vector3 &first, const Vector3 &la
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ActivateConversationCameraStream(const ConversationDialogueRecord *stream) {
     ConversationCameraState *state = g_conversationCameraState;
@@ -789,7 +789,7 @@ void ActivateConversationCameraStream(const ConversationDialogueRecord *stream) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EndConversationCameraStream() {
     ConversationCameraState *state = g_conversationCameraState;
@@ -831,7 +831,7 @@ void EndConversationCameraStream() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline std::int32_t GetConversationHistoryIndex(std::int32_t current, std::int32_t back) {
     std::int32_t index = current - back;
     if (index < 0)
@@ -840,7 +840,7 @@ static inline std::int32_t GetConversationHistoryIndex(std::int32_t current, std
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RestoreConversationCamera() {
     ConversationCameraState &state = *g_conversationCameraState;
@@ -870,13 +870,13 @@ void RestoreConversationCamera() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResumeConversationCameraWrapper() {
     ResumeConversationCamera();
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResumeConversationCamera() {
     ConversationCameraState *state = g_conversationCameraState;
@@ -885,7 +885,7 @@ void ResumeConversationCamera() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateConversationCamera() {
     ConversationCameraState &state = *g_conversationCameraState;
@@ -910,7 +910,7 @@ void UpdateConversationCamera() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PauseConversationCameraClock(std::int32_t paused) {
     if (!(g_conversationCameraState->flags & 2U))
@@ -923,7 +923,7 @@ void PauseConversationCameraClock(std::int32_t paused) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t camCtrlHoldConversationShot(std::int32_t release) {
     ConversationCameraState *state = g_conversationCameraState;
@@ -943,7 +943,7 @@ std::int32_t camCtrlHoldConversationShot(std::int32_t release) {
 void ResetConversationCameraState(ConversationCameraState *state) {
     std::memset(state, 0, sizeof(*state));
     state->forcedCandidate = -1;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state->historyIndex = 0;
     state->previousHistory = 0;
 #else
@@ -958,7 +958,7 @@ void ResetConversationCameraState(ConversationCameraState *state) {
     ResetConversationCandidates(state);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TickConversationActivation(ConversationCameraState *state) {
     if (state->activationFrames > 0) {
@@ -975,7 +975,7 @@ void TickConversationActivation(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AdvanceConversationShotClock(ConversationCameraState *state) {
     state->flags &= ~0x40U;
@@ -1008,7 +1008,7 @@ void AdvanceConversationShotClock(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BeginConversationShot(ConversationCameraState *state) {
     ++state->shotGenerationCount;
@@ -1045,7 +1045,7 @@ void BeginConversationShot(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RefreshConversationSceneFlags(ConversationCameraState *state) {
     state->sceneFlags = 0;
     if (state->flags & 0x80000U)
@@ -1075,7 +1075,7 @@ void RefreshConversationSceneFlags(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateConversationMemberAlpha(ConversationCameraState *state) {
     std::int32_t hideTarget = 0;
@@ -1106,25 +1106,25 @@ void UpdateConversationMemberAlpha(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline std::int8_t ConversationRecordFlags(const ConversationDialogueRecord *record) {
     return reinterpret_cast<const std::int8_t *>(&record->command)[3];
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline std::size_t ConversationRecordBytes(const ConversationDialogueRecord *record) {
     return static_cast<std::int8_t>(record->command) * 4;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline const ConversationDialogueRecord *NextConversationRecord(const ConversationDialogueRecord *record) {
     return reinterpret_cast<const ConversationDialogueRecord *>(reinterpret_cast<const std::byte *>(record) + ConversationRecordBytes(record));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void AssignConversationShotTypes(ConversationCameraState *state) {
     std::uint32_t previousType = 1;
@@ -1195,7 +1195,7 @@ static void AssignConversationShotTypes(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ResetConversationShotTypeForFlag10(ConversationCameraState *state) {
     if (state->flags & 0x10U) {
         state->shotTypes[state->shotIndex] = 0;
@@ -1204,7 +1204,7 @@ static void ResetConversationShotTypeForFlag10(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void RecordConversationShot(ConversationCameraState *state) {
     ConversationShotHistory &history = state->history[state->historyIndex];
@@ -1219,7 +1219,7 @@ static void RecordConversationShot(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void AdvanceConversationFrame(ConversationCameraState *state) {
     if (state->shotFrame <= state->shotDurationFrames)
@@ -1228,7 +1228,7 @@ static void AdvanceConversationFrame(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static float GetConversationProgress(ConversationCameraState *state) {
     const float frame = static_cast<float>(state->shotFrame);
@@ -1254,7 +1254,7 @@ static float GetConversationProgress(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EvaluateConversationShot(ConversationCameraState *state) {
     AdvanceConversationFrame(state);
@@ -1290,7 +1290,7 @@ void EvaluateConversationShot(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DetectConversationActorMovement(ConversationCameraState *state) {
     Vector3 rootPosition, specialPosition, rootDelta, specialDelta;
     state->flags &= ~0x800U;
@@ -1316,7 +1316,7 @@ void DetectConversationActorMovement(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateConversationActorPose(ConversationCameraState *state) {
     state->flags &= ~0x40000U;
     state->previousActorTarget = state->actorTarget;
@@ -1347,7 +1347,7 @@ void UpdateConversationActorPose(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReadConversationActorPose(ConversationCameraState *state) {
     Vector3 position, sum;
     std::int32_t count;
@@ -1382,7 +1382,7 @@ static void ReadConversationActorPose(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define CONVERSATION_ABS(x) ((x) < 0.0f ? -(x) : (x))
 
 static void SmoothConversationActorPose(ConversationCameraState *state) {
@@ -1482,7 +1482,7 @@ static void SmoothConversationActorPose(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FitConversationEyeDistance(ConversationCameraState *state) {
     if (!state->shotType)
         return;
@@ -1523,7 +1523,7 @@ void FitConversationEyeDistance(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FitConversationFieldOfView(ConversationCameraState *state) {
     if (!state->shotType)
         return;
@@ -1561,7 +1561,7 @@ void FitConversationFieldOfView(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void BlendConversationEntryCamera(ConversationCameraState *state) {
     if (!(state->flags & 0x20000U))
@@ -1579,7 +1579,7 @@ static void BlendConversationEntryCamera(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void BlendConversationPreviousShot(ConversationCameraState *state) {
     if (!(state->flags & 0x10000U))
@@ -1599,7 +1599,7 @@ static void BlendConversationPreviousShot(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ApplyConversationLookTurn(ConversationCameraState *state) {
     std::int32_t turnFrames = 60;
@@ -1637,7 +1637,7 @@ static void ApplyConversationLookTurn(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ApplyConversationSpecialModeOverride(ConversationCameraState *state) {
     std::int32_t first = 0;
@@ -1679,7 +1679,7 @@ static void ApplyConversationSpecialModeOverride(ConversationCameraState *state)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static float ConversationParameterFloat(const ConversationCameraDescriptor &descriptor, std::size_t offset) {
     float value;
@@ -1688,7 +1688,7 @@ static float ConversationParameterFloat(const ConversationCameraDescriptor &desc
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int16_t ConversationParameterAngle(const ConversationCameraDescriptor &descriptor, std::size_t offset) {
     std::int16_t value;
     __builtin_memcpy(&value, static_cast<const std::byte *>(descriptor.parameters) + offset, sizeof(value));
@@ -1696,7 +1696,7 @@ static std::int16_t ConversationParameterAngle(const ConversationCameraDescripto
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 TransformConversationPoint(const Vector3 &point, const Vector3 &origin, std::int16_t yaw, std::int16_t pitch) {
     matrix_stack::PushUnitMatrix();
     Matrix4x4::preTranslate(origin.x, origin.y, origin.z);
@@ -1709,7 +1709,7 @@ static Vector3 TransformConversationPoint(const Vector3 &point, const Vector3 &o
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void BindConversationShotActors(ConversationCameraState *state) {
     const ConversationDialogueRecord *const shot = state->shots[state->shotIndex];
@@ -1729,7 +1729,7 @@ static void BindConversationShotActors(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void AssignConversationShotAnchors(ConversationCameraState *state) {
     for (std::int32_t shot = 0; shot < state->shotCount; ++shot) {
@@ -1758,7 +1758,7 @@ static void AssignConversationShotAnchors(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ReadConversationCameraPackets(ConversationCameraState *state) {
     std::int32_t shotCount = 0, memberCount = 0;
@@ -1816,7 +1816,7 @@ static void ReadConversationCameraPackets(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CompressConversationCameraStream(ConversationCameraState *state) {
     std::int32_t processed;
@@ -1881,7 +1881,7 @@ static void CompressConversationCameraStream(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CaptureConversationParticipantAlpha(ConversationCameraState *state) {
     std::int32_t index;
@@ -1901,7 +1901,7 @@ static void CaptureConversationParticipantAlpha(ConversationCameraState *state) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void RestoreConversationParticipantAlpha(ConversationCameraState *state) {
     for (ConversationParticipantAlpha *saved = state->alphaParticipants; saved->name != 0xffffffffU; ++saved) {
@@ -1918,13 +1918,13 @@ static void RestoreConversationParticipantAlpha(ConversationCameraState *state) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ConversationAbsAngle(std::int32_t angle) {
     return angle < 0 ? -angle : angle;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateConversationAngleClass(ConversationCameraState *state) {
     state->orientationClass = 0;
@@ -1971,7 +1971,7 @@ static void UpdateConversationAngleClass(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void GenerateConversationTypeOne(ConversationCameraState *state) {
     const float amount = state->shotProgress;
@@ -2026,7 +2026,7 @@ static void GenerateConversationTypeOne(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void GenerateConversationTypeTwo(ConversationCameraState *state) {
     struct ConversationTypeTwoTable {
         std::int16_t startFov;
@@ -2095,7 +2095,7 @@ static void GenerateConversationTypeTwo(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void GenerateConversationTypeEight(ConversationCameraState *state) {
     Vector3 *const eye = &state->eye;
     Vector3 *const target = &state->target;
@@ -2132,7 +2132,7 @@ static void GenerateConversationTypeEight(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void GenerateConversationFixedCandidate(ConversationCameraState *state) {
     Vector3 sum;
     am2Vector3Add(&sum, &state->actorTarget, &state->actorEye);
@@ -2142,7 +2142,7 @@ static void GenerateConversationFixedCandidate(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GenerateConversationCandidate(ConversationCameraState *state) {
     if (state->flags & 0x8000000U) {
         GenerateConversationFixedCandidate(state);
@@ -2162,7 +2162,7 @@ void GenerateConversationCandidate(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SampleConversationCandidate(Vector3 &eye, Vector3 &target, std::int32_t candidate, float progress) {
     Vector3 previousEye, previousTarget;
     std::int16_t previousFov;
@@ -2190,7 +2190,7 @@ static void SampleConversationCandidate(Vector3 &eye, Vector3 &target, std::int3
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void SelectConversationCameraSide(ConversationCameraState *state) {
     if (state->sceneFlags & 8U) {
@@ -2281,7 +2281,7 @@ static void SelectConversationCameraSide(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateConversationMirrorFlags(ConversationCameraState *state) {
     std::int32_t mirror = 0;
     if (state->flags & 0x20000000U)
@@ -2323,7 +2323,7 @@ void UpdateConversationMirrorFlags(ConversationCameraState *state) {
 
 // @verified - d
 void ResetConversationCandidates(ConversationCameraState *state) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t groupZero = 0;
     std::int32_t groupOne = 0;
     ConversationCandidateState *candidate = state->candidates;
@@ -2378,7 +2378,7 @@ void ResetConversationCandidates(ConversationCameraState *state) {
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FilterConversationCandidates(ConversationCameraState *state) {
     if ((state->flags & 0x400U) && state->shotType == 1)
         state->flags |= 0x8000000U;
@@ -2403,7 +2403,7 @@ void FilterConversationCandidates(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void RestrictConversationCandidateAngles(ConversationCameraState *state) {
     std::uint32_t admitted = 0;
     std::uint32_t mask = 0;
@@ -2430,7 +2430,7 @@ static void RestrictConversationCandidateAngles(ConversationCameraState *state) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReadmitConversationCandidates(ConversationCameraState *state) {
     std::int32_t index;
     std::int32_t count = 0;
@@ -2460,7 +2460,7 @@ static void ReadmitConversationCandidates(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SelectConversationCandidate(ConversationCameraState *state) {
     std::int8_t available[128];
@@ -2510,7 +2510,7 @@ void SelectConversationCandidate(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline const std::int8_t *ConversationOrientationGroups() {
     static const std::int8_t groups[8] = {0, 1, 2, 3, 3, 3, 2, 1};
     return groups;
@@ -2586,7 +2586,7 @@ static void FilterConversationSceneCandidates(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void RetireRecentConversationCandidates(ConversationCameraState *state) {
     for (std::int32_t index = 0; index < 4; ++index) {
@@ -2598,7 +2598,7 @@ static void RetireRecentConversationCandidates(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void MarkConversationEdgeCandidates(ConversationCameraState *state) {
     ConversationCandidateState *candidate = state->candidates;
     const ConversationCameraDescriptor *descriptor = conversationCameraDescriptors;
@@ -2611,7 +2611,7 @@ static void MarkConversationEdgeCandidates(ConversationCameraState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void CheckConversationCandidateCollisions(ConversationCameraState *state) {
     static const std::uint8_t collisionClasses[16] = {0, 1, 2, 7, 3, 1, 8, 5, 4, 1, 2, 7, 9, 9, 6, 10};
     Vector3 eye0, target0, eye1, target1, eye2, target2, eye3, target3, eye4, target4;
@@ -2681,7 +2681,7 @@ static void CheckConversationCandidateCollisions(ConversationCameraState *state)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static bool AreConversationAngleCandidatesBlocked(ConversationCameraState *state) {
     ResetConversationCandidates(state);
@@ -2714,7 +2714,7 @@ static bool AreConversationAngleCandidatesBlocked(ConversationCameraState *state
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ConversationCollisionSegment(const Vector3 &start, const Vector3 &end, float radius) {
     ConversationCameraState &state = *g_conversationCameraState;
     std::int32_t hit = 0;
@@ -2731,7 +2731,7 @@ static std::int32_t ConversationCollisionSegment(const Vector3 &start, const Vec
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ConversationCollisionPoint(const Vector3 &point) {
     ConversationCameraState &state = *g_conversationCameraState;
     std::int32_t hit = 0;
@@ -2746,7 +2746,7 @@ static std::int32_t ConversationCollisionPoint(const Vector3 &point) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RotateConversationOffset(const ConversationOffset &offset, Vector3 &result) {
     result.x = -offset.distance * dc::sdk::SinFixed(offset.angle);
     result.y = offset.height;
@@ -2754,7 +2754,7 @@ void RotateConversationOffset(const ConversationOffset &offset, Vector3 &result)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void MeasureConversationOffset(const Vector3 &point, ConversationOffset &offset) {
     offset.distance = ::sqrtf(point.x * point.x + point.z * point.z);
     offset.angle = static_cast<std::int16_t>(static_cast<std::int32_t>(dc::sdk::ArcTan2Fixed(point.x, point.z)) + 0x8000);
@@ -2762,13 +2762,13 @@ void MeasureConversationOffset(const Vector3 &point, ConversationOffset &offset)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlConversationUnsupported() {
     return -1;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsConversationCameraCharacter(const Character *character) {
     ConversationCameraState *state = g_conversationCameraState;
@@ -2781,7 +2781,7 @@ bool IsConversationCameraCharacter(const Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void OffsetPointAlongYaw(Vector3 *result, const Vector3 *point, float distance, std::int16_t yaw) {
     const std::int16_t angle = static_cast<std::int16_t>(yaw + 0x8000);
     result->x = dc::sdk::SinFixed(angle) * distance + point->x;
@@ -2790,7 +2790,7 @@ void OffsetPointAlongYaw(Vector3 *result, const Vector3 *point, float distance, 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float UnprojectViewPointToWorld(float x, float y, float depth, Vector3 *world) {
     const float scale = -depth / camCtrlGetViewHeightScale();
@@ -2806,7 +2806,7 @@ float UnprojectViewPointToWorld(float x, float y, float depth, Vector3 *world) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float ProjectConversationActorToScreen(const Vector3 &world, Vector3 &screen) {
     matrix_stack::Matrix4x4_Push(0);
@@ -2823,19 +2823,19 @@ float ProjectConversationActorToScreen(const Vector3 &world, Vector3 &screen) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void *GetCameraMathWork() {
     return &g_cameraMathWork;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void TouchCameraMathWork(void *) {
     GetCameraMathWork();
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetTransformedForwardVector(Vector3 *direction) {
     direction->x = 0.0f;
     direction->y = 0.0f;
@@ -2844,20 +2844,20 @@ void GetTransformedForwardVector(Vector3 *direction) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 shen_name GetCameraSpecialTargetName() {
     return (g_conversationCameraState->flags & 2U) ? g_conversationCameraState->specialTargetName : shen_name(0);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlConversationTargetUnsupported() {
     return -1;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t camCtrlSetConversationLookTarget(const Vector3 *location) {
     g_conversationCameraState->lookLocation.x = location->x;
@@ -2878,7 +2878,7 @@ std::int32_t camCtrlSetConversationFlag4000(std::int32_t enabled) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlSetConversationForcedCandidate(std::int32_t candidate) {
     if (candidate < 0 || candidate >= g_conversationCameraState->candidateCount) {
         g_conversationCameraState->forcedCandidate = -1;
@@ -2889,7 +2889,7 @@ std::int32_t camCtrlSetConversationForcedCandidate(std::int32_t candidate) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlSetInterpModeTo(std::uint8_t mode) {
     if (cameraMotionMode == 3) {
@@ -2942,7 +2942,7 @@ void camCtrlSetInterpModeTo(std::uint8_t mode) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsEarlyAuthFightCamera() {
     FightRuntimePrefix *const game = vfmaGetTaskParam();
@@ -2955,7 +2955,7 @@ bool IsEarlyAuthFightCamera() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsAuthFightCamera() {
     FightRuntimePrefix *const game = vfmaGetTaskParam();
@@ -2967,7 +2967,7 @@ bool IsAuthFightCamera() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetFightCameraLinkedKind(std::uint8_t kind) {
     if (kind < 4)
@@ -2979,34 +2979,34 @@ void SetFightCameraLinkedKind(std::uint8_t kind) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint8_t camCtrlGetInterpMode() {
     return static_cast<std::uint8_t>(cameraMotionMode);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t GetFightCameraLinkedKind() {
     return static_cast<std::uint8_t>(fightCameraLinkedKind);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlSetFightDistance(float distance) {
     fightCameraDistanceSetting = distance;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlSetFightHeight(float height) {
     fightCameraHeightSetting = height;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeCameraGoal() {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -3016,7 +3016,7 @@ void InitializeCameraGoal() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void resetIntersectionAndTest() {
     camCtrlGetNextCamPos(&fightCameraEye);
@@ -3045,7 +3045,7 @@ void resetIntersectionAndTest() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlEvaluateGoal() {
     camCtrlClearFlags(0x400U);
     if (IsWazamakiInactive())
@@ -3163,14 +3163,14 @@ void camCtrlEvaluateGoal() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 CameraVector(float x, float y, float z) {
     Vector3 result = {x, y, z};
     return result;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateEnvironmentFightCamera(FightRuntimePrefix *game, FightActorRuntimePrefix *self, FightActorRuntimePrefix *other) {
     Vector3 position, raised, target, offset, work, heading, span, eye, resolved, delta, positive, negative, contact;
     if (!game->characters[game->playerSlot])
@@ -3455,7 +3455,7 @@ void UpdateEnvironmentFightCamera(FightRuntimePrefix *game, FightActorRuntimePre
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateFirstPersonFightCamera(FightRuntimePrefix *game, FightActorRuntimePrefix *self, FightActorRuntimePrefix *other) {
     Vector3 base, average, selfBone, otherBone, delta, heading, toTarget, toEye, eye, offset;
@@ -3585,7 +3585,7 @@ void UpdateFirstPersonFightCamera(FightRuntimePrefix *game, FightActorRuntimePre
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateFieldFightCamera(FightRuntimePrefix *, FightActorRuntimePrefix *self, FightActorRuntimePrefix *other) {
     Vector3 delta, eye, first, second;
@@ -3643,7 +3643,7 @@ void UpdateFieldFightCamera(FightRuntimePrefix *, FightActorRuntimePrefix *self,
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t camCtrlGetNextRoll();
 
 void UpdateQuadraticFightCamera(FightRuntimePrefix *game, FightActorRuntimePrefix *self, FightActorRuntimePrefix *other) {
@@ -3767,7 +3767,7 @@ void UpdateQuadraticFightCamera(FightRuntimePrefix *game, FightActorRuntimePrefi
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BeginMotionUpdateCamera(Character *target) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -3785,7 +3785,7 @@ void BeginMotionUpdateCamera(Character *target) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateMotionFightCamera(FightRuntimePrefix *, FightActorRuntimePrefix *self, FightActorRuntimePrefix *other) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -3880,14 +3880,14 @@ void UpdateMotionFightCamera(FightRuntimePrefix *, FightActorRuntimePrefix *self
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetMotionCameraWaypoints() {
     fightMotionCameraWaypointCount = 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AppendMotionCameraWaypoint(const Vector3 &position) {
     if (fightMotionCameraWaypointCount < 5) {
@@ -3897,7 +3897,7 @@ void AppendMotionCameraWaypoint(const Vector3 &position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BeginMotionInterpolationCamera(Character *target) {
     (void)HLib::GetTaskParameter(g_mapControlTask);
@@ -3919,7 +3919,7 @@ void BeginMotionInterpolationCamera(Character *target) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateMotionInterpolationFightCamera(FightRuntimePrefix *, FightActorRuntimePrefix *, FightActorRuntimePrefix *) {
     Character *const player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
@@ -4006,32 +4006,32 @@ void UpdateMotionInterpolationFightCamera(FightRuntimePrefix *, FightActorRuntim
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t LerpInteger(std::int32_t target, std::int32_t base, float amount) {
     return static_cast<std::int32_t>((static_cast<float>(target) - static_cast<float>(base)) * amount + static_cast<float>(base));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t LerpIntegerWrapper(std::int32_t target, std::int32_t base, float amount) {
     return LerpInteger(target, base, amount);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CameraLerpAngle(std::int32_t target, std::int32_t base, float amount) {
     const std::int16_t difference = static_cast<std::int16_t>(target - base);
     return static_cast<std::int16_t>(static_cast<float>(difference) * amount + static_cast<float>(base));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CameraLerpAngleWrapper(std::int32_t target, std::int32_t base, float amount) {
     return CameraLerpAngle(target, base, amount);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int16_t CameraTransitionAngle(std::int32_t base, std::int32_t target, float amount) {
     if (::fabsf(amount) < FLT_EPSILON)
         return base;
@@ -4042,7 +4042,7 @@ static std::int16_t CameraTransitionAngle(std::int32_t base, std::int32_t target
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float CosineEaseValue(float base, float target, float amount) {
     if (::fabsf(target - base) < 1.1920929e-07f)
         return base;
@@ -4053,7 +4053,7 @@ float CosineEaseValue(float base, float target, float amount) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float SineEaseValue(float base, float target, float amount) {
     if (::fabsf(target - base) < 1.1920929e-07f)
         return base;
@@ -4069,7 +4069,7 @@ float SineEaseValue(float base, float target, float amount) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float TangentEaseValue(float base, float target, float amount, float steepness) {
     if (::fabsf(target - base) < 1.1920929e-07f)
         return base;
@@ -4083,7 +4083,7 @@ float TangentEaseValue(float base, float target, float amount, float steepness) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float SmoothStepEaseValue(float base, float target, float amount) {
     if (::fabsf(target - base) < 1.1920929e-07f)
         return base;
@@ -4094,7 +4094,7 @@ float SmoothStepEaseValue(float base, float target, float amount) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float CameraTransitionValue(float base, float target, float amount) {
     if (::fabsf(amount) < FLT_EPSILON)
         return base;
@@ -4105,7 +4105,7 @@ float CameraTransitionValue(float base, float target, float amount) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlRetainPreviousPose(CameraRuntime &camera) {
     camera.position.x = camera.nextPosition.x;
     camera.position.y = camera.nextPosition.y;
@@ -4121,18 +4121,18 @@ static void camCtrlRetainPreviousPose(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlResetDefaultState(CameraRuntime &camera) {
     camera.defaultState = -1;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlComputePreviousPositionNullsub(CameraRuntime &) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlComputeOrbitPosition(CameraRuntime &camera) {
     const float distance = camera.orbitDistance;
     if (distance < 0.0f)
@@ -4147,7 +4147,7 @@ static void camCtrlComputeOrbitPosition(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlComputeLookAtPosition(CameraRuntime &camera) {
     camera.nextPosition.x = camera.previousPosition.x;
     camera.nextPosition.y = camera.previousPosition.y;
@@ -4160,7 +4160,7 @@ static void camCtrlComputeLookAtPosition(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlComputeAnchorPosition(CameraRuntime &camera) {
     matrix_stack::PushUnitMatrix();
     Matrix4x4::preTranslate(camera.anchorOffset.x, camera.anchorOffset.y, camera.anchorOffset.z);
@@ -4172,7 +4172,7 @@ static void camCtrlComputeAnchorPosition(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlComputeAimedAnchorPosition(CameraRuntime &camera) {
     const float x = camera.targetPosition.x - camera.anchorOffset.x;
     const float y = camera.targetPosition.y - camera.anchorOffset.y;
@@ -4189,7 +4189,7 @@ void camCtrlComputeAimedAnchorPosition(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlComputeTargetFromRotation(CameraRuntime &camera) {
     matrix_stack::PushUnitMatrix();
     Matrix4x4::preTranslate(camera.nextPosition.x, camera.nextPosition.y, camera.nextPosition.z);
@@ -4202,7 +4202,7 @@ void camCtrlComputeTargetFromRotation(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateCameraTransitions(CameraRuntime &camera) {
     CameraRuntime easedCamera;
@@ -4306,7 +4306,7 @@ void UpdateCameraTransitions(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define CAMERA_ABS(value) ((value) < 0 ? -(value) : (value))
 // @verified - d
 void camCtrlInterpolateNextPositionRotation(CameraRuntime &camera) {
@@ -4339,7 +4339,7 @@ void camCtrlInterpolateNextPositionRotation(CameraRuntime &camera) {
 #undef CAMERA_ABS
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlApplyNextPositionOffsets(CameraRuntime &camera) {
     camera.nextPosition.x += camera.jitter.x;
     camera.nextPosition.y += camera.jitter.y;
@@ -4355,7 +4355,7 @@ void camCtrlApplyNextPositionOffsets(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlComputeNextPosition(CameraRuntime &camera) {
     switch (camera.interpolationSourceMode) {
@@ -4399,17 +4399,17 @@ void camCtrlComputeNextPosition(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void CameraSplineProjectionNullsub(CameraRuntime &) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void CameraMatrixProjectionNullsub(CameraRuntime &) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlSetFlag40000000(std::int32_t mode) {
     CameraRuntime *camera = g_cameraControl;
     const std::int32_t previous = (camera->flags & 0x40000000U) != 0;
@@ -4462,7 +4462,7 @@ void srchSetupCameraFov() {
     g_searchCameraYaw = g_searchCameraPitch = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlSetConversationFlag20000000(std::int32_t enabled) {
     if (enabled)
         g_conversationCameraState->flags |= 0x20000000U;
@@ -4472,7 +4472,7 @@ std::int32_t camCtrlSetConversationFlag20000000(std::int32_t enabled) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsConversationCameraSequenceFinished() {
     ConversationCameraState *state = g_conversationCameraState;
     if (!(state->flags & 2U))
@@ -4483,12 +4483,12 @@ std::int32_t IsConversationCameraSequenceFinished() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ConversationCameraProjectionNullsub() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void CameraProjectionPostCallback(CameraRuntime &camera) {
     CameraSplineProjectionNullsub(camera);
     CameraMatrixProjectionNullsub(camera);
@@ -4496,7 +4496,7 @@ static void CameraProjectionPostCallback(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlProjectCameraMatrices(void *) {
     CameraRuntime &camera = *g_cameraControl;
     camCtrlRecalcFov(camera);
@@ -4509,7 +4509,7 @@ static void camCtrlProjectCameraMatrices(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlSetFloats(float position, float angle) {
     CameraRuntime *const camera = g_cameraControl;
     if (position == 0.0f && angle == 0.0f) {
@@ -4525,7 +4525,7 @@ static void camCtrlSetFloats(float position, float angle) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void plymComputeConvTargetAnchor(Vector3 *anchor) {
     GetPlayerTargetWorldPosition(anchor);
     const float speed = plymGetSpeedZ();
@@ -4539,21 +4539,21 @@ static void plymComputeConvTargetAnchor(Vector3 *anchor) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void CameraScaleTo(Vector3 &value, float length) {
     Vector3::NormalizeInPlace(value);
     value = Vector3::Scale(value, length);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float CameraDistance(const Vector3 &first, const Vector3 &second) {
     const Vector3 delta = Vector3::Subtract(first, second);
     return Vector3::CalcMagnitude(delta);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void TransformIntersectionNormal(Vector3 *normal);
 
 std::int32_t camCtrlGetIdealCameraPosition(CameraRuntime &camera) {
@@ -4646,7 +4646,7 @@ std::int32_t camCtrlGetIdealCameraPosition(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlInterpolateApplyCameraAngY(CameraRuntime &camera) {
     const float distance = camera.orbitDistance;
     if (camera.flags & 0x200U) {
@@ -4682,7 +4682,7 @@ static void camCtrlInterpolateApplyCameraAngY(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void camCtrlUpdateFollowCamera(CameraRuntime &camera) {
     if (camera.flags & 0x800000U) {
         if (camera.previousState != 7 || !camCtrlIsTransitionActive()) {
@@ -4761,7 +4761,7 @@ static void camCtrlUpdateFollowCamera(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void camCtrlAutoCenterTargetInView(CameraRuntime &camera) {
     if (!ctrlGetRootNode())
@@ -4833,7 +4833,7 @@ static void camCtrlAutoCenterTargetInView(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlSwitchColiPhase(CameraRuntime &camera) {
     if (plymIntersectionTest()) {
@@ -4927,7 +4927,7 @@ bool camCtrlSetLookAroundMode() {
     return true;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetCamSnapAngY(CameraRuntime &camera) {
     Vector3 position;
     camCtrlSetFloats(0.23f, 0.30000001f);
@@ -4949,7 +4949,7 @@ void camCtrlSetCamSnapAngY(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define CAMERA_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define CAMERA_MAX(a, b) ((a) < (b) ? (b) : (a))
 #define CAMERA_ABS(value) ((value) < 0 ? -(value) : (value))
@@ -5128,7 +5128,7 @@ void camCtrlHandleLookAroundCam(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchSetFovStyle(std::int32_t fovStyle) {
     const std::int32_t previous = g_searchCameraState.fovStyle;
     g_searchCameraState.fovStyle = fovStyle;
@@ -5136,7 +5136,7 @@ std::int32_t srchSetFovStyle(std::int32_t fovStyle) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static float SearchCameraEase(const SearchCameraState &state) {
     Vector3 position;
@@ -5152,7 +5152,7 @@ static float SearchCameraEase(const SearchCameraState &state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetInterpolationSourceMode(std::uint8_t mode);
 
 static void ResetLockedOnCameraPosition(SearchCameraState &state) {
@@ -5172,7 +5172,7 @@ static void ResetLockedOnCameraPosition(SearchCameraState &state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t camCtrlOrFlags(std::uint32_t mask);
 
 void UpdateLockedOnCamera() {
@@ -5375,7 +5375,7 @@ void UpdateLockedOnCamera() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlCallback(void *) {
     CameraRuntime &camera = *g_cameraControl;
@@ -5453,7 +5453,7 @@ void srchGetLookTarget(Vector3 *target) {
         *target = state->lookTarget;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AccumulateFightCameraVelocity(FightCameraVelocity *velocity, FightRuntimePrefix *game, FightActorRuntimePrefix *self) {
     std::int32_t closeEnemy;
     const std::int32_t playerSlot = game->playerSlot;
@@ -5511,7 +5511,7 @@ void AccumulateFightCameraVelocity(FightCameraVelocity *velocity, FightRuntimePr
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void vfSetupLinkedFightCamera(FightActorRuntimePrefix *actor, std::uint8_t kind) {
     FightRuntimePrefix *const game = actor->game;
@@ -5545,7 +5545,7 @@ void vfSetupLinkedFightCamera(FightActorRuntimePrefix *actor, std::uint8_t kind)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void vfUnknownCamRelated(FightRuntimePrefix *game) {
     const std::uint8_t mode = static_cast<std::uint8_t>(cameraMotionMode);
@@ -5564,7 +5564,7 @@ void vfUnknownCamRelated(FightRuntimePrefix *game) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetFightCameraToParticipants(FightRuntimePrefix *, FightActorRuntimePrefix *self, FightActorRuntimePrefix *other) {
     Vector3 direction;
     if (!self || !other || self == other)
@@ -5582,7 +5582,7 @@ void ResetFightCameraToParticipants(FightRuntimePrefix *, FightActorRuntimePrefi
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ResetFightCameraPattern() {
     fightCameraPattern.flags = fightCameraPattern.frame = fightCameraPattern.state = 0;
     fightCameraPattern.phaseX = fightCameraPattern.phaseY = 0.0f;
@@ -5592,7 +5592,7 @@ static void ResetFightCameraPattern() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateFightCameraPattern(FightRuntimePrefix *game) {
     if (static_cast<std::uint32_t>(game->state) > 3 || game->elapsedTicks < 60) {
         camCtrlSetNextRoll(0);
@@ -5656,7 +5656,7 @@ void UpdateFightCameraPattern(FightRuntimePrefix *game) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlShakeFightCamera(float amount) {
     camCtrlSetShakeAmplitude(0.0f, amount, 0.5f);
 }
@@ -5677,7 +5677,7 @@ void PrepareBattleEventSprite(void *parameter) {
     PrepareDrawWithMode(*reinterpret_cast<const LegacyIconSprite *>(parameter));
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ClampFightCameraPoint(Vector3 &point, const Vector3 &centre) {
     point.x = point.x < centre.x - 0.05f ? centre.x - 0.05f : point.x > centre.x + 0.05f ? centre.x + 0.05f : point.x;
     point.y = point.y < centre.y - 0.1f ? centre.y - 0.1f : point.y > centre.y + 0.1f ? centre.y + 0.1f : point.y;
@@ -5685,13 +5685,13 @@ static void ClampFightCameraPoint(Vector3 &point, const Vector3 &centre) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t FightCameraYawBetween(float x1, float z1, float x2, float z2) {
     return static_cast<std::int16_t>(dc::sdk::ArcTan2Fixed(x1 - x2, z1 - z2));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void MoveFightCameraToward(const Vector3 &desired, Vector3 &retained, Vector3 &direction, std::int32_t collide) {
     Vector3 delta, position;
     delta.x = (desired.x - retained.x) / 5.0f;
@@ -5727,7 +5727,7 @@ static void MoveFightCameraToward(const Vector3 &desired, Vector3 &retained, Vec
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FightCameraSubtract(const Vector3 &from, const Vector3 &to, Vector3 &result) {
     result.x = to.x - from.x;
     result.y = to.y - from.y;
@@ -5735,13 +5735,13 @@ void FightCameraSubtract(const Vector3 &from, const Vector3 &to, Vector3 &result
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float FightCameraLength(const Vector3 &value) {
     return am2Vector3Length(&value);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FightCameraCopy(const Vector3 &source, Vector3 &destination) {
     destination.x = source.x;
     destination.y = source.y;
@@ -5749,7 +5749,7 @@ void FightCameraCopy(const Vector3 &source, Vector3 &destination) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FightCameraBlendPoint(Vector3 &point, const Vector3 &other, float amount) {
     if (amount < 0.0f)
         amount = 0.0f;
@@ -5761,13 +5761,13 @@ void FightCameraBlendPoint(Vector3 &point, const Vector3 &other, float amount) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ScaleFightCameraVector(Vector3 &value, float length) {
     dc::sdk::SetVectorLength(&value, &value, length);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t FightCameraRaycast(Vector3 &result, const Vector3 &destination, const Vector3 &origin) {
     const shen_name map = g_currentMap;
     if (map == SHEN_NAME(QKBT))

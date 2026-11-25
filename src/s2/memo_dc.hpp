@@ -44,7 +44,7 @@ std::int32_t CancelSelectorMemo(std::int32_t force);
 void CloseActiveMemo();
 void OpenMemoFromNotebookMenu();
 void RequestMemoClose();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RenderMemoPageText(std::int32_t page, MemoTexture **textures);
 #else
 void RenderMemoPageText(std::int16_t page, MemoTexture **textures);

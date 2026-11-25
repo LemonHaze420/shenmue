@@ -276,16 +276,35 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--reference", type=Path, required=True)
-    parser.add_argument("--candidate", type=Path, required=True)
-    parser.add_argument("--elf", type=Path, required=True)
+    parser.add_argument("--candidate", type=Path)
+    parser.add_argument("--elf", type=Path)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--objdiff", type=Path, required=True)
+    parser.add_argument("--objdiff", type=Path)
+    parser.add_argument("--summary-only", action="store_true", help="Compare bytes and functions without running objdiff")
+    parser.add_argument("--prepare-reference", action="store_true", help="Extract build resources from a verified reference")
     args = parser.parse_args()
     try:
         import yaml
         config = yaml.safe_load(args.config.read_text())
         native = config["reference"]
         output = args.output_dir.resolve()
+        if args.prepare_reference:
+            reference = reference_bytes(args.reference, native)
+            font = native["debug_font"]
+            start = font["address"] - native["base"]
+            end = start + font["size"]
+            if start < 0 or end > len(reference):
+                raise ValueError("Debug font is outside the reference image")
+            contents = reference[start:end]
+            if hashlib.sha256(contents).hexdigest() != font["sha256"]:
+                raise ValueError("Debug font SHA256 mismatch")
+            destination = output / "debug_screen_font.bin"
+            if destination.resolve() in (args.reference.resolve(), args.config.resolve()):
+                raise ValueError("Resource output must not replace its input files")
+            write(destination, contents)
+            return 0
+        if not args.candidate or not args.elf or (not args.objdiff and not args.summary_only):
+            raise ValueError("Comparison requires --candidate, --elf and either --objdiff or --summary-only")
         generated = [output / name for name in ("reference/1ST_READ.BIN", "expected.o", "current.o", "objdiff.json", "report.json", "image.json")]
         inputs = {p.resolve() for p in (args.config, args.reference, args.candidate, args.elf, args.config.parent / config["symbols"])}
         if inputs.intersection(p.resolve() for p in generated):
@@ -327,10 +346,13 @@ def main():
                       f"{functions['unpaired']} unpaired", flush=True)
         print(f"[match] 1ST_READ.BIN: {state}; {result['equal_bytes']}/{max(len(reference), len(candidate))} identical bytes; no masks", flush=True)
         print(f"[match] comparing {len(names)} native functions", flush=True)
-        subprocess.run([str(args.objdiff.resolve()), "report", "generate", "-p", str(output), "-o", str(output / "report.json"),
-                        "-f", "json-pretty"], check=True)
+        if not args.summary_only:
+            subprocess.run([str(args.objdiff.resolve()), "report", "generate", "-p", str(output), "-o", str(output / "report.json"),
+                            "-f", "json-pretty"], check=True)
         print(f"[match] {result['paired_function_names']}/{len(names)} native function names paired; objdiff project: {output}")
-        print(f"[match] whole-image comparison: {output / 'image.json'}; function report: {output / 'report.json'}")
+        print(f"[match] whole-image comparison: {output / 'image.json'}")
+        if not args.summary_only:
+            print(f"[match] function report: {output / 'report.json'}")
         return 0 if result["match"] else 1
     except (ImportError, OSError, ValueError, KeyError, struct.error, subprocess.CalledProcessError) as error:
         parser.exit(2, f"[match] {error}\n")

@@ -94,7 +94,7 @@
 #include <cstring>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #include "s2/model_image_component_dc.hpp"
 #include "s2/motion_stream_dc.hpp"
@@ -130,7 +130,7 @@
 #include <cctype>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cmath>
 #endif
 
@@ -198,7 +198,7 @@
 #include "s2/door_state_dc.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/field_collision_dc.hpp"
 #endif
 
@@ -225,7 +225,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/reflector_board_dc.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_transparency_dc.hpp"
 #endif
 
@@ -412,7 +412,7 @@ void LoadMazeMarkers();
 void LoadMazePackage();
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern char mazeLoadFilename[32];
 const char *mazeMapNames[] = {"qte", "kmz1", "kmz2", "kmz3", "kmz4"};
 #endif
@@ -1635,7 +1635,7 @@ std::uint32_t mazeReferenceCount = 0;
 EndpointLinks mazeLinks[32][2];
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t mazeUnitWallHitCount;
 #endif
 
@@ -2298,7 +2298,7 @@ void DrawMazeTreeEffects(const MazeRoad *road) {
             position.x *= -1.0f;
         matrix_stack::Matrix4x4_Push();
         Matrix4x4::preTranslate(position.x, position.y, position.z);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         SwizzledBasis3x4IntoActiveFrom(g_mazeViewTransform.rows);
 #else
         CopyMazeMatrixBasis(&g_mazeViewTransform);
@@ -2353,7 +2353,7 @@ void DrawMazeFlutterEffects(const MazeRoad *road) {
             alpha += 0.3f;
         matrix_stack::Matrix4x4_Push();
         Matrix4x4::preTranslate(position.x, position.y, position.z);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         SwizzledBasis3x4IntoActiveFrom(mazeFlutterTransform.rows);
 #else
         CopyMazeMatrixBasis(&mazeFlutterTransform);
@@ -2453,8 +2453,10 @@ std::int32_t InitializeMazeObjectTransforms(MazeRoad **blocks, const Vector3 *ca
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializeMazeNavigationTrail() {
     Vector3 start, end;
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
     if (mazeGetCurrentRefCount() != 3)
         return;
+#endif
     if (g_currentMap == SHEN_NAME4('K', 'M', 'Z', '2')) {
         start.x = -500.0f;
         start.z = -190.0f;
@@ -2656,7 +2658,7 @@ void DrawMazeAuthoredObjects(shen_name name, const MazeRoad *road) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const char *mazeTerrainName = "SRL9";
 #endif
 
@@ -2665,7 +2667,7 @@ void InitializeMazeModels() {
     static const char *mediumNames[] = {"SRB1", "SRB2", "SRB3", "IRB1", "IRB2", "IRB3", "KRB1", "KRB2", "KRB3", "IOB0", "IOB1", "IOB2", "IRM1", "IRM2", "IRM3",
         "IRM4", "IRM5", "HOM0", "H3F1", "H3F2", "H3F3", "H3F4", "H3F5", "H3F6", "H3F7", "H3F8", "H3F9", "HOM3", "HIJ1", "HIJ2", "HIJ3", "HOJ0", "HOJ1", "H3J1",
         "H3J2", "end"};
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t index;
     ::sprintf(mazeLoadFilename, "%smap", mazeMapNames[GetMazeAuxiliaryWord()]);
     void *mapData = FileLoader(mazePackage, mazeLoadFilename, PACKAGE_BINARY_EXTENSION);
@@ -2698,7 +2700,7 @@ void InitializeMazeModels() {
     InitializeMazeRenderModelNullsub();
 #else
     char filename[32];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ::sprintf(mazeLoadFilename, "%smap", mazeMapNames[GetMazeAuxiliaryWord()]);
     mazeAuthoredMap = static_cast<std::byte *>(FileLoader(mazePackage, mazeLoadFilename, PACKAGE_BINARY_EXTENSION));
     mazeUnitAreas = static_cast<std::byte *>(FileLoader(mazePackage, "unitarea", PACKAGE_BINARY_EXTENSION));
@@ -3106,7 +3108,7 @@ void DrawMazePropStates(const MazePropState *states) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetMazeBob() {
     float value;
     std::int32_t phase, current, previous;
@@ -3120,7 +3122,7 @@ float GetMazeBob() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetMazeBob() {
     const std::uint32_t current = (mazeGetCurrentRefCount() & 0xf0U) >> 4, previous = (current - 1) & 15U;
     const float fraction = static_cast<float>(mazeGetCurrentRefCount() & 15U) * 0.0625f;
@@ -3766,7 +3768,7 @@ std::int32_t MazeVisibleRoadsBlock(const Vector3 *camera, const Vector3 *target)
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool MazeUnitWallsBlock(const MazeRoad *road, const Vector3 *camera, const Vector3 *target) {
     for (std::int32_t index = 0; g_currentMazeUnits[index]; ++index) {
         const MazeRoad *current = g_currentMazeUnits[index];
@@ -3784,7 +3786,7 @@ bool MazeUnitWallsBlock(const MazeRoad *road, const Vector3 *camera, const Vecto
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool MazeUnitWallsBlock(const MazeRoad *road, const Vector3 *camera, const Vector3 *target) {
     for (std::int32_t index = 0; g_currentMazeUnits[index]; ++index) {
         const MazeRoad *current = g_currentMazeUnits[index];
@@ -3807,7 +3809,7 @@ bool MazeUnitWallsBlock(const MazeRoad *road, const Vector3 *camera, const Vecto
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool MazeSegmentsIntersect(const Vector3 &a, const Vector3 &b, const Vector3 &c, const Vector3 &d) {
     float deltaX = b.x - a.x;
     float deltaZ = b.z - a.z;
@@ -3833,7 +3835,7 @@ bool MazeSegmentsIntersect(const Vector3 &a, const Vector3 &b, const Vector3 &c,
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool MazeSegmentsIntersect(const Vector3 &a, const Vector3 &b, const Vector3 &c, const Vector3 &d) {
     const float crossC = (c.x - b.x) * (b.z - a.z) - (c.z - b.z) * (b.x - a.x);
     const float crossD = (d.x - b.x) * (b.z - a.z) - (d.z - b.z) * (b.x - a.x);
@@ -3940,7 +3942,7 @@ std::int32_t GetAuthoredRecordYaw(std::int32_t block, std::int32_t record) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t mazeFindPartitionDistance(std::int32_t sourcePartition, std::int32_t sourceElement, std::int32_t targetPartition, std::int32_t targetElement,
     std::int32_t *nextPartition, std::int32_t *volatile nextElement) {
     RouteSearch search;
@@ -3981,7 +3983,7 @@ std::int32_t mazeFindPartitionDistance(std::int32_t sourcePartition, std::int32_
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t mazeFindPartitionDistance(std::int32_t sourcePartition, std::int32_t sourceElement, std::int32_t targetPartition, std::int32_t targetElement,
     std::int32_t *nextPartition, std::int32_t *nextElement) {
     RouteSearch search = {sourcePartition, sourceElement, targetPartition, targetElement, -1, 0, 0, sourcePartition, sourceElement};
@@ -4004,7 +4006,7 @@ std::int32_t mazeFindPartitionDistance(std::int32_t sourcePartition, std::int32_
 #endif
 
 namespace {
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t SearchRoute(RouteSearch &search, std::int32_t endpoint) {
     if (search.partition < 0)
         return 0;
@@ -4057,7 +4059,7 @@ std::uint32_t SearchRoute(RouteSearch &search, std::int32_t endpoint) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t SearchRoute(RouteSearch &search, std::int32_t endpoint) {
     if (search.partition < 0 || mazeLinks[search.partition][0].visited)
         return 0;
@@ -4311,7 +4313,7 @@ void ResetMazeEndpointLinks(EndpointLinks *links) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BuildMazeEndpointLinks(EndpointNeighbor *links, std::int32_t partition, std::int32_t element) {
     Vector3 position, points[3];
     std::int32_t adjacentPartitions[3], adjacentElements[3];
@@ -4352,7 +4354,7 @@ void BuildMazeEndpointLinks(EndpointNeighbor *links, std::int32_t partition, std
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BuildMazeEndpointLinks(std::int32_t partition, std::int32_t endpoint) {
     const std::int32_t element = endpoint ? g_mazePartitions[partition].count - 1 : 0;
     Vector3 position;
@@ -4380,7 +4382,7 @@ void BuildMazeEndpointLinks(std::int32_t partition, std::int32_t endpoint) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializeMazeRouteLinks() {
     std::int32_t index;
     for (index = 0; index < 32; ++index) {
@@ -4394,7 +4396,7 @@ void InitializeMazeRouteLinks() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeMazeRouteLinks() {
     for (std::int32_t index = 0; index < 32; ++index) {
         ResetMazeEndpointLinks(&mazeLinks[index][0]);
@@ -5556,7 +5558,7 @@ std::int32_t IsItemSelectable() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadMemoData() {
     g_memoData = 0;
     g_memoMasterTable = 0;
@@ -5588,7 +5590,7 @@ void LoadMemoData() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool LoadMemoData() {
     g_memoData = 0;
     g_memoMasterTable = 0;
@@ -5664,7 +5666,7 @@ void SetMemoTextureName(std::byte *header, const char *name) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool NotifyMemoFlag(std::int32_t flag, bool selected) {
     const std::int16_t *row = memoLineFlags[0];
     std::int32_t latest = -1;
@@ -5702,7 +5704,7 @@ bool NotifyMemoFlag(std::int32_t flag, bool selected) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool NotifyMemoFlag(std::int32_t flag, bool selected) {
     const std::int16_t *row = memoLineFlags[0];
     std::int16_t latest = -1;
@@ -5927,7 +5929,7 @@ void MazeRuntimeNullsub() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 void mazeInit() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     LoadMazePackage();
     SetMazeDefaults();
     mazeRoadDrawCount = 0;
@@ -5972,7 +5974,7 @@ void mazeInit() {
             ++roads;
         SetMazeRoadCount(block, roads);
     }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(MazeTaskCallback, 14, 2, 8, shen_name(SHEN_NAME4('M', 'A', 'Z', 'E')));
     static_cast<MazeTaskData *>(HLib::GetTaskParameter(task))->task = task;
 #else

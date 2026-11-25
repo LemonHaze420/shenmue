@@ -4,7 +4,7 @@
 
 #include "platform/dc/matrix.hpp"
 #include "s2/event_matrix_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include <cstring>
 #endif
 #include "s2/motion_work_dc.hpp"
@@ -23,7 +23,7 @@
 #include "s2/screen_film_dc.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/scenario_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #endif
 #include "shenmue.h"
@@ -51,7 +51,7 @@ Matrix4x4 *g_handPoseMatrixOutput = 0;
 #define SHENMUE_HAND_ANGLE HandSignedAngle
 #define SHENMUE_HAND_ANGLE HandSignedAngle
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BuildHandJointTransform(float positionX, float positionY, float positionZ, std::int32_t x, std::int32_t y, std::int32_t z) {
     Vector2 yValues, xValues, zValues;
@@ -142,7 +142,7 @@ std::int32_t InterpolateHandPoseChannel(std::int32_t count, const HandCubicKeyfr
     }
     const float fixed = (65536.0f * angle) / 360.0f;
     std::int32_t result;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     result = static_cast<std::int32_t>(fixed);
 #else
     asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(result) : "f"(fixed) : "fpul");

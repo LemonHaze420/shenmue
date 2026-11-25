@@ -824,7 +824,7 @@ void HelpWidgetResetRuns();
 void HelpWidgetParseLine(std::string_view line);
 void HelpWidgetAddButtonIcon(std::int32_t code);
 void FormatColoursForHelpTopic(std::uint8_t topic);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsSpeakIconCancellable();
 #else
 bool IsSpeakIconCancellable();

@@ -173,7 +173,7 @@ float CalculatePlanarDistanceBetweenPoints(const Vector3 *first, const Vector3 *
 float CalculateDistanceSquaredBetweenPoints(const Vector3 *first, const Vector3 *second);
 #endif
 
-#if SHENMUE_IS_DC && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && (SHENMUE_IS_DC && SHENMUE_IS_S2)
 float CalculatePlanarMagnitude(float x, float z);
 #endif
 

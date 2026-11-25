@@ -33,7 +33,7 @@
 #include "s2/system_modules_dc.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/texture_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/area_jump_dc.hpp"
 #include "s2/battle_qte.hpp"
 #include "s2/calendar_dc.hpp"
@@ -69,7 +69,7 @@
 #include "s2/scenario_talk_dc.hpp"
 #include "s2/scenario_dc.hpp"
 #include <cri_adxt.h>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_playback_dc.hpp"
 #endif
 #include "s2/startup_assets_dc.hpp"
@@ -92,7 +92,7 @@
 #include "s2/lighting_dc.hpp"
 #include "s2/moves_scroll.hpp"
 #include "platform/dc/mt7.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_control_state_dc.hpp"
 #include "s2/pad_control_dc.hpp"
 #include "s2/date_time.hpp"
@@ -105,7 +105,7 @@
 #include "s2/search_runtime_dc.hpp"
 #endif
 #include "s2/map_region_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hand_dc.hpp"
 #include "s2/object_xforms.hpp"
 #include "s2/sound_program.hpp"
@@ -119,7 +119,7 @@
 #include "s2/speak_icon_setup_dc.hpp"
 #include "s2/search_commands_dc.hpp"
 #include "s2/flag_data.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/flag_context_dc.hpp"
 #endif
 
@@ -211,13 +211,13 @@ void ResetNativePlayerStats() {
     g_nativePlayerStats.cash = 596;
     g_nativePlayerStats.segaCoins = 0;
     g_transferredYen = 17880;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_fightUiActive = g_fightActive = 0;
 #else
     g_fightActive = g_fightUiActive = 0;
 #endif
     ResetRetainedBattleState();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::size_t scoresSize = sizeof(g_minigameScores);
     std::memset(g_minigameScores, 0, scoresSize);
     std::size_t wordsSize = sizeof(g_playerRetainedResetWords);
@@ -246,7 +246,7 @@ void ResetNativePlayerStats() {
     g_arcadeStatistics[3].time = 0;
     InitializeCombatStatistics(&g_combatStatistics);
     ResetSavedFrameCounter();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ResetGlobalStateFlags();
 #else
     ResetRetainedPlayerFlags();
@@ -254,7 +254,7 @@ void ResetNativePlayerStats() {
     ResetQronSceneChange();
     for (std::int32_t index = 0; index < 16; ++index)
         vfMotnNibbleSet(static_cast<std::uint8_t>(index), 0);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     SetBattleQteParameters(0.0f, 0, 0);
 #else
     SetGameCompletionState(0.0f, 0, 0);
@@ -311,7 +311,7 @@ void SetVoiceSettingEnabled(std::uint8_t enabled) {
 }
 
 std::int32_t GetConversationPlaybackEnabled() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t enabled = 1;
     enabled &= (g_nativePlayerStats.gameConfigurationFlags >> 1U);
     const std::int32_t act = g_actNumber;
@@ -377,7 +377,7 @@ void ApplyS2TitleLogoFlag(std::int32_t enabled) {
         g_nativePlayerStats.gameConfigurationFlags |= GCF_TitleLogo;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetS2TitleLogoFlag() {
     return static_cast<std::int32_t>((g_nativePlayerStats.gameConfigurationFlags & GCF_TitleLogo) >> 7U);
 }
@@ -398,7 +398,7 @@ void ApplyS2ControlMode(std::int32_t mode) {
 
 void SetMGOTOSIDAMA(std::int32_t bit, std::int32_t enabled) {
     const std::uint32_t shift = static_cast<std::uint32_t>(bit) & 31U;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::uint32_t mask = static_cast<std::uint32_t>(bit >= 0) << shift;
 #else
     const std::uint32_t mask = bit >= 0 ? 1U << shift : (shift ? 1U >> (32U - shift) : 0U);
@@ -491,7 +491,7 @@ void SetSavedMinigameScore(std::uint32_t index, std::uint32_t score) {
         g_minigameScores[index] = score;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RecordScenarioTalkGroup(std::int32_t index) {
     std::int32_t found = -1;
     for (std::int32_t slot = 0; slot < static_cast<std::int16_t>(g_playerResetCounter); ++slot) {
@@ -514,13 +514,13 @@ void ResetPlayerSaveSelections() {
     g_playerSelectionCounter = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t GetPlayerSelectionCounter() {
     return static_cast<std::int16_t>(g_playerSelectionCounter);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RecordRecentScenarioTalk(std::int32_t index) {
     if (g_playerSaveSelections[0] != index && g_playerSaveSelections[1] != index && g_playerSaveSelections[2] != index &&
@@ -569,7 +569,7 @@ retry:
     goto retry;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name GetScenarioActorTypeName(std::int32_t isNpc, std::int32_t enabled);
 
 struct StatisticRequestFields {
@@ -832,6 +832,20 @@ void IncrementFrameCount() {
             ++*authorFrames;
     }
 }
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::uint32_t g_omakeVideoCount;
+
+void SetOmakeVideoCount(std::uint32_t count) {
+    if (count < 256)
+        g_omakeVideoCount = count;
+}
+
+std::uint32_t GetOmakeVideoCount() {
+    return g_omakeVideoCount;
+}
+
+#endif
 
 } // namespace s2
 } // namespace shenmue

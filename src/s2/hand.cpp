@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hand_dc.hpp"
 #include "s2/shadow_dc.hpp"
 #include "s2/motion_work_dc.hpp"
@@ -35,7 +35,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -96,7 +96,7 @@ MotionOverride g_searchHandMotionOverride{};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 Vector3 Row(const Matrix4x4 &matrix, std::size_t row);
@@ -152,7 +152,7 @@ std::uint64_t ParseHandPoseCommand(HandParams *hand, std::byte *command, std::in
 std::uint64_t ApplyCharacterHandPoseCommand(Character *character, std::int32_t side, std::byte *command, std::int16_t ticks);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool g_searchHandPairedTarget;
 
@@ -162,7 +162,7 @@ static Vector3 g_searchHandDefaultTargetOffset = {0.09f, 0, 0};
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -192,7 +192,7 @@ Vector3 HandMatrixRow(const Matrix4x4 &matrix, std::int32_t row) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -215,7 +215,7 @@ float HandPathLength(const MotionRigAxis *path, float limit) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool mtwkApplyHand(std::uint8_t mode, std::uint8_t side) {
@@ -295,7 +295,7 @@ bool mtwkApplyHand(HandIKMode mode, std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool srchSetTargetsWithParams(std::int32_t side, const Matrix4x4 *transform, const Vector3 *tangentOrigin, const Vector3 *pathOrigin, std::uint8_t ticks) {
     Vector3 outgoing, incoming, start, blend, tangent, destination;
@@ -453,7 +453,7 @@ bool srchSetTargetsWithParams(std::int32_t side, const Matrix4x4 *transform, con
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool srchSetSearchJointAngles(std::uint8_t side, std::byte *beginCommand, std::byte *endCommand, std::int32_t fastTiming) {
@@ -489,7 +489,7 @@ bool srchSetSearchJointAngles(std::uint8_t side, std::byte *beginCommand, std::b
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 const Matrix4x4 *mtwkGetSearchArmTransform(std::uint8_t side) {
@@ -506,7 +506,7 @@ Matrix4x4 *mtwkGetSearchArmTransform(std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool SetSearchHandRotatingTarget(
@@ -564,7 +564,7 @@ bool SetSearchHandRotatingTarget(
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 float srchSetPathBiasFor(std::uint8_t side, float bias) {
     if (!g_searchHandMotionWork)
@@ -609,7 +609,7 @@ std::uint8_t srchSetJointTable(std::uint8_t table, std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool srchSetXformFor(const Vector3 *targetOffset, std::uint8_t side) {
@@ -636,7 +636,7 @@ bool srchSetXformFor(const Vector3 *targetOffset, std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool get_x_from_target(Vector3 *targetOffset, std::uint8_t side) {
@@ -658,7 +658,7 @@ bool get_x_from_target(Vector3 *targetOffset, std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool SetSearchHandCurrentTransform(const Matrix4x4 *transform, std::uint8_t side) {
@@ -689,7 +689,7 @@ bool SetSearchHandCurrentTransform(const Matrix4x4 *transform, std::uint8_t side
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool srchSetNewTicksTimeFor(std::int32_t ticks, std::uint8_t side) {
@@ -720,7 +720,7 @@ bool srchSetNewTicksTimeFor(std::uint8_t ticks, std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t srchGetTicksDifference(std::uint8_t side) {
@@ -742,7 +742,7 @@ std::int32_t srchGetTicksDifference(std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t srchGetCurrentTotalTicks(std::uint8_t side) {
@@ -764,7 +764,7 @@ std::int32_t srchGetCurrentTotalTicks(std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool SearchIK_SetTarget(const Matrix4x4 *transform) {
@@ -794,7 +794,7 @@ void SearchIK_SetTarget(const Matrix4x4 *transform) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetSearchHandOverrideEnabled(std::uint8_t enabled) {
@@ -817,7 +817,7 @@ bool SetSearchHandOverrideEnabled(bool enabled) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool IsSearchHandOverrideEnabled() {
@@ -830,7 +830,7 @@ bool IsSearchHandOverrideEnabled() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void GetSearchHandJointRotation(std::uint8_t side, Vector3i *rotation) {
@@ -853,7 +853,7 @@ void GetSearchHandJointRotation(std::uint8_t side, Vector3i *rotation) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void SetSearchHandJointRotation(std::uint8_t side, const Vector3i *rotation) {
     if (!g_searchHandMotionWork)
@@ -866,7 +866,7 @@ void SetSearchHandJointRotation(std::uint8_t side, const Vector3i *rotation) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -882,7 +882,7 @@ Vector3i searchHandChestRotation;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -895,7 +895,7 @@ MotionArmRig &SearchArm(std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -905,7 +905,7 @@ const float epsilon = 0.00000011920929f;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -917,7 +917,7 @@ float HandClamp(float value, float low, float high) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -931,7 +931,7 @@ void HandSwap(float &a, float &b) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -944,7 +944,7 @@ Vector4 HandRow(const Vector3 &v) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -967,7 +967,7 @@ Vector3 Row(const Matrix4x4 &matrix, std::size_t row) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -979,7 +979,7 @@ Matrix4x4 Identity() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1011,7 +1011,7 @@ Matrix4x4 Multiply(const Matrix4x4 &a, const Matrix4x4 &b) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1038,7 +1038,7 @@ Vector3 TransformVector(const Matrix4x4 &matrix, Vector3 value) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1064,7 +1064,7 @@ Vector3 TransformPoint(const Matrix4x4 &matrix, Vector3 value) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1090,7 +1090,7 @@ void Translate(Matrix4x4 &matrix, Vector3 value) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1115,7 +1115,7 @@ Matrix4x4 Basis(Vector3 x, Vector3 z, Vector3 position) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1137,7 +1137,7 @@ std::uint16_t Angle(float radians) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1169,7 +1169,7 @@ void Rotate(std::uint8_t axis, std::uint16_t angle) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1181,7 +1181,7 @@ MotionArmRig &Arm(MotionWork &work, std::uint8_t side) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1197,7 +1197,7 @@ void SetBlend(float blend) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1211,7 +1211,7 @@ void CaptureTarget(HandIKConfig &config, const Matrix4x4 &transform) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1238,7 +1238,7 @@ float Ease(float time, float bias) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1276,7 +1276,7 @@ float Derivative(const MotionRigChannel &channel, float time) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1300,7 +1300,7 @@ float PathSpeed(const HandIKConfig &config, float time) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1315,7 +1315,7 @@ float PathLength(const HandIKConfig &config) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1406,7 +1406,7 @@ Vector3 SamplePath(const HandIKConfig &config, float fraction) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1425,7 +1425,7 @@ Vector3 NormalizeMotionAxis(Vector3 axis) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1437,7 +1437,7 @@ Vector3 CrossMotionAxes(const Vector3 &a, const Vector3 &b) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1490,7 +1490,7 @@ void ApplyMotionRotationBasis(Matrix4x4 &transform, const MotionRotationBasis &b
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1540,7 +1540,7 @@ Matrix4x4 SampleBasis(const HandIKConfig &config, float time) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1557,7 +1557,7 @@ void SubmitBeginPose(HandIKConfig &config, std::uint8_t side) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1573,7 +1573,7 @@ void SubmitEndPose(HandIKConfig &config, std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1706,7 +1706,7 @@ bool AdvancePath(HandIKConfig &config, std::uint8_t side, Matrix4x4 &target) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1734,7 +1734,7 @@ void TickPose(HandIKConfig &config, std::uint8_t side) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1754,7 +1754,7 @@ Vector3 RotateVectorAroundAxis(Vector3 value, Vector3 axis, float radians) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1822,7 +1822,7 @@ void TickSearchHandPose() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1871,7 +1871,7 @@ void BuildError(const Matrix4x4 &current, const Matrix4x4 &target, float (&error
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2028,7 +2028,7 @@ void BuildTargetError(HandIKConfig &config, std::uint8_t side, float (&error)[6]
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2151,7 +2151,7 @@ void BuildJacobian(const HandIKConfig &config, std::uint8_t side, float (&jacobi
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2220,7 +2220,7 @@ float Determinant(const float *matrix, std::size_t order) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2340,7 +2340,7 @@ bool InvertSix(float (&matrix)[6][6]) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2407,7 +2407,7 @@ float SolveWeighted(const float (&jacobian)[6][8], const float (&weights)[8], co
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2452,7 +2452,7 @@ void SolveHand(HandIKConfig &config, std::uint8_t side) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2498,7 +2498,7 @@ void EvaluateArm(MotionWork &work, std::uint8_t side, std::uint32_t interpolatio
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2522,7 +2522,7 @@ Matrix4x4 ChestOverrideMatrix() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 float SearchIK_GetMaxBlend() {
     return handBlend;
@@ -2530,7 +2530,7 @@ float SearchIK_GetMaxBlend() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void setSearchIKFlag(float blend) {
     handBlend = blend;
@@ -2538,7 +2538,7 @@ void setSearchIKFlag(float blend) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HandIKMode getSearchHandConfigModeFor(std::uint8_t side) {
     return handWork && side < 2 ? configurations[side].mode : HandIKMode::Unavailable;
@@ -2546,7 +2546,7 @@ HandIKMode getSearchHandConfigModeFor(std::uint8_t side) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 float g_searchHandSingularDeterminant = 0.5f;
 float g_searchHandWeakDeterminant = 1.5f;
@@ -2628,7 +2628,7 @@ void SolveSearchHand() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2651,7 +2651,7 @@ inline void ApplySearchChestTransform() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void srchArmEvaluate(MotionArmRig &arm, std::uint32_t interpolationMode, const float *angles) {
     const float (*dimensions)[6] = g_motionConstData.dimensions;
@@ -2694,7 +2694,7 @@ void srchArmEvaluate(MotionArmRig &arm, std::uint32_t interpolationMode, const f
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void MotionCommonCallback(std::int32_t mode, std::int32_t interpolationMode) {
@@ -2730,7 +2730,7 @@ void MotionCommonCallback(std::int64_t mode, std::int32_t interpolationMode) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void mtwkAssignCallbacks(MotionWork *work) {
@@ -2742,7 +2742,7 @@ void mtwkAssignCallbacks(MotionWork *work) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t mtwkGetCustomOverrideFlags(const MotionWork *work) {
     return work && work == handWork && (work->runtime.seqFlags & MSF_SearchHand) && overrideEnabled ? g_searchHandMotionOverride.flags : 0;
@@ -2750,7 +2750,7 @@ std::uint32_t mtwkGetCustomOverrideFlags(const MotionWork *work) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool mtwkClearSearchHandRequests(MotionWork *work) {
     if (!work || work != handWork || !(work->runtime.seqFlags & MSF_SearchHand))
@@ -2772,7 +2772,7 @@ bool mtwkClearSearchHandRequests(MotionWork *work) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]) {
@@ -2797,7 +2797,7 @@ void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HandParams *GetCharacterHand(Character *character, std::int32_t side) {
     if (!character)
@@ -2813,7 +2813,7 @@ FindModelComponent
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool IsHandPoseInactive(const HandParams &hand) {
     return (hand.poseFlags & HandPoseInactive) != 0;
@@ -2821,7 +2821,7 @@ bool IsHandPoseInactive(const HandParams &hand) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint8_t SetHandPoseFlags(HandParams &hand, std::int16_t enabled, std::uint8_t flags) {
     const std::uint8_t previous = hand.poseFlags;
@@ -2853,7 +2853,7 @@ std::uint8_t SetHandPoseFlags(HandParams &hand, std::int16_t enabled, std::uint8
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t GetHandPoseAnimationResult(const HandParams &hand) {
     return static_cast<std::uint32_t>(hand.poseMode ? -static_cast<std::int32_t>(hand.poseTicks) : hand.currentPoseFrame + 1);
@@ -2861,7 +2861,7 @@ std::uint64_t GetHandPoseAnimationResult(const HandParams &hand) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetHandPoseStep(HandParams &hand, float step) {
     if (step > 0.0f)
@@ -2870,7 +2870,7 @@ void SetHandPoseStep(HandParams &hand, float step) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetHandSecondaryPoseWork(HandParams &hand, void *work) {
     if (hand.secondaryPoseWork == work)
@@ -2881,7 +2881,7 @@ void SetHandSecondaryPoseWork(HandParams &hand, void *work) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void GetHandEndpointPosition(const HandParams &hand, std::int32_t endpoint, Vector3 &position) {
     position = hand.jointPositions[handEndBoneIds[endpoint]];
@@ -2889,7 +2889,7 @@ void GetHandEndpointPosition(const HandParams &hand, std::int32_t endpoint, Vect
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void GetHandPrimaryNodeRotation(const HandParams &hand, Vector3i &rotation) {
     rotation = hand.primaryNode ? hand.primaryNode->rotation : Vector3i{};
@@ -2897,7 +2897,7 @@ void GetHandPrimaryNodeRotation(const HandParams &hand, Vector3i &rotation) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 MT7Node *SetHandPrimaryNodeRotation(HandParams &hand, const Vector3i &rotation) {
     if (hand.primaryNode)
@@ -2907,7 +2907,7 @@ MT7Node *SetHandPrimaryNodeRotation(HandParams &hand, const Vector3i &rotation) 
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::byte *WriteHandPoseCommand(const HandParams &hand, std::byte *command) {
@@ -2921,7 +2921,7 @@ std::byte *WriteHandPoseCommand(const HandParams &hand, std::byte *command) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t ParseHandPoseCommand(HandParams *hand, std::byte *command, std::int16_t ticks) {
     if (d3t::GetObjectModelPathHash(GetMT7ReaderData(hand->owner ? static_cast<const MT7Model *>(hand->owner->model) : nullptr)) ==
@@ -2960,7 +2960,7 @@ std::uint64_t ParseHandPoseCommand(HandParams *hand, std::byte *command, std::in
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t ApplyCharacterHandPoseCommand(Character *character, std::int32_t side, std::byte *command, std::int16_t ticks) {
     HandParams *const hand = GetCharacterHand(character, side);
@@ -2971,7 +2971,7 @@ std::uint64_t ApplyCharacterHandPoseCommand(Character *character, std::int32_t s
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3008,7 +3008,7 @@ bool SetHandRegionEnabled(HandParams &hand, std::int8_t state, std::int16_t pose
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool SetCharacterHandRegionEnabled(Character *character, std::uint8_t side, bool enabled, std::int8_t alphaPolicy) {
     HandParams *const hand = GetCharacterHand(character, side);
@@ -3017,7 +3017,7 @@ bool SetCharacterHandRegionEnabled(Character *character, std::uint8_t side, bool
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 MT7Node *SetHighModelXYZ(Character *character, std::int8_t state, std::int32_t side, std::int16_t pose) {
     HandParams *const hand = GetCharacterHand(character, side);
@@ -3029,7 +3029,7 @@ MT7Node *SetHighModelXYZ(Character *character, std::int8_t state, std::int32_t s
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 MT7Node *SetHandRegionXYZWithFlags(Character *character, std::int8_t state, std::int32_t side, std::int16_t pose, std::int8_t alphaPolicy) {
     HandParams *const hand = GetCharacterHand(character, side);
@@ -3041,7 +3041,7 @@ MT7Node *SetHandRegionXYZWithFlags(Character *character, std::int8_t state, std:
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool ApplyScenarioLeftHandPose(Character *character) {
     // ApplyScenarioLeftHandPose selects this authored pose only for RYO/InternalFlag123.
@@ -3053,7 +3053,7 @@ bool ApplyScenarioLeftHandPose(Character *character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int8_t AdvanceHandDrawState(HandParams &hand) {
@@ -3074,7 +3074,7 @@ std::int8_t AdvanceHandDrawState(HandParams &hand) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool BeginSearchHand(Character *character, std::int32_t handSelection, std::uint32_t jointTable) {
     if (!character)
@@ -3225,7 +3225,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void SetSearchHandChestTransform(const Vector3 *position, const Vector3i *rotation) {
     if (!g_searchHandMotionWork)
@@ -3361,7 +3361,7 @@ void SetSearchHandChestTransform(const Vector3 *position, const Vector3i *rotati
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void mtwkResetBlends() {
     if (handWork) {
@@ -3377,7 +3377,7 @@ void mtwkResetBlends() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ResetSearchHandState() {
     handCharacter = nullptr;
@@ -3389,7 +3389,7 @@ void ResetSearchHandState() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool EvaluateSearchHandArm(MotionWork &work, std::uint8_t side, std::uint32_t interpolationMode) {
     if (!mtwkGetCustomOverrideFlags(&work) || side >= 2 || !(g_searchHandMotionOverride.flags & (1U << side)))

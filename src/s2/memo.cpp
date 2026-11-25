@@ -416,7 +416,7 @@ void RasterMemoLine(std::uint32_t line, std::string_view text) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
 bool SelectMemoFlagText(char *text, char *ruby, std::int32_t line);
 void RasterizeMemoLine(std::uint16_t *destination, const char *text, const char *ruby, std::int16_t width, const std::uint16_t *colours);
@@ -435,7 +435,7 @@ struct {
 
 ConversationBuffer *memoAudio;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ProvisionalMemoTextureState {
     std::byte retained[4];
     MemoTextureTaskData *data;
@@ -460,7 +460,7 @@ std::int32_t memoTextureHandles[4] = {-1, -1, -1, -1};
 MemoTextureName memoTextureNames[2][16];
 
 std::int32_t memoOriginalTextures[32];
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t memoModelTextureCount = 0;
 #endif
 
@@ -506,7 +506,7 @@ void PrepareMemoNextPage();
 void PrepareMemoPreviousPage();
 void FinishMemoTexturePage(std::int32_t previous);
 void InitializeMemoTexture(MemoTexture &texture, const char *name, std::int16_t width, std::int16_t height);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SetupMemoTextures();
 #else
 bool SetupMemoTextures();
@@ -527,7 +527,7 @@ void ExpandMemoText(char *destination, const char *source);
 const char *GetMemoText(const std::byte *table, std::int32_t index);
 void FormatMemoTransferredMoney(char *destination, std::int32_t hongKong);
 std::uint8_t PrepareMemoTextLine(char *destination, const char *source, std::uint16_t *colours, std::int32_t *selection);
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RasterizeMemoRuby(FontRuntimeData *font, std::uint16_t glyph, std::uint16_t *destination, std::int32_t bytePitch);
 void RasterizeMemoLine(std::uint16_t *destination, const char *text, const char *ruby, std::int32_t width, const std::uint16_t *colours);
 #endif
@@ -549,7 +549,7 @@ std::int32_t CancelSelectorMemo(std::int32_t force);
 void CloseActiveMemo();
 void RequestMemoClose();
 void MEMO_Callback(void *);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RenderMemoPageText(std::int32_t page, MemoTexture **textures);
 #else
 void RenderMemoPageText(std::int16_t page, MemoTexture **textures);
@@ -775,7 +775,7 @@ void MEMO_RefreshControllerInput() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetMemoRuntime() {
     MemoStateWork *state = &memoState;
     memoTask = 0;
@@ -1849,7 +1849,7 @@ void SetMemoOpeningPage(std::int16_t page) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BeginMemoPageTurn() {
     MemoWork *work = &memo;
     std::uint16_t motions[2][2] = {{0xf0ee, 0xf0ef}, {0xf0ec, 0xf0ed}};
@@ -2088,7 +2088,7 @@ void PlayMemoAudio(std::int32_t volume) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareMemoNextPage() {
     UpdateMemoTexturePage(memoNextPage);
     memoTextureNames[1][4] = memoTextureNames[1][5];
@@ -2117,7 +2117,7 @@ void PrepareMemoNextPage() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareMemoPreviousPage() {
     UpdateMemoTexturePage(memoNextPage - 1 < 0 ? 0 : static_cast<std::int16_t>(memoNextPage - 1));
     memoTextureNames[1][3] = memoTextureNames[1][6];
@@ -2146,7 +2146,7 @@ void PrepareMemoPreviousPage() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FinishMemoTexturePage(std::int32_t previous) {
     MemoTextureName *destination, *source;
     MemoTextureName *const names = memoTextureNames[0];
@@ -2193,7 +2193,7 @@ std::int16_t GetMemoOpeningPage() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RenderMemoPageText(std::int32_t page, MemoTexture **textures) {
     char output[32], text[32], ruby[64];
     std::uint16_t colours[9];
@@ -2449,7 +2449,7 @@ void DrawMemoModelContext(void *parameter) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void (*memoPageRenderers[2])(std::int32_t, MemoTexture **) = {0, RenderMemoPageText};
 #else
 void (*memoPageRenderers[2])(std::int16_t, MemoTexture **) = {0, RenderMemoPageText};
@@ -2506,7 +2506,7 @@ void InitializeMemoTexture(MemoTexture &texture, const char *name, std::int16_t 
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SetupMemoTextures() {
     std::int32_t result = 0;
     if (!MEMO_TEXTURE_DATA) {
@@ -2958,7 +2958,7 @@ std::uint8_t PrepareMemoTextLine(char *destination, const char *source, std::uin
 
 namespace {
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void RasterizeMemoRuby(FontRuntimeData *font, std::uint16_t glyph, std::uint16_t *destination, std::int32_t bytePitch) {
     std::uint8_t coverage[400] = {};
@@ -2995,7 +2995,7 @@ void RasterizeMemoRuby(FontRuntimeData *font, std::uint16_t glyph, std::uint16_t
 
 namespace {
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void RasterizeMemoLine(std::uint16_t *destination, const char *text, const char *ruby, std::int32_t width, const std::uint16_t *colours) {
     FontRuntimeData *const font = GetFontRuntimeData();

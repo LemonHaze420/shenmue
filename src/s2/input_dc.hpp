@@ -51,7 +51,7 @@ enum ControllerInputSelector {
 };
 
 SHENMUE_INPUT_DATA std::uintptr_t kPeripheralMemoryAlias =
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     0;
 #else
     0x80000000;
@@ -78,7 +78,7 @@ void SnapshotPeripheralInputs();
 void UpdateInputsFromInputDevices();
 std::uint32_t EVT_GetControllerInput(std::uint8_t userIndex, std::int32_t selector);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PeripheralInputSnapshot *GetControllerEventWork(std::uint8_t userIndex);
 #endif
 

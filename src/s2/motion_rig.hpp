@@ -54,7 +54,7 @@ struct MotionRigChannel {
     float inverseDuration;       // +0x20
     std::uint32_t keysRemaining; // +0x24
     std::uint32_t keyCount;      // +0x28, authored tuples (explicit keys plus two)
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     std::uint32_t reserved2c;
 #endif
     const std::uint16_t *frameCursor; // +0x30
@@ -65,7 +65,7 @@ struct MotionRigChannel {
 
 struct MotionRigAxis {
     MotionRigChannel channel;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float dimensions[1];
 #else
     float dimensions[2]; // +0x48
@@ -106,7 +106,7 @@ struct MotionRigTwoJoint {
 // and the position/velocity/acceleration triplet the next transition blends from.
 struct MotionRigTarget {
     MotionRigAxis axes[3]; // axes[2].dimensions are output X/Y
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float outputY;
     float outputZ;
 #else
@@ -147,7 +147,7 @@ struct MotionBaseRig {
     MotionCallback leftAnkleCallback;      // +0x920
     MotionRigAxis leftFootRotation[3];     // +0x930; axes[1]/axes[2] tails are the foot offset
     Matrix4x4 leftFootWorld;               // +0xa20
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::byte reserveda60[0x38];
 #else
     std::byte reserveda60[0x40];
@@ -164,7 +164,7 @@ struct MotionBaseRig {
     MotionCallback rightAnkleCallback;   // +0xef8
     MotionRigAxis rightFootRotation[3];  // +0xf08; axes[1]/axes[2] tails are the foot offset
     Matrix4x4 rightFootWorld;            // +0xff8
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::byte reserved1038[0x38];
 #else
     std::byte reserved1038[0x40];
@@ -197,7 +197,7 @@ struct MotionHeadRig {
     MotionRigRotation midRotation;  // +0x1a0
     MotionRigTarget target;         // +0x2d0
     Matrix4x4 headWorld;            // +0x408
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 eyeOffset;
 #else
     Vector4 eyeOffset; // +0x448
@@ -233,7 +233,7 @@ struct MotionArmRig {
     MotionCallback wristCallback;     // +0x658
 };
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MotionOverrideRig {
     MotionRigRotation hips;
     MotionRigTarget pelvisTarget;
@@ -301,7 +301,7 @@ struct MotionStreamContext {
 };
 
 // Native motionOverride_t: the custom arm solver installed through SetCustomMotionOverride.
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MotionOverride;
 #else
 struct MotionOverride {
@@ -342,7 +342,7 @@ SHENMUE_MOTION_RIG_CONSTANT std::uint32_t motionInitGraphFrames = 0xff00;
 SHENMUE_MOTION_RIG_CONSTANT std::uint32_t motionInitBaking = 0x10000;
 SHENMUE_MOTION_RIG_CONSTANT std::uint16_t motionWideKeyCounts = 0x0100;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SHENMUE_MOTION_RIG_LAYOUT(sizeof(MotionTimePair) == 0x0c);
 SHENMUE_MOTION_RIG_LAYOUT(sizeof(MotionRigClock) == 0x1c);
 SHENMUE_MOTION_RIG_LAYOUT(sizeof(MotionRigKey) == 0x10);
@@ -483,7 +483,7 @@ extern const std::uint16_t *g_motionKeyData;
 extern std::int8_t g_motionGraphFrames;
 extern std::int32_t g_motionUseOverride;
 extern std::uint32_t g_motionRigBoneId;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint32_t g_motionPoseMode asm("_shenmue_s2_texanim_pose_word");
 #else
 extern std::uint32_t g_motionPoseMode;
@@ -493,14 +493,14 @@ extern float g_motionGaitSplitFraction;
 extern Matrix4x4 g_motionOverrideRootTransform;
 extern Matrix4x4 g_motionOverrideBakeTransform;
 extern MotionOverride *g_customMotionOverride;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 extern const float (*g_motionRigDimensions)[6];
 #endif
 
 // Channel streams.
 void ReadMotionKeyBlock(MotionRigChannel &channel);
 void SkipMotionKeyBlock();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMotionStreamFlags(std::int32_t channels, std::uint32_t initFlags, std::int32_t animFlags);
 #else
 void SetMotionStreamFlags(std::int32_t channels, std::uint32_t initFlags, std::uint16_t animFlags);
@@ -519,18 +519,18 @@ void SetGaitSplitFraction(float fraction);
 float AimBasisAtTarget(const Vector3 &target);
 float AlignFrameToTarget_Vector(const Vector3 &target);
 void AxisAngleToBasisSlerp(MotionRotationBasis &basis);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SwizzledBasis3x4IntoActiveFrom(const Vector4 *rows);
 #else
 void SwizzledBasis3x4IntoActiveFrom(const Vector4 (&rows)[3]);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint);
 #else
 void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint);
 #endif
 void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback, std::int32_t joint);
 #else
 void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback);
@@ -539,7 +539,7 @@ void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], Mo
 
 // Region readers, blend sources and solvers. The Evaluate* blends rescale a region's channels toward the
 // rest pose for an override blend and return 0 when that blend is already applied.
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EvaluateBase(MotionBaseRig &base, std::int32_t sourceRig, float scale, float blend);
 std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::int32_t sourceRig, float scale, float blend);
 std::int32_t EvaluateHead(MotionHeadRig &head, std::int32_t sourceRig, float scale, float blend);
@@ -548,18 +548,18 @@ std::int32_t EvaluateBase(MotionBaseRig &base, std::uint8_t sourceRig, float sca
 std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::uint8_t sourceRig, float scale, float blend);
 std::int32_t EvaluateHead(MotionHeadRig &head, std::uint8_t sourceRig, float scale, float blend);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EvaluateArm(MotionArmRig &arm, std::uint32_t sourceRig, float scale, float blend);
 #else
 std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale, float blend);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MotionWork;
 void MotionRigVersionError(std::uint32_t error);
 std::int32_t mtwkRigEvaluateControllers(
     MotionWork *work, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags, std::uint32_t region);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags);
 std::int32_t ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags);
 std::int32_t ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags);
@@ -568,7 +568,7 @@ void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *
 void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags);
 void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags);
 #else
 void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags);

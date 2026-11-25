@@ -39,7 +39,7 @@ struct MaterialSoundCommand {
     std::uint32_t variantCount;
 };
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef std::uint32_t SoundCommandMode;
 enum { SoundCommandMode_Raw = 0, SoundCommandMode_Channel = 1, SoundCommandMode_Bank = 2, SoundCommandMode_Environment = 3 };
 struct SoundDriverCommand {

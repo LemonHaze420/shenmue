@@ -1,6 +1,6 @@
 #include "platform/dc/particle_effects.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include <cmath>
 #include "common/native_sqrt.hpp"
@@ -24,17 +24,17 @@ void SetFftEffectActive(FftEffectHandle handle, std::int32_t active) {
         flags &= ~0x80000000U;
 }
 
-#if !SHENMUE_IS_S2 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !SHENMUE_IS_S2 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void InitializeFftPhaseSteps(float *steps, float scale) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float kFftPhasePi = 3.1415927410125732f;
 #endif
     for (std::int32_t row = 0; row < 8; ++row) {
         for (std::int32_t column = 0; column < 8; ++column) {
             steps[row * 16 + column] = scale * RandomFloat();
             steps[row * 16 + 16 - column] = scale * RandomFloat();
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
             float &first = steps[row * 16 + column];
             float &second = steps[row * 16 + 16 - column];
             if (first < kFftDenormalEpsilon && first > -kFftDenormalEpsilon)
@@ -54,28 +54,28 @@ void InitializeFftPhaseSteps(float *steps, float scale) {
 float *BuildFftFalloff(float exponent, float *table) {
     float *const falloff = table;
     std::int32_t row, column;
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
     falloff[0] = kFftDenormalEpsilon;
 #endif
     for (row = 1; row < 8; ++row) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         float value = 100.0f / fast_powf_approx(static_cast<float>(row), exponent * 0.5f);
 #else
         float value = 100.0f / std::pow(static_cast<float>(row), exponent * 0.5f);
 #endif
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
         if (value < kFftDenormalEpsilon && value > -kFftDenormalEpsilon)
             value = kFftDenormalEpsilon;
 #endif
         falloff[row * 8] = value;
     }
     for (column = 1; column < 8; ++column) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         float value = 100.0f / fast_powf_approx(static_cast<float>(column), exponent * 0.5f);
 #else
         float value = 100.0f / std::pow(static_cast<float>(column), exponent * 0.5f);
 #endif
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
         if (value < kFftDenormalEpsilon && value > -kFftDenormalEpsilon)
             value = kFftDenormalEpsilon;
 #endif
@@ -83,12 +83,12 @@ float *BuildFftFalloff(float exponent, float *table) {
     }
     for (row = 1; row < 8; ++row) {
         for (column = 1; column < 8; ++column) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             float value = 25.0f / fast_powf_approx(NativeSqrt(static_cast<float>(row * row + column * column)), exponent * 0.5f);
 #else
             float value = 25.0f / std::pow(NativeSqrt(static_cast<float>(row * row + column * column)), exponent * 0.5f);
 #endif
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
             if (value < kFftDenormalEpsilon && value > -kFftDenormalEpsilon)
                 value = kFftDenormalEpsilon;
 #endif
@@ -100,7 +100,7 @@ float *BuildFftFalloff(float exponent, float *table) {
 
 // @verified - d
 float *ScaleFftFalloff(float scale, float *table) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float *entry = table;
     for (std::int32_t index = 0; index < 64; ++index, ++entry) {
         float value = *entry * scale;
@@ -112,7 +112,7 @@ float *ScaleFftFalloff(float scale, float *table) {
 #else
     for (std::int32_t index = 0; index < 64; ++index) {
         table[index] *= scale;
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
         if (table[index] < kFftDenormalEpsilon && table[index] > -kFftDenormalEpsilon)
             table[index] = kFftDenormalEpsilon;
 #endif
@@ -124,12 +124,12 @@ float *ScaleFftFalloff(float scale, float *table) {
 // @verified - d
 void SetFftEffectFalloff(FftEffectHandle handle, const float *table) {
     FftEffect &effect =
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
         *handle;
 #else
         g_fftEffects[handle];
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float *amplitude = effect.amplitudes;
     for (std::int32_t row = 0; row < 8; ++row) {
         for (std::int32_t column = 0; column < 8; ++column)
@@ -144,7 +144,7 @@ void SetFftEffectFalloff(FftEffectHandle handle, const float *table) {
 // @verified - d
 void SetFftEffectPhaseScale(FftEffectHandle handle, float scale) {
     FftEffect &effect =
-#if SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
         *handle;
 #else
         g_fftEffects[handle];
@@ -153,7 +153,7 @@ void SetFftEffectPhaseScale(FftEffectHandle handle, float scale) {
     InitializeFftPhaseSteps(effect.phaseSteps, scale);
 }
 
-#if !SHENMUE_IS_S2 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !SHENMUE_IS_S2 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void SetFftEffectPixels(FftEffectHandle handle, std::uint16_t *pixels) {
     FftEffect &effect =

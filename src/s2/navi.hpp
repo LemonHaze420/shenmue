@@ -5,14 +5,14 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include <cstdint>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "common/math.hpp"
 #endif
 
 namespace shenmue {
 namespace s2 {
 std::uint32_t SetNaviDisplayOverride(std::int32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 namespace HLib {
 struct Task;
 }

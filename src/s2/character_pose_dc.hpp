@@ -13,7 +13,7 @@ void GetCharacterLocalPosition(const Character *character, Vector3 *position);
 void SetCharacterLocalPosition(Character *character, const Vector3 *position);
 void TransformPointByCharacterNode(const CharacterNode *node, Vector3 *position);
 void InverseTransformPointByCharacterNode(const CharacterNode *node, Vector3 *position);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InverseRotateVectorByCharacterNode(const CharacterNode *node, Vector3 *vector);
 void AssignCharacterChildSpacePosition(Character *character, const Vector3 *delta);
 void AddCharacterChildSpacePosition(Character *character, const Vector3 *delta);

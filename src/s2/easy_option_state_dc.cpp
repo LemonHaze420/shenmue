@@ -8,11 +8,11 @@ namespace s2 {
 
 std::uint8_t g_easyOptionActive;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t g_easyOptionMode;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetNewEasyOptionState(std::int32_t mode) {
     g_easyOptionActive = 1;
@@ -33,7 +33,7 @@ bool IsEasyOptionActive() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/easy_option_data_dc.hpp"
 #include "platform/dc/mt7.hpp"
 #include "s2/pad_control_dc.hpp"
@@ -449,7 +449,7 @@ static void InitEasyOptionTaskCallback(void *) {
     HLib::SetCurrentTaskTo(EasyOptionTaskCallback);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetCachedFacialModelRoot(std::int8_t index, MT7Node *root) {
     facialModelCache[index].model->root = root;
     facialModelCache[index].root = root;

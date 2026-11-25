@@ -1,10 +1,8 @@
 #include "shenmue.h"
 #include "s2/legacy_sprite_types.hpp"
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/gauge.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/file_loader_dc.hpp"
 #endif
 
@@ -16,11 +14,9 @@
 #include "s2/archive_data.hpp"
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/hlib.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/legacy_sprite_dc.hpp"
 #include "s2/texture_dc.hpp"
 #include "s2/title_sprite_dc.hpp"
@@ -105,11 +101,9 @@
 #include <cstdint>
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cstring>
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "common/math.hpp"
 #include "s2/character_dc.hpp"
 #include "s2/window.hpp"
@@ -195,7 +189,7 @@ namespace dc {
 
 namespace sdk {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMirroredModelDrawMode(std::int32_t enabled);
 #endif
 
@@ -222,7 +216,7 @@ std::int32_t gaugeLayout{};
 
 } // namespace shenmue
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace shenmue
 #include "s2/event_character_state_dc.hpp"
 #include "s2/map_visibility_dc.hpp"
@@ -246,7 +240,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef bool (*IconInputSlotClose)(std::int32_t force);
 typedef bool (*IconInputSlotClose)(std::int32_t force);
 typedef std::int32_t (*ItemWindowShape)(std::int32_t cell, std::int32_t columns);
@@ -254,14 +248,14 @@ typedef std::int32_t (*ItemWindowShape)(std::int32_t cell, std::int32_t columns)
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ga_CtrlGauge(void *);
 void ReleaseGaugeTextures();
 #endif
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 bool OpenSelectedItemLook(std::int16_t item, std::int32_t mode);
@@ -287,17 +281,15 @@ void *SafeTryLoadFile(const char *directory, const char *filename, shen_name all
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *gaugeTask = 0;
 std::int32_t gaugeTextures[6];
 float gaugePercent[2];
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 std::uint32_t gaugeFlags;
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t gaugeLayout;
 #endif
 
@@ -350,7 +342,7 @@ bool LoadGaugeTextures() {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
@@ -818,21 +810,20 @@ std::int32_t SetFightGaugeLayout(std::int32_t layout) {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 inline void InitializeGaugePacket(LegacySpritePacket &packet) {
     INIT_LEGACY_SPRITE_PACKET(packet);
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 void DrawSingleFightGaugeOrbRow() {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float (&base)[2] = FIGHT_GAUGE_BASE_POSITIONS[gaugeLayout];
 #endif
     LegacySpritePacket packet;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     InitializeGaugePacket(packet);
     packet.quad.flags |= 0x400U;
 #endif
@@ -847,7 +838,7 @@ void DrawSingleFightGaugeOrbRow() {
 #endif
     float threshold = 8.0f;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     for (std::int32_t orb = 0; orb < 12 && gaugePercent[0] > threshold; ++orb) {
         std::int32_t texture;
         if (orb <= 7)
@@ -871,7 +862,7 @@ void DrawSingleFightGaugeOrbRow() {
 #endif
         if (gaugeTextures[texture] != -1)
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             DrawLegacySpritePacket(packet, gaugeTextures[texture], 6.0f);
 #endif
 
@@ -885,7 +876,7 @@ void DrawSingleFightGaugeOrbRow() {
 
 // @verified - d
 void CtrlGauge_Callback(void *) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float (&base)[2] = FIGHT_GAUGE_BASE_POSITIONS[gaugeLayout];
     if (!(gaugeFlags & 2U))
         return;
@@ -980,7 +971,7 @@ void CtrlGauge_Callback(void *) {
 // @verified - d
 void ga_CtrlGauge(void *) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     HLib::ExecuteCallbackNow(CtrlGauge_Callback, 0);
 #endif
 
@@ -988,9 +979,8 @@ void ga_CtrlGauge(void *) {
     HLib::ExecuteCallbackNow(CtrlGauge_Callback, nullptr);
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReleaseGaugeTextures() {
     for (std::int32_t index = 0; index < 6; ++index) {
@@ -1013,7 +1003,7 @@ void SetFilledOrbCount(d3t::UIGaugeState &widget, float percent) {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -1390,7 +1380,7 @@ void ClearFightGaugeTrainingVisibility() {
 
 } // namespace shenmue
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace shenmue
 
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_LoadGauge() {

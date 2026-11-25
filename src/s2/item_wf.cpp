@@ -1,6 +1,6 @@
 #include "s2/item_wf.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/gauge.hpp"
 #include "s2/inventory_dc.hpp"
 #include "s2/item_selection_queries_dc.hpp"
@@ -46,7 +46,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -118,7 +118,7 @@ ItemPreviewDrawData itemPreview{};
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 std::uint32_t GetSpecialWfScroll();
@@ -142,7 +142,7 @@ std::uint32_t GetGuiItemAction(std::uint32_t item) noexcept;
 void ClearGuiItemActions() noexcept;
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -154,7 +154,7 @@ int ItemTextureClear_Nullsub(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -173,7 +173,7 @@ void SetupItemInspectInView() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -224,7 +224,7 @@ GetCharacterMotionYaw
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -253,7 +253,7 @@ bool LoadItemModel() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -309,7 +309,7 @@ void DrawItemModelPreview(void *parameter) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -341,7 +341,7 @@ void icsuRenderItem() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -420,7 +420,7 @@ void icsuMoveRotateAdjustItemScale() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -432,7 +432,7 @@ WfTaskData *GetWfTaskData() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ReleaseWfResources(NativeWfTaskData &wf);
 
@@ -440,7 +440,7 @@ HLib::Task *wfMainControl = 0;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetwfMainControlState() {
@@ -465,7 +465,7 @@ bool GetwfMainControlState() noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void RefreshWfMasks(NativeWfTaskData &wf) {
@@ -510,7 +510,7 @@ void RefreshWfMasks(WfTaskData &wf) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ReleaseWf(NativeWfTaskData &wf) {
@@ -546,7 +546,7 @@ void ReleaseWf(WfTaskData &wf) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t OpenWfScrollMenu() {
@@ -596,7 +596,7 @@ bool OpenWfScrollMenu() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void OpenWfScrollWidget() {
     WfTaskData *wf = GetWfTaskData();
@@ -620,7 +620,7 @@ void OpenWfScrollWidget() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void CloseWfScrollMenu(std::int32_t force) {
@@ -648,7 +648,7 @@ std::int64_t CloseWfScrollMenu(std::int32_t force) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void StopWfScrollMenu() {
     if (WfTaskData *wf = GetWfTaskData()) {
@@ -661,7 +661,7 @@ void StopWfScrollMenu() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void LearnWfScroll(std::int32_t index) {
     WfTaskData *wf = GetWfTaskData();
@@ -679,7 +679,7 @@ void LearnWfScroll(std::int32_t index) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetWfOwnedScrolls() {
     WfTaskData *wf = GetWfTaskData();
@@ -691,7 +691,7 @@ std::uint32_t GetWfOwnedScrolls() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetWfLearnedScrolls() {
     WfTaskData *wf = GetWfTaskData();
@@ -703,7 +703,7 @@ std::uint32_t GetWfLearnedScrolls() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint16_t GetWfPromptIcon(std::uint16_t prompt, std::uint32_t scroll) {
     const std::uint32_t learned = GetWfLearnedScrolls();
@@ -712,7 +712,7 @@ std::uint16_t GetWfPromptIcon(std::uint16_t prompt, std::uint32_t scroll) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void BuildWfMenuEntries(std::span<WfMenuEntry, 25> entries) {
     const std::uint32_t owned = GetWfOwnedScrolls();
@@ -731,7 +731,7 @@ void BuildWfMenuEntries(std::span<WfMenuEntry, 25> entries) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int32_t FindWfScrollDefinition(std::int32_t item) noexcept {
@@ -744,7 +744,7 @@ std::int32_t FindWfScrollDefinition(std::int32_t item) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetWfScrollPreviewRow(std::int32_t index) {
     if (index >= 3000)
@@ -760,7 +760,7 @@ std::int32_t GetWfScrollPreviewRow(std::int32_t index) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void BuildOwnedWfScrollSlots(std::span<std::int32_t, 26> slots) {
@@ -778,7 +778,7 @@ void BuildOwnedWfScrollSlots(std::span<std::int32_t, 26> slots) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void GetWfScrollMove(std::int32_t index, std::int32_t *category, std::int32_t *move) noexcept {
     *category = wfScrollDefinitions[static_cast<std::size_t>(index)].category;
@@ -787,7 +787,7 @@ void GetWfScrollMove(std::int32_t index, std::int32_t *category, std::int32_t *m
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetWfScrollItem(std::int32_t index) noexcept {
     const std::int8_t offset =
@@ -797,7 +797,7 @@ std::uint32_t GetWfScrollItem(std::int32_t index) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ICSU_InitItemLook_Callback(void *) {
     itemLookState = 0;
@@ -813,7 +813,7 @@ void ICSU_InitItemLook_Callback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ICSU_CtrlItemLook_Callback(void *) {
     using enum CameraState;
@@ -877,7 +877,7 @@ void ICSU_CtrlItemLook_Callback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool OpenItemLook(std::uint32_t item, std::int32_t mode) {
     previousItemPostFxBank = static_cast<std::int32_t>(GetPostFxBankValue(1));
@@ -907,7 +907,7 @@ bool OpenItemLook(std::uint32_t item, std::int32_t mode) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetItemLookShowingGameMenu() noexcept {
     showingItemGameMenu = true;
@@ -915,7 +915,7 @@ void SetItemLookShowingGameMenu() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ToggleGameMenu() noexcept {
     if (showingItemGameMenu) {
@@ -928,7 +928,7 @@ void ToggleGameMenu() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void CloseItemLook() {
     SelectPostFxBank(1, previousItemPostFxBank);
@@ -972,7 +972,7 @@ void CloseItemLook() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void InspectWfScroll(std::int32_t index) {
     const std::uint32_t item = index == 24 ? GetSpecialWfScroll() : GetWfScrollItem(index);
@@ -985,7 +985,7 @@ void InspectWfScroll(std::int32_t index) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetGuiItemAction(std::uint32_t item) noexcept {
     const std::span<const InventoryItemDefinition> definitions = GetInventoryItemDefinitions(S2InventoryBank::Type0);
@@ -997,7 +997,7 @@ std::uint32_t GetGuiItemAction(std::uint32_t item) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint8_t SetGuiItemAction(std::uint32_t item, std::uint8_t flags, std::int32_t enabled) noexcept {
     const std::span<const InventoryItemDefinition> definitions = GetInventoryItemDefinitions(S2InventoryBank::Type0);
@@ -1013,7 +1013,7 @@ std::uint8_t SetGuiItemAction(std::uint32_t item, std::uint8_t flags, std::int32
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ClearGuiItemActions() noexcept {
     guiItemActions.fill(0);
@@ -1021,7 +1021,7 @@ void ClearGuiItemActions() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t UpdateSelectedItemStateFlag(std::int16_t item) {
     std::int64_t result = GetShouldRenderIcons(RenderIconSlot::Any);
@@ -1038,7 +1038,7 @@ std::int64_t UpdateSelectedItemStateFlag(std::int16_t item) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetItemLookRotation(std::int16_t pitch, std::int16_t yaw, std::int16_t roll) noexcept {
     itemLookRotation = {pitch, yaw, roll};
@@ -1046,7 +1046,7 @@ void SetItemLookRotation(std::int16_t pitch, std::int16_t yaw, std::int16_t roll
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ReleaseItemWfOwners() {
     if (itemLookState || itemModelFile)
@@ -1061,7 +1061,7 @@ void ReleaseItemWfOwners() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool InitializeWfTextures(NativeWfTaskData *wf) {
@@ -1115,7 +1115,7 @@ bool InitializeWfTextures(WfTaskData &wf) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static std::uint32_t GetSpecialWfScroll() {
@@ -1143,7 +1143,7 @@ std::uint32_t GetSpecialWfScroll() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void RefreshWfText(NativeWfTaskData &wf) {
@@ -1191,7 +1191,7 @@ void RefreshWfText(WfTaskData &wf) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1208,7 +1208,7 @@ void FinishWfLearn(WfTaskData &wf) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool MoveWfSelection(NativeWfTaskData &wf, std::uint16_t buttons) {
@@ -1231,7 +1231,7 @@ static bool MoveWfSelection(NativeWfTaskData &wf, std::uint16_t buttons) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static const std::uint16_t wfPromptIcons[3][2] = {{266, 265}, {268, 267}, {270, 269}};
 
@@ -1301,7 +1301,7 @@ void DrawWf(void *parameter) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1313,7 +1313,7 @@ bool MoveWfPosition(WfTaskData &wf, bool advancing) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void Queue_wf_MainControl(std::uint8_t nextFunctionIndex) {
@@ -1341,7 +1341,7 @@ void Queue_wf_MainControl(std::uint8_t nextFunctionIndex) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void wf_MainControl_Callback(void *parameter) {

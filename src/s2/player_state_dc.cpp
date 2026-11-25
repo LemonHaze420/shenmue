@@ -4,7 +4,7 @@
 
 #include "s2/player_model_dc.hpp"
 #include <cstring>
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/party_companion.hpp"
 #endif
 
@@ -13,11 +13,11 @@ namespace s2 {
 
 PlayerRuntimeState g_playerRuntime;
 PlayerRuntimeState *g_playerRuntimePointer = 0;
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PlayerPersistentState *g_pendingPlayerPersistentStatePointer = &g_pendingPlayerPersistentState;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_playerRuntimeResetWord0;
 std::uint32_t g_playerRuntimeResetWord1;
 std::uint32_t g_playerRuntimeResetWord2;
@@ -27,7 +27,7 @@ std::uint32_t g_playerRuntimeResetWord5;
 std::uint32_t g_playerRuntimeResetWord6;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetPendingPlayerPersistentState(std::int32_t) {
     PlayerPersistentState *const pending = g_pendingPlayerPersistentStatePointer;
     pending->present = 0;
@@ -37,7 +37,7 @@ void ResetPendingPlayerPersistentState(std::int32_t) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetPlayerRuntimeWords() {
     g_playerRuntimeResetWord1 = 0;
     g_playerRuntimeResetWord3 = 0;
@@ -49,37 +49,37 @@ void ResetPlayerRuntimeWords() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlayerModuleNullsubA(void *, float) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlayerModuleNullsubB(void *, std::int16_t) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlayerModuleNullsubC(std::uint32_t) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlayerModuleNullsubD() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlayerModuleNullsubE() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlayerModuleNullsubF() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymImportPersistentState(const PlayerPersistentState *state) {
     PlayerPersistentState *const pending = g_pendingPlayerPersistentStatePointer;
@@ -90,7 +90,7 @@ std::int32_t plymImportPersistentState(const PlayerPersistentState *state) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymExportPersistentState(PlayerPersistentState *state) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
     PlayerModelState *const model = runtime->model;
@@ -110,7 +110,7 @@ std::int32_t plymExportPersistentState(PlayerPersistentState *state) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializePlayerRuntime() {
     PlayerRuntimeState *const state = g_playerRuntimePointer;
     state->flags = 0;

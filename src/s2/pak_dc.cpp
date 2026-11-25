@@ -1,5 +1,5 @@
 #include "s2/pak_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_info.hpp"
 #include "s2/lighting_dc.hpp"
 #include "s2/map_models_dc.hpp"
@@ -117,14 +117,14 @@ shen_name pakEntryType;
 } // namespace
 
 void RemovePackagePropReader(std::uint32_t index);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void *LoadPackageFieldData(void *data);
 #endif
 static void *LoadPackageLightData(void *data);
 static std::uint32_t LoadPackageMotionBank(void *data);
 static std::uint32_t LoadPackageMotionPropBank(void *data);
 static void ReleasePackageFieldData(void *data);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReleasePackageLightData(void *data);
 static void ReleasePackageEventScript(const char *name, std::int32_t type);
 #endif
@@ -194,7 +194,7 @@ void DecompressPackage(const void *source, void *destination, void *, void *, st
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ComparePakNamesN(const char *left, const char *right, std::int32_t length) {
     const std::int32_t rightLength = static_cast<std::int32_t>(std::strlen(right));
@@ -216,7 +216,7 @@ std::int32_t ComparePakNamesN(const char *left, const char *right, std::int32_t 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ComparePakNames(const char *left, const char *right) {
     return ComparePakNamesN(left, right, static_cast<std::int32_t>(std::strlen(left)));
@@ -296,7 +296,7 @@ std::int32_t LoadPakTextures(PakLoadTaskData *task, PakGlobalData *slot) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define PAK_DIRECTORY_ENTRY(directory, index)                                                                                                                  \
     reinterpret_cast<PakDirectoryEntry *>((index) * sizeof(PakDirectoryEntry) + (directory)->entriesOffset + reinterpret_cast<std::uintptr_t>(directory))
 #define PAK_ENTRY_DATA(directory, index) (reinterpret_cast<std::byte *>(directory) + PAK_DIRECTORY_ENTRY(directory, index)->dataOffset)
@@ -546,7 +546,7 @@ std::int32_t LoadPakResources(PakLoadTaskData *task, PakGlobalData *slot) {
             InstallEventOverlay(payload, GetPakEntryName(&entry), entry.auxiliary, static_cast<EventFunctionType>(((entry.tag >> 16U) & 0xffU) - '0'));
             break;
         case SHEN_NAME4('F', 'L', 'D', 'D'): {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             LoadPackageFieldData(payload);
 #else
             PakChunkHeader *chunk = reinterpret_cast<PakChunkHeader *>(static_cast<std::byte *>(payload) + 8);
@@ -612,7 +612,7 @@ std::int32_t LoadPakResources(PakLoadTaskData *task, PakGlobalData *slot) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BuildAfsPakName(const char *filename, std::int32_t firstIndex, std::int32_t secondIndex, char *output) {
     std::sprintf(output, "%s%04ld%04ld", filename, static_cast<long>(firstIndex), static_cast<long>(secondIndex));
@@ -623,7 +623,7 @@ void BuildAfsPakName(const char *filename, std::int32_t firstIndex, std::int32_t
 void ClosePakRead(PakGlobalData *slot, std::int32_t releaseBuffer) {
     if (slot->flags & PakAfsRead) {
         if (slot->afsFile) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             if (slot->afsFile->stm)
 #else
             if (ADXF_GetStat(slot->afsFile))
@@ -764,7 +764,7 @@ void ReleasePakTextures(PakGlobalData *slot) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define PAK_DIRECTORY_ENTRY(directory, index)                                                                                                                  \
     reinterpret_cast<PakDirectoryEntry *>((index) * sizeof(PakDirectoryEntry) + (directory)->entriesOffset + reinterpret_cast<std::uintptr_t>(directory))
 #define PAK_ENTRY_DATA(directory, index) (reinterpret_cast<std::byte *>(directory) + PAK_DIRECTORY_ENTRY(directory, index)->dataOffset)
@@ -937,7 +937,7 @@ void FreePakSlotStorage(PakGlobalData *slot) {
     slot->name = __typeof__(slot->name)();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void *LoadPackageFieldData(void *data) {
     PakChunkHeader *chunk = reinterpret_cast<PakChunkHeader *>(static_cast<std::byte *>(data) + 8);
     while (chunk->size) {
@@ -973,7 +973,7 @@ static void ReleasePackageFieldData(void *data) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReleasePackageLightData(void *data) {
     PakChunkHeader *chunk = reinterpret_cast<PakChunkHeader *>(static_cast<std::byte *>(data) + 8);
     while (chunk->size) {
@@ -997,7 +997,7 @@ void UnregisterLightData(std::int32_t identifier) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReleasePackageEventScript(const char *name, std::int32_t type) {
     char filename[16];
     char extension[8];
@@ -1367,7 +1367,7 @@ PakGlobalData *ReadPakFileFromDirectory(const char *directory, const char *name,
     return slot;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakGlobalData *RequestMapPackage(const char *directory, const char *name, std::uintptr_t allocation) {
     PakLoadTaskData *const work = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
@@ -1376,7 +1376,7 @@ PakGlobalData *RequestMapPackage(const char *directory, const char *name, std::u
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakGlobalData *RequestMapPackage(const char *directory, const char *name) {
     return RequestMapPackage(directory, name, 0);
@@ -1418,7 +1418,7 @@ void FreePakLoadTask() {
         SetTaskHeapData(pakLoadTaskData);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t CancelPakSlot(PakGlobalData *package) {
     PakLoadTaskData *const work = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
@@ -1460,7 +1460,7 @@ std::int32_t CancelPakSlot(PakGlobalData *package) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::intptr_t EV_pakUtils(std::int32_t category, std::uint32_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex) {
     PakGlobalData *package;
@@ -1579,7 +1579,7 @@ PakGlobalData *RequestPakFromAfsWithAllocation(PakAfsPartition *partition, std::
     return RequestPakFromAfs(partition, firstIndex, secondIndex, 1);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PakGlobalData *RequestPakFromAfs(PakAfsPartition *partition, std::int32_t firstIndex, std::int32_t secondIndex, std::uintptr_t allocation) {
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(partition);
     if (address < reinterpret_cast<std::uintptr_t>(pakPartitions) || address > reinterpret_cast<std::uintptr_t>(pakPartitions + 3) || !partition->afs)
@@ -1606,14 +1606,14 @@ PakGlobalData *RequestPakFromAfs(PakAfsPartition *partition, std::int32_t firstI
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakGlobalData *RequestPakFromAfs(PakAfsPartition *partition, std::int32_t firstIndex, std::int32_t secondIndex) {
     return RequestPakFromAfs(partition, firstIndex, secondIndex, 0);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void pakLoad(PakGlobalData *package) {
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(package);
@@ -1627,7 +1627,7 @@ void pakLoad(PakGlobalData *package) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetNewPakLoadedBuffer(PakGlobalData *package) {
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(package);
@@ -1641,7 +1641,7 @@ void SetNewPakLoadedBuffer(PakGlobalData *package) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakAfsPartition *MountPakAfs(const char *directory, const char *filename) {
     std::int32_t index;
@@ -1690,7 +1690,7 @@ std::int32_t IsPakSlotIdle(const PakGlobalData *package) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetPakReadiness(PakGlobalData *package) {
     PakGlobalData *const pak = package;
@@ -1717,7 +1717,7 @@ std::int32_t GetPakReadiness(PakGlobalData *package) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakGlobalData *FindPakByEntryName(const char *name) {
     if (!pakLoadTaskData)
@@ -1730,7 +1730,7 @@ PakGlobalData *FindPakByEntryName(const char *name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakGlobalData *FindPakInAfs(PakAfsPartition *partition, std::int32_t firstIndex, std::int32_t secondIndex) {
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(partition);
@@ -1883,7 +1883,7 @@ found:
         ->auxiliary;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetPakEntryNameByType(PakGlobalData *package, shen_name type, char *name) {
     PakGlobalData *const pak = package;
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(pak);
@@ -1949,7 +1949,7 @@ MT7Model *LoadGameModel(PakGlobalData *package, const char *filename) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PakGlobalData *FindPakContainingEntryData(const void *data) {
     PakLoadTaskData *work;
     if (pakLoadTaskData)
@@ -1980,7 +1980,7 @@ PakGlobalData *pakLoadGetNext() {
     return work->next;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PakGlobalData *GetSelectedPakPackage() {
     const PakLoadTaskData *const work = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
@@ -1988,7 +1988,7 @@ PakGlobalData *GetSelectedPakPackage() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t *FindPakEventCamera(PakGlobalData *package, std::int32_t index) {
     PakGlobalData *const pak = package;
@@ -2009,7 +2009,7 @@ std::uint32_t *FindPakEventCamera(PakGlobalData *package, std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t *pakFindEventCam(std::int32_t index) {
     PakGlobalData *package = GetSelectedPakPackage();
@@ -2034,7 +2034,7 @@ std::uint32_t *pakFindEventCam(std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const std::byte *FindPackageDynamicMap(const std::uint8_t name[4]) {
     PakGlobalData *package = 0;
@@ -2056,7 +2056,7 @@ const std::byte *FindPackageDynamicMap(const std::uint8_t name[4]) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t PakLoadWait() {
     const PakLoadTaskData *const work = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
@@ -2066,14 +2066,14 @@ std::int32_t PakLoadWait() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t *GetReadyPakMapHandles(PakGlobalData *package) {
     return IsPakSlotIdle(package) ? package->mapHandles : 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetupPakSpace(std::int32_t budget) {
     PakLoadTaskData *const work = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));
@@ -2083,7 +2083,7 @@ void SetupPakSpace(std::int32_t budget) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetPakLoadBudget() {
     const PakLoadTaskData *const work = pakLoadTaskData ? pakLoadTaskData : static_cast<PakLoadTaskData *>(HLib::GetTaskParameter(pakLoadTask));

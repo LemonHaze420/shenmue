@@ -43,7 +43,7 @@ enum {
     ShenFlagOp_RequireStatBelow = 0x11
 };
 extern ScenarioPersistentFlagBanks g_scenarioPersistentFlags;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern const std::int8_t scenarioFlagBitMasks[8];
 #endif
 struct ScenarioValueOperand {
@@ -61,7 +61,7 @@ typedef char ScenarioFlagLayoutCheck8[(offsetof(ScenarioGameplayFlagState, initi
 static const std::int32_t scenarioEventValueMaximums[8] = {85, 31, 4, 1, 3, 1, 15, 1};
 static const std::uint32_t scenarioEventValueShifts[8] = {0, 8, 14, 18, 20, 23, 25, 30};
 static const std::uint32_t scenarioEventValueMasks[8] = {0xff, 0x3f, 0xf, 3, 7, 3, 0x1f, 3};
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint32_t g_scenarioGameplayFlags[10];
 #else
 extern ScenarioGameplayFlagState g_scenarioGameplayFlags;
@@ -70,7 +70,7 @@ extern void *g_scenarioFlagNotificationJingle;
 extern std::int32_t g_scenarioFlagNotificationPending, g_scenarioFlagNotificationFrames;
 extern std::int32_t g_scenarioFlagNotificationShown;
 std::int32_t GetScenarioFlagNotificationShown();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int32_t g_scenarioTransientState[5];
 void SetScenarioTransientState(std::int32_t index, std::int32_t value);
 std::int32_t GetScenarioTransientState(std::int32_t index);
@@ -91,19 +91,19 @@ bool GetStoryFlag(std::int32_t flag);
 std::uint8_t GetScenarioByteStat(std::int32_t index);
 std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag);
 void EV_SetPlayerFlag(PlayerFlagWriteMode mode, std::int32_t flag, std::int32_t value);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetScenarioPersistentFlags();
 #else
 std::int64_t ResetScenarioPersistentFlags();
 #endif
 const std::int32_t *FindFlagDefinition(std::int32_t flag);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetShenmueFlag(std::int32_t flag, std::int32_t = 0);
 #else
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 std::int32_t EV_GetShenmueFlag(std::int32_t flag);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 struct FlagDefinition {
     std::int32_t stepModeTable;

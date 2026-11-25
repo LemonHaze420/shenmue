@@ -31,7 +31,7 @@ bool ButtonRequestFacesPlayer(const ButtonMediationRequest *request);
 bool ButtonRequestInCamera(const ButtonMediationRequest *request);
 std::int32_t IsButtonSearchable();
 bool IsScenarioButtonAdmissionEnabled();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsScenarioTalkInputCaptured();
 #endif
 
@@ -50,7 +50,7 @@ HLib::Task *Queue_ButtonMediation(std::uint8_t nextFunctionIndex) {
     return task;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void btnButtonMediationCtrl_Callback(void *) {
     ButtonMediationControl *const control = g_buttonMediationControl;
@@ -176,7 +176,7 @@ void btnButtonMediationCtrl_Callback(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RegisterButtonMediation(shen_name name, const Vector3 *position, std::uint32_t flags) {
     ButtonMediationControl *const control = g_buttonMediationControl;
@@ -211,7 +211,7 @@ std::int32_t RegisterButtonMediation(shen_name name, const Vector3 *position, st
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UnregisterButtonMediation(shen_name name) {
     ButtonMediationControl *const control = g_buttonMediationControl;
     ButtonMediationRequest *request = control->requests;
@@ -226,7 +226,7 @@ std::int32_t UnregisterButtonMediation(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetMediatedButtonBindings(shen_name name) {
     const ButtonMediationResult *const result = FindButtonMediationResult(name);
@@ -247,7 +247,7 @@ std::uint32_t GetMediatedButtonBindings(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t btnCheck(shen_name name) {
     const ButtonMediationResult *const result = FindButtonMediationResult(name);
@@ -268,7 +268,7 @@ std::uint32_t btnCheck(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 LegacyInputSlot *GetButtonMediationResultData(shen_name name) {
     ButtonMediationControl *const control = g_buttonMediationControl;
@@ -281,7 +281,7 @@ std::uint32_t IsButtonMediationField124Set() {
     return g_buttonMediationControl->field124 != 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetBattleDataConfig(std::int32_t mode, shen_name name) {
     if (mode == 1)
@@ -424,7 +424,7 @@ void FilterButtonRequests(ButtonMediationControl *control) {
         if (mapRequest && request->name != BUTTON_BTMK)
             request->flags |= kButtonRequestRejected;
         PadControlEntry *const pad = GetMapPadControlEntry();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         if (!IsPadControlEntryBound(pad) && (request->name != BUTTON_BTFT || !IsScenarioTalkInputCaptured()))
 #else
         if (!IsPadControlEntryBound(pad) && (request->name != BUTTON_BTFT || !IsScenarioButtonAdmissionEnabled()))
@@ -514,7 +514,7 @@ void PrioritizeButtonRequests(ButtonMediationControl *control) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 ButtonMediationResult *FindButtonMediationResult(shen_name name) {
     ButtonMediationControl *const control = g_buttonMediationControl;
@@ -545,7 +545,7 @@ bool ButtonRequestFacesPlayer(const ButtonMediationRequest *request) {
     return admitted;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsButtonRequestAdmitted() {
     return !HasScenarioCharacterControl();
 }
@@ -578,7 +578,7 @@ std::int32_t IsButtonSearchable() {
     return plymIsSearchable() != 0;
 }
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsScenarioButtonAdmissionEnabled() {
     std::uint32_t flags;
     std::memcpy(&flags, reinterpret_cast<const std::byte *>(g_scenarioEventContext) + kScenarioContextFlagsOffset, sizeof(flags));
@@ -589,7 +589,7 @@ bool IsScenarioButtonAdmissionEnabled() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_GetBattleDataConfig(std::int32_t mode, std::uint32_t name) {
     return shenmue::s2::GetBattleDataConfig(mode, shenmue::shen_name(name));
 }

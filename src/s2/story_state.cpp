@@ -4,7 +4,7 @@
 
 #include "s2/story_state.hpp"
 #include "s2/player_stats_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/debug_screen_dc.hpp"
 #include "s2/frame_dc.hpp"
 #include "s2/game_system_dc.hpp"
@@ -276,7 +276,7 @@ void ReleaseCachedFacialModel(const char *name, std::uint8_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UnloadCachedFacialModel(const char *name, std::uint8_t index) {
     ReleaseCachedFacialModel(name, index);
     return 1;
@@ -326,7 +326,7 @@ void ResetStepTiming(std::int32_t step) {
     g_previousStoryStep = step;
     g_stepRangeStart = step;
     g_stepRangeEnd = step;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int32_t slot = GetStepCounterSlot(step);
 #else
     const std::int32_t slot = GetStepCounterSlot();
@@ -348,7 +348,7 @@ void ResetSTEP() {
     ResetStepTiming(0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 namespace {
 extern std::uint8_t stepRangeDebugDisplay;
 } // namespace
@@ -506,7 +506,7 @@ bool AssignScenarioEventStateOperand(std::uint8_t mode, std::uint16_t objectId, 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DisplayStepInfo() {
     SetDebugScreenTextPosition(13, 2);
@@ -521,7 +521,7 @@ void DisplayStepInfo() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t stepRangeDebugDisplay;
 #endif
 
@@ -531,7 +531,7 @@ std::uint8_t stepRangeDebugDisplay;
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetStepCounterSlot(std::int32_t) {
 #else
 std::int32_t GetStepCounterSlot() {
@@ -543,7 +543,7 @@ std::int32_t GetStepCounterSlot() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateStepDebugCounters() {
     const std::int32_t previous = g_storyStep;
     ++g_stepElapsedFrames;

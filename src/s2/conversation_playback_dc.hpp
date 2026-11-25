@@ -42,7 +42,7 @@ bool StartConversationStream(ConversationStream &stream, std::int32_t partition,
 std::int32_t IsConversationStreamActive(ConversationStream &stream);
 std::int32_t IsConversationPacketReadPending(void *request);
 void SetConversationStreamCameraCode(ConversationStream &stream, std::int32_t cameraCode);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetConversationStreamPitch(ConversationStream &stream, std::int32_t pitch);
 #endif
 void *ReadConversationPacket(AudioPartition *partition, std::uint32_t entry, std::int32_t sector, ConversationPacketBuffer *packet);

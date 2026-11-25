@@ -5,7 +5,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/debug_screen_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #endif
 
@@ -211,7 +211,7 @@ const HandSkinRemapHeader *NormalizeHandSkinVertices(HandSkinVertex *vertices, c
 CharacterHandComponent *AllocateHNDL(Character *character);
 CharacterHandComponent *AllocateHNDR(Character *character);
 void ResetCharacterHandComponent(CharacterHandComponent &hand);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct HandIKConfig {
     std::uint8_t flags, mode, pendingMode, totalTicks, ticksRemaining, blendTotalTicks, blendTicksRemaining, commandDelay;
     std::uint8_t jointTable, rotationAxis;
@@ -246,7 +246,7 @@ static const float searchHandJointLimits[2][8][2] = {
         {-1.5707963705062866f, 1.5707963705062866f}, {0, 2.967059850692749f}, {-2.094395160675049f, 2.094395160675049f},
         {-1.3962634801864624f, 1.3962634801864624f}, {-1.5707963705062866f, 1.5707963705062866f}}};
 extern HandIKConfig g_searchHandConfigurations[2];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 enum HandIKMode { HandIK_Disabled, HandIK_PathFollow, HandIK_HoldTransform, HandIK_DeltaVector, HandIK_Unblended, HandIK_HandPose, HandIK_Unavailable };
 enum HandIKFlags { HandIKEnabled = 1, HandIKPathActive = 2, HandIKBlendToPath = 4, HandIKFastCommandTiming = 8, HandIKRotatingTarget = 16 };
 HandIKMode getSearchHandConfigModeFor(std::uint8_t side);
@@ -294,7 +294,7 @@ SHENMUE_HAND_CONSTANT std::int16_t handCommandJointIds[19] SHENMUE_HAND_INITIALI
 SHENMUE_HAND_CONSTANT std::int16_t handEndJointIds[20] SHENMUE_HAND_INITIALIZER{69, 67, 65, 59, 57, 55, 53, 45, 43, 41, 39, 37, 35, 33, 31, 29, 27, 25, 23, -1};
 SHENMUE_HAND_CONSTANT std::uint32_t handPoseCommandRangeMask = 0xe000, handPoseCommandSignBit = 0x8000;
 void ParseHandPoseCommand(CharacterHandComponent &hand, std::byte *command, std::int16_t ticks);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void WriteHandPoseCommand(const CharacterHandComponent *hand, std::byte *command);
 void SolveHandGripPose(CharacterHandComponent *hand, const Matrix4x4 *base, MT7Node *geometry, const Matrix4x4 *transform, std::int32_t flags,
     std::byte *beginCommand, std::byte *endCommand);
@@ -312,7 +312,7 @@ void ConfigureHandPoseSequence(CharacterHandComponent &hand, std::int16_t pose, 
 void SetCharacterHandRegionEnabled(CharacterHandComponent *hand, std::int8_t region, std::int16_t pose, std::int8_t alphaPolicy);
 void SetHandPrimaryRotation(CharacterHandComponent *hand, std::int32_t x, std::int32_t y, std::int32_t z);
 void mhndSetPrimaryRotation(CharacterHandComponent *hand, std::int32_t x, std::int32_t y, std::int32_t z);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void mhndGetPrimaryRotation(const CharacterHandComponent *hand, Vector3i *rotation);
 #endif
 MT7Model *QueryHandModelCacheNullsub(const char *filename);

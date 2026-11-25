@@ -669,7 +669,7 @@ static void ClearCharacterQueryPointFound();
 static void SetCharacterQueryPointFound(CharacterControlModel *control);
 std::uint32_t AssignCharacterControlFlags(Character *character, std::uint32_t flags);
 std::uint32_t ccmClearFlags(Character *character, std::uint32_t flags);
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t toggleCCMflagsByAmt(Character *character, std::uint32_t flags);
 #else
 void toggleCCMflagsByAmt(Character *character, std::uint32_t flags);
@@ -683,7 +683,7 @@ void ccmGetGroundAngles(Character *character, std::int16_t *angles);
 std::int32_t SetCharacterCollisionEnabled(Character *character, std::int32_t enabled);
 float GetCharacterCollisionRadius(const Character *character);
 float GetCharacterCollisionCapsuleMargin(const Character *character);
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float SetCharacterCollisionCapsuleMargin(Character *character, float margin);
 #else
 CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin);
@@ -693,7 +693,7 @@ std::int32_t ccmHasFrameDisplacement(Character *character);
 void ccmUpdateEntityFlag(Character *character);
 Character **GatherCharacterControlOwners();
 Character **GetCharacterControlOwners();
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius);
 #else
 bool ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius);
@@ -930,7 +930,7 @@ std::size_t GatherCharacterControls(std::span<CharacterControlModel *> output) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius) {
     std::int32_t corrected = 0;
 #else
@@ -948,7 +948,7 @@ bool ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, f
         Vector3 offset;
         am2Vector3Subtract(&offset, result, &centre);
         offset.y = 0.0f;
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         const float distanceSquared = (0.0f + offset.x * offset.x) + offset.z * offset.z;
 #else
         const float distanceSquared = offset.x * offset.x + offset.y * offset.y + offset.z * offset.z;
@@ -965,7 +965,7 @@ bool ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, f
             offset.z = 0.0f;
         }
         am2Vector3Scale(&offset, &offset, penetration + 0.050000001f);
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         am2Vector3Add(result, result, &offset);
 #else
         am2Vector3AddInPlace(result, &offset);
@@ -1204,7 +1204,7 @@ std::uint32_t AssignCharacterControlFlags(Character *character, std::uint32_t fl
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t ccmGetFlags(Character *character) {
     const CharacterControlModel *const control = reinterpret_cast<const CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
@@ -1218,7 +1218,7 @@ std::uint32_t ccmGetFlags(Character *character) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t ccmReplaceFlags(Character *character, std::uint32_t flags) {
     CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
@@ -1239,7 +1239,7 @@ std::uint32_t ccmReplaceFlags(Character *character, std::uint32_t flags) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t ccmClearFlags(Character *character, std::uint32_t flags) {
     std::uint32_t previous = 0;
@@ -1256,7 +1256,7 @@ std::uint32_t ccmClearFlags(Character *character, std::uint32_t flags) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t toggleCCMflagsByAmt(Character *character, std::uint32_t flags) {
     __typeof__(static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL))) const control =
         static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
@@ -1305,7 +1305,7 @@ void ccmSetFlagsFor(Character *character, std::uint32_t flags) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 Vector3 *ccmGetAppliedMovement(Character *character, Vector3 *movement) {
     CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
@@ -1337,7 +1337,7 @@ void ccmGetGroundAngles(Character *character, std::int16_t *angles) {
     angles[1] = control->groundYaw;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetCharacterCollisionEnabled(Character *character, std::int32_t enabled) {
     return SetFlagForToken(character, CHARACTER_CONTROL, enabled);
@@ -1401,7 +1401,7 @@ float GetCharacterCollisionCapsuleMargin(const Character *character) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float SetCharacterCollisionCapsuleMargin(Character *character, float margin) {
     CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, SHEN_NAME(CCM_)));
     float previous = 0.0f;

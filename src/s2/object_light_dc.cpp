@@ -152,7 +152,7 @@ void TailLampTaskCallback(void *payload) {
         HLib::DestroyCurrentTask();
 }
 
-#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM || SHENMUE_TARGET_S2_DC_JP_1001
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawKnifeModel(const MT7Node *node) {
     const std::int32_t previousLight = GetCurrentActiveLight();
@@ -212,7 +212,7 @@ void DrawKnifeModel(const MT7Node *node) {
 }
 #endif
 
-#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM || SHENMUE_TARGET_S2_DC_JP_1001
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AllocateKnifeComponent(Character *character) {
     charaAssignCoreCallback(character, DrawKnifeCharacter);
@@ -310,7 +310,7 @@ std::int32_t cpamSetFlag(Character *character, std::int32_t enabled) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool shenCheckCharaHasAlphaManager(const Character *character) {
     return character ? IsModelComponentEnabled(character, CHARACTER_ALPHA_MANAGER) : false;
@@ -394,7 +394,7 @@ void AttachTailLampComponent(Character *character) {
     SetModelComponentCleanup(character, MODEL_COMPONENT_LAMP, CleanupTailLamp);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetTailLampActive(Character *character, std::uint32_t active) {
     TailLampWork *const lamp = static_cast<TailLampWork *>(charFindComp(character, MODEL_COMPONENT_LAMP));
     if (lamp)

@@ -48,7 +48,7 @@ void RemovePackagePropReader(std::uint32_t index);
 void UpdatePropRoot();
 void SetupModelForImageModule(MT7Node *root);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetPropVector3(const Vector3 *position);
 void SetDisplayFlagForProp(shen_name name, std::uint32_t enabled);
 std::uint32_t HasPropCharacterZeroUpperSignature(shen_name name);

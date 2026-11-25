@@ -5,7 +5,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GatherFieldSphereVolumeCells(const Vector3 *position, float radius, std::int16_t *cells) {
     const FieldDataGridConfig *const grid = g_currentFieldData->grid;
     if (!grid) {
@@ -65,7 +65,7 @@ std::int32_t GatherFieldSphereVolumeCells(const Vector3 *position, float radius,
     const float maximumY = ((radius + position->y) - grid->minimum.y) * grid->reciprocalCellSize;
     const float maximumZ = ((radius + position->z) - grid->minimum.z) * grid->reciprocalCellSize;
     std::int32_t width, height, depth, firstX, firstY, firstZ, lastX, lastY, lastZ;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     width = static_cast<std::int32_t>(grid->width);
     height = static_cast<std::int32_t>(grid->height);
     depth = static_cast<std::int32_t>(grid->depth);

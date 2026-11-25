@@ -76,12 +76,12 @@ const char *Filepath_Gen(FilepathGenMode::Type mode);
 #else
 const char *Filepath_Gen(FilepathGenMode mode);
 #endif
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateFlagWork();
 #else
 bool AllocateFlagWork(std::int32_t actNumber);
 #endif
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadMemoData();
 #else
 bool LoadMemoData();

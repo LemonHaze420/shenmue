@@ -6,7 +6,7 @@
 #include "s2/player_held_air_dc.hpp"
 #include "s2/scene_assets_dc.hpp"
 #include "s2/texture_cache_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/texture_dc.hpp"
 #endif
 #include <cstdio>
@@ -66,7 +66,7 @@ void AllocateARMM() {
     HLib::SetTaskDataMotionFlag(g_armMotionMemory);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializeAirLayers() {
     std::int32_t index;
     AirCloudLayer *cloud = g_airCloudLayers;
@@ -456,7 +456,7 @@ void DrawAirNode(MT7Node *node, float alpha, std::int32_t layer, std::int32_t cl
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateAirCloudColours(std::int32_t index) {
     float firstAlpha, firstRed, firstGreen, firstBlue, secondAlpha, secondRed, secondGreen, secondBlue, stepAlpha, stepRed, stepGreen, stepBlue;
     AirCloudLayer *layer = &g_airCloudLayers[index];
@@ -508,7 +508,7 @@ void UpdateAirCloudColours(std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateAirDomeColours() {
     float firstAlpha, firstRed, firstGreen, firstBlue, secondAlpha, secondRed, secondGreen, secondBlue, stepAlpha, stepRed, stepGreen, stepBlue;
     AirDomeLayer *layer = &g_airDomeLayers[0];
@@ -560,7 +560,7 @@ void UpdateAirDomeColours() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const char *airTextureChunkNames[2] = {"PVRT", "GBIX"};
 
 void LoadAirTextures(std::int32_t texture, float scale, std::int32_t layer) {
@@ -689,7 +689,7 @@ void UpdateAirSeconds() {
     g_airDrawState.currentSeconds = ReadAirSeconds();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetIsSkySetup(std::int32_t value) {
     g_airDrawState.drawEnabled = value;
@@ -706,7 +706,7 @@ void EV_SetPlanetLayerColours_Impl(std::uint32_t first, std::uint32_t second, st
     g_airCloudLayers[layer].secondColour = second;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetPlanetLayerColour(std::int32_t channel, std::int32_t layer) {
     return channel ? g_airCloudLayers[layer].secondColour : g_airCloudLayers[layer].firstColour;
@@ -724,7 +724,7 @@ std::uint32_t GetWeatherCloudOrSkyColour(std::int32_t channel) {
     return channel ? g_airDomeLayers[0].secondColour : g_airDomeLayers[0].firstColour;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetPlanetLayerBlend(float blend, std::int32_t layer) {
     g_airCloudLayers[layer].blend = blend;
 }
@@ -750,7 +750,7 @@ void shenUpdatePlanetByLayer(float value, std::int32_t channel, std::int32_t lay
         g_airCloudLayers[layer].scrollRate.y = value;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetPlanetLayerScrollRate(std::int32_t channel, std::int32_t layer) {
     if (channel == 0)
         return g_airCloudLayers[layer].scrollRate.x;
@@ -768,7 +768,7 @@ void ResetPlanetLayerScroll(std::int32_t layer) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetPlanetLayerOffset(const Vector3 *offset, std::int32_t layer) {
     AirCloudLayer *const cloud = &g_airCloudLayers[layer];
@@ -776,7 +776,7 @@ void SetPlanetLayerOffset(const Vector3 *offset, std::int32_t layer) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetPlanetLayerOffset(std::int32_t layer) {
     g_airCloudLayers[layer].offset.x = 0.0f;
@@ -857,7 +857,7 @@ void UpdateCelestialPosition() {
     UpdateCelestialCoordinates();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateCelestialRotation(const Vector3i &angles, const Vector3 &input, Vector3 &output) {
     Vector3i savedAngles;
     Vector3 initial, transformed;

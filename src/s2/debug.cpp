@@ -184,7 +184,7 @@ void EventAssertMessageNullsub(const char *, std::int32_t, const char *) {
 void DebugLogToFileRemoved(const char *, ...) {
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DebugObjectNullsub() {
 }
 #endif

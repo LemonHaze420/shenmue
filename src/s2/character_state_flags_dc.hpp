@@ -12,7 +12,7 @@ void charaToggleFlag(Character *character, std::int32_t enabled);
 std::uint8_t *figpAssignModeForCharacter(Character *character, std::uint8_t mode);
 void SetClothFlag(Character *character, std::uint8_t flags, std::int32_t enabled);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct FigurePoseControlPrefix {
     std::uint8_t mode, startTime, motionScale, direction, flags;
 };

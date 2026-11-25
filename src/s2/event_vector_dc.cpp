@@ -94,7 +94,7 @@ float InterpolateTo(float target, float value, float weight) {
     return (target - value) * weight + value;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float InterpolateFloat(float target, float value, float weight) {
     return InterpolateTo(target, value, weight);
 }
@@ -122,7 +122,7 @@ std::int32_t Vector3_ToFixed16EulerAngles(const Vector3 &direction, Vector3s &an
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t Vector3_GetFixedYaw(const Vector3 *direction) {
     return static_cast<std::int16_t>(InverseFixedAtan2(direction->x, direction->z));
 }
@@ -176,7 +176,7 @@ std::int32_t ComputeNormalizedAngleRatio(float ratio) {
     return 0xc000;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ComputeInverseAngleRatio(float ratio);
 
 std::int32_t Vector3_ComputePlanarAnglesBetween(const Vector3 &first, const Vector3 &second, Vector3s &angles) {
@@ -216,7 +216,7 @@ std::int32_t Vector3_ToFixed16EulerAnglesBetween(const Vector3 &from, const Vect
 }
 #endif
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void Matrix4x4_BuildRotationMatrix(const Vector3 &first, const Vector3 &second) {
     Vector3 axis;

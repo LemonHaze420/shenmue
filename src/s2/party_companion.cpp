@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/party_companion.hpp"
 #include "s2/character_alpha_dc.hpp"
 #include "s2/character_yaw_dc.hpp"
@@ -55,11 +55,9 @@
 #include "s2/player.hpp"
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/string_utility.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #include "s2/math.hpp"
 #include "s2/scalar_math_dc.hpp"
@@ -83,20 +81,16 @@
 #include <bit>
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cmath>
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstdio>
 #include <cstdlib>
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cstring>
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #include "s2/conversation_dc.hpp"
 #include "s2/scenario_talk_dc.hpp"
@@ -191,7 +185,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetConversationPlaybackEnabled();
 
 std::int32_t InitializePartyGuide();
@@ -260,13 +254,13 @@ using namespace model_component_detail;
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PlayerPlacementNode *plymUpdatePlacementChain(PlayerPlacementNode *node);
 #endif
 
 } // namespace player_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EV_ForceLoadNpc(shen_name name);
 
 std::int32_t GetNpcRestingMotion(const Character *character);
@@ -282,7 +276,7 @@ void ReleaseConversationPacket(void *request);
 
 namespace model_component_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReleaseCompletedPartyGuideRoute(PartyCompanion &party);
 void UpdatePartyCharacterState(PartyCompanion &party);
 std::int32_t UpdatePartyPlayerProximity(PartyCompanion &party);
@@ -301,17 +295,16 @@ float SquaredDistance(const Vector3 &left, const Vector3 &right) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float x = left.x - right.x;
 #endif
     const float y = left.y - right.y;
     const float z = left.z - right.z;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (std::fabs(x) < FLT_EPSILON && std::fabs(y) < FLT_EPSILON && std::fabs(z) < FLT_EPSILON)
 #endif
 
@@ -321,7 +314,7 @@ float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right) 
 #endif
         return 0.0f;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     return x * x + y * y + z * z;
 #endif
 
@@ -329,9 +322,8 @@ float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right) 
     return (y * y + x * x) + z * z;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RecordPartyPlayerTrail(PartyCompanion &party, const Vector3 &position) {
     std::int32_t appended = 0;
@@ -524,12 +516,11 @@ void AdjustPartyControllerFloor(std::uint32_t, Vector3 *target, MotionWork *, vo
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void ConfigurePartyMotion(PartyCompanion &party) {
     MotionWork *const work = party.motionWork;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     mtwkCopyTransition(work, 0, 0, 1, 0);
 #endif
 
@@ -545,9 +536,8 @@ void ConfigurePartyMotion(PartyCompanion &party) {
     mtwkAssignTargetCallback(work, AdjustPartyControllerFloor, 30);
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ReleaseCompletedPartyGuideRoute(PartyCompanion &party) {
     if (!IsNpcRouteReady(SHEN_NAME(M01_)) || !InitializePartyGuide())
@@ -1960,10 +1950,9 @@ std::int32_t UpdatePartyCameraVisibility(PartyCompanion &party) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void UpdatePartyCharacterState(PartyCompanion &party) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     MotionWork *const work = charFindMotionwork(party.character);
     if (work && !party.motionWork) {
         party.motionWork = work;
@@ -2030,9 +2019,8 @@ void UpdatePartyCharacterState(PartyCompanion &party) {
     }
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UpdatePartyCameraVisibility(PartyCompanion &party) {
     std::int32_t visible = 0;
     Vector3 projected;
@@ -2085,14 +2073,14 @@ void UpdatePartyPlayerProximity(PartyCompanion &party) {
 
 } // namespace model_component_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace model_component_detail
 std::int32_t FindFieldSegmentOffsetInWorld(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
 #endif
 
 namespace model_component_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float Vector3_PlanarSquaredDistance(const Vector3 &left, const Vector3 &right);
 
 // @verified - d
@@ -2226,7 +2214,7 @@ static const Vector3 *PartyTrailSample(const PartyCompanion &party, std::int32_t
 
 } // namespace model_component_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace model_component_detail
 void GetPlayerTargetWorldPosition(Vector3 *position);
 std::int16_t Vector3_GetFixedYaw(const Vector3 *direction);
@@ -2234,7 +2222,7 @@ std::int16_t Vector3_GetFixedYaw(const Vector3 *direction);
 
 namespace model_component_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void PreparePartyFollowPlacement(PartyCompanion &party) {
     PartyPlacementNode *const placement = &party.placement;
@@ -3359,7 +3347,6 @@ static void UpdatePartyBehavior(PartyCompanion &party) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 void UpdatePartyControl(PartyCompanion &party) {
     PreparePartyPlacement(party);
     if (party.flags & 0x2000U)
@@ -3367,7 +3354,7 @@ void UpdatePartyControl(PartyCompanion &party) {
     FindPartyObstacles(party);
     SelectPartyAvoidancePlacement(party);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     UpdatePartyBehavior(party);
 #endif
 
@@ -3385,9 +3372,8 @@ void UpdatePartyControl(PartyCompanion &party) {
 #endif
     UpdatePartyMotionController(party);
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t UpdatePartyRequestedPlacement(PartyCompanion &party) {
     if (party.flags & 0x200U) {
@@ -3398,7 +3384,6 @@ std::int32_t UpdatePartyRequestedPlacement(PartyCompanion &party) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void UpdatePartyCompanion(Character *character, void *payload) {
     PartyCompanion &party = *static_cast<PartyCompanion *>(payload);
@@ -3408,7 +3393,7 @@ void UpdatePartyCompanion(Character *character, void *payload) {
 #endif
     party.character = character;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!(party.flags & 2U) && party.mode == 1) {
         Vector3 position;
         GetPlayerTargetWorldPosition(&position);
@@ -3425,28 +3410,26 @@ void UpdatePartyCompanion(Character *character, void *payload) {
 #endif
         ++party.frameCount;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         UpdatePartyRequestedPlacement(party);
 #endif
         UpdatePartyCharacterState(party);
         UpdatePartyPlayerProximity(party);
         UpdatePartyControl(party);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     }
 #endif
 }
-#endif
 
 } // namespace model_component_detail
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
  // namespace model_component_detail
 
 // @verified - d
 PartyCompanion *FindPartyCompanion(const Character *character) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     return character ? static_cast<PartyCompanion *>(charFindComp(character, SHEN_NAME(PTYC))) : 0;
 #endif
 
@@ -3459,7 +3442,7 @@ PartyCompanion *FindPartyCompanion(const Character *character) {
 // @verified - d
 shen_name FindNavigationPartyCompanion(shen_name name) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const PartyCompanion *party = 0;
     std::uint32_t names[4] = {SHEN_NAME4('R', 'E', 'N', '_'), SHEN_NAME4('S', 'I', 'N', '_'), SHEN_NAME4('J', 'O', 'P', '_'), 0};
     if (!name) {
@@ -3481,12 +3464,12 @@ shen_name FindNavigationPartyCompanion(shen_name name) {
             if (party)
                 break;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             ++entry;
 #endif
         }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     } else
         party = FindPartyCompanionByName(name);
     if (!party)
@@ -3503,9 +3486,8 @@ shen_name FindNavigationPartyCompanion(shen_name name) {
     return party && (party->flags & 0x10000002U) == 0x10000002U ? party->name : shen_name{};
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsPartyCompanion(shen_name name) {
     if (!FindPartyCompanionByName(name))
         return 0;
@@ -3694,11 +3676,10 @@ std::int32_t plymGetPartyAuthorStatus(shen_name name) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 std::int32_t FindPTYCForChara(shen_name name) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const PartyCompanion *const party = FindPartyCompanionByName(name);
     return party ? (static_cast<std::int32_t>(party->flags) >> 1) & 1 : 0;
 #endif
@@ -3708,9 +3689,8 @@ std::int32_t FindPTYCForChara(shen_name name) {
     return party && (party->flags & 2U) != 0;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SetPartyCompanionActiveBit(shen_name name, std::int32_t enabled) {
     PartyCompanion *const party = FindPartyCompanionByName(name);
     if (!party)
@@ -4198,11 +4178,10 @@ std::int32_t FreeInactivePartyCompanion(shen_name name) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 std::int32_t ptycCharaUnlock(shen_name name) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PartyCompanion *const party = FindPartyCompanionByName(name);
 #endif
 
@@ -4212,7 +4191,7 @@ std::int32_t ptycCharaUnlock(shen_name name) {
     if (!party)
         return -1;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!(party->flags & 0x40000000U) && name != SHEN_NAME(SIN_))
 #endif
 
@@ -4232,9 +4211,8 @@ std::int32_t ptycCharaUnlock(shen_name name) {
 #endif
     return 0;
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t DeactivatePartyCompanion(shen_name name) {
     PartyCompanion *const party = FindPartyCompanionByName(name);
@@ -4411,11 +4389,10 @@ void ResetPartyCompanionTransition() {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 std::uint32_t GetPartyCompanionTransitionPending() {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     return g_pPartyCompanionTransition->present;
 #endif
 
@@ -4428,13 +4405,13 @@ std::uint32_t GetPartyCompanionTransitionPending() {
 // @verified - d
 std::int32_t ImportPartyCompanionTransition(const PartyCompanionTransition &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PartyCompanionTransition *const transition = g_pPartyCompanionTransition;
 #endif
     if (!state.present)
         return -1;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     *transition = state;
 #endif
 
@@ -4443,9 +4420,8 @@ std::int32_t ImportPartyCompanionTransition(const PartyCompanionTransition &stat
 #endif
     return 0;
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PartyCompanionTransitionNullsub1() {
 }
 
@@ -4686,7 +4662,7 @@ std::int32_t ExportPartyCompanionTransition(PartyCompanionTransition &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (!defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (!(SHENMUE_IS_DC && SHENMUE_IS_S2)))
 std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
     PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     if (!party)

@@ -93,7 +93,7 @@ void CaptureCurrentPlayerState(SavedAreaJumpLocation *location, std::byte *place
 void RestoreSavedAreaJumpLocation(const SavedAreaJumpLocation *location, const std::byte *placement);
 void ActivateSavedAreaJumpLocation();
 void ResetGlobalStateFlags();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetUnusedCtrlFlag(std::uint8_t value);
 #endif
 void SetUnusedFlag();

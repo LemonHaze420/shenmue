@@ -898,5 +898,6 @@ EVENT_FUNCTION(void, EventFunction891, ())
 EVENT_FUNCTION(int, RegisterNpcFlags, (shen_name name, int flag, int value))
 #if defined(SHENMUE_TARGET_S2_DC_EU)
 EVENT_FUNCTION(int, GetGameLanguage, ())
+EVENT_FUNCTION(int, GetRenderCallbackState, ())
 #endif
 #endif

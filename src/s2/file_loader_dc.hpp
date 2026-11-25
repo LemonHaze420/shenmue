@@ -63,7 +63,7 @@ std::int32_t OpenFileFromLocation(FileState *file, const DiscFileLocation *locat
 std::int32_t OpenFile(FileState *file, const char *directory, const char *filename);
 std::uint32_t CopyFileToHLibMemory(FileState *file, void *destination, std::uint32_t bytes);
 void FileStatAndProcessIfExists(FileState *file);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int IsFileReadIdle(const FileState *file);
 #else
 bool IsFileReadIdle(const FileState *file);
@@ -72,7 +72,7 @@ std::int32_t SeekFile(FileState *file, std::int32_t offset, std::int32_t origin)
 std::uint32_t GetFilePosition(const FileState *file);
 std::uint32_t GetFileSize(const FileState *file);
 std::uint32_t shenOpenFile(const char *directory, const char *filename);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int shenFileExists(const char *directory, const char *filename);
 #else
 bool shenFileExists(const char *directory, const char *filename);

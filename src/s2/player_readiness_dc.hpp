@@ -11,10 +11,10 @@ bool plymIsSearchBlocked();
 std::int32_t srchCheckFlags(std::int32_t mode);
 std::int32_t PlayerBusyCheckNullsub();
 bool shenCheckIsBusy();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool shenGetIsPlayerInMenu();
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool plymCanEvaluateSearchTargets();
 #endif
 std::int32_t IsCtrlSpeakIconInactive();

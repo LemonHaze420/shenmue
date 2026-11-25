@@ -59,7 +59,7 @@ extern std::int16_t searchPropIKRotationVelocity[2];
 void srchClearPropIKSlot(std::int32_t index);
 void srchResetIK();
 std::int32_t srchGetPropIKIndex();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchGetPropIKLookup(std::uint32_t marker);
 #else
 std::int32_t srchGetPropIKLookup(std::uint16_t marker);

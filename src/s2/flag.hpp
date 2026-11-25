@@ -4,7 +4,7 @@
 #include "common/types.hpp"
 #include "s2/flag_data.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/scenario_flags_dc.hpp"
 #endif
 
@@ -349,7 +349,7 @@ static_assert(sizeof(FlagCandidate) == 0x10);
 extern ShenPlayerData shenPlayerData;
 extern std::int32_t g_systemManageDebugDisplay;
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 std::int32_t EV_GetShenmueFlag(std::int32_t flag);

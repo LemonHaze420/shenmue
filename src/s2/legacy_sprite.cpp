@@ -4,7 +4,7 @@
 #include "s2/legacy_sprite_dc.hpp"
 #include "s2/legacy_sprite_slot.hpp"
 #include "common/math.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/money_icon.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/pause.hpp"
@@ -369,7 +369,7 @@ std::int32_t TruncateSpriteCoordinate(float value) noexcept {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef std::int32_t (*ItemWindowShape)(std::int32_t cell, std::int32_t columns);
 
 void ReleaseNamedTexture_Wrapper(std::int32_t index);
@@ -443,7 +443,7 @@ TempTextureWork titleCommonTempWork SPRITE_ZERO;
 
 float legacySpriteSlotScaleX = 1.0f, legacySpriteSlotScaleY = 1.0f, legacySpriteSlotPulse = 0.0f;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float legacySpriteSlotPulseStep = 0.0f;
 #endif
 
@@ -451,39 +451,39 @@ std::int32_t legacySpriteSlotWidthOffset = 0, legacySpriteSlotHeightOffset = 0, 
 
 std::uint32_t legacySpriteSlotColour = UINT32_MAX, legacySpriteSlotSecondaryColour = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacyIconSprite itemWindowEdges[4] SPRITE_ZERO;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacySpritePacket itemWindowTiles SPRITE_ZERO;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacySpritePacket itemWindowSeparators SPRITE_ZERO;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacyIconSprite itemWindowSelection SPRITE_ZERO;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacyIconSprite quantityDigits[8] SPRITE_ZERO;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacyIconSprite quantityBrackets[2] SPRITE_ZERO;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const float itemWindowEdgeOffsets[2] = {11.0f, -11.0f};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern const std::uint16_t itemQuantityDigitIcons[10] = {1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const ItemWindowShape itemWindowShapes[2] = {GetStraightItemWindowShape, GetRoundedItemWindowShape};
 #endif
 
@@ -501,7 +501,7 @@ template <typename T, typename U> T SpriteBits(const U &value) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::uint8_t *const kCommonIconBankRectangles[14] = {kCommonIconRectangles + 0x104, kCommonIconRectangles + 0x204, kCommonIconRectangles + 0x204,
     kCommonIconRectangles + 0x204, kCommonIconRectangles, kCommonIconRectangles + 0x7c, kCommonIconRectangles + 0xbc, kCommonIconRectangles + 0x244,
     kCommonIconRectangles + 0x244, kCommonIconRectangles + 0x104, kCommonIconRectangles + 0x104, kCommonIconRectangles + 0x104, kCommonIconRectangles + 0x104,
@@ -526,7 +526,7 @@ void CommonIconRectNullsub() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetLegacyIconSpritePosition(LegacyIconSprite &sprite, float x, float y) {
     sprite.x = x;
     sprite.y = y;
@@ -570,7 +570,7 @@ void InitializeLegacyIconSprite(LegacyIconSprite &sprite) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetRoundedItemWindowShape(std::int32_t cell, std::int32_t columns) {
     if (!cell)
@@ -586,7 +586,7 @@ std::int32_t GetRoundedItemWindowShape(std::int32_t cell, std::int32_t columns) 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetStraightItemWindowShape(std::int32_t cell, std::int32_t columns) {
     return !cell || cell == columns ? 3 : 1;
@@ -597,7 +597,7 @@ std::int32_t GetStraightItemWindowShape(std::int32_t cell, std::int32_t columns)
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawLegacyWindowHorizontal(float x, float y, std::int32_t columns, std::int32_t edgeType, std::int32_t flipped, float depth, std::int32_t flags) {
     float cursor = x + 3.0f;
     const ItemWindowShape shapeForCell = itemWindowShapes[edgeType];
@@ -671,7 +671,7 @@ void DrawLegacyWindowHorizontal(
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacyWindowTiles(float x, float y, std::int32_t columns, std::int32_t rows, float depth, std::int32_t flags) {
     std::int32_t column;
@@ -711,7 +711,7 @@ void DrawLegacyWindowTiles(float x, float y, std::int32_t columns, std::int32_t 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 // @verified - d
 void DrawLegacyWindowBackground(float x, float y, float width, float height, float depth, std::int32_t flags) {
@@ -746,8 +746,8 @@ void DrawLegacyWindowBackground(float x, float y, float width, float height, flo
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool LoadLegacyCollectionSprites(shen_name owner) {
     bool result = false;
@@ -812,8 +812,8 @@ std::int64_t LoadLegacyCollectionSprites(shen_name owner) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReleaseLegacyCollectionSprites(shen_name owner) {
     if (owner) {
@@ -875,8 +875,8 @@ void FreeTempSprites(std::int32_t index) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacyWindowEdges(float x, float y, std::int32_t rows, std::int32_t columns, float depth, std::int32_t flags) {
     std::int32_t remaining;
@@ -920,8 +920,8 @@ void DrawLegacyWindowEdges(float x, float y, std::int32_t rows, std::int32_t col
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacyItemWindow(const Vector2 &position, float depth, std::int32_t columns, std::int32_t rows) {
     const float columnCount = static_cast<float>(columns), rowCount = static_cast<float>(rows);
@@ -965,8 +965,8 @@ void PrepareDrawIndexedTexture(const LegacyIconSprite &sprite, ScreenMode mode) 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateLegacySelectionGlow(std::uint32_t &colour, bool &brightening) {
     if (brightening) {
@@ -990,8 +990,8 @@ void UpdateLegacySelectionGlow(std::uint32_t &colour, bool &brightening) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacySelectionGlow(const Vector2 &position, std::uint32_t &colour, bool &brightening, float depth) {
     itemWindowSelection.x = position.x;
@@ -1032,7 +1032,7 @@ void DrawLegacySelectionGlow(float x, float y, float depth, std::uint32_t &colou
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawMoneyDigits(float x, float y, float scale, float depth, std::int32_t amount, std::uint32_t colour) {
     bool significant = false;
@@ -1062,7 +1062,7 @@ void DrawMoneyDigits(float x, float y, float scale, float depth, std::int32_t am
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLegacyItemQuantity(float x, float y, std::int32_t quantity, float depth) {
     float left = (x - 128.0f) - 16.0f;
@@ -1185,7 +1185,7 @@ void ReleaseTempTextures() {
 std::int32_t FindBorrowedSpriteSlot(std::int32_t slot);
 
 const TempTextureWork &GetBorrowedSpriteTexture(std::int32_t index, std::int32_t texture) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     TempTextureWork *work = &titleCommonTempWork;
     const BorrowedLegacySpriteSlot *slot = 0;
     const std::int32_t found = FindBorrowedSpriteSlot(index);
@@ -1512,10 +1512,10 @@ void InitializeLegacyQuantitySprites() {
 void DrawLegacyColourPacket(const LegacySpritePacket &packet, float depth) {
     if (!(packet.quad.flags & 0x1000U))
         depth = ConvertLegacyScreenDepth(depth);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     depth = 1.0f / depth;
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     NJS_POLYGON_VTX vertices[4];
     vertices[0].z = vertices[1].z = vertices[2].z = vertices[3].z = depth;
     vertices[0].x = packet.quad.corners[0];
@@ -1559,7 +1559,7 @@ void DrawLegacyColourPacket(const LegacySpritePacket &packet, float depth) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void SubmitLegacyTexturePacket(const LegacySpritePacket &packet, std::uint32_t texture, float depth) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float vertices[28];
     vertices[2] = vertices[9] = vertices[16] = vertices[23] = depth;
     vertices[0] = packet.quad.corners[0];
@@ -1731,13 +1731,13 @@ void DrawTempSpriteSlot(std::uint32_t icon, std::uint32_t position, float depth,
     DrawLegacySpritePacket(packet, static_cast<std::uint32_t>(work.texture), depth);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t legacyClearColourEditComponent = 0;
 static std::int32_t legacyClearColourEditEntry = 0;
 #endif
 static std::uint8_t legacyClearColourBytes[8] = {0xff, 0x50, 0x50, 0x50, 0xff, 0, 0, 0};
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EditLegacyClearColours(std::int32_t column, std::int32_t line, std::int32_t port) {
     const std::uint32_t held = g_inputBuffer[port].held;
     const std::uint32_t pressed = g_inputBuffer[port].pressedPriority;
@@ -1783,7 +1783,7 @@ std::uint32_t GetBlackClearColour() {
         legacyClearColourBytes[7];
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawTempSpriteClearColourSlot(std::uint32_t icon, std::uint32_t position, float depth, std::int32_t mode) {
     LegacySpritePacket packet;
     const TempTextureWork &work = GetTempSpriteTexture(static_cast<std::int16_t>(icon >> 16), static_cast<std::uint16_t>(icon));
@@ -1815,7 +1815,7 @@ void DrawTempSpriteClearColourSlot(std::uint32_t icon, std::uint32_t position, f
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetLegacySpriteSlotPulse() {
     legacySpriteSlotPulse = 0.0f;
     legacySpriteSlotPulseStep = 1.4f;
@@ -2025,7 +2025,7 @@ std::uint16_t GetCommonIconTextureHandle(std::uint16_t icon) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void PrepareDrawSimple(const LegacyIconSprite &sprite, std::uint32_t colour) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int8_t *const rectangle = GetCommonIconRect(sprite.icon);
     if (!rectangle || GetCommonIconTextureIndex(static_cast<std::uint16_t>(sprite.icon)) < 0)
         return;
@@ -2197,7 +2197,7 @@ void InitializeLegacyItemWindow() {
 void PrepareDrawTextureWithMode(const LegacyIconSprite &sprite) {
     LegacySpritePacket packet;
     INIT_LEGACY_SPRITE_PACKET(packet);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     TransformScreenSpace(packet.quad, static_cast<ScreenAlignment>(sprite.alignment), static_cast<std::int32_t>(sprite.x), static_cast<std::int32_t>(sprite.y),
         sprite.width, sprite.height, sprite.scaleX, sprite.scaleY, static_cast<std::int32_t>(sprite.rotation));
 #else
@@ -2466,7 +2466,7 @@ bool shenSubmitQuadsUI(float x, float y, std::uint32_t fill, std::uint32_t borde
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PrepareDrawIndexedTextureWithSecondary(const LegacyIconSprite &sprite, std::uint32_t secondaryColour) {
     LegacySpritePacket packet;
@@ -2495,7 +2495,7 @@ void PrepareDrawIndexedTextureWithSecondary(const LegacyIconSprite &sprite, std:
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void shenTransformScreenCoors(const LegacyIconSprite &sprite, std::uint32_t colour) {
     LegacySpritePacket packet;
@@ -2525,7 +2525,7 @@ void shenTransformScreenCoors(const LegacyIconSprite &sprite, std::uint32_t colo
 
 // @verified - d
 void AdjustScreenAspectRatio(LegacyScreenQuad &quad, ScreenAlignment alignment, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     switch (static_cast<std::int32_t>(alignment) / 4) {
     case 0:
         quad.corners[1] = quad.corners[3] = static_cast<float>(y);
@@ -2652,7 +2652,7 @@ void SetScreenQuadBounds(LegacyScreenQuad &quad, std::int32_t left, std::int32_t
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TransformScreenSpace(LegacyScreenQuad &quad, ScreenAlignment alignment, std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height,
     float scaleX, float scaleY, std::int32_t rotation) {
@@ -2732,7 +2732,7 @@ void TransformScreenSpace(LegacyScreenQuad &quad, ScreenAlignment alignment, std
             const float localY = static_cast<float>(coordinates[index + 1]);
             float resultX = localY * yx;
             float resultY = localY * yy;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             resultX = localX * xx + resultX;
             resultY = localX * xy + resultY;
 #else
@@ -2748,7 +2748,7 @@ void TransformScreenSpace(LegacyScreenQuad &quad, ScreenAlignment alignment, std
             const float localY = static_cast<float>(coordinates[index + 1]);
             float resultX = static_cast<float>(x);
             float resultY = static_cast<float>(y);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             resultX = localX * scaleX + resultX;
             resultY = localY * scaleY + resultY;
 #else
@@ -2927,7 +2927,7 @@ void TitleSaveSelectionResetNoOp() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ShowTitleLoadConfirmation() {
     std::uint8_t parameters[7];
     parameters[0] = 1;

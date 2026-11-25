@@ -1,15 +1,76 @@
 #pragma once
 
 #include "s2/hlib.hpp"
+#include "common/math.hpp"
+#if !SHENMUE_IS_DC
+#include <array>
+#endif
+namespace shenmue { namespace s2 {
+struct HikiModelNode {
+    std::uint32_t flags;
+    std::int32_t entityOffset;
+#if SHENMUE_IS_DC
+    std::byte transform[36];
+#else
+    std::array<std::byte, 36> transform;
+#endif
+    std::int32_t childOffset;
+    std::int32_t siblingOffset;
+    std::int32_t parentOffset;
+    std::int32_t matrixOffset;
+    std::int32_t taskDataOffset;
+};
+
+struct HikiModelEntity {
+#if SHENMUE_IS_DC
+    std::byte reserved[4];
+#else
+    std::array<std::byte, 4> reserved;
+#endif
+    std::int32_t vertexOffset;
+    std::uint32_t vertexCount;
+    std::int32_t chunkOffset;
+    Vector3 centre;
+    float clipRadius;
+};
+
+struct HikiWaveVertex {
+    float height;
+    std::uint32_t diffuse;
+    std::uint32_t specular;
+};
+
+struct HikiTextureHeader {
+#if SHENMUE_IS_DC
+    std::uint32_t words[4];
+#else
+    std::array<std::uint32_t, 4> words;
+#endif
+};
+
+} }
+
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 namespace shenmue { namespace s2 {
 extern std::int32_t g_hikiTextureIndex;
 extern void *g_hikiAllocation0, *g_hikiAllocation1, *g_hikiRetainedView;
 void ResetHikiTaskData();
 void HIKI_Enqueue();
-} } // namespace shenmue::s2
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+enum { HIKI_ALPHA_GRID_SIZE = 17 * 17, HIKI_DIFFUSE_MASK = 0x0fffffff };
+extern float g_hikiOpacity;
+extern HikiWaveVertex g_hikiWaveVertices[HIKI_ALPHA_GRID_SIZE];
+extern std::uint32_t g_effectDiffuseMask;
+void RelocateHikiModel(HikiModelNode &node, const void *image);
+void InitializeHikiWaveHeights(const float *heights, std::uint32_t diffuse);
+void ParseHikiData(const std::uint8_t *alpha);
+void InitializeHikiTextureCoordinates(std::int32_t u, std::int32_t v, HikiModelEntity &entity);
+void ApplyHikiTexture(std::int32_t texture, HikiModelEntity &entity);
+void ScrollHikiTexture(std::int32_t texture, std::int16_t u, std::int16_t v, HikiModelEntity &entity);
+void DrawLegacyEffectEntity(HikiModelEntity &entity);
+const float *GetWaveHeights();
 #endif
+} } // namespace shenmue::s2
 #else
 #include "s2/effect_texture.hpp"
 #include "common/math.hpp"
@@ -29,36 +90,6 @@ inline constexpr std::size_t HIKI_ALPHA_GRID_SIZE = 17 * 17;
 inline constexpr std::uint32_t HIKI_DIFFUSE_MASK = 0x0fffffff;
 
 // MT6 eff_wave nodes retain signed offsets relative to HLib::DynamicHeapBase after admission.
-struct HikiModelNode {
-    std::uint32_t flags;
-    std::int32_t entityOffset;
-    std::array<std::byte, 36> transform;
-    std::int32_t childOffset;
-    std::int32_t siblingOffset;
-    std::int32_t parentOffset;
-    std::int32_t matrixOffset;
-    std::int32_t taskDataOffset;
-};
-
-struct HikiModelEntity {
-    std::array<std::byte, 4> reserved;
-    std::int32_t vertexOffset;
-    std::uint32_t vertexCount;
-    std::int32_t chunkOffset;
-    Vector3 centre;
-    float clipRadius;
-};
-
-struct HikiWaveVertex {
-    float height;
-    std::uint32_t diffuse;
-    std::uint32_t specular;
-};
-
-struct HikiTextureHeader {
-    std::array<std::uint32_t, 4> words;
-};
-
 struct HikiTextureRecord {
     LegacyEffectTexture texture;
     HikiTextureHeader header;

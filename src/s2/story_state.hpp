@@ -17,7 +17,7 @@ inline constexpr shen_name TASK_UPDB{SHEN_NAME(UPDB)};
 
 // Native STEP state consumed directly by the baked EV3 area functions.
 std::uint32_t GetCurrentStep();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DisplayStepInfo();
 #endif
 void SetSTEP(std::int32_t step);

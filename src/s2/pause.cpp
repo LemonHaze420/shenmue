@@ -1,6 +1,6 @@
 #include "s2/pause.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/author_control_state_dc.hpp"
 #include "s2/conversation_dc.hpp"
@@ -25,7 +25,7 @@
 #define SHENMUE_FRAME_MODULE(value) SystemModule_##value
 #include "s2/magic_room_dc.hpp"
 #include "s2/system_modules_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_control_dc.hpp"
 #include "s2/area_jump_dc.hpp"
 #include "s2/character_model_dc.hpp"

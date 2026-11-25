@@ -2,18 +2,18 @@
 
 #include "common/types.hpp"
 #include "shenmue.h"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/model_dc.hpp"
 #endif
 #include "s2/hlib.hpp"
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <array>
 #include <cstddef>
 #include <cstdint>
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SHENMUE_TREE_CONSTANT static const
 #else
 #define SHENMUE_TREE_CONSTANT inline constexpr
@@ -22,7 +22,7 @@ namespace shenmue { namespace s2 {
 
 struct MT7Node;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define TREE_TASK SHEN_NAME(TREE)
 #else
 inline constexpr shen_name TREE_TASK{SHEN_NAME(TREE)};
@@ -42,7 +42,7 @@ SHENMUE_TREE_CONSTANT std::int32_t TREE_SWAY_X_PERCENT = 30;
 
 struct TreeSwayRecord {
     MT7Node *tree;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     MT7Node branchCopies[2];
 #else
     std::array<std::byte, 0x80> branchCopies;
@@ -54,7 +54,7 @@ struct TreeSwayRecord {
     std::int32_t amplitudeX;
     std::int32_t amplitudeZ;
 };
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char TreeLayoutCheck1[(sizeof(TreeSwayRecord) == 0x9c) ? 1 : -1];
 typedef char TreeLayoutCheck2[(offsetof(TreeSwayRecord, branchCopies) == 4) ? 1 : -1];
 typedef char TreeLayoutCheck3[(offsetof(TreeSwayRecord, phaseX) == 0x84) ? 1 : -1];
@@ -68,7 +68,7 @@ typedef char TreeLayoutCheck7[(offsetof(TreeSwayRecord, amplitudeZ) == 0x9c) ? 1
 
 extern HLib::Task *g_treeTask;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void tree_Callback_Enqueue(char nextFunctionIndex);
 #else
 void tree_Callback_Enqueue(std::uint8_t nextFunctionIndex);

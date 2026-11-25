@@ -33,7 +33,7 @@ namespace s2 {
 
 std::int32_t FindNamedTexture(std::uint32_t nameLow, std::uint32_t nameHigh, NamedTextureCell **previous, NamedTextureCell **found);
 std::int32_t ReleaseNamedTexture(std::int32_t index);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t LoadTextureChunks(const TextureChunk *chunk, std::uint32_t bytes, std::int32_t *textures, MemoTextureName *names);
 #else
 std::int32_t LoadTextureChunks(const TextureChunk *chunk, std::uint32_t bytes, std::int32_t *textures);
@@ -60,7 +60,7 @@ namespace {
 
 TX_ALIGN(32) std::byte textureCacheStorage[kTextureCacheStorageBytes] TX_ZERO;
 PaletteSlot effectPaletteSlots[1] TX_ZERO;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t namedTextureNameText[3];
 #endif
 
@@ -184,7 +184,7 @@ void ReleaseNamedTextureCell(NamedTextureCell *previous, NamedTextureCell *cell)
     cell->references = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetNamedTextureSurface(std::int32_t index) {
     return g_textureIndexMap[index + dc::sdk::g_modelTextureIdBase].surface;
 }
@@ -243,7 +243,7 @@ void DestroyEffectTextureReferences() {
     ReleasePaletteReference(0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 char *FormatNamedTextureName(const std::uint32_t *name) {
     char *text = reinterpret_cast<char *>(namedTextureNameText);
     namedTextureNameText[0] = name[0];
@@ -296,7 +296,7 @@ void ReleaseNamedTexture_Wrapper(std::int32_t index) {
     ReleaseNamedTexture(index);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FlushTextureImage(const std::uint32_t *image) {
     const std::uint32_t tag = *image;
     if (tag == SHEN_NAME(GBIX))
@@ -459,7 +459,7 @@ std::int32_t LoadTextureChunks(const TextureChunk *chunks, std::int32_t *texture
     return count;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t LoadTextureChunks(const TextureChunk *source, std::uint32_t bytes, std::int32_t *textures, MemoTextureName *names) {
     const TextureChunk *chunk = source;
     const std::byte *const end = reinterpret_cast<const std::byte *>(chunk) + bytes;
@@ -476,7 +476,9 @@ std::int32_t LoadTextureChunks(const TextureChunk *source, std::uint32_t bytes, 
     }
     return count;
 }
-#else
+#endif
+
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 // @verified - d
 std::int32_t LoadTextureChunks(const TextureChunk *chunk, std::uint32_t bytes, std::int32_t *textures) {
     const std::byte *const end = reinterpret_cast<const std::byte *>(chunk) + bytes;
@@ -503,7 +505,7 @@ std::int32_t ReadTempTextureEntries(const void *source, TempTextureEntry *entrie
     return count;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::uint32_t *GetTextureChunkData(const TextureChunk *chunk, std::int16_t offset) {
     return reinterpret_cast<const std::uint32_t *>(chunk + 1) + offset;
 }
@@ -535,7 +537,7 @@ std::int32_t ReplacePtxTexture(std::int32_t index, const TextureChunk *texture) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void QueryFreeTextureMemory(KMUINT32 *total, KMUINT32 *largest) {
     if (kmGetFreeTextureMem(total, largest) != 0) {
@@ -594,7 +596,7 @@ GeneratedTextureSurface *AllocateSHAD_SRUF(std::uint32_t width, std::uint32_t he
     return surface;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetTextureStorageSize(std::uint32_t format, std::int32_t height, std::int32_t width) {
     switch (format & 0xff00U) {
@@ -621,7 +623,7 @@ std::int32_t GetTextureStorageSize(std::uint32_t format, std::int32_t height, st
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ParseGuiPtx(TextureChunk *chunk, std::int32_t height, std::int32_t width, std::uint32_t idLow, std::uint32_t idHigh, std::uint32_t format) {
     TextureChunk *texture = chunk;
@@ -713,7 +715,7 @@ void SwapGeneratedSurfaceBuffer(GeneratedTextureSurface *surface) {
     surface->activeSlot ^= 1U;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetGeneratedSurfaceInfo(GeneratedTextureSurface *surface, std::int16_t *info) {
     info[0] = surface->width;
     info[1] = surface->height;

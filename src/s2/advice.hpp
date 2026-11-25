@@ -2,7 +2,7 @@
 
 #include "s2/hlib.hpp"
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstdint>
 #include <array>
 #include <string_view>
@@ -10,7 +10,7 @@
 
 namespace shenmue { namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef std::int32_t AdviceControlMode;
 enum {
     AdviceControlMode_None = 0,
@@ -61,17 +61,17 @@ enum class AdviceControlMode : std::int32_t {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define TASK_FIGHT_ADVICE SHEN_NAME(FBAV)
 #else
 inline constexpr shen_name TASK_FIGHT_ADVICE = SHEN_NAME(FBAV);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define TASK_ADVICE_CONTROL SHEN_NAME(ADVC)
 #else
 inline constexpr shen_name TASK_ADVICE_CONTROL = SHEN_NAME(ADVC);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct AdviceButton {
     std::int16_t icon;
     std::int8_t column, line;

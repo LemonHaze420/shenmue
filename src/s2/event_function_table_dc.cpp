@@ -144,7 +144,50 @@ void UpdateModelTextureCoordinates(MT7ModelChunk *model);
 } // namespace s2
 } // namespace shenmue
 #if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#error Select the verified GameJam event function table
+namespace shenmue { namespace s2 {
+void SetOmakeVideoCount(std::uint32_t count);
+std::uint32_t GetOmakeVideoCount();
+void AddLightPriority(std::int32_t light);
+void InitializeMazeNavigationTrail();
+void InitializeShipSpray();
+void AssignShipSprayPosition(const Vector3 &position);
+void AssignShipSprayYaw(std::int32_t yaw);
+void HIKI_Enqueue();
+void AssignHikiYaw(std::int32_t yaw, std::int32_t reserved);
+void mazeSetCurrentRefCount(std::uint32_t count);
+std::uint32_t mazeGetCurrentRefCount();
+void Queue_OP_StaffRoll();
+std::uint32_t SetNpcColdResetMode(std::uint32_t mode);
+std::uint32_t GetLoadingPhaseFlags();
+void SetLoadingPhaseFlags(std::uint32_t flags);
+void AssignShipSprayLocalPosition(const Vector3 *position);
+void AssignHikiPosition(const Vector3 *position);
+void AssignHikiLocalPosition(const Vector3 *position);
+void AssignHikiRotation(std::int32_t yaw);
+std::int32_t ResetAllNpcRouteStates();
+void ReleaseNpcScriptRouteOwner();
+std::int32_t npcStartPlayEntityAtPos(shen_name name, shen_name point, const Vector3 *position, std::int32_t yaw);
+void SetPlayerCashOrMoney(std::int32_t amount, std::int32_t mode, std::int32_t step);
+void SetChildObjectFlagByIndex(Character *character, std::uint8_t mode);
+void AssignMapFacialClip(shen_name speaker, const std::int16_t *clip);
+std::int32_t GetMainIconInputAdmitted();
+void ReleaseLoadTitleFade();
+void StopNpcFollowingMotionForEvent(shen_name name);
+void SetFireCameraOffset(std::uint32_t index, float offset);
+std::int32_t GetMagicRoomState3();
+void SetNewNpcBatchCountOverride(std::int32_t mode, std::int32_t count);
+void ChangeToMovieTask(std::int32_t movie);
+void SetShipSprayFadeRate(float rate);
+void InitializeDakuSpray();
+void SetDakuSprayPosition(std::uint32_t index, const Vector3 &position);
+void SetDakuSpraySize(std::uint32_t index, float width, float height);
+void SetDakuSprayColour(std::uint32_t index, std::uint32_t colour);
+std::int32_t RegisterNpcFlags(shen_name name, std::uint32_t flags, std::int32_t operation);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+std::int32_t GetGameLanguage();
+std::int32_t GetRenderCallbackState();
+#endif
+} }
 #endif
 
 extern "C" {
@@ -1020,7 +1063,7 @@ std::uintptr_t g_eventFunctionTable[EVENT_FUNCTION_COUNT] __attribute__((section
     reinterpret_cast<std::uintptr_t>(&::shenmue::s2::hmdlSetPoseFor),
     reinterpret_cast<std::uintptr_t>(&Event_getSpecialBonePos),
     reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetEyeToChara),
-    reinterpret_cast<std::uintptr_t>(&SetPlayerCashOrMoney),
+    reinterpret_cast<std::uintptr_t>(static_cast<void (*)(std::int32_t, std::int32_t)>(&SetPlayerCashOrMoney)),
     reinterpret_cast<std::uintptr_t>(&CalculateFixedSine),
     reinterpret_cast<std::uintptr_t>(&CalculateFixedCosine),
     reinterpret_cast<std::uintptr_t>(&FixedAngleTangent),
@@ -1524,6 +1567,55 @@ std::uintptr_t g_eventFunctionTable[EVENT_FUNCTION_COUNT] __attribute__((section
     reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetMGOTOSIDAMA),
     reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetMGOTOSIDAMA),
     reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetMazeUnitDrawDistance),
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetOmakeVideoCount),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetOmakeVideoCount),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AddLightPriority),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::InitializeMazeNavigationTrail),
+    reinterpret_cast<std::uintptr_t>(&flddPushIntersectionFlag),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::Queue_OP_StaffRoll),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetNpcRouteYaw),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetNpcColdResetMode),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetLoadingPhaseFlags),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetLoadingPhaseFlags),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::InitializeShipSpray),
+    reinterpret_cast<std::uintptr_t>(static_cast<void (*)(const Vector3 &)>(&::shenmue::s2::AssignShipSprayPosition)),
+    reinterpret_cast<std::uintptr_t>(static_cast<void (*)(const Vector3 *)>(&::shenmue::s2::AssignShipSprayLocalPosition)),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AssignShipSprayYaw),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::HIKI_Enqueue),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AssignHikiPosition),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AssignHikiLocalPosition),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AssignHikiRotation),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AssignHikiYaw),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::ResetAllNpcRouteStates),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::ReleaseNpcScriptRouteOwner),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::srchHasActiveLockonTarget),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::mazeSetCurrentRefCount),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::mazeGetCurrentRefCount),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::npcStartPlayEntityAtPos),
+    reinterpret_cast<std::uintptr_t>(static_cast<void (*)(std::int32_t, std::int32_t, std::int32_t)>(&::shenmue::s2::SetPlayerCashOrMoney)),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetChildObjectFlagByIndex),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::AssignMapFacialClip),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetMainIconInputAdmitted),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::ReleaseLoadTitleFade),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::FindOSAG),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::StopNpcFollowingMotionForEvent),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetFireCameraOffset),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetFireInstanceAlpha),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetMagicRoomState3),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetNewNpcBatchCountOverride),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::ChangeToMovieTask),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetShipSprayFadeRate),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::InitializeDakuSpray),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetDakuSprayPosition),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetDakuSpraySize),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::SetDakuSprayColour),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::RegisterNpcFlags),
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetGameLanguage),
+    reinterpret_cast<std::uintptr_t>(&::shenmue::s2::GetRenderCallbackState),
+#endif
+#endif
 };
 
 } // namespace s2

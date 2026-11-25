@@ -2,7 +2,7 @@
 
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/flag_data.hpp"
 
@@ -20,8 +20,10 @@ struct ShenPlayerData {
     std::int16_t sleepScheduleFlag;
     std::int16_t contextIndex;
     std::int16_t queryArgument;
-    std::uint8_t freeQuestActive;
-    std::byte retained0d[3];
+    union {
+        std::uint32_t loadingPhase;
+        std::uint8_t freeQuestActive;
+    };
     std::uint32_t flags;
     FlagRecord *firstRecord;
     FlagRecord *triggerRecord;

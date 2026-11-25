@@ -111,7 +111,7 @@ bool IsPadControlEntryBound(const PadControlEntry *entry) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SuppressGameInput(std::int32_t frames);
 
 void SuppressPadInput(std::int32_t frames) {

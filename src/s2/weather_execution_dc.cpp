@@ -426,15 +426,15 @@ void UpdateWeatherFixc(WeatherFixcOwner *owner);
 
 void Weather_LoadWCCPEntries(const void *entries, std::int32_t count, std::int32_t setIndex);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FreeWeatherParticleGroup(WeatherParticleGroup *group);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FreeWeatherRainMode0Group(WeatherParticleGroup *group);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FreeWeatherRainMode1Group(WeatherParticleGroup *group);
 #endif
 
@@ -645,7 +645,7 @@ void AllocateWeatherRippleColourRamp(WeatherParticleGroup *group, std::uint32_t 
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetWeatherParticleGroupRippleColour(WeatherParticleGroup *group) {
     return group ? group->rippleColour : 0;
 }
@@ -1320,7 +1320,7 @@ void UnlinkWeatherWindFromFixc(WeatherWind *wind) {
         RemoveWeatherWindLink(static_cast<WeatherFixcOwner *>(GetWeatherFixcNodeData(node)), wind);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void Weather_FreeActiveFIXC() {
     if (g_weatherExecution.activeFixc) {
@@ -1575,13 +1575,13 @@ void WSCN_DeleteWeatherData() {
         HLib::FreeTaskData(g_sceneWeatherData);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void WSCN_SetWeatherShouldUpdateDay(std::int32_t enabled) {
     SetWeatherShouldUpdateDay(enabled);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EV_WeatherEffectUtil_Impl(std::uint32_t fov, float rainScale, float, float rippleScale) {
     Weather_FreeActiveFIXC();

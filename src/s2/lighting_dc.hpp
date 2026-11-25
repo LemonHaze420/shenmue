@@ -34,7 +34,7 @@ extern const Matrix4x4 *g_geometryLightTransform;
 std::uint32_t ApplyGeometryLightTree(MT7Node *root, const LightRuntimeEntry *lights, std::int32_t count, const Vector4 *colour);
 void SetLightRuntimeType(std::uint32_t index, std::int32_t value);
 std::uint32_t GetSelectedLightKind(std::uint32_t index);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const Vector4 characterShadowBlack = {};
 extern std::int32_t g_characterShadowSavedLightMode;
 extern Vector4 g_characterShadowSavedAmbient;
@@ -58,7 +58,7 @@ void SetSelectedLightPosition(std::uint32_t index, const Vector3 &position);
 void SetSelectedLightConeAngle(std::uint32_t index, std::int32_t angle);
 void ResetSelectedLightEntry(std::uint32_t index);
 void InitializeLightRuntimeTables();
-#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM || SHENMUE_TARGET_S2_DC_JP_1001
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t FindUnusedSelectedLight();
 #endif
 

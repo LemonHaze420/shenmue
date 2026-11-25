@@ -1,6 +1,6 @@
 #include "s2/npc_area_route.hpp"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/qron_dc.hpp"
 #include "s2/camera_dc.hpp"
 #include "s2/map_control_dc.hpp"
@@ -21,7 +21,7 @@
 #include "s2/file_loader_dc.hpp"
 #include "s2/startup_assets_dc.hpp"
 #include <cstdio>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/date_time.hpp"
 #include "s2/motion_registry_dc.hpp"
 #include "s2/scenario_flags_dc.hpp"
@@ -55,7 +55,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -101,7 +101,7 @@ NpcAreaProbe areaProbes[2];
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 template <class T> T *HeapPointer(std::int32_t offset);
@@ -196,7 +196,7 @@ void ApplyNpcAreaMotion(NpcRouteLiveEntry &entry, std::uint16_t motion);
 bool TickNpcAreaRouteState(NpcRouteLiveEntry &entry);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -381,7 +381,7 @@ static NpcAreaProbe areaProbe;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool InitializeNpcAreaRouteStore();
 bool InitializeNpcAreaRoute(NpcRouteLiveEntry *entry);
 std::int32_t StopNpcAreaRoute(NpcRouteLiveEntry *entry);
@@ -648,7 +648,7 @@ const std::byte *FindAnimationDefinition(const NpcAreaRouteState &state, const N
 } // namespace
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint16_t RemapNpcMotionForRig(std::int32_t rig, std::uint16_t motion) {
@@ -662,7 +662,7 @@ std::uint16_t RemapNpcMotionForRig(std::int32_t rig, std::uint16_t motion) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SelectNpcWeightedMotion(std::int32_t count, const std::uint8_t *weights) {
@@ -681,7 +681,7 @@ std::int32_t SelectNpcWeightedMotion(std::int32_t count, const std::uint8_t *wei
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SelectNpcSpecialMotion(NpcRouteLiveEntry *entry, std::int32_t age, std::int32_t sex, std::int32_t profile) {
@@ -717,7 +717,7 @@ std::int32_t SelectNpcSpecialMotion(NpcRouteLiveEntry *entry, std::int32_t age, 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SelectNpcIdleSpecialMotion(NpcRouteLiveEntry *entry, std::int32_t age, std::int32_t sex, std::int32_t profile) {
@@ -753,7 +753,7 @@ std::int32_t SelectNpcIdleSpecialMotion(NpcRouteLiveEntry *entry, std::int32_t a
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -765,7 +765,7 @@ std::uint8_t ScriptByte(const std::byte *command) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -779,7 +779,7 @@ std::uint16_t ScriptWord(const std::byte *command) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -793,7 +793,7 @@ std::uint32_t ScriptDword(const std::byte *command) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool InitializeNpcAreaRouteStore() {
@@ -819,7 +819,7 @@ bool InitializeNpcAreaRouteStore() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool BindNpcAreaRouteResources(std::span<NpcAreaPoint> points, const Vector3 &areaOrigin) {
     if (!areaStore)
@@ -846,7 +846,7 @@ bool BindNpcAreaRouteResources(std::span<NpcAreaPoint> points, const Vector3 &ar
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetNpcAreaRouteOrigin(const Vector3 &origin) {
     routeOrigin = origin;
@@ -854,7 +854,7 @@ void SetNpcAreaRouteOrigin(const Vector3 &origin) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ResetNpcAreaRouteResources() {
     areaPoints = {};
@@ -867,7 +867,7 @@ void ResetNpcAreaRouteResources() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void FreeNpcAreaRouteStore() {
     ResetNpcAreaRouteResources();
@@ -877,7 +877,7 @@ void FreeNpcAreaRouteStore() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 NpcAreaRouteState *GetNpcAreaPointRouteState(std::uint16_t point) {
     if (point >= areaPoints.size())
@@ -888,7 +888,7 @@ NpcAreaRouteState *GetNpcAreaPointRouteState(std::uint16_t point) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t PrepareNpcAreaRouteStore(std::int32_t count) {
@@ -904,7 +904,7 @@ std::int32_t PrepareNpcAreaRouteStore(std::int32_t count) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t RegisterNpcAreaRouteState(NpcAreaRouteState *state, std::int32_t point) {
     if (!npcAreaRouteStore || !state)
@@ -957,7 +957,7 @@ std::int32_t RegisterNpcAreaRouteState(NpcAreaRouteState *state, std::int32_t po
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void QueueNpcAreaDoorMotion(NpcRouteLiveEntry *entry) {
@@ -998,7 +998,7 @@ void QueueNpcAreaDoorMotion(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool InitializeNpcAreaRoute(NpcRouteLiveEntry *entry) {
@@ -1030,7 +1030,7 @@ bool InitializeNpcAreaRoute(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t StopNpcAreaRoute(NpcRouteLiveEntry *entry) {
@@ -1082,7 +1082,7 @@ std::int32_t StopNpcAreaRoute(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ClearNpcAreaRouteForEntry(NpcRouteLiveEntry *entry) {
@@ -1135,7 +1135,7 @@ std::int32_t ClearNpcAreaRouteForEntry(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t DisableNpcAreaRoute(NpcRouteLiveEntry *entry) {
@@ -1151,7 +1151,7 @@ std::int32_t DisableNpcAreaRoute(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1192,7 +1192,7 @@ float AreaLaneWidth(const NpcAreaControlRow &row) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1245,7 +1245,7 @@ void AreaLinkedPosition(const NpcAreaOwnerRow &owner, Vector3 &position) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1351,7 +1351,7 @@ bool AreaTargetReached(const NpcAreaRouteState &state, const NpcRouteLiveEntry &
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1446,7 +1446,7 @@ bool SelectAreaExitDirection(const NpcAreaRouteState &state, NpcRouteLiveEntry &
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1478,7 +1478,7 @@ bool QueueAreaOwnerExit(const NpcAreaRouteState &state, NpcRouteLiveEntry &entry
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1516,7 +1516,7 @@ bool ProbeAreaControlRow(const NpcAreaControlRow &row, NpcAreaProbe &probe) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1573,7 +1573,7 @@ bool ProbeAreaOwnerRow(const NpcAreaOwnerRow &owner, NpcAreaProbe &probe) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1588,7 +1588,7 @@ void AdvanceAreaControlRow(const NpcAreaRouteState &state, NpcRouteLiveEntry &en
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1603,7 +1603,7 @@ void QueueAreaOwnerLane(const NpcAreaRouteState &state, NpcRouteLiveEntry &entry
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1631,7 +1631,7 @@ std::int32_t AreaQueueLength(const NpcAreaRouteState &state) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1725,7 +1725,7 @@ bool SelectFreeAreaOwner(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1743,7 +1743,7 @@ void AdvanceAreaMasks(NpcAreaRouteState &state) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1760,7 +1760,7 @@ void UnlinkAreaStoreSlot(NpcAreaStoreSlot &slot) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1836,7 +1836,7 @@ std::int32_t ReserveEndpointOwner(NpcAreaRouteState &state, NpcAreaOwnerRow &own
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1942,7 +1942,7 @@ std::int32_t SelectEndpointOwner(NpcAreaRouteState &state, NpcRouteLiveEntry &en
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2011,7 +2011,7 @@ bool SelectClipAreaOwner(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2057,7 +2057,7 @@ void ReserveAreaEntrance(NpcAreaRouteState &state) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2173,7 +2173,7 @@ void UpdateAreaDistance(NpcAreaStoreSlot &slot) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2185,7 +2185,7 @@ bool AreaUsesSpecialAttachment(const NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2202,7 +2202,7 @@ void ApplyAreaTransform(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2248,7 +2248,7 @@ float AreaSegmentParameter(const Vector3 &start, const Vector3 &end, const Vecto
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2279,7 +2279,7 @@ float AreaRowParameter(const NpcAreaControlRow &row, const NpcRouteLiveEntry &en
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2332,7 +2332,7 @@ bool AreaOpposingLaneOccupied(const NpcAreaRouteState &state, const NpcRouteLive
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2543,7 +2543,7 @@ void DisplaceAreaLane(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, bool a
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2656,7 +2656,7 @@ bool ReserveAreaLane(const NpcAreaRouteState &state, const NpcRouteLiveEntry &en
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2716,7 +2716,7 @@ bool AreaOwnerLaneAvailable(const NpcAreaRouteState &state, const NpcRouteLiveEn
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2801,7 +2801,7 @@ bool OccupyAreaOwner(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2819,7 +2819,7 @@ void FinishAreaRoute(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2902,7 +2902,7 @@ bool HasOccupiedPartner(const NpcAreaRouteState &state, const NpcRouteLiveEntry 
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2945,7 +2945,7 @@ const std::byte *FindAnimationDefinition(const NpcAreaRouteState &state, const N
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2981,7 +2981,7 @@ const std::byte *NextInstruction(const std::byte *command) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3017,7 +3017,7 @@ const std::byte *PreviousInstruction(const std::byte *command) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3029,7 +3029,7 @@ bool IsScriptSectionEnd(std::uint8_t opcode) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3073,7 +3073,7 @@ const std::byte *FindInstructionEnd(const std::byte *command) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3117,7 +3117,7 @@ const std::byte *FindInstructionStart(const std::byte *command) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3149,7 +3149,7 @@ const std::byte *FindSection(const std::byte *command, std::uint8_t section) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3239,7 +3239,7 @@ const std::byte *ChooseMotionInstruction(NpcRouteLiveEntry &entry, const std::by
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3276,7 +3276,7 @@ std::uint16_t BeginAnimationInstruction(NpcRouteLiveEntry &entry, const std::byt
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t SelectNpcAreaTransitionMotion(const NpcRouteLiveEntry *entry) {
@@ -3343,7 +3343,7 @@ std::uint32_t SelectNpcAreaTransitionMotion(const NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint16_t npcResolveAnimationForRoute(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
@@ -3352,7 +3352,7 @@ std::uint16_t npcResolveAnimationForRoute(NpcAreaRouteState &state, NpcRouteLive
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ResumeNpcAreaSpecialMotion(NpcRouteLiveEntry *entry) {
@@ -3367,7 +3367,7 @@ void ResumeNpcAreaSpecialMotion(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3577,7 +3577,7 @@ std::uint16_t ResolveNpcAreaOwnerAnimation(NpcAreaRouteState *state, NpcRouteLiv
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState *state, NpcRouteLiveEntry *entry) {
@@ -3698,7 +3698,7 @@ std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState &state, NpcRouteLiveEntr
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ApplyNpcAreaMotion(NpcRouteLiveEntry *entry, std::uint16_t motion) {
@@ -3730,7 +3730,7 @@ void ApplyNpcAreaMotion(NpcRouteLiveEntry &entry, std::uint16_t motion) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool RequestNpcAreaRouteCompletion(NpcRouteLiveEntry &entry) {
     if (!(entry.opcodeFlags & 2U))
@@ -3781,7 +3781,7 @@ bool RequestNpcAreaRouteCompletion(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool QueueAreaMotion(NpcRouteLiveEntry *entry, const Vector3 *target, const Vector3 *facing, std::int16_t yaw, std::uint16_t motion) {
@@ -3848,7 +3848,7 @@ bool QueueAreaMotion(NpcRouteLiveEntry &entry, const Vector3 *target, const Vect
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3948,7 +3948,7 @@ std::uint16_t SelectAreaApproachMotion(std::int32_t rig, std::uint8_t action, st
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3974,7 +3974,7 @@ Vector3 SampleAreaMotion(std::uint16_t motion, std::int32_t rig, float frame) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4010,7 +4010,7 @@ Vector3 TransformAreaMotion(const Vector3 &origin, std::int16_t yaw, Vector3 mot
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4032,7 +4032,7 @@ bool IsAreaSeatedAction(std::uint8_t action) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4053,7 +4053,7 @@ void LimitAreaCollisionRadius(const NpcAreaRouteState &state, NpcRouteLiveEntry 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4148,7 +4148,7 @@ void QueueAreaOwnerApproach(const NpcAreaRouteState &state, NpcRouteLiveEntry &e
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4169,7 +4169,7 @@ void QueueAreaOwnerTarget(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4183,7 +4183,7 @@ void EnterAreaOwnerLane(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4221,7 +4221,7 @@ void QueueAreaDoorMotion(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4293,7 +4293,7 @@ bool TickAreaTraversal(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, bool 
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4355,7 +4355,7 @@ bool TickAreaOwnerApproach(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, b
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4423,7 +4423,7 @@ bool TickAreaWaiting(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, bool ow
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4511,7 +4511,7 @@ void QueueAreaOwnerExitMotion(const NpcAreaRouteState &state, NpcRouteLiveEntry 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4614,7 +4614,7 @@ void PrepareAreaOwnerGround(const NpcAreaRouteState &state, NpcRouteLiveEntry &e
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4709,7 +4709,7 @@ void PositionAreaQueueMember(NpcRouteLiveEntry &entry, const Vector3 &facing, co
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4746,7 +4746,7 @@ void PositionAreaQueueHead(const NpcAreaRouteState &state, NpcRouteLiveEntry &en
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4830,7 +4830,7 @@ bool MaintainAreaQueue(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4860,7 +4860,7 @@ void RestoreAreaMotionAttachment(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4908,7 +4908,7 @@ bool AreaDoorPathClear(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4944,7 +4944,7 @@ bool ClaimAreaEntrance(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4970,7 +4970,7 @@ void PublishAreaWorldPosition(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool PrepareNpcAreaDoor(NpcAreaRouteState *state, NpcRouteLiveEntry *entry) {
@@ -4991,7 +4991,7 @@ bool PrepareNpcAreaDoor(NpcAreaRouteState *state, NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ActivateNpcAreaRoutes(std::int32_t active) {
@@ -5093,7 +5093,7 @@ void ActivateNpcAreaRoutes(bool active) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t GetNpcAreaRouteStoreCount() {
@@ -5102,7 +5102,7 @@ std::uint32_t GetNpcAreaRouteStoreCount() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t GetNpcAreaSpecialMotionFlags(const NpcRouteLiveEntry &entry) {
@@ -5148,7 +5148,7 @@ std::uint32_t GetNpcAreaSpecialMotionFlags(const NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -5197,7 +5197,7 @@ bool FinishAreaOwnerAnimation(NpcAreaRouteState &state, NpcRouteLiveEntry &entry
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5211,7 +5211,7 @@ void RestoreAreaSavedPosition(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5361,7 +5361,7 @@ FindMotionWork
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5465,7 +5465,7 @@ bool TickInactiveAreaRoute(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5558,7 +5558,7 @@ bool AdmitAreaRoute(NpcAreaRouteState &state, NpcRouteLiveEntry &entry, bool ini
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -5606,7 +5606,7 @@ void ApplyAreaOwnerAnimation(const NpcAreaRouteState &state, NpcRouteLiveEntry &
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5618,7 +5618,7 @@ NpcAreaControlRow *ControlRows(const NpcAreaRouteState &state) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5630,7 +5630,7 @@ NpcAreaOwnerRow *OwnerRows(const NpcAreaRouteState &state) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5643,7 +5643,7 @@ NpcRouteLiveEntry *ListHead(const NpcAreaRouteState &state, std::size_t list) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5661,7 +5661,7 @@ void SetListHead(NpcAreaRouteState &state, NpcRouteLiveEntry *entry, std::size_t
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5711,7 +5711,7 @@ void RegisterAreaState(NpcAreaRouteState &state, std::int16_t point) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5725,7 +5725,7 @@ std::int32_t AreaQueueCapacity(const NpcAreaRouteState &state) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5737,7 +5737,7 @@ bool IsAreaWaitCommand(const NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5749,7 +5749,7 @@ bool IsAreaEndpoint(const NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5778,7 +5778,7 @@ bool PrepareAreaDoor(NpcAreaRouteState &state, NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -5964,7 +5964,7 @@ void ProbeAreaState(NpcAreaRouteState &state) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -5978,7 +5978,7 @@ void UpdateNearestAreaProbe() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -6078,7 +6078,7 @@ void ReserveAreaProbe(const NpcAreaProbe &probe) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6167,7 +6167,7 @@ bool IsAreaProbeAhead(const NpcAreaRouteState &state, const NpcRouteLiveEntry &e
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -6323,7 +6323,7 @@ bool AreaProbeAhead(const NpcAreaRouteState &state, const NpcRouteLiveEntry &ent
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6376,7 +6376,7 @@ bool IsAreaOwnerProbeAhead(const NpcAreaRouteState &state, const NpcRouteLiveEnt
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -6476,7 +6476,7 @@ bool AreaOwnerProbeAhead(const NpcAreaRouteState &state, const NpcRouteLiveEntry
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -6501,7 +6501,7 @@ Vector3 AreaLerp(const Vector3 &first, const Vector3 &second, float parameter) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void PrepareNpcAreaRoutes() {
@@ -6567,7 +6567,7 @@ void PrepareNpcAreaRoutes() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool ResetNpcAreaRouteState(NpcRouteLiveEntry &entry) {
     NpcAreaRouteState *const state = GetNpcAreaPointRouteState(entry.currentAreaPoint);
@@ -6627,7 +6627,7 @@ bool ResetNpcAreaRouteState(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool TryEnterNpcAreaRoute(NpcRouteLiveEntry &entry) {
     NpcAreaRouteState *const state = GetNpcAreaPointRouteState(entry.currentAreaPoint);
@@ -6648,7 +6648,7 @@ bool TryEnterNpcAreaRoute(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6660,7 +6660,7 @@ template <class T> T *HeapPointer(std::int32_t offset) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6676,7 +6676,7 @@ std::int32_t HeapOffset(const void *pointer) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6688,7 +6688,7 @@ float AreaSine(std::int32_t angle) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6700,7 +6700,7 @@ float AreaCosine(std::int32_t angle) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6714,7 +6714,7 @@ std::int32_t AreaYaw(const Vector3 &angles) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6726,7 +6726,7 @@ void SetAreaYaw(Vector3 &angles, std::int32_t yaw) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6740,7 +6740,7 @@ float AreaDistanceSquared(const Vector3 &first, const Vector3 &second) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t TickNpcAreaRouteState(NpcRouteLiveEntry *entry) {
@@ -7264,7 +7264,7 @@ bool TickNpcAreaRouteState(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void RestoreNpcAreaMotion(NpcRouteLiveEntry &entry) {
     const NpcAreaRouteState *const state = GetNpcAreaPointRouteState(entry.currentAreaPoint);
@@ -7277,7 +7277,7 @@ void RestoreNpcAreaMotion(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t TickNpcCrowdAreaState(NpcAreaRouteState *state, NpcRouteLiveEntry *entry) {
     std::int32_t capacity = npcAreaQueueCapacities[g_actNumber];
@@ -8523,7 +8523,7 @@ std::int32_t TickNpcCrowdAreaState(NpcAreaRouteState *state, NpcRouteLiveEntry *
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t TickNpcLocalAreaState(NpcAreaRouteState *state, NpcRouteLiveEntry *entry) {
     std::int32_t loop;
@@ -8750,7 +8750,7 @@ std::int32_t TickNpcLocalAreaState(NpcAreaRouteState *state, NpcRouteLiveEntry *
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 

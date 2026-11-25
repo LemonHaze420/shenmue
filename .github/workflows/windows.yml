@@ -168,6 +168,8 @@ jobs:
       - name: Build and round-trip S2 event overlays
         id: events
         run: ./.github/scripts/roundtrip-events.ps1
+      - name: Build and compare S2 Dreamcast executables
+        run: ./.github/scripts/match-s2-dc.ps1
       - name: Build screen captures
         run: cmake --build build/windows-capture --config Release --target shenmue1 shenmue2 --parallel 4
       - name: Build WS capture

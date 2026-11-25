@@ -1,6 +1,6 @@
 #include "platform/dc/particle_simulation.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include "platform/dc/ninja.hpp"
 
@@ -16,7 +16,7 @@ ParticleChannel g_particleChannels[16] = {};
 
 // @verified - d
 void SetParticleChannelActive(std::int32_t index, std::int32_t active) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (active)
         g_particleChannels[index].flags |= 0x80000000U;
     else
@@ -33,10 +33,10 @@ void SetParticleChannelActive(std::int32_t index, std::int32_t active) {
 #endif
 }
 
-#if !SHENMUE_IS_S2 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !SHENMUE_IS_S2 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void SetParticleChannelSpawnProbability(std::int32_t index, float probability) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_particleChannels[index].spawnProbabilityQ15 = static_cast<std::int32_t>(probability * 32767.0f);
 #else
     ParticleChannel &channel =
@@ -110,7 +110,7 @@ void ReleaseParticleChannelTexture(std::int32_t index) {
     if (channel.textureSurface) {
         kmFreeTexture(static_cast<KMSURFACEDESC *>(channel.textureSurface));
         channel.textureSurface = 0;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         if (channel.flags & 1U)
             channel.context.flags = 0xa0000002U;
         else
@@ -128,7 +128,7 @@ void ReleaseParticleChannelTexture(std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ReleaseParticleChannelTextures() {
     ParticleChannel *channel = g_particleChannels;
     for (std::int32_t index = 0; index < 16; ++index, ++channel) {

@@ -44,7 +44,7 @@
 #include "s2/screen_film_dc.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/scenario_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #endif
 #include "shenmue.h"
@@ -53,7 +53,7 @@
 #include "platform/dc/sdk.hpp"
 #include "s2/motion_ground_dc.hpp"
 #include "s2/event_character_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #include "s2/motion_registry_dc.hpp"
 #include "s2/motion_stream_dc.hpp"
@@ -78,7 +78,7 @@
 #include "s2/map_event_character_dc.hpp"
 #include "s2/map_region_dc.hpp"
 #include "s2/door_state_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #include "s2/field_collision_dc.hpp"
 #endif
@@ -93,7 +93,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 }
 } // namespace dc
 } // namespace shenmue
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/pause.hpp"
 #endif
 #include "s2/pad_control_dc.hpp"
@@ -149,7 +149,7 @@ void SetMapModelSlotEnabled(std::int32_t enabled, std::int32_t index) {
         g_mapModelSlots[index].enabled = static_cast<std::uint32_t>(enabled);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 CharacterHandComponent *GetCharacterHand(Character *character, std::int32_t side) {
     return !side ? AllocateHNDR(character) : AllocateHNDL(character);
@@ -330,7 +330,7 @@ void SetCharacterFaceSecondaryParameters(const Character *character, std::uint8_
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyCharacterHandRotation(Character *character, std::int32_t side, std::uint32_t flags, const Vector3i *rotation) {
     CharacterHandComponent *const hand = GetCharacterHand(character, side);
@@ -388,7 +388,7 @@ void ReplaceScenarioImageModule(shen_name name, const char *imageName, std::int3
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyCharacterGeometryLighting(Character *character, std::int32_t replaceDrawCallback) {
     Vector4 colour;
@@ -405,7 +405,7 @@ void ApplyCharacterGeometryLighting(Character *character, std::int32_t replaceDr
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetCharacterGeometryLighting(Character *character) {
     SetupModelDataDefaultVS(character->model);
@@ -454,7 +454,7 @@ void __attribute__((renesas)) shenmue_s2_event_SetScenarioCharacterTransparency(
 }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 __attribute__((renesas)) shenmue::s2::Character *shenmue_s2_event_ctrlGetCharaByName(std::uint32_t name) {
     return shenmue::s2::ctrlGetCharaByName(shenmue::shen_name(name));

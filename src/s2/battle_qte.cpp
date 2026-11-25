@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/battle_qte.hpp"
 #include "s2/fight.hpp"
 #include "s2/input_dc.hpp"
@@ -63,7 +63,7 @@
 #include "s2/camera_sequence_dc.hpp"
 #include "s2/face_controller_dc.hpp"
 #include "s2/osage_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #endif
 #include "s2/startup_assets_dc.hpp"
@@ -88,7 +88,7 @@
 #include <float.h>
 #include "s2/camera_conversation_dc.hpp"
 #include "s2/title_sprite_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_dc.hpp"
 #include "s2/motion_ground_dc.hpp"
 #include "s2/door_control_dc.hpp"
@@ -115,7 +115,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -133,7 +133,7 @@ bool firstInputFrame{true};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 BattleQteTaskData *GetBattleQteTaskData();
@@ -155,7 +155,7 @@ BattleQteTaskData *fbqtDisableMode();
 std::int64_t qteBattleUtil(BattleQteMode mode, std::int32_t a2, std::int32_t a3, std::int32_t a4, std::int32_t a5);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 HLib::Task *Queue_vfq_BattleQteMain();
 
@@ -225,7 +225,7 @@ std::int32_t firstInputFrame = 1;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 namespace {
 
 BattleQteTaskData *GetBattleQteTaskData();
@@ -281,7 +281,7 @@ void fbqtToggleMode();
 BattleQteTaskData *fbqtDisableMode();
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t qteBattleUtil(BattleQteMode mode, std::int32_t a2, std::int32_t a3, std::int32_t a4, std::int32_t a5) {
@@ -414,7 +414,7 @@ std::int64_t qteBattleUtil(BattleQteMode mode, std::int32_t a2, std::int32_t a3,
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 HLib::Task *Queue_vfq_BattleQteMain() {
@@ -441,7 +441,7 @@ HLib::Task *Queue_vfq_BattleQteMain() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool vfqIsBattleQteActive() {
     const BattleQteTaskData *const data = GetBattleQteTaskData();
@@ -456,7 +456,7 @@ bool vfqIsBattleQteActive() noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void fbqtToggleMode() {
     GetBattleQteTaskData()->mode |= 0x80000000U;
@@ -470,7 +470,7 @@ void fbqtToggleMode() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 BattleQteTaskData *fbqtDisableMode() {
     BattleQteTaskData *const data = GetBattleQteTaskData();
@@ -488,7 +488,7 @@ BattleQteTaskData *fbqtDisableMode() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfqInitBattleQteTask(BattleQteTaskData &data) {
@@ -790,7 +790,7 @@ void vfq_BattleQteMain_Callback(void *parameter) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static std::int32_t vfqCheckBattleQteSuccess(BattleQteTaskData &data, FightActorRuntimePrefix *actor, FightActorRuntimePrefix *player) {
@@ -847,7 +847,7 @@ std::uint16_t vfqConvertCommandMask(std::int32_t value) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint16_t vfqPollBattleQteInput(BattleQteTaskData &data) {
@@ -925,7 +925,7 @@ std::uint16_t vfqPollBattleQteInput(BattleQteTaskData &data) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -980,7 +980,7 @@ BattleQteTaskData *GetBattleQteTaskData() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #else
 
@@ -994,7 +994,7 @@ void EndBattleQtePause() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // Native FreeTaskPtr: module heap sweep invalidates only the published FBQT task pointer.
 void ResetBattleQteTaskPointer() {
@@ -1010,7 +1010,7 @@ void ResetBattleQteTaskPointer() noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfqResetBattleQte(BattleQteTaskData &data) {
     std::uint8_t index;
@@ -1057,7 +1057,7 @@ void vfqResetBattleQte(BattleQteTaskData &data) noexcept {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void EnableQteUi(BattleQteTaskData &data) {
@@ -1131,7 +1131,7 @@ void EnableQteUi(BattleQteTaskData &data) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfqSetBattleQteIcons(BattleQteTaskData &data, std::uint8_t mode, std::uint16_t mask, std::uint16_t frames) {
@@ -1193,7 +1193,7 @@ void vfqSetBattleQteIcons(BattleQteTaskData &data, std::uint8_t mode, std::uint1
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void DrawBattleQteIcons(BattleQteTaskData &data) {
@@ -1247,7 +1247,7 @@ static void DrawBattleQteIcons(BattleQteTaskData &data) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void DrawBattleQteDirections(BattleQteTaskData &data) {
@@ -1302,7 +1302,7 @@ static void DrawBattleQteDirections(BattleQteTaskData &data) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void ResetBattleQteDirectionState() {
     bufferedInput = 0;

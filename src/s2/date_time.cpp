@@ -890,7 +890,7 @@ void TimeX_ConstructMatrices(void *) {
     dc::sdk::PushGraphicsWorkspace();
     Matrix4x4::preTranslate(handWatch.armPosition.x, handWatch.armPosition.y, handWatch.armPosition.z);
     Matrix4x4::RotateAroundY_Wrapper(handWatch.armRotation.y);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     DrawCharacterModelBranch(handWatch.root);
 #else
     reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(handWatch.root);

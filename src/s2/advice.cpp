@@ -1,6 +1,6 @@
 #include "s2/advice.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/font.hpp"
 #include "s2/input_dc.hpp"
 #include "s2/pause.hpp"
@@ -29,7 +29,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -63,7 +63,7 @@ static_assert(sizeof(adviceLegacyIcons[0]) == 8);
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 void AdviceControl_Callback(void *);
@@ -77,7 +77,7 @@ void AssignAdviceControlMode(AdviceControlMode mode) noexcept;
 void QueueFightAdviceControl(std::uint8_t mode);
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -89,7 +89,7 @@ void AdviceIdleNullsub(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -109,7 +109,7 @@ void StepAdviceColour() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -143,7 +143,7 @@ std::uint32_t adviceIconCount = 0;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -201,7 +201,7 @@ void DrawAdvice(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -310,7 +310,7 @@ void AdviceControl_Callback(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -337,7 +337,7 @@ void FightAdviceControlTaskCallback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t FightAdviceControlCallback() {
@@ -351,7 +351,7 @@ std::int64_t FightAdviceControlCallback() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void Queue_ADV_CtrlAdvice() {
@@ -363,7 +363,7 @@ void Queue_ADV_CtrlAdvice() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void AssignAdviceControlMode(AdviceControlMode mode) {
@@ -382,7 +382,7 @@ void AssignAdviceControlMode(AdviceControlMode mode) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 AdviceControlMode GetAdviceControlMode() noexcept {
     return adviceMode;
@@ -390,7 +390,7 @@ AdviceControlMode GetAdviceControlMode() noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void QueueFightAdviceControl(std::uint8_t mode) {
@@ -410,7 +410,7 @@ void QueueFightAdviceControl(std::uint8_t mode) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ReleaseAdviceControlOwners() noexcept {
     DestroyElementByIndex(UIElement::GameHelp);
@@ -427,7 +427,7 @@ void ReleaseAdviceControlOwners() noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void FormatAdviceHelpText(const char *text) {
@@ -606,7 +606,7 @@ void FormatAdviceHelpText(std::string_view text) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HLib::Task *QueueAdviceControl() {
     advicePhase = 0;
@@ -623,7 +623,7 @@ HLib::Task *QueueAdviceControl() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_QueueFightAdviceControl(std::uint8_t mode) {
     shenmue::s2::QueueFightAdviceControl(mode);
 }

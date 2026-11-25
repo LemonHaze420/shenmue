@@ -151,7 +151,7 @@ void srchInitialize(SearchTaskData &search) {
     searchExitRequested = 0;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 SearchTarget *srchReadMapTargets() {
     char directory[64], filename[32];
@@ -814,7 +814,7 @@ std::int32_t srchRestoreRyoNpcStates(SearchTaskData &search) {
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 SearchTarget *FindSearchTarget(const SearchTaskData &search, shen_name name) {
     SearchTarget *found = 0;
@@ -955,7 +955,7 @@ bool RetrieveSearchFlagFromPtr(Vector3 &position) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t srchSetTargetEnabled(shen_name name, std::int32_t enabled) {
     std::uint32_t previous = UINT32_MAX;
@@ -984,7 +984,7 @@ bool srchSetTarget(std::uint32_t index, SearchTarget *targets) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool srchClearTarget(std::uint32_t index) {
     SearchTaskData *const control = searchControl;
@@ -996,7 +996,7 @@ bool srchClearTarget(std::uint32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t srchGetActiveTargetPosition(Vector3 *position) {
     if (searchControl->mode == SearchMode::Idle)
@@ -1011,7 +1011,7 @@ std::int32_t srchGetActiveTargetPosition(Vector3 *position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t srchGetActiveTargetYaw(std::int16_t *yaw) {
     if (searchControl->mode == SearchMode::Idle)
@@ -1026,7 +1026,7 @@ std::int32_t srchGetActiveTargetYaw(std::int16_t *yaw) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t srchGetActiveTargetLockonAngle(float *angle) {
     if (searchControl->mode == SearchMode::Idle)
@@ -1075,7 +1075,7 @@ bool srchHasActiveLockonTarget() {
     return false;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void srchRequestInhibit() {
     searchControl->state |= 1;
@@ -1087,14 +1087,14 @@ void srchRequestRelease() {
     searchControl->state |= 2U;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void srchRequestLockonExit() {
     searchExitRequested = 1;
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void srchReset() {
     searchControl->mode = SearchMode::Idle;
@@ -1111,7 +1111,7 @@ void srchReset() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t srchSetLookMode() {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -1139,7 +1139,7 @@ std::int32_t srchCheckFlags(std::int32_t mode) {
     return 0;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 shen_name srchGetTargetName(std::uint32_t index) {
     static const shen_name *const srchTargetNames[3] = {&selectedSearchName, &g_searchCharacterFallback, &focusObject};

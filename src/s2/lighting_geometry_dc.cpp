@@ -96,7 +96,7 @@ void TraverseGeometryLightTree(MT7Node *node) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetGeometryLightTree(MT7Node *node) {
     if (node->mesh && !(node->kind & 0x10))
@@ -136,7 +136,7 @@ std::uint32_t ApplyGeometryLightTree(MT7Node *root, const LightRuntimeEntry *lig
     return geometryLightingRequired;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AssignLightProgram(std::uint32_t mapSlot) {
     if (mapSlot > 31)
@@ -163,7 +163,7 @@ void AssignLightProgram(std::uint32_t mapSlot) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PushGlobalLightingProgram() {
     Vector4 colour;
@@ -199,7 +199,7 @@ void PushGlobalLightingProgram() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetupModelDataDefaultVS(MT7Node *root) {
     if (!root)
@@ -216,7 +216,7 @@ void SetupModelDataDefaultVS(MT7Node *root) {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 void __attribute__((renesas)) shenmue_s2_event_AssignLightProgram(std::uint32_t mapSlot) {
     shenmue::s2::AssignLightProgram(mapSlot);

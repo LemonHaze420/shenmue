@@ -4,7 +4,7 @@
 
 #include <cstring>
 #include "s2/frame_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_dc.hpp"
 #include "s2/input_dc.hpp"
 #include "s2/npc_data_dc.hpp"
@@ -48,10 +48,10 @@
 #include "shenmue.h"
 #include "s2/player_stats_dc.hpp"
 #include "s2/game_system_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/camera_conversation_dc.hpp"
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hand_dc.hpp"
 #include "s2/object_xforms.hpp"
 #include "s2/player_ground_state_dc.hpp"
@@ -101,7 +101,7 @@
 #include "platform/dc/mt7.hpp"
 #include "s2/flag_data.hpp"
 #include "s2/inventory_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/flag_context_dc.hpp"
 #endif
 #include "s2/fight_blur_dc.hpp"
@@ -110,7 +110,7 @@
 #include "s2/system_modules_dc.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/texture_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/save_screen_state_dc.hpp"
 #include <cstdarg>
 #include <cstdio>
@@ -121,7 +121,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ScenarioChoiceCandidate {
     std::int16_t id;
     std::int8_t rank, priority;
@@ -129,14 +129,14 @@ struct ScenarioChoiceCandidate {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ScenarioCharacterAction {
     shen_name name;
     std::int32_t action;
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t GetParentMenu();
 
 std::uint8_t UpdateSelectorMemo();
@@ -296,7 +296,7 @@ bool GetStoryFlag(std::int32_t flag);
 
 std::uint8_t GetScenarioByteStat(std::int32_t index);
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 
@@ -310,7 +310,7 @@ bool GetStoryFlag(std::int32_t flag);
 
 std::uint8_t GetScenarioByteStat(std::int32_t index);
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 
@@ -330,7 +330,7 @@ bool GetStoryFlag(std::int32_t flag);
 
 std::uint8_t GetScenarioByteStat(std::int32_t index);
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 
@@ -354,7 +354,7 @@ bool GetStoryFlag(std::int32_t flag);
 
 std::uint8_t GetScenarioByteStat(std::int32_t index);
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 
@@ -380,7 +380,7 @@ FreeTalkRegistration *g_freeTalkFreeRegistrations;
 
 shen_name g_freeTalkVisibleCharacters[8];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioQueuedFaceLooks[8];
 #endif
 
@@ -396,7 +396,7 @@ std::int32_t g_scenarioSubtitleHoldFrames;
 
 ScenarioActionQueue *scenarioActionQueueStorage;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioGameplayFlags[10];
 #else
 ScenarioGameplayFlagState g_scenarioGameplayFlags;
@@ -408,7 +408,7 @@ std::int32_t g_scenarioFlagNotificationPending, g_scenarioFlagNotificationFrames
 
 std::int32_t g_scenarioFlagNotificationShown;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t scenarioGameplayFlagsInitialized = 0, scenarioGameplayFlagsDay = 0, scenarioGameplayFlagsStep = 0;
 #endif
 
@@ -422,189 +422,189 @@ static std::int32_t scntBranchCount = 0;
 
 static std::int32_t scntBranchRepeated = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float scenarioLineLetterFrames = 4.0f, scenarioLineBaseFrames = 15.0f;
 #endif
 
 std::int32_t g_currentShenmue1SaveAreaId = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static ScenarioEventContextStorage g_scenarioEventStorage;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioFreeTalkPhase;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name g_scenarioCharacterAdmissionNames[kScenarioAdmissionCount];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 g_scenarioAdmissionPositions[kScenarioAdmissionCount];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioSelectionCount;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioLineStartTicks;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 ScenarioDialogueCue g_scenarioDialogueCues[kScenarioDialogueCueCount];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioActionQueueId = 0, g_scenarioAcknowledgementQueueId = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 ConversationBuffer *g_scenarioCurrentDialogue;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioRetainedState94c = 0, g_scenarioRetainedState950 = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioLookTargetActive = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioRetainedLookTarget;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioTalkAreaActive;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioFaceForwardMode, g_scenarioFacingCommandsIssued, g_scenarioPlayerFacingIssued, g_scenarioNpcFacingIssued,
     g_scenarioSuppressPlayerFacing, g_scenarioSuppressNpcFacing;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioTalkPromptResumed = 0, g_scenarioFollowPromptShown = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::byte *g_externalFreeTalkRecords = 0, *g_extraFreeTalkRecord = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateFIXO(Character *character);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PadControlEntry *BindPadControlEntry(PadControlEntry *entry);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EndConversationCameraStream();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static Vector3 scenarioSearchPlayerPosition, scenarioSearchFocusPosition, scenarioSearchLockonPosition;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t scenarioSearchPlayerYaw, scenarioSearchHasLockonPosition;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MT7Node *g_scenarioStepModels[7];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioSelectedFollowFlag;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RestoreConversationCamera();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 ConversationDialogueRecord g_scenarioCameraRecords[24];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint16_t scenarioChoiceIds[5];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int8_t scenarioChoiceRanks[5], scenarioChoiceGroups[5];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::byte *scenarioChoiceTargets[6];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static ScenarioChoiceCandidate scenarioLinkedChoices[100];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t scenarioPromptFrames, scenarioLineHoldFrames;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float scenarioLineTimeOffset;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t scenarioLinePauseTicks;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int32_t g_scenarioTalkPromptResumed, g_scenarioFollowPromptShown;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EndConversationCameraStream();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ActivateConversationCameraStream(const ConversationDialogueRecord *records);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlHoldConversationShot(std::int32_t held);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResumeConversationCamera();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t scenarioInitialHandPose[57] = {0x7cfU, 0xff4aU, 0xed86U, 0x666U, 0xb4U, 0xf6c3U, 0x222U, 0xfccfU, 0xd26U, 0x0U, 0xfd2aU, 0xd1caU, 0x0U,
     0xfd2aU, 0xc0b8U, 0x0U, 0x0U, 0xeaacU, 0x0U, 0x0U, 0xfd2aU, 0x0U, 0x0U, 0xdde0U, 0x0U, 0x0U, 0xb99cU, 0x0U, 0xfe94U, 0xdd2bU, 0x0U, 0x0U, 0xff4aU, 0x0U,
     0x2d9U, 0xd99bU, 0x0U, 0xfe95U, 0xc0baU, 0x0U, 0xfddeU, 0xdbc0U, 0x0U, 0x0U, 0x0U, 0x0U, 0x0U, 0xdc72U, 0x0U, 0x667U, 0xc2daU, 0x0U, 0xb7U, 0xe7d6U,
     0xfa50U, 0xff4aU, 0xfbbcU};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlSetConversationLookTarget(const Vector3 *position);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t scenarioHardBusy;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static FreeTalkRegistration g_freeTalkRegistrationPool[kFreeTalkRegistrationCount];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::uint32_t scenarioSuspendedLineTicks = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t scenarioMeshCount, scenarioTaggedMesh;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name g_scenarioActionParticipants[8], g_scenarioRetainedParticipants[10];
 const Vector3 *g_scenarioLookLocation;
 Vector3 g_scenarioSpeakerPosition, g_scenarioPlayerPosition;
@@ -623,33 +623,33 @@ float g_scenarioSpeakerHeadHeight, g_scenarioSpeakerChestHeight;
 std::uint8_t g_scenarioLookTargetReleased;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int8_t g_scenarioLookCameraState = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_scenarioParticipantFaceLooks[8] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 g_scenarioDefaultLookLocation = {0, 0, 0};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t scenarioPlayerTurnAround;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int8_t scenarioLookReleaseFrames, scenarioLookLocationFrames = 0, scenarioLetterFrames = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int8_t scenarioPlayerTurnFrames = 0, scenarioPlayerTurnFrameLimit = -1;
 #endif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t supportIptCurrent;
 #endif
 
@@ -657,23 +657,23 @@ std::uint32_t supportIptCurrent;
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t supportMetricsPage = 0;
 #endif
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_scenarioTransientState[5];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t g_scenarioTalkOccurrences[512] = {};
 #endif
 
 std::byte *g_systemTalkData = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t gameSysActivityFlags, supportIptMaximum, supportIptMinimum;
 #else
 std::uint32_t gameSysActivityFlags, gameSysUnusedColour = 0;
@@ -681,7 +681,7 @@ std::uint32_t gameSysActivityFlags, gameSysUnusedColour = 0;
 
 std::int32_t gameSysActivityCounters[5];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t currentDebugMenuPage, inputSuppressionFrames;
 #else
 std::int32_t gameSysUnusedState = 0, currentDebugMenuPage = 0, inputSuppressionFrames = 0;
@@ -709,7 +709,7 @@ bool ResolveCurrentMapOperand(std::uint32_t index) {
     return index >= sizeof(scenarioMapOperandNames) / sizeof(scenarioMapOperandNames[0]) ? false : scenIsInArea(scenarioMapOperandNames[index]);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name GetMapOperandName(std::uint32_t index) {
     if (index < sizeof(scenarioMapOperandNames) / sizeof(scenarioMapOperandNames[0]))
         return scenarioMapOperandNames[index];
@@ -717,7 +717,7 @@ shen_name GetMapOperandName(std::uint32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetScenarioGlobals() {
     g_scenarioFlagNotificationPending = 0;
@@ -739,7 +739,7 @@ std::byte *LoadSystemTalk() {
     return data;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void scenUpdateFreeTalkRuntime(ScenarioEventContextPrefix *context) {
     if (!context || g_scenarioEventContext != context)
@@ -786,7 +786,7 @@ void scenUpdateFreeTalkRuntime(ScenarioEventContextPrefix *context) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 ScenarioEventContextPrefix *InitializeScenarioEventContext(HLib::Task *task) {
     std::int32_t index;
@@ -832,7 +832,7 @@ ScenarioEventContextPrefix *InitializeScenarioEventContext(HLib::Task *task) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static shen_name ResolveScenarioParticipant(shen_name name, const ScenarioFreeTalkCharacter *record) {
     if (name == shen_name(SHEN_NAME4('E', 'X', 'T', 'R')))
@@ -843,7 +843,7 @@ static shen_name ResolveScenarioParticipant(shen_name name, const ScenarioFreeTa
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CollectScenarioCandidateMesh(MT7Node *node) {
     if (node->mesh) {
@@ -858,7 +858,7 @@ static void CollectScenarioCandidateMesh(MT7Node *node) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t CollectScenarioCandidateMeshIndex(Character *character) {
     MT7Node *const model = character->model;
@@ -880,7 +880,7 @@ void AllocateScenarioFreeTalkCharacter(Character *character) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool AttachScenarioFreeTalkCharacter(Character *character, const std::byte *source) {
     ScenarioFreeTalkCharacter *record = 0;
     bool result = false;
@@ -972,7 +972,7 @@ bool AttachScenarioFreeTalkCharacter(Character *character, const std::byte *sour
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PauseScenarioLineClock(std::int32_t paused) {
     PauseConversationCameraClock(paused);
@@ -1125,7 +1125,7 @@ const std::byte *FindScenarioConversationRoot(ScenarioFreeTalkCharacter *record,
     return result;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool IsScenarioFollowPromptAvailable() {
     if (GetCurrentStep() == 60000)
         return false;
@@ -1139,32 +1139,32 @@ bool IsScenarioFollowPromptAvailable() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::byte *GetScenarioPersistentScratch() {
     return g_scenarioPersistentFlags.scratch;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetNewScenarioTask(const std::byte *scnf) {
     g_scenarioEventContext->freeTalkData = scnf;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline std::uint8_t &ScenarioSpeakerLetter() {
     return reinterpret_cast<std::uint8_t *>(g_scenarioEventContext)[9];
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline std::uint8_t &ScenarioListenerLetter() {
     return reinterpret_cast<std::uint8_t *>(g_scenarioEventContext)[10];
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ScenarioLineContext {
     std::byte retained00[0x14];
     ScenarioDialogueCue *cueCursor;
@@ -1176,43 +1176,43 @@ struct ScenarioLineContext {
 #define SCENARIO_CUE_CURSOR (SCENARIO_LINE_CONTEXT->cueCursor)
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ScntSigned12(std::uint8_t opcode, const std::byte *cursor) {
     const std::uint32_t value = ((opcode & 15U) << 8) | *cursor;
     return static_cast<std::int32_t>((value ^ 0x800U) - 0x800U);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ScntSigned20(std::uint8_t opcode, const std::byte *cursor) {
     const std::uint32_t value = ((opcode & 15U) << 16) | (cursor[0] << 8) | cursor[1];
     return static_cast<std::int32_t>((value ^ 0x80000U) - 0x80000U);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SCENARIO_LINE_CLOCK() (static_cast<float>(g_scenarioLineStartTicks - *reinterpret_cast<std::uint32_t *>(kFrameTimerCounterRegister)) / 12500000.0f)
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SCENARIO_FRAME_TICKS() (*reinterpret_cast<std::uint32_t *>(kFrameTimerCounterRegister))
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 shen_name *GetScenarioCharacterAdmissionNames() {
     return g_scenarioCharacterAdmissionNames;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 Vector3 *srchGetScenarioAdmissionPositions() {
     return g_scenarioAdmissionPositions;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name GetActiveFreeTalkCharacter() {
     if (!g_scenarioEventContext)
         return 0;
@@ -1229,13 +1229,13 @@ shen_name GetActiveFreeTalkCharacter() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t HasActiveFreeTalkCharacter() {
     return GetActiveFreeTalkCharacter() != 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 shen_name GetActiveScenarioCharacter() {
     return g_scenarioEventContext->activeCharacter;
@@ -1251,7 +1251,7 @@ bool IsScenarioCharacterForcedVisible(shen_name character) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool scenIsRecordRunning(shen_name character) {
     if (!g_scenarioEventContext)
@@ -1278,7 +1278,7 @@ std::int32_t ScenarioCharacterIsRyo(shen_name name) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 Character *ResolveScenarioTalkCharacter(shen_name name) {
     if (name == CHARACTER_NAME_AKIR || name == CHARACTER_NAME_RYO) {
@@ -1289,7 +1289,7 @@ Character *ResolveScenarioTalkCharacter(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsSystemScenarioRecordName(shen_name name) {
     std::int32_t result = 0;
     if ((name & 0xffffU) == 0x5953U && (name & 0xff000000U) != 0x5f000000U)
@@ -1298,7 +1298,7 @@ std::int32_t IsSystemScenarioRecordName(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t GetScenarioTalkCompletedCount(const ScenarioFreeTalkCharacter *character) {
     return character ? static_cast<std::int8_t>(character->state->completedCount) : 0;
 }
@@ -1317,7 +1317,7 @@ void SetScenarioTalkCompletedCount(ScenarioFreeTalkCharacter *character, std::in
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t GetScenarioTalkActivationCount(const ScenarioFreeTalkCharacter *character) {
     return character ? static_cast<std::int8_t>(character->state->activationCount) : 0;
 }
@@ -1384,7 +1384,7 @@ void NotifyScenarioMemoFlag(std::int32_t flag) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::int8_t scenarioFlagBitMasks[8] = {1, 2, 4, 8, 16, 32, 64, -128};
 #else
 static const std::int8_t scenarioFlagBitMasks[8] = {1, 2, 4, 8, 16, 32, 64, -128};
@@ -1403,7 +1403,7 @@ void ClearOrSetShenmueFlags(std::int32_t flag, std::int32_t enabled) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t GetScenarioScratchFlag(std::int32_t flag) {
     if (flag <= 1023) {
@@ -1435,7 +1435,7 @@ void SetScenarioByteStat(std::int32_t index, std::int32_t value) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name *GetScenarioFreeTalkParticipants(shen_name name) {
     if (FindScenarioFreeTalkCharacter(name))
         return g_freeTalkVisibleCharacters;
@@ -1443,7 +1443,7 @@ shen_name *GetScenarioFreeTalkParticipants(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t StartScenarioFreeTalkRecord(shen_name name, std::int32_t root) {
     if (!g_scenarioFreeTalkPhase || IsScenarioBusy())
@@ -1477,7 +1477,7 @@ std::int32_t StartScenarioFreeTalkRecord(shen_name name, std::int32_t root) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void StopScenarioFreeTalkRecord() {
     ScenarioEventContextPrefix *const context = g_scenarioEventContext;
@@ -1495,7 +1495,7 @@ void StopScenarioFreeTalkRecord() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitiateCleanupForSceneChara(shen_name name) {
     if (!g_scenarioFreeTalkPhase || (((g_scenarioEventContext->flags >> 15) & 1) && name == g_scenarioEventContext->activeCharacter))
@@ -1545,7 +1545,7 @@ ScenarioFreeTalkCharacter *FindScenarioFreeTalkCharacter(shen_name character) {
     return record;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReadFreeTalk() {
     if (!g_scenarioEventContext)
@@ -1617,7 +1617,7 @@ void ReadFreeTalk() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void scenUpdateFreeTalkInteraction() {
     if (!GetParentMenu() && ((g_scenarioEventContext->flags >> 9) & 1U) == 0)
@@ -1693,7 +1693,7 @@ void scenUpdateFreeTalkInteraction() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void GetScenarioSearchPosition(FreeTalkRegistration *candidate, Vector3 *position) {
     const Matrix4x4 *const matrices = mtwkGetDrawOverrideData(candidate->motionWork);
@@ -1713,7 +1713,7 @@ static void GetScenarioSearchPosition(FreeTalkRegistration *candidate, Vector3 *
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 FreeTalkRegistration *srchEvaluateSearchTarget() {
     Vector3 position, selectedPosition;
@@ -1814,7 +1814,7 @@ FreeTalkRegistration *srchEvaluateSearchTarget() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void scenActivateCandidate(FreeTalkRegistration *candidate) {
     ScenarioFreeTalkCharacter *const record = candidate->component;
@@ -1874,7 +1874,7 @@ void scenActivateCandidate(FreeTalkRegistration *candidate) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t EvaluateScenarioSearchGeometry(FreeTalkRegistration *candidate, Vector3 *position, float *distance, std::int16_t *yaw) {
     ScenarioFreeTalkCharacter *record;
@@ -1976,7 +1976,7 @@ static std::int32_t EvaluateScenarioSearchGeometry(FreeTalkRegistration *candida
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InterruptScenarioFreeTalkRecord(ScenarioFreeTalkCharacter *record) {
     if (!record)
@@ -2001,7 +2001,7 @@ void InterruptScenarioFreeTalkRecord(ScenarioFreeTalkCharacter *record) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t ReadScenarioActionQueue(std::uint32_t index, void *output, std::int32_t size) {
     ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
@@ -2028,7 +2028,7 @@ std::uint32_t ReadScenarioActionQueue(std::uint32_t index, void *output, std::in
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsScenarioActiveRecordIdle() {
     const ScenarioFreeTalkCharacter *const record = FindScenarioFreeTalkCharacter(g_scenarioEventContext->activeCharacter);
@@ -2045,7 +2045,7 @@ bool IsScenarioActiveRecordIdle() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void QueueScenarioRecordAction(ScenarioFreeTalkCharacter *record, std::int32_t action) {
     switch (action) {
@@ -2061,7 +2061,7 @@ static void QueueScenarioRecordAction(ScenarioFreeTalkCharacter *record, std::in
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void QueueScenarioCharacterAction(shen_name name, std::int32_t action) {
     std::uint32_t data[2] = {name, static_cast<std::uint32_t>(action)};
@@ -2069,14 +2069,14 @@ static void QueueScenarioCharacterAction(shen_name name, std::int32_t action) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ReadScenarioAcknowledgement(void *output) {
     return ReadScenarioActionQueue(g_scenarioAcknowledgementQueueId, output, 8);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FlushScenarioActionQueue() {
     std::uint32_t action[2];
@@ -2085,7 +2085,7 @@ void FlushScenarioActionQueue() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetScenarioFlagBanks(std::uint8_t **banks) {
     banks[0] = g_scenarioPersistentFlags.story;
     banks[1] = g_scenarioPersistentFlags.internal;
@@ -2093,7 +2093,7 @@ void GetScenarioFlagBanks(std::uint8_t **banks) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t AllocateScenarioActionQueue(shen_name name) {
     std::int32_t index;
@@ -2113,7 +2113,7 @@ std::int32_t AllocateScenarioActionQueue(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t WriteScenarioActionQueue(std::uint32_t index, const void *input, std::uint32_t size) {
     ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
@@ -2135,7 +2135,7 @@ std::int32_t WriteScenarioActionQueue(std::uint32_t index, const void *input, st
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool CanActivateScenarioCandidate() {
     if (!IsPlayerControlEnabled() && ((g_scenarioEventContext->flags >> 9U) & 1U) == 0)
@@ -2152,7 +2152,7 @@ bool CanActivateScenarioCandidate() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EndScenarioConversation() {
     ScenarioFreeTalkCharacter *const record = FindScenarioFreeTalkCharacter(g_scenarioEventContext->activeCharacter);
     if (record)
@@ -2181,7 +2181,7 @@ void EndScenarioConversation() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t IsScenarioBusy() {
     const bool conversationActive = cvsGet();
@@ -2199,13 +2199,13 @@ std::int32_t HasScenarioCharacterControl() {
     return active;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t HasScenarioRequestedRoot() {
     return (g_scenarioEventContext->flags >> 17U) & 1U;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsScenarioBusyForMainIcon() {
     if (cvsGet())
@@ -2218,14 +2218,14 @@ bool IsScenarioBusyForMainIcon() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t scenCheckActiveRecordBusy() {
     return g_scenarioEventContext->activeCharacter && ((g_scenarioEventContext->flags >> 8) & 1U) == 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void scenUpdateCandidateAvailability() {
     const ScenarioFreeTalkCharacter *record = FindScenarioFreeTalkCharacter(g_scenarioEventContext->activeCharacter);
@@ -2308,7 +2308,7 @@ done:
     record->commandState = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsActiveScenarioCameraSuppressed() {
     const ScenarioFreeTalkCharacter *const record = FindScenarioFreeTalkCharacter(g_scenarioEventContext->activeCharacter);
@@ -2345,7 +2345,7 @@ void ResetScntBranchHistory() {
     scntBranchRepeated = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SCENARIO_EVENT_STORAGE (reinterpret_cast<ScenarioEventContextStorage *>(g_scenarioEventContext))
 struct ScenarioCameraPacketHeader {
     std::uint8_t kind, retained01, retained02, flags;
@@ -2687,7 +2687,7 @@ done:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 #define SCENARIO_LIP_CLIP (reinterpret_cast<ScenarioEventContextStorage *>(g_scenarioEventContext)->lipClip)
 static void BuildScenarioLipSequence(ScenarioFreeTalkCharacter *record) {
@@ -2714,7 +2714,7 @@ static void BuildScenarioLipSequence(ScenarioFreeTalkCharacter *record) {
 #undef SCENARIO_LIP_CLIP
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static const std::byte *FindScenarioIndexedSection(ScenarioFreeTalkCharacter *record, std::int32_t section) {
     const std::byte *cursor = record->script;
@@ -2735,7 +2735,7 @@ static const std::byte *FindScenarioIndexedSection(ScenarioFreeTalkCharacter *re
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t CanSkipScenarioLine(ScenarioFreeTalkCharacter *record) {
     if (record) {
         if (!GetS2DialogueMode())
@@ -2749,7 +2749,7 @@ static std::int32_t CanSkipScenarioLine(ScenarioFreeTalkCharacter *record) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static const std::byte *AdvanceScenarioCharacterCommandStream(ScenarioFreeTalkCharacter *record) {
     const std::byte *cursor;
@@ -2826,7 +2826,7 @@ static const std::byte *AdvanceScenarioCharacterCommandStream(ScenarioFreeTalkCh
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static inline void ResolveScenarioChoiceSlot(ScenarioFreeTalkCharacter *record) {
     std::int32_t slot;
@@ -2842,7 +2842,7 @@ static inline void ResolveScenarioChoiceSlot(ScenarioFreeTalkCharacter *record) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RecordScenarioTalkOccurrence(std::uint16_t index) {
     if (index < 512) {
@@ -2854,7 +2854,7 @@ void RecordScenarioTalkOccurrence(std::uint16_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BeginScenarioTalkSession(ScenarioFreeTalkCharacter *record) {
     std::int32_t index;
@@ -2920,7 +2920,7 @@ void BeginScenarioTalkSession(ScenarioFreeTalkCharacter *record) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EndScenarioTalkSession(ScenarioFreeTalkCharacter *record) {
     record->flags &= ~0x1000U;
@@ -2933,7 +2933,7 @@ void EndScenarioTalkSession(ScenarioFreeTalkCharacter *record) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline void SetScenarioCurrentSpeaker(ScenarioFreeTalkCharacter *record) {
     record->state->flags &= 0xfffbU;
     if (SCENARIO_LINE_CONTEXT->lastSpeaker != record->name) {
@@ -2945,7 +2945,7 @@ static inline void SetScenarioCurrentSpeaker(ScenarioFreeTalkCharacter *record) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void scenExecuteRecord(ScenarioFreeTalkCharacter *record) {
     if (!record)
@@ -3415,7 +3415,7 @@ stepProgram:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static const std::byte *scenSelectRecordStart(ScenarioFreeTalkCharacter *record) {
     const std::byte *cursor;
@@ -3478,7 +3478,7 @@ static const std::byte *scenSelectRecordStart(ScenarioFreeTalkCharacter *record)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static const std::byte *scenExecuteLineOpcode(ScenarioFreeTalkCharacter *record, const std::byte *cursor, std::int32_t *stop) {
     const std::uint8_t opcode = *cursor++;
@@ -3575,7 +3575,7 @@ static const std::byte *scenExecuteLineOpcode(ScenarioFreeTalkCharacter *record,
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static const std::byte *scenExecuteStreamOpcode(ScenarioFreeTalkCharacter *record, const std::byte *cursor, std::int32_t *stop) {
     std::uint8_t opcode;
@@ -3663,7 +3663,7 @@ static const std::byte *scenExecuteStreamOpcode(ScenarioFreeTalkCharacter *recor
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static bool SettleScenarioPromptFacing(ScenarioFreeTalkCharacter *record) {
     bool requested = false;
@@ -3689,7 +3689,7 @@ static bool SettleScenarioPromptFacing(ScenarioFreeTalkCharacter *record) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::byte *scenExecuteChoiceOpcode(ScenarioFreeTalkCharacter *record, const std::byte *cursor, std::int32_t *stop) {
     std::int16_t choices[4];
     std::int32_t i, j, k, n;
@@ -3984,7 +3984,7 @@ const std::byte *scenExecuteChoiceOpcode(ScenarioFreeTalkCharacter *record, cons
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkCharacter *record, const std::byte *cursor, std::int32_t *stop) {
     const std::uint32_t opcode = *cursor++;
@@ -4148,7 +4148,7 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkCharacter *record, con
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void scenStepRecordProgram(ScenarioFreeTalkCharacter *record) {
     if (!record->name) {
@@ -4212,7 +4212,7 @@ static void scenStepRecordProgram(ScenarioFreeTalkCharacter *record) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CaptureScenarioTalkInput() {
     if (!(g_scenarioEventContext->flags & 0x82U) && !IsSystemScenarioRecordName(g_scenarioEventContext->activeCharacter)) {
@@ -4222,7 +4222,7 @@ void CaptureScenarioTalkInput() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReleaseScenarioTalkInput() {
     ScenarioEventContextPrefix *const context = g_scenarioEventContext;
@@ -4233,19 +4233,19 @@ void ReleaseScenarioTalkInput() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsScenarioTalkInputCaptured() {
     return (g_scenarioEventContext->flags >> 1U) & 1U;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RequestScenarioCameraRestore() {
     g_scenarioEventContext->flags |= 0x4000U;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ConsumeScenarioCameraRestoreRequest() {
     if ((g_scenarioEventContext->flags >> 14U) & 1U) {
@@ -4256,7 +4256,7 @@ void ConsumeScenarioCameraRestoreRequest() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BeginScenarioPlayerPresentation() {
     if (IsPlayerControlEnabled()) {
         g_scenarioEventContext->flags |= 0x2000U;
@@ -4265,7 +4265,7 @@ void BeginScenarioPlayerPresentation() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EndScenarioPlayerPresentation(std::int32_t mode) {
     if ((g_scenarioEventContext->flags >> 13U) & 1U) {
@@ -4276,7 +4276,7 @@ void EndScenarioPlayerPresentation(std::int32_t mode) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyScenarioFaceLook(std::uint32_t command) {
     static const std::uint32_t expressions[16] = {0, 3, 1, 5, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -4290,14 +4290,14 @@ void ApplyScenarioFaceLook(std::uint32_t command) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ScenarioGameplayFlagFields {
     std::uint32_t value0 : 8, value1 : 6, value2 : 4, value3 : 2, value4 : 3, value5 : 2, value6 : 5, value7 : 2;
 };
 #define SCENARIO_GAMEPLAY_FIELDS (reinterpret_cast<ScenarioGameplayFlagFields *>(g_scenarioGameplayFlags))
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t MapScenarioOperandKind(std::int32_t index) {
     switch (index) {
     case 6:
@@ -4310,7 +4310,7 @@ static std::int32_t MapScenarioOperandKind(std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateGameplayFlags() {
     if (!scenarioGameplayFlagsInitialized) {
         for (std::int32_t index = 0; index < 10; ++index) {
@@ -4363,7 +4363,7 @@ void UpdateGameplayFlags() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RestoreScenarioGameplayFlags(const ScenarioGameplayFlagState *state) {
     g_scenarioGameplayFlags[0] = state->words[0];
     g_scenarioGameplayFlags[1] = state->words[1];
@@ -4381,7 +4381,7 @@ void RestoreScenarioGameplayFlags(const ScenarioGameplayFlagState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SaveScenarioGameplayFlags(ScenarioGameplayFlagState *state) {
     state->words[0] = g_scenarioGameplayFlags[0];
     state->words[1] = g_scenarioGameplayFlags[1];
@@ -4553,7 +4553,7 @@ std::int32_t ResolveScenarioValue(const ScenarioValueOperand &operand) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TickScenarioFlagNotification() {
     if (UpdateSelectorMemo()) {
@@ -4936,7 +4936,7 @@ done:
     return cursor;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name GetScenarioActorTypeName(std::int32_t isNpc, std::int32_t enabled) {
     if (enabled) {
         if (isNpc)
@@ -4947,7 +4947,7 @@ shen_name GetScenarioActorTypeName(std::int32_t isNpc, std::int32_t enabled) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetScenarioInteractionState() {
     g_scenarioLookActive = g_scenarioRyoAcknowledged = g_scenarioActionSystemRecord = 0;
@@ -4968,7 +4968,7 @@ void ResetScenarioInteractionState() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void scenProcessCharacterActionQueue() {
     Character *first, *second;
     std::int32_t action;
@@ -5181,7 +5181,7 @@ void scenProcessCharacterActionQueue() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void FaceScenarioParticipantsForward() {
     for (std::int32_t index = 0; index < 8; ++index) {
@@ -5202,7 +5202,7 @@ static void FaceScenarioParticipantsForward() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void QueueScenarioParticipantTurn(std::int32_t action) {
     const std::int32_t pair = action - 41;
@@ -5224,7 +5224,7 @@ static void QueueScenarioParticipantTurn(std::int32_t action) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void TurnScenarioParticipantToward(std::int32_t slot) {
     if (!g_scenarioSpeakerPoseCaptured) {
@@ -5250,7 +5250,7 @@ static void TurnScenarioParticipantToward(std::int32_t slot) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void ReleaseScenarioParticipantLook(shen_name name) {
     if (g_scenarioLookActive)
@@ -5271,7 +5271,7 @@ static void ReleaseScenarioParticipantLook(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void LookAtScenarioRecordLocation(std::int32_t action, shen_name name) {
     if (!ResolveScenarioTalkCharacter(name))
@@ -5297,7 +5297,7 @@ static void LookAtScenarioRecordLocation(std::int32_t action, shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void SetScenarioPlayerLookTarget(const Vector3 *position, std::int32_t mode) {
     if (mode)
@@ -5309,7 +5309,7 @@ static void SetScenarioPlayerLookTarget(const Vector3 *position, std::int32_t mo
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void RequestScenarioLookRelease(shen_name name) {
     g_scenarioLookReleaseRequested = 1;
@@ -5318,7 +5318,7 @@ static void RequestScenarioLookRelease(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void EndScenarioLocationLook(std::int32_t action, shen_name name) {
     if (action >= 0) {
@@ -5329,7 +5329,7 @@ static void EndScenarioLocationLook(std::int32_t action, shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void SetScenarioLetterMotion(shen_name name, std::int8_t show) {
     if (name) {
@@ -5341,7 +5341,7 @@ static void SetScenarioLetterMotion(shen_name name, std::int8_t show) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void AcknowledgeScenarioPlayer(shen_name name) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -5354,7 +5354,7 @@ static void AcknowledgeScenarioPlayer(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void AcknowledgeScenarioLookRelease(shen_name name) {
     if (g_scenarioLookActive)
@@ -5364,7 +5364,7 @@ static void AcknowledgeScenarioLookRelease(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static inline void HideScenarioLetter() {
     Character *const letter = ResolveScenarioTalkCharacter(shen_name(SHEN_NAME4('L', 'E', 'T', 'R')));
@@ -5379,7 +5379,7 @@ static inline void HideScenarioLetter() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void RetireScenarioTalkParticipants(shen_name name) {
     Vector3 zero;
@@ -5421,7 +5421,7 @@ static void RetireScenarioTalkParticipants(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void SelectScenarioActionParticipants(shen_name name) {
     const shen_name *const participants = GetScenarioFreeTalkParticipants(name);
@@ -5432,7 +5432,7 @@ static void SelectScenarioActionParticipants(shen_name name) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void TurnScenarioPlayerTowardSpeaker() {
     Character *character;
@@ -5496,7 +5496,7 @@ static void TurnScenarioPlayerTowardSpeaker() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void CaptureScenarioSpeakerPose() {
     Character *character;
@@ -5529,7 +5529,7 @@ static void CaptureScenarioSpeakerPose() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SolveRyoMatrix(shen_name origin, shen_name other, std::int32_t yaw, Vector3 *result) {
     Character *const first = ResolveScenarioTalkCharacter(origin);
@@ -5556,7 +5556,7 @@ void SolveRyoMatrix(shen_name origin, shen_name other, std::int32_t yaw, Vector3
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SpawnMoveScroll() {
     std::int32_t index;
@@ -5627,7 +5627,7 @@ void SpawnMoveScroll() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetModePerCurrentStep(std::int32_t mode) {
     Character *const character = ResolveScenarioTalkCharacter(SHEN_NAME(LETR));
@@ -5705,26 +5705,26 @@ shen_name scenFindMapRegionName(const Vector3 *position) {
     return name;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetVertexBufferUsedBytes() {
     return dc::sdk::g_systemMetrics[5];
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 __attribute__((noipa)) std::uint32_t DebugMenuInputBlockedNullsub() {
     return 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AssignEventPrintPointers();
 #endif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PrintSupportMetric(const char *format, ...) {
     char text[256];
@@ -5741,7 +5741,7 @@ void PrintSupportMetric(const char *format, ...) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DisplaySystemMetrics() {
     supportIptCurrent = dc::sdk::g_systemMetrics[5];
@@ -5803,7 +5803,7 @@ void DisplaySystemMetrics() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DisplayFlagInfo(SupportTaskData *data) {
     if (g_inputBuffer[3].pressedPriority & 0x200U) {
@@ -5854,7 +5854,7 @@ void DisplayFlagInfo(SupportTaskData *data) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SUPP_Callback(void *parameter) {
     SetDebugScreenTextPosition(2, 2);
@@ -5965,13 +5965,13 @@ void ClearGameSysActivityFlag(std::int32_t index) {
     gameSysActivityFlags &= ~(1 << index);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetGameSysActivityFlag(std::int32_t index) {
     return gameSysActivityFlags & (1 << index);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetScenarioTransientState(std::int32_t index, std::int32_t value) {
     if (index < 5)
@@ -5979,7 +5979,7 @@ void SetScenarioTransientState(std::int32_t index, std::int32_t value) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetScenarioTransientState(std::int32_t index) {
     if (index < 5)
@@ -6058,7 +6058,7 @@ void SuppressGameInput(std::int32_t frames) {
 void GameSys(void *) {
     g_currentShenmue1SaveAreaId = GetShenmue1SaveAreaId(g_currentMap);
     ResetGameSysActivity();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     supportIptMaximum = 0;
     supportIptMinimum = 0x00ffffffU;
 #else
@@ -6085,10 +6085,18 @@ void GameSys(void *) {
 void GameSysNullsub() {
 }
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void AssignMapFacialClip(shen_name speaker, const std::int16_t *clip) {
+    const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    scenAssignFacialClip(control->scenarioTask, clip, speaker);
+}
+
+#endif
+
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_IsScenarioBusy() {
     return shenmue::s2::IsScenarioBusy();
 }

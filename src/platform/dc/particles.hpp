@@ -2,7 +2,7 @@
 
 #include "platform/dc/sdk.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 namespace shenmue { namespace dc { namespace sdk {
 
@@ -52,7 +52,7 @@ void DrawParticleChannels() asm("_shenmue_dc_draw_particle_channels");
 void ReleaseParticleChannelTextures();
 void ReleaseParticleChannelTexture(std::int32_t index);
 void SetParticleChannelActive(std::int32_t index, std::int32_t active);
-#if !SHENMUE_IS_S2 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !SHENMUE_IS_S2 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetParticleChannelSpawnProbability(std::int32_t index, float probability);
 #endif
 

@@ -51,7 +51,7 @@ void InitializeImageModule(ImageModuleComponent *image);
 void ReleaseImageModule(ImageModuleComponent *image);
 MT7Node *ResolveImageModule(ImageModuleComponent *image, Vector3 *position);
 void ConfigureImageModuleVariants(ImageModuleComponent *image, HLib::Task *manager, const char *name, std::int32_t count);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ConfigureImageModuleAnimation(ImageModuleComponent *image, std::int32_t mode, std::int32_t remaining, float step);
 #else
 void ConfigureImageModuleAnimation(ImageModuleComponent *image, std::uint8_t mode, std::int32_t remaining, float step);
@@ -65,7 +65,7 @@ void SetCharacterImageSelection(Character *character, std::int32_t selected);
 void SetCharacterImageEntrySelection(Character *character, std::int32_t entry, std::uint32_t child, std::int32_t group, std::uint32_t variant);
 void ImageModuleUpdate(Character *character, void *data);
 void ImageModuleCleanup(Character *character, void *data);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AssignImageModuleParameters(Character *character, std::int32_t mode, std::int32_t remaining, float step, std::uint32_t group);
 #else
 void AssignImageModuleParameters(Character *character, std::uint8_t mode, std::int32_t remaining, float step, std::uint32_t group);

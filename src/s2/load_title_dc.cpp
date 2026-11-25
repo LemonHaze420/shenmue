@@ -7,7 +7,7 @@
 #include "s2/file_loader_dc.hpp"
 #include "s2/texture_dc.hpp"
 #include "platform/dc/sdk.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_control_dc.hpp"
 #include "s2/sound_program.hpp"
 #include "s2/window.hpp"
@@ -62,7 +62,7 @@ void InitST_TitleFunc() {
     g_loadFloorTexture = -1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void TimeLimit_Callback(void *);
 
 void CreateTimeLimitTask(std::uint16_t hidden) {
@@ -122,7 +122,7 @@ std::int32_t GetTimeLimitSeconds() {
     return g_timeLimitSeconds;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int16_t timeLimitAlarmIntervals[11] = {2, 2, 5, 7, 9, 13, 17, 21, 24, 27, 30};
 
 void DrawTimeLimit(void *);
@@ -363,7 +363,7 @@ void DrawEndingText(void *) {
     DrawLegacySpritePacket(packet, g_endingTextTextures[2], 6.0f);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void scenSetTaskFlags(std::int32_t mode) {
 #else
 void scenSetTaskFlags(std::uint8_t mode) {
@@ -423,7 +423,7 @@ void DrawLoadingSpinner(std::int32_t x, std::int32_t y) {
     SetLegacySpriteSlotScale(1.0f, 1.0f);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_loadingDotInterval = 14;
 
 void DrawLoadingDots(std::int32_t x, std::int32_t y) {

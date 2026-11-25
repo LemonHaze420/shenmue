@@ -71,7 +71,7 @@ void ReadMotionKeyBlock(MotionRigChannel &channel) {
         else
             second.timeSeconds = g_motionMaximumAnimTime;
     }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     channel.current.value = DecodeMotnFloat(first.value) * channel.scale + channel.bias;
 #else
     float value = DecodeMotnFloat(first.value);
@@ -85,7 +85,7 @@ void ReadMotionKeyBlock(MotionRigChannel &channel) {
     else
         channel.current.tangentOut = channel.current.tangentIn;
     channel.current.timeSeconds = first.timeSeconds;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     channel.next.value = DecodeMotnFloat(second.value) * channel.scale + channel.bias;
 #else
     value = DecodeMotnFloat(second.value);

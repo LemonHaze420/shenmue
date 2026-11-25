@@ -4,7 +4,7 @@
 
 #include "platform/dc/am2_vector.hpp"
 #include <cmath>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/matrix.hpp"
 #include "s2/character_dc.hpp"
 #include "s2/event_matrix_dc.hpp"
@@ -65,7 +65,7 @@ std::int32_t ResolveCharacterControlPair(CharacterControlModel *first, Character
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // Sphere chain and count at offsets 0x74 and 0x78.
 struct CharacterControlSphereChain {
     Vector4 *spheres;

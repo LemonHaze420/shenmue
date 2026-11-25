@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #include "s2/motion_work_dc.hpp"
 #include "s2/character_dc.hpp"
@@ -76,20 +76,20 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 using namespace npc_package_detail;
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int64_t npcGetCurrentTimeSimState();
 std::int64_t ResetCurrentTimeSimState();
 std::int64_t npcSetCurrentTimeSimStateEnabled();
 std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute);
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace npc_package_detail {
 
@@ -338,7 +338,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 extern DateTime npcCurrentDateTime;
 
@@ -390,7 +390,7 @@ std::int32_t NpcRouteConditionsChanged(NpcRouteLiveEntry *entry);
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcGetCurrentTimeSimState();
 std::int32_t npcSetCurrentTimeSimStateEnabled();
 std::int32_t ResetCurrentTimeSimState();
@@ -420,7 +420,7 @@ std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute);
 void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int32_t skipAuthoredSeed);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t npcGetCurrentTimeSimState() {
@@ -435,7 +435,7 @@ std::int64_t npcGetCurrentTimeSimState() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t npcSetCurrentTimeSimStateEnabled() {
@@ -452,7 +452,7 @@ std::int64_t npcSetCurrentTimeSimStateEnabled() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t npcResetDateTimeIfNeeded() {
     const std::int64_t result = npcGetCurrentTimeSimState();
@@ -464,7 +464,7 @@ std::int64_t npcResetDateTimeIfNeeded() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ResetCurrentTimeSimState() {
@@ -481,7 +481,7 @@ std::int64_t ResetCurrentTimeSimState() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void TickNpcTimedMotion(NpcRouteLiveEntry *entry) {
@@ -494,7 +494,7 @@ void TickNpcTimedMotion(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
@@ -542,7 +542,7 @@ std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int32_t skipAuthoredSeed) {
     ActivateNpcAreaRoutes(false);
@@ -569,7 +569,7 @@ void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void TickNpcRouteSlices(std::int32_t currentTime) {
@@ -589,7 +589,7 @@ void TickNpcRouteSlices(std::int32_t currentTime) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void InterpretNpcScheduleEntry(NpcRouteLiveEntry *entry, std::int32_t currentTime) {
     Vector3 probe;
@@ -822,7 +822,7 @@ void InterpretNpcScheduleEntry(NpcRouteLiveEntry *entry, std::int32_t currentTim
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position) {
@@ -840,7 +840,7 @@ void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name nam
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void RankNpcStreamEntry(NpcRouteLiveEntry *entry) {
@@ -917,7 +917,7 @@ void RankNpcStreamEntry(NpcRouteLiveEntry *entry) {
 } // namespace s2
 } // namespace shenmue
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
     shenmue::s2::npcAdvanceTime(hour, minute);
 }

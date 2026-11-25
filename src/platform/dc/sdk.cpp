@@ -206,7 +206,7 @@ void SeedRandom(std::uint32_t seed) {
     g_randomSeed = seed;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float TruncateFloat(float value) {
     const float magnitude = __builtin_fabsf(value);
     if (magnitude < 8388608.0f) {

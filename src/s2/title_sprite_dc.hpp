@@ -71,7 +71,7 @@ void InitializeTitlePacket(LegacySpritePacket &packet);
 void DrawTitleLogo(std::int32_t texture, float alpha);
 void DrawTitlePressStart(LegacySpritePacket packet, std::int32_t frame);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct TitleTextureRectangle {
     std::int16_t left, top, right, bottom;
 };

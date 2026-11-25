@@ -18,7 +18,7 @@ const std::uint8_t kLoadTitleMonthSprites[12] = {29, 17, 23, 19, 26, 13, 27, 25,
 
 void DrawLoadingLabel(std::uint32_t colour) {
     LegacySpritePacket packet;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     INIT_LEGACY_SPRITE_PACKET(packet);
     packet.uv[0] = 0.0f;
     packet.uv[1] = 0.875f;
@@ -40,7 +40,7 @@ void DrawLoadingLabel(std::uint32_t colour) {
     DrawLegacySpritePacket(packet, static_cast<std::uint32_t>(g_loadScreenSpriteTexture), 6.0f);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void NormalizeCalendarDateTime() {
     DateTime increment;
     increment.year = 0;
@@ -57,7 +57,7 @@ void DrawFloorTitle(std::int16_t centreY) {
     if (g_loadFloorTexture < 0)
         return;
     LegacySpritePacket packet;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     INIT_LEGACY_SPRITE_PACKET(packet);
     packet.colour = (static_cast<std::uint32_t>(g_loadTitleAlpha) << 24) | 0xffffffU;
     packet.quad.flags |= 0x400;
@@ -78,7 +78,7 @@ void DrawFloorTitle(std::int16_t centreY) {
     DrawLegacySpritePacket(packet, static_cast<std::uint32_t>(g_loadFloorTexture), 6.0f);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_loadFloorNumberX = 320.0f, g_loadFloorNumberY = 238.0f;
 
 void DrawFloorNumber(std::int32_t value, std::int32_t special) {

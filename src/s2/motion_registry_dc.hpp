@@ -45,7 +45,7 @@ struct RetiredMotionRange {
 SHENMUE_MOTION_REGISTRY_LAYOUT(sizeof(RetiredMotionRange) == 4);
 extern RetiredMotionRange g_retiredMotionRanges[32];
 std::uint32_t RegisterMotionBank(void *data);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t ReleaseMotionBank(std::uint32_t handle);
 #else
 void ReleaseMotionBank(std::uint32_t handle);
@@ -92,7 +92,7 @@ SHENMUE_MOTION_REGISTRY_CONSTANT std::size_t kMotionPropBankCount = 6;
 SHENMUE_MOTION_REGISTRY_CONSTANT std::size_t kMotionPropBankCount = 4;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t *AllocateMotionFileData(std::uint32_t size);
 std::int32_t MOTN_GetFootstepAttributes(std::uint16_t animationId, std::uint8_t *attributes);
 void ResetMotionBankEntry(MotionRegistryEntry *entry);
@@ -169,7 +169,7 @@ extern MotionPropBank g_motionPropBanks[kMotionPropBankCount];
 extern std::int8_t g_motionBankCount;
 extern std::uint32_t g_registeredMotionBytes;
 extern std::byte *g_fallbackMotionTable;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int32_t *g_fallbackMotionSection0, *g_fallbackMotionSection1, *g_fallbackMotionSection2, *g_fallbackMotionSection3;
 #else
 extern std::int32_t *g_fallbackMotionSections[4];
@@ -182,18 +182,18 @@ const MotnAnimationHeader *MOTN_GetDataForAnimId(std::uint16_t animationId);
 const std::byte *MOTN_GetMarkerData(std::uint16_t animationId);
 const std::byte *MOTN_FindAnimationExtraRecord(std::uint16_t animationId, std::uint32_t tag);
 std::uint32_t MOTN_GetLeadFootFlag(std::uint16_t animationId);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern const std::uint8_t motionCommandWidths[];
 #else
 SHENMUE_MOTION_REGISTRY_CONSTANT std::uint8_t motionCommandWidths[] SHENMUE_MOTION_REGISTRY_INITIALIZER{12, 4, 8, 16, 20, 12, 8, 4, 0, 16, 8, 12, 4, 4, 16, 8,
     4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 4, 8, 8, 8, 0, 4, 4, 16, 8, 8, 8, 8, 4, 4, 4, 8, 8, 4, 8, 8, 4, 4, 8, 8, 8, 4, 8, 8, 8, 16, 12, 28, 4, 8, 8, 4, 8, 8, 8,
     8, 8, 12, 8, 12, 8, 8, 4, 8, 8, 4, 4, 4, 4, 16, 8, 12, 8, 4, 8, 4, 2, 0};
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern const std::uint8_t motionFrameCommandWidths[];
 const std::byte *MOTN_FindFrameEvent(std::int8_t eventType, std::uint16_t animationId, float firstFrame, float lastFrame, std::int32_t occurrence);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateAndLoadMOTFiles();
 #else
 std::byte *AllocateAndLoadMOTFiles();

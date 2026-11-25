@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/player_movement_dc.hpp"
 #include "s2/player_control_state_dc.hpp"
@@ -22,7 +22,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PlayerPersistentState g_pendingPlayerPersistentState = {};
 #endif
 
@@ -54,7 +54,7 @@ void SetCharacterControlModelFlags(Character *character, std::uint32_t flags) {
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SynchronizePlayerModelState(Character *character, PlayerModelState &state);
 void plymUpdateRyoBag(PlayerModelState &state);
 void plymUpdateHeldState(PlayerModelState &state);
@@ -71,11 +71,10 @@ Vector3 publishedPlayerSearchLocation{};
 std::int16_t movingFrames{}, stationaryFrames{}, turningFrames{};
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::uint32_t restore = state.padFlags & 0x8000U;
 #endif
 
@@ -85,7 +84,7 @@ void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
 #endif
     state.padFlags &= ~0x8000U;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!(state.flags & 0x4000000U))
 #endif
 
@@ -94,7 +93,7 @@ void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
 #endif
         return;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int32_t cameraState = camCtrlGetState();
     float alpha = state.character->alpha;
     if (cameraState == 22 && restore)
@@ -116,7 +115,7 @@ void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
 #endif
         }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         if (restore)
             alpha = state.savedDisplayAlpha;
     }
@@ -132,7 +131,7 @@ void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
 void InitializePlayerModelState(PlayerModelState &state) {
     std::memset(static_cast<void *>(&state), 0, sizeof(state));
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t sample = 0;
     std::int32_t lastSample = 2;
     do {
@@ -160,7 +159,7 @@ void InitializePlayerModelState(PlayerModelState &state) {
 #endif
     state.secondaryInteractionDistanceLimit = 20.0f;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.specialModeTargetCharacter = 0;
     state.specialModeState = 0;
     state.specialModeFlags = 0;
@@ -190,7 +189,7 @@ void InitializePlayerModelState(PlayerModelState &state) {
 #endif
     state.placementQueryHandle = -1;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PlayerPlacementNode *const placementRoot = &state.placementRoot;
     std::size_t placementSize = sizeof(PlayerPlacementNode);
     void *(*clearPlacement)(void *, int, std::size_t) = std::memset;
@@ -198,9 +197,8 @@ void InitializePlayerModelState(PlayerModelState &state) {
     clearPlacement(&state.placementScratch, 0, placementSize);
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PlayerCameraInputNullsub(PlayerModelState &) {
 }
@@ -221,10 +219,9 @@ Character *authFindChara(shen_name name) {
 
 namespace player_detail {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 void PlayerModelUpdate(Character *character, void *payload) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PlayerModelState *const state = static_cast<PlayerModelState *>(payload);
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
     if ((runtime->flags & 0x8000U) == 0)
@@ -239,7 +236,7 @@ void PlayerModelUpdate(Character *character, void *payload) {
 #endif
         return;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (++state->frameCount == 0)
         state->frameCount = 1;
     SynchronizePlayerModelState(character, *state);
@@ -296,7 +293,6 @@ sampleInput:
     }
 #endif
 }
-#endif
 
 } // namespace player_detail
 
@@ -334,7 +330,6 @@ void plymSetDefaultFlags() {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
  // namespace player_detail
 
 // @verified - d
@@ -343,7 +338,7 @@ void plymInitializeRyoBagState(PlayerModelState &state) {
     state.activeHelperMode = 0;
     state.pendingHelperMode = -1;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.helperCharacter = 0;
 #endif
 
@@ -351,9 +346,8 @@ void plymInitializeRyoBagState(PlayerModelState &state) {
     state.helperCharacter = nullptr;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializePlayerSceneContexts(PlayerModelState &state) {
     g_playerRuntimePointer->currentDay = g_currentDateTime.day;

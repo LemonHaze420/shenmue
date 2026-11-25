@@ -150,7 +150,7 @@ void FreeTalkCharacterCleanup(Character *character, void *payload);
 void AllocateScenarioFreeTalkCharacter(Character *character);
 bool IsScenarioCharacterForcedVisible(shen_name character);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SHENMUE_SCNT_CONSTANT std::size_t kFreeTalkRegistrationCount = 64;
 void InitializeFreeTalkRegistrations();
 void PauseScenarioLineClock(std::int32_t paused);

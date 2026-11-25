@@ -54,7 +54,7 @@ Vector4 UnpackGeometryColour(const std::uint32_t *source) {
     return colour;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t PackGeometryColour(const Vector4 &colour) {
     const std::uint8_t red = colour.x < 0.0f ? 0 : colour.x > 1.0f ? 255 : static_cast<std::uint8_t>(colour.x * 255.0f);
     const std::uint8_t green = colour.y < 0.0f ? 0 : colour.y > 1.0f ? 255 : static_cast<std::uint8_t>(colour.y * 255.0f);
@@ -97,7 +97,7 @@ float GeometryLightDistance(const Vector3 &position, const Vector3 &light, Vecto
 Vector2 g_fftForwardTwiddles[32];
 Vector2 g_fftBackwardTwiddles[32];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetMT7GeometryLightMesh(void *meshData) {
     std::int32_t *const mesh = static_cast<std::int32_t *>(meshData);
     std::int32_t *command;

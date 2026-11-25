@@ -5,7 +5,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "common/types.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "common/math.hpp"
 #endif
@@ -25,7 +25,7 @@ extern AudioPartition *g_magicRoomArchive;
 extern _adx_fs *g_magicRoomFile;
 extern std::uint8_t g_magicRoomAreaJumpBlocked;
 void InitMagicRoomPtrs();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 typedef std::int32_t MagicRoomInteger;
 typedef std::uint32_t MagicRoomUnsigned;

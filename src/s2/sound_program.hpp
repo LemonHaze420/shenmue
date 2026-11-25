@@ -11,7 +11,7 @@ namespace s2 {
 
 struct Character;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
 std::int32_t Loop3DSoundEffect(std::uint32_t flags);
 std::int32_t PlayFootstepForNode(std::uint32_t flags, Character *character);

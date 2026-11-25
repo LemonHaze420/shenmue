@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/player_movement_dc.hpp"
 #include "s2/character_control_dc.hpp"
@@ -29,7 +29,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t mtwkGetEntityYaw(const MotionWork *work);
 void OffsetPointAlongYaw(Vector3 *result, const Vector3 *point, float distance, std::int16_t yaw);
 std::int32_t FindFieldSegmentOffsetInWorld(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
@@ -40,7 +40,7 @@ const std::uint32_t *flddGetCategoryRecord(std::uint32_t category);
 
 namespace model_component_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right);
 #endif
 
@@ -48,7 +48,7 @@ float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right);
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 inline float SquareRoot(float value) {
     return ::sqrtf(value);
 }
@@ -173,11 +173,10 @@ Vector3 TransformPlymPoint(const Matrix4x4 &transform, const Vector3 &point) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, const Vector3 &destination) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t firstHit = 0;
     float squared = 100.0f;
     Vector3 second, first;
@@ -189,7 +188,7 @@ std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, co
 #endif
     state.collisionFlags = 0;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.collisionType = 0;
     state.collisionCharacter = 0;
     flddToggleFlag(0xfbd7U);
@@ -259,7 +258,7 @@ std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, co
         }
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float distance = sqrtf(squared);
     state.collisionDistance = distance;
     return static_cast<std::int8_t>(state.collisionFlags);
@@ -292,7 +291,6 @@ std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, co
     return result;
 #endif
 }
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // One side-rail cast; a later rail replaces the earlier only when nearer.
@@ -336,10 +334,9 @@ void SetPlymWallBoundary(PlayerModelState &state, std::int16_t wallYaw) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymProbeMovementCollision(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 forward, leftEnd, rightEnd, leftStart, rightStart;
     Vector2s centerNormal, rightNormal, leftNormal;
     Vector3 centerPoint, rightPoint, leftPoint, delta, position, local;
@@ -629,7 +626,7 @@ void plymProbeMovementCollision(PlayerModelState &state) {
 // @verified - d
 void plymProbeDesiredYawCollision(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 forward;
     Vector2s normal;
     Vector3 delta;
@@ -641,7 +638,7 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
 #endif
     state.desiredYawProbeDistance = 10.0f;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     matrix_stack::PushUnitMatrix();
     matrix_stack::TranslateVector(&state.worldPosition);
     Matrix4x4::RotateAroundY_Wrapper(state.desiredYaw);
@@ -655,7 +652,7 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
 #endif
     Matrix4x4::TransformPoint(plymRayForward, forward);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PopCurrentMatrix(1);
     if (!flddRaycastScene(state, state.worldPosition, forward))
         return;
@@ -671,7 +668,7 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
 #endif
     state.desiredYawProbeDistance = state.collisionDistance;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (static_cast<std::int8_t>(state.collisionType) == 1) {
         transformIntersectionResult(&normal);
 #endif
@@ -684,7 +681,7 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
         state.desiredProbeYaw = static_cast<std::int16_t>(normal.y + 0x4000);
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (static_cast<std::int8_t>(state.collisionType) == 2) {
         am2Vector3Subtract(&delta, &state.fieldCollisionPoint, &state.worldPosition);
         const std::int16_t yaw = Vector3_GetFixedYaw(&delta);
@@ -723,7 +720,6 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
         state.desiredYawProbeDistance = (leftDistance + rightDistance) * 0.5f;
 #endif
 }
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
@@ -1154,10 +1150,9 @@ void plymProbeSideWalls(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateGroundBoundaryTurn(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const PlayerMovementState *const movement = state.movementState;
     Vector3 anchorLocal, playerLocal;
     std::int32_t yaw;
@@ -1295,9 +1290,8 @@ void plymUpdateGroundBoundaryTurn(PlayerModelState &state) {
     state.groundBoundaryTurnYawDelta = static_cast<std::int16_t>(turnYaw - state.currentYaw);
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void plymProbeSideWalls(PlayerModelState &state) {
     static const Vector3 leftProbe = {2.0f, 0.0f, 0.0f};
@@ -1345,11 +1339,10 @@ void plymProbeSideWalls(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymMatchCharacterSpeed(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (state.limitingCollisionDistance > 3.0f || state.movementInterpolation > 0.0f)
 #endif
 
@@ -1360,7 +1353,7 @@ void plymMatchCharacterSpeed(PlayerModelState &state) {
     Character *const character = state.limitingCollisionCharacter;
     const shen_name name = ctrlGetScenarioCharaName(character);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!character || !IsNpcRouteMoving(name))
 #endif
 
@@ -1369,7 +1362,7 @@ void plymMatchCharacterSpeed(PlayerModelState &state) {
 #endif
         return;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t yawDelta = static_cast<std::int16_t>(GetCharacterWorldYaw(character) - state.currentYaw);
     if (yawDelta < 0)
         yawDelta = -yawDelta;
@@ -1382,7 +1375,7 @@ void plymMatchCharacterSpeed(PlayerModelState &state) {
 #endif
         return;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 position;
     GetCharacterWorldPosition(character, &position);
     matrix_stack::PushUnitMatrix();
@@ -1398,7 +1391,7 @@ void plymMatchCharacterSpeed(PlayerModelState &state) {
 #endif
         return;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.movementSelectionFlags |= 0x20000U;
     const float step = GetNpcRouteCurrentStep(name);
     if (!(std::fabs(step) < 0.00000011920929f))
@@ -1414,9 +1407,8 @@ void plymMatchCharacterSpeed(PlayerModelState &state) {
         state.movementResult = route->motionStep * 0.97500002f;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymRaycastFromModel(PlayerModelState &state, const Vector3 &destination) {
     return flddRaycastScene(state, state.worldPosition, destination);
 }
@@ -1434,10 +1426,9 @@ std::int32_t NpcAvoidanceSide(shen_name name) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymResolveCollisionSteering(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t steerFlag = 4U;
     std::int16_t limitYaw, spread, opposite, turn, angle;
     turn = 0;
@@ -1725,7 +1716,7 @@ void plymResolveCollisionSteering(PlayerModelState &state) {
 
 // @verified - d
 void plymUpdateCollisionTurnActivation(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::uint32_t candidate = state.movementSelectionFlags & 4U;
     std::int32_t activate = candidate ? 1 : 0;
     const std::int16_t boundaryDelta = static_cast<std::int16_t>(state.collisionBoundaryYaw - state.currentYaw);
@@ -1835,7 +1826,7 @@ void plymUpdateCollisionTurnActivation(PlayerModelState &state) {
 
 // @verified - d
 void plymUpdateCollisionTurnLatch(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int16_t offset;
     const Vector3 *endProbe, *startProbe;
     Vector3 end, start;
@@ -1926,7 +1917,6 @@ void plymUpdateCollisionTurnLatch(PlayerModelState &state) {
     }
 #endif
 }
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // Native movement-context yaw constraint (PLYM pad flag 0x400000): stair and
@@ -1984,10 +1974,9 @@ bool plymConstrainMovementContextYaw(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymResolveCollisionTurn(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t kind;
     reinterpret_cast<PlayerMovementState *>(&state.retainedSecondaryController)->motionScale = (kind = 0, state.turnSpeedScale = 1.0f);
     state.pendingTurnDelta = 0;
@@ -2216,9 +2205,8 @@ void plymResolveCollisionTurn(PlayerModelState &state) {
     plymConstrainMovementContextYaw(state);
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float SimdSolveVectorProjection(Vector3 &output, const Vector3 &base, const Vector3 &direction, const Vector3 &reference, const Vector3 &crossVector) {
     output.x = base.x;

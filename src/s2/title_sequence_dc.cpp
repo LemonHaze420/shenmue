@@ -320,7 +320,7 @@ void CheckTitleDebugInput(void *data) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DebugTitleControl(void *) {
     const std::uint16_t buttons = g_inputBuffer[0].pressedPriority;
     if (buttons & 0xc0U) {

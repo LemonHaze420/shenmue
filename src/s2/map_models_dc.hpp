@@ -138,7 +138,7 @@ void BuildMapClipRecords(MT7Node *node);
 void BuildMapModelCommandCells(std::int32_t index, std::int32_t count, std::int32_t dangers, std::int32_t wallsCount, std::int32_t cameraWallsCount);
 void SetMapFieldDepthEnabled(std::uint32_t enabled, std::int32_t index);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMapModelSlotPosition(const Vector3 *position, std::int32_t index);
 std::uint32_t SetMapModelSlotRotation(std::int32_t rotationY, std::int32_t index);
 std::uint32_t SetMapModelSlotTransform(std::int32_t index, const Vector3 *position, std::int32_t rotationY);

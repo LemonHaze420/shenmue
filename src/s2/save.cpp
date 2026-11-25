@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/save.hpp"
 #include "s2/legacy_sprite_dc.hpp"
 #include "s2/pad_control_dc.hpp"
@@ -165,7 +165,7 @@ extern "C" int stbi_write_jpg_to_func(void (*func)(void *context, void *data, in
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::array<ArcadeRankingRecord, 20> g_harrierRankings{};
 
@@ -183,7 +183,7 @@ std::array<S2SaveDataInfo, 10> &g_backupS1SaveDataInfos = nativeSaveBacking.alte
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 std::span<const std::byte> Payload(const S2SaveImage &image) noexcept;
@@ -240,7 +240,7 @@ void SetSaveFrontendMode(std::int32_t mode) noexcept;
 void TFSEL_ModChange_Callback(void *);
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -252,7 +252,7 @@ constexpr std::uint32_t SnapshotName(const char *name) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -981,7 +981,7 @@ TitleFileSelectState *g_titleFileSelect = &titleFileSelect;
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // get_tbl keeps the bank-reset order, including
 // OutRun's additional WORD publication into each Harrier record's extra.
@@ -1000,7 +1000,7 @@ void ResetArcadeRankings() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1010,7 +1010,7 @@ void (*backupLayerCallback)(std::int32_t stage, std::int32_t result, const void 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1028,7 +1028,7 @@ bool SnapshotAreaMatches(std::uint32_t pattern, std::uint32_t area) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1044,7 +1044,7 @@ template <std::size_t Size> std::uint32_t MatchSnapshotArea(std::uint32_t area, 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1070,7 +1070,7 @@ std::uint32_t GetSnapshotAreaSortKey(std::uint32_t area) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetSnapshotBioSortKey(std::uint32_t name) noexcept {
     std::int32_t index = 0;
@@ -1088,7 +1088,7 @@ std::int32_t GetSnapshotBioSortKey(std::uint32_t name) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void UpdateSnapshotAreaSortKey(SnapshotMetadataRecord &record) noexcept {
@@ -1133,7 +1133,7 @@ void UpdateSnapshotAreaSortKey(SnapshotMetadataRecord &record) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1161,7 +1161,7 @@ void UpdateSnapshotSortKeys(SnapshotMetadataRecord &record) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1173,7 +1173,7 @@ std::filesystem::path SnapshotMetadataPath() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1185,7 +1185,7 @@ void FreeSnapshotMetadataWrite(std::int32_t, const void *source) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1248,7 +1248,7 @@ bool WriteSnapshotMetadataFile() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1320,7 +1320,7 @@ bool LoadSnapshotMetadataFile() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1338,7 +1338,7 @@ void CompleteSnapshotSave(std::int32_t result, const void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1352,7 +1352,7 @@ void AppendSnapshotJpegBytes(void *context, void *data, int size) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1373,7 +1373,7 @@ std::int32_t WriteSnapshotTask(void *data) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1399,7 +1399,7 @@ std::span<std::byte> InventoryBank(S2InventoryBank bank) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1412,7 +1412,7 @@ std::span<const std::byte> InventoryBankConst(S2InventoryBank bank) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1426,7 +1426,7 @@ template <typename Value> Value ReadValue(const S2SaveImage &image, std::size_t 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1438,7 +1438,7 @@ template <typename Value> void WriteValue(S2SaveImage &image, std::size_t offset
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1450,7 +1450,7 @@ std::span<const std::byte> Payload(const S2SaveImage &image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1462,7 +1462,7 @@ std::span<std::byte> Payload(S2SaveImage &image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1481,7 +1481,7 @@ void InitializeImageLayout(S2SaveImage &image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1493,7 +1493,7 @@ S2SaveDataInfo SaveDataInfo(const S2SaveImage &image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1505,7 +1505,7 @@ void WriteSaveDataInfo(S2SaveImage &image, const S2SaveDataInfo &info) noexcept 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1521,7 +1521,7 @@ bool SaveDataInfoIsValid(const S2SaveDataInfo &info) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1534,7 +1534,7 @@ bool GameDateTimeIsValid(const DateTime &value) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1551,7 +1551,7 @@ bool GetLocalTime(std::tm &result) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1578,7 +1578,7 @@ void CaptureBitFlags(std::span<std::byte> output, PlayerFlagReadMode mode) noexc
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1604,7 +1604,7 @@ void LoadSaveNaviTrail(std::span<const std::byte> payload) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1630,7 +1630,7 @@ void CaptureSaveNaviTrail(std::span<std::byte> payload) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1653,7 +1653,7 @@ void CaptureSavedPlayerPlacement(SavedPlayerTransform &transform, std::span<std:
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1752,7 +1752,7 @@ void CaptureRuntimePayload(S2SaveImage &image, bool capturePlacement = true) noe
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1768,7 +1768,7 @@ std::int32_t ImportPendingPlayerPersistentState(const PlayerPersistentState &sta
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1879,7 +1879,7 @@ void DecodeRuntimePayload(const S2SaveImage &image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1893,7 +1893,7 @@ void ResetInventory() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1908,7 +1908,7 @@ bool SaveSlotEligible(std::size_t slot, bool completedOnly) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1924,7 +1924,7 @@ std::int32_t FirstEligibleSlot(bool completedOnly) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1944,7 +1944,7 @@ void SetMessageToken(const char *token) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1960,7 +1960,7 @@ void ShowMessage(const char *token, bool confirmation) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1974,7 +1974,7 @@ void DismissMessage() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1989,7 +1989,7 @@ bool ConsumeConfirmInput(LegacyInputSlot &input) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2004,7 +2004,7 @@ bool ConsumeCancelInput(LegacyInputSlot &input) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2075,7 +2075,7 @@ SaveTaskData *saveTaskData;
 
 std::uint32_t currentSaveState;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_saveScreenAdmission = 0;
 #endif
 
@@ -2113,7 +2113,7 @@ HLib::Task *g_hotplugTask;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetSaveScreenLanguage() {
@@ -2122,7 +2122,7 @@ std::int32_t GetSaveScreenLanguage() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2144,7 +2144,7 @@ void SaveTaskIdle(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2160,7 +2160,7 @@ void SaveTaskAcquireInput(void *taskData) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2175,7 +2175,7 @@ void SaveTaskProcessInput(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2199,7 +2199,7 @@ void SaveTaskDispatch(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2225,7 +2225,7 @@ void SaveTaskInitCallback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2237,7 +2237,7 @@ std::int8_t SaveTransitionValue(std::string_view row, std::size_t index) noexcep
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2272,7 +2272,7 @@ bool SaveScreenYesNoChoice(bool draw) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2465,7 +2465,7 @@ void ApplySaveScreenTransition(SaveTaskData &save) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2483,7 +2483,7 @@ void SetDiskChange(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2503,7 +2503,7 @@ void SelectSaveScreenHelp(std::uint32_t flags) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2574,7 +2574,7 @@ SaveTaskData *SetSaveScreenWarning(std::int32_t warning, std::int32_t value) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 SaveTaskData *SelectSaveScreenWarning(SaveTaskData *save, std::int32_t screen) {
     std::int32_t value = 0;
@@ -2622,7 +2622,7 @@ SaveTaskData *SelectSaveScreenWarning(SaveTaskData *save, std::int32_t screen) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2636,7 +2636,7 @@ void SetSaveScreenSystemProcessing(std::int32_t enabled) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2673,7 +2673,7 @@ bool PrepareResumeData(std::int32_t mode) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2778,7 +2778,7 @@ void SaveScreenInitialize(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2853,7 +2853,7 @@ void SaveScreenComplete(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2907,7 +2907,7 @@ void SaveScreenDiskFade(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2931,7 +2931,7 @@ void SaveScreenDiskComplete(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2972,7 +2972,7 @@ void SaveScreenFadeOut(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2997,7 +2997,7 @@ std::int32_t CheckSaveFileSpace(const char *filename, std::int32_t bytes) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3026,7 +3026,7 @@ void BuildSaveBackupImage(std::byte *image, std::int32_t bytes) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t CheckSaveSectionSpace(std::int32_t slot) {
     if (slot == -1)
@@ -3088,7 +3088,7 @@ std::int32_t WriteSaveDataSection(std::int32_t slot) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3115,7 +3115,7 @@ void CacheSaveMetadata(std::int32_t slot, std::int32_t initializationMode) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3137,9 +3137,9 @@ void DrawSaveGlyph(std::int32_t x, std::int32_t y, const SaveGlyphRecord *glyph,
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetSaveScreenAdmission() {
     return g_saveScreenAdmission;
@@ -3148,9 +3148,9 @@ std::int32_t GetSaveScreenAdmission() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetSaveScreenAdmission(std::int32_t enabled) {
     g_saveScreenAdmission = enabled;
@@ -3159,7 +3159,7 @@ void SetSaveScreenAdmission(std::int32_t enabled) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void SM_Destroy() {
     HLib::DestroyTaskInternal(saveTask);
@@ -3189,7 +3189,7 @@ std::int64_t StartShowScreenOfId(std::uint32_t screenId) noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t IsSaveAllowed() {
@@ -3204,7 +3204,7 @@ std::uint32_t IsSaveAllowed() noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3218,7 +3218,7 @@ void DrawCenteredSaveText(std::int32_t y, const char *text, std::int32_t font) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3279,7 +3279,7 @@ void DrawSaveScreenMessage(std::int32_t message) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 BackupSlotMetadata *GetCachedBackupSlot(std::int32_t slot);
 
@@ -3337,7 +3337,7 @@ void DrawSaveSlotList(SaveTaskData *save) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3392,7 +3392,7 @@ static void DrawSaveDiscChangeNoLanguage(SaveTaskData *save) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3438,7 +3438,7 @@ void DrawSaveScreen(SaveTaskData *save, std::int32_t screen) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3497,7 +3497,7 @@ bool ProcessSaveChoice(std::int32_t draw) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3523,7 +3523,7 @@ std::int32_t CheckAllSaveFilesPresent() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3550,7 +3550,7 @@ std::int32_t CheckSystemSaveFilePresent() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static const SaveScreenRow *const saveScreenRowTables[6] = {0, 0, saveDefaultRows, saveLoadRows, saveStaffRows, 0};
 
@@ -3829,7 +3829,7 @@ void SaveScreenRun(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SM_Init_Enqueue(std::int32_t initializationMode) {
@@ -3904,7 +3904,7 @@ HLib::Task *SM_Init_Enqueue(std::int32_t initializationMode) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3928,7 +3928,7 @@ void DrawLegacySaveText(const char *text) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3956,7 +3956,7 @@ void DrawLegacySaveNumber(const char *text) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3977,7 +3977,7 @@ bool MatchLegacySaveArea(std::uint32_t pattern, shen_name map, std::int32_t &exa
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4007,7 +4007,7 @@ std::int32_t GetLegacySaveAreaId(shen_name map) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4043,7 +4043,7 @@ std::int32_t GetLegacySaveLocationId(std::int32_t area) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4062,7 +4062,7 @@ void DrawLegacySaveArea(std::int32_t area, std::size_t row) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4083,7 +4083,7 @@ void DrawLegacySaveLocation(std::int32_t area, std::size_t row) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4103,7 +4103,7 @@ void DrawLegacySaveSlotIndex(const SaveTaskData &save) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4157,7 +4157,7 @@ void DrawLegacySaveSlotList(SaveTaskData &save) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static bool GetSaveSlotPayload(std::byte **header, std::byte **payload, std::int32_t slot);
 
@@ -4214,7 +4214,7 @@ void RestoreSaveBufferBlocks(const std::byte *stats, const std::byte *story, con
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t CalculateSavePayloadChecksum(const void *source, std::int32_t size) {
@@ -4234,7 +4234,7 @@ std::uint32_t CalculateSavePayloadChecksum(const void *source, std::int32_t size
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4247,7 +4247,7 @@ void RegisterBackupCompleteCallback() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t BackupCompleteCallback(std::int32_t port, std::int32_t operation, std::int32_t result) {
@@ -4285,7 +4285,7 @@ std::int32_t BackupCompleteCallback(std::int32_t port, std::int32_t operation, s
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t BackupProgressCallback() {
@@ -4295,7 +4295,7 @@ std::int32_t BackupProgressCallback() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void InitializeBackupMemory() {
@@ -4310,7 +4310,7 @@ void InitializeBackupMemory() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void WaitForBackupMemoryIdle() {
@@ -4320,7 +4320,7 @@ void WaitForBackupMemoryIdle() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 BackupSlotMetadata *GetCachedBackupSlot(std::int32_t slot) {
     return g_cachedBackupSlots + slot;
@@ -4337,7 +4337,7 @@ std::int32_t GetBackupConnectionStatus(std::int32_t index) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t WaitForBackupOperation(std::int32_t index) {
@@ -4352,7 +4352,7 @@ std::int32_t WaitForBackupOperationPort0() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t CheckBackupFileExists(std::int32_t index, const char *filename) {
@@ -4391,7 +4391,7 @@ std::uint64_t CheckBackupFileExists(const char *name) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t QueueBackupFileRead(const char *name, void *destination, std::uint32_t offset, std::uint32_t size, BackupSaveCompletion completion) {
@@ -4416,7 +4416,7 @@ std::uint64_t QueueBackupFileRead(const char *name, void *destination, std::uint
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t ReadBackupFile(const char *name, void *destination, std::uint32_t offset, std::uint32_t size, BackupSaveCompletion completion) {
@@ -4429,7 +4429,7 @@ std::uint64_t ReadBackupFile(const char *name, void *destination, std::uint32_t 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t ScanS1BackupSlots() {
@@ -4454,7 +4454,7 @@ std::uint32_t ScanS1BackupSlots() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t ScanS2BackupSlots() {
@@ -4485,7 +4485,7 @@ std::uint32_t ScanS2BackupSlots() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 S2SaveDataInfo *GetBackupSaveDataInfo(std::int32_t slot) noexcept {
@@ -4497,7 +4497,7 @@ S2SaveDataInfo *GetBackupSaveDataInfo(std::int32_t slot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 S2SaveDataInfo *GetS1BackupSaveDataInfo(std::uint32_t slot) noexcept {
@@ -4506,7 +4506,7 @@ S2SaveDataInfo *GetS1BackupSaveDataInfo(std::uint32_t slot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void RenewLocalBackupInfo() {
@@ -4519,7 +4519,7 @@ void RenewLocalBackupInfo() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t GetLocalBackupInfo() noexcept {
@@ -4528,7 +4528,7 @@ std::uint64_t GetLocalBackupInfo() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t GetCurrentGameFlags() noexcept {
@@ -4537,7 +4537,7 @@ std::uint64_t GetCurrentGameFlags() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t SetCurrentGameFlag(std::uint8_t bit, std::int32_t enabled) noexcept {
@@ -4552,7 +4552,7 @@ std::uint64_t SetCurrentGameFlag(std::uint8_t bit, std::int32_t enabled) noexcep
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t GetCompletedGameCount() noexcept {
@@ -4561,7 +4561,7 @@ std::uint64_t GetCompletedGameCount() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t SetCompletedGameCount(std::uint32_t count) noexcept {
@@ -4572,7 +4572,7 @@ std::uint64_t SetCompletedGameCount(std::uint32_t count) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const S2CombatStatistics &S2Save_GetCombatStatistics() noexcept {
     return combatStatistics;
@@ -4580,7 +4580,7 @@ const S2CombatStatistics &S2Save_GetCombatStatistics() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Runtime counters saturate and skip the three non-move IDs.
 void S2Save_AccumulateCombatStatistics(std::span<const std::byte, 0x200> history, std::uint16_t streakDelta, std::int32_t defaultHealth) noexcept {
@@ -4602,7 +4602,7 @@ void S2Save_AccumulateCombatStatistics(std::span<const std::byte, 0x200> history
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const S2PersistentPlayerStats &S2Save_GetPersistentPlayerStats() noexcept {
     return playerStats;
@@ -4610,7 +4610,7 @@ const S2PersistentPlayerStats &S2Save_GetPersistentPlayerStats() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_SetPersistentPlayerStats(const S2PersistentPlayerStats &stats) noexcept {
     playerStats = stats;
@@ -4620,7 +4620,7 @@ void S2Save_SetPersistentPlayerStats(const S2PersistentPlayerStats &stats) noexc
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t GetPlayerStat(PlayerStatsId type) noexcept {
@@ -4650,7 +4650,7 @@ std::uint64_t GetPlayerStat(PlayerStatsId type) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetPlayerStat(PlayerStatsId type, std::uint32_t value) noexcept {
@@ -4695,7 +4695,7 @@ void SetPlayerStat(PlayerStatsId type, std::uint32_t value) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetCurrentSegaCoins() noexcept {
     return playerStats.segaCoins;
@@ -4703,7 +4703,7 @@ std::int32_t GetCurrentSegaCoins() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetCurrentSegaCoins(std::int32_t segaCoins) noexcept {
     playerStats.segaCoins = segaCoins;
@@ -4711,7 +4711,7 @@ void SetCurrentSegaCoins(std::int32_t segaCoins) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_SetSkillFlags(const std::array<std::byte, 16> &flags) noexcept {
     playerStats.statFlags = flags;
@@ -4719,7 +4719,7 @@ void S2Save_SetSkillFlags(const std::array<std::byte, 16> &flags) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 bool vfCheckSkillFlag(shen_name flag) noexcept {
@@ -4731,7 +4731,7 @@ bool vfCheckSkillFlag(shen_name flag) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetTransferredYen() noexcept {
     return playerStats.transferredYen;
@@ -4739,7 +4739,7 @@ std::int32_t GetTransferredYen() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::span<const S2MoveSkillBank, 3> S2Save_GetMoveSkillBanks() noexcept {
     return moveSkillBanks;
@@ -4747,7 +4747,7 @@ std::span<const S2MoveSkillBank, 3> S2Save_GetMoveSkillBanks() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2Save_SetMoveProficiency(std::uint8_t category, std::size_t index, std::int16_t value) noexcept {
     if (category < 1 || category > moveSkillBanks.size() || index >= moveSkillBanks[category - 1U].proficiency.size())
@@ -4758,7 +4758,7 @@ bool S2Save_SetMoveProficiency(std::uint8_t category, std::size_t index, std::in
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t GetMoveProficiency(std::uint8_t category, std::uint8_t move) noexcept {
@@ -4769,7 +4769,7 @@ std::uint32_t GetMoveProficiency(std::uint8_t category, std::uint8_t move) noexc
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t SetMoveProficiency(std::int8_t clear, std::uint8_t category, std::int16_t move, std::int16_t value) noexcept {
     S2MoveSkillBank &bank = moveSkillBanks[category - 1U];
@@ -4784,7 +4784,7 @@ std::int64_t SetMoveProficiency(std::int8_t clear, std::uint8_t category, std::i
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::span<const std::byte> S2Save_GetInventoryBank(S2InventoryBank bank) noexcept {
     return InventoryBankConst(bank);
@@ -4792,7 +4792,7 @@ std::span<const std::byte> S2Save_GetInventoryBank(S2InventoryBank bank) noexcep
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2Save_SetInventoryItem(S2InventoryBank bank, std::size_t index, std::byte value) noexcept {
     std::span<std::byte> data = InventoryBank(bank);
@@ -4804,7 +4804,7 @@ bool S2Save_SetInventoryItem(S2InventoryBank bank, std::size_t index, std::byte 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::span<const std::int32_t, 26> S2Save_GetMinigameScores() noexcept {
     return minigameScores;
@@ -4812,7 +4812,7 @@ std::span<const std::int32_t, 26> S2Save_GetMinigameScores() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t GetSavedMinigameScore(std::uint32_t index) noexcept {
@@ -4821,7 +4821,7 @@ std::uint64_t GetSavedMinigameScore(std::uint32_t index) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetSavedMinigameScore(SavedScoreType type, std::uint32_t score) noexcept {
     const std::uint32_t index = static_cast<std::uint32_t>(type);
@@ -4831,7 +4831,7 @@ void SetSavedMinigameScore(SavedScoreType type, std::uint32_t score) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void InitializeSnapshotMetadata() noexcept {
     snapshotMetadata = {};
@@ -4858,7 +4858,7 @@ void InitializeSnapshotMetadata() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ValidateSnapshotMetadataFiles() noexcept {
     bool changed = false;
@@ -4876,7 +4876,7 @@ void ValidateSnapshotMetadataFiles() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool SaveSnapshotMetadata() noexcept {
     try {
@@ -4890,7 +4890,7 @@ bool SaveSnapshotMetadata() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 SnapshotMetadataOwner *GetSnapshotMetadataOwner() noexcept {
     if (!snapshotMetadataInitialized)
@@ -4900,7 +4900,7 @@ SnapshotMetadataOwner *GetSnapshotMetadataOwner() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetSnapshotMetadataCount() noexcept {
     const SnapshotMetadataOwner *const owner = GetSnapshotMetadataOwner();
@@ -4910,7 +4910,7 @@ std::uint32_t GetSnapshotMetadataCount() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetSnapshotDataOption() noexcept {
     return snapshotDataOption;
@@ -4918,7 +4918,7 @@ std::int32_t GetSnapshotDataOption() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetSnapshotDataOption(std::int32_t option) noexcept {
     snapshotDataOption = option;
@@ -4926,7 +4926,7 @@ void SetSnapshotDataOption(std::int32_t option) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t QueueSnapshotSave(
     std::uint32_t slot, std::uint32_t rowPitch, std::uint32_t width, std::uint32_t height, std::uint32_t format, std::vector<std::byte> &&pixels) noexcept {
@@ -4951,7 +4951,7 @@ std::uint32_t QueueSnapshotSave(
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t IsSnapshotSaveInProgress() noexcept {
     return snapshotSaveInProgress.load(std::memory_order_seq_cst);
@@ -4959,7 +4959,7 @@ std::uint32_t IsSnapshotSaveInProgress() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Native shenGetLocalTime: the wall-clock SYSTEMTIME fields; the trailing byte is always 15.
 std::int64_t shenGetLocalTime(LocalTimeSnapshot *snapshot) noexcept {
@@ -4980,7 +4980,7 @@ std::int64_t shenGetLocalTime(LocalTimeSnapshot *snapshot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Native shenGetLocalTimeSnapshot: shenGetLocalTime without the trailing byte.
 std::int64_t shenGetLocalTimeSnapshot(LocalTimeSnapshot *snapshot) noexcept {
@@ -4998,7 +4998,7 @@ std::int64_t shenGetLocalTimeSnapshot(LocalTimeSnapshot *snapshot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::filesystem::path S2Save_SnapshotPath(std::uint32_t slot) {
     return saveDirectory / (std::to_string(slot) + ".jpg");
@@ -5006,7 +5006,7 @@ std::filesystem::path S2Save_SnapshotPath(std::uint32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t S2Save_Checksum(std::span<const std::byte> payload) noexcept {
     std::uint32_t checksum = 0xffffffffU;
@@ -5021,7 +5021,7 @@ std::uint32_t S2Save_Checksum(std::span<const std::byte> payload) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_Validate(const S2SaveImage &image) noexcept {
     if (ReadValue<std::uint32_t>(image, kSystemHeaderOffset) != kSystemMagic || ReadValue<std::uint32_t>(image, kSystemHeaderOffset + 4) != kSaveVersion) {
@@ -5040,7 +5040,7 @@ S2SaveResult S2Save_Validate(const S2SaveImage &image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5081,7 +5081,7 @@ void CaptureGameSaveData(S2SaveImage &image, std::uint8_t clearState, const std:
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5104,7 +5104,7 @@ std::uint64_t RefreshSaveSystemHeader(S2SaveImage &image) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5117,7 +5117,7 @@ std::uint64_t CaptureSaveImageContent(S2SaveImage &image, std::uint8_t clearStat
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5132,7 +5132,7 @@ void PackSaveBlock(std::byte *block, std::uint32_t size) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5148,7 +5148,7 @@ void CompleteGameSave(std::int32_t result, const void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5166,7 +5166,7 @@ std::int32_t QueueGameSaveWrite(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t S2Save_CheckData() {
     loadedGameFlags = 0;
@@ -5184,7 +5184,7 @@ std::uint64_t S2Save_CheckData() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t SaveGame(std::uint32_t slot) {
     loadedGameFlags = 0;
@@ -5210,7 +5210,7 @@ std::uint32_t SaveGame(std::uint32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetGameSaveStatus() {
     const std::int32_t status = gameSaveStatus.load(std::memory_order_seq_cst);
@@ -5223,7 +5223,7 @@ std::int32_t GetGameSaveStatus() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetSaveMenuSource() noexcept {
     return saveMenuSource;
@@ -5231,7 +5231,7 @@ std::uint32_t GetSaveMenuSource() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t SetSaveMenuSource(std::uint32_t source) noexcept {
     if (source <= 2)
@@ -5241,7 +5241,7 @@ std::uint32_t SetSaveMenuSource(std::uint32_t source) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_Capture(S2SaveImage &image, std::uint8_t clearState) {
     std::tm systemTime{};
@@ -5265,7 +5265,7 @@ S2SaveResult S2Save_Capture(S2SaveImage &image, std::uint8_t clearState) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -5278,7 +5278,7 @@ std::int32_t SaveRestorePlatformNullsub() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t RestoreCurrentSceneInfoFromSave() noexcept {
@@ -5298,7 +5298,7 @@ std::uint64_t RestoreCurrentSceneInfoFromSave() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_Apply(const S2SaveImage &image) {
     const S2SaveResult validation = S2Save_Validate(image);
@@ -5326,7 +5326,7 @@ S2SaveResult S2Save_Apply(const S2SaveImage &image) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_Read(const std::filesystem::path &path, S2SaveImage &image) {
 #if defined(SHENMUE_STEAM)
@@ -5373,7 +5373,7 @@ S2SaveResult S2Save_Read(const std::filesystem::path &path, S2SaveImage &image) 
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_Write(const std::filesystem::path &path, const S2SaveImage &image) {
 #if defined(SHENMUE_STEAM)
@@ -5438,7 +5438,7 @@ S2SaveResult S2Save_Write(const std::filesystem::path &path, const S2SaveImage &
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_ReadSlot(std::size_t slot, S2SaveImage &image) {
     if (slot >= S2SaveSlotCount)
@@ -5448,7 +5448,7 @@ S2SaveResult S2Save_ReadSlot(std::size_t slot, S2SaveImage &image) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 S2SaveResult S2Save_WriteSlot(std::size_t slot, std::uint8_t clearState) {
     if (slot >= S2SaveSlotCount)
@@ -5477,7 +5477,7 @@ S2SaveResult S2Save_WriteSlot(std::size_t slot, std::uint8_t clearState) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::filesystem::path S2Save_SlotPath(std::size_t slot) {
     if (slot >= S2SaveSlotCount)
@@ -5487,7 +5487,7 @@ std::filesystem::path S2Save_SlotPath(std::size_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_SetDirectory(std::filesystem::path directory) {
     saveDirectory = std::move(directory);
@@ -5496,7 +5496,7 @@ void S2Save_SetDirectory(std::filesystem::path directory) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const std::filesystem::path &S2Save_GetDirectory() noexcept {
     return saveDirectory;
@@ -5504,7 +5504,7 @@ const std::filesystem::path &S2Save_GetDirectory() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t InitializeMoveSkillStats() noexcept {
@@ -5531,7 +5531,7 @@ std::int64_t InitializeMoveSkillStats() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint8_t ResetNativePlayerStats() noexcept {
@@ -5577,7 +5577,7 @@ std::uint8_t ResetNativePlayerStats() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void ResetNewGameConfiguration() {
@@ -5596,7 +5596,7 @@ void ResetNewGameConfiguration() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint16_t GetImportedPlayerOption() noexcept {
     return retainedImportedPlayerOption;
@@ -5604,7 +5604,7 @@ std::uint16_t GetImportedPlayerOption() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetImportedPlayerOption(std::uint16_t value) noexcept {
     retainedImportedPlayerOption = value;
@@ -5612,7 +5612,7 @@ void SetImportedPlayerOption(std::uint16_t value) noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetBackupFreeBlocks(std::int32_t index) {
@@ -5657,7 +5657,7 @@ std::int32_t LoadBackupFilePort0(std::int32_t index) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ReadBackupBlocks(std::int32_t index, void *destination, std::int32_t firstBlock, std::int32_t blocks, const char *filename) {
@@ -5698,7 +5698,7 @@ std::int32_t ReadGameSaveFile(std::int32_t slot) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t ReadSaveDataSection(std::int32_t slot) {
     if (slot == 3)
@@ -5724,7 +5724,7 @@ std::uint64_t ReadSaveDataSection(std::int32_t gameSection, std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::byte *RestoreSystemSaveProgress() noexcept {
@@ -5737,7 +5737,7 @@ std::byte *RestoreSystemSaveProgress() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t ReadSystemSaveHeader(std::int32_t slot) {
@@ -5753,7 +5753,7 @@ std::uint64_t ReadSystemSaveHeader(std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t RestoreSaveSystemSettings(std::int32_t slot) {
@@ -5768,7 +5768,7 @@ std::int64_t RestoreSaveSystemSettings(std::int32_t slot) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void InitSystemSaveHeader(std::uint32_t *header) {
     header[0] = SAVE_SYSTEM_HEADER;
@@ -5804,7 +5804,7 @@ std::uint32_t InitializeDefaultSaveData() noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool ValidateBackupSaveImage(void *image) {
@@ -5816,7 +5816,7 @@ bool ValidateBackupSaveImage(void *image) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static bool GetSaveSlotPayload(std::byte **header, std::byte **payload, std::int32_t slot) {
     if (slot == -1)
@@ -5854,7 +5854,7 @@ void RestoreGameSaveSlot(std::uint32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlacement) {
@@ -5881,7 +5881,7 @@ std::int64_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlaceme
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t InitializeNewGameFromSaveSlot(std::int32_t slot) {
@@ -5901,7 +5901,7 @@ std::int64_t InitializeNewGameFromSaveSlot(std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_ResetNewGameState() {
     (void)InitializeNewGameFromSaveSlot(-1);
@@ -5914,7 +5914,7 @@ void S2Save_ResetNewGameState() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const std::array<S2SaveSlotInfo, S2SaveSlotCount> &S2Save_RefreshSlotCatalog() {
     for (std::size_t slot = 0; slot < slotCatalog.size(); ++slot) {
@@ -5938,7 +5938,7 @@ const std::array<S2SaveSlotInfo, S2SaveSlotCount> &S2Save_RefreshSlotCatalog() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const std::array<S2SaveSlotInfo, S2SaveSlotCount> &S2Save_GetSlotCatalog() noexcept {
     return slotCatalog;
@@ -5946,7 +5946,7 @@ const std::array<S2SaveSlotInfo, S2SaveSlotCount> &S2Save_GetSlotCatalog() noexc
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2Save_HasContinueSlot() {
     if (!slotCatalogInitialized)
@@ -5956,7 +5956,7 @@ bool S2Save_HasContinueSlot() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void LCDM_Idle(void *) {
     // PC v1.07 enqueues LCDM with nullsub_1.  The task owns its parsed
@@ -5965,7 +5965,7 @@ void LCDM_Idle(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6005,7 +6005,7 @@ const std::byte *FindLcdmSection(std::span<const std::byte> resource, std::uint3
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6017,7 +6017,7 @@ constexpr std::uint32_t LcdmName(char a, char b, char c, char d) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6029,7 +6029,7 @@ void SetLcdmResourcePointer(LcdmTaskData &data, std::size_t offset, const std::b
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6043,7 +6043,7 @@ const std::byte *GetLcdmResourcePointer(const LcdmTaskData &data, std::size_t of
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6058,7 +6058,7 @@ bool LcdmSectionHasBytes(std::span<const std::byte> resource, const std::byte *s
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6147,7 +6147,7 @@ void BuildLcdmResourceState(LcdmTaskData &data, std::span<const std::byte> resou
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void LcdmSelectMessage(std::uintptr_t message) noexcept {
@@ -6167,7 +6167,7 @@ void LcdmSelectMessage(std::uintptr_t message) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void LcdmInit(std::uintptr_t image) noexcept {
     LcdmTaskData *const data = lcdmTask ? static_cast<LcdmTaskData *>(HLib::GetTaskParameter(lcdmTask)) : nullptr;
@@ -6193,7 +6193,7 @@ void LcdmInit(std::uintptr_t image) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void QueueLcdmTask() {
     lcdmTask = HLib::EnqueueTaskWithParameter(LCDM_Idle, 2, 2, sizeof(LcdmTaskData), SHEN_NAME(LCDM));
@@ -6213,7 +6213,7 @@ void QueueLcdmTask() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6233,7 +6233,7 @@ const std::byte *GetWindowGlyphBitmap(std::uint16_t glyph) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6248,7 +6248,7 @@ void AllocateWindowBackBuffer(GeneratedTextureSurface *surface) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6275,7 +6275,7 @@ void RasterizeWindowGlyphShadow(WindowSlot *window, std::uint16_t glyph, std::in
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6308,7 +6308,7 @@ void UploadWindowShadowSurface(WindowSlot *window, GeneratedTextureSurface *surf
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6370,7 +6370,7 @@ void UpdateWindowRow(WindowSlot *window, WindowTaskData *, std::int32_t line, st
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -6400,7 +6400,7 @@ void DrawWindowMessageSprites(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void WindowTaskEntry_Callback(void *parameter) {
 #if SHENMUE_IS_PC
@@ -6457,7 +6457,7 @@ void WindowTaskEntry_Callback(void *parameter) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 HLib::Task *QueueWindowTask(std::uint8_t nextFunctionIndex) {
@@ -6487,7 +6487,7 @@ HLib::Task *QueueWindowTask(std::uint8_t nextFunctionIndex) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6544,7 +6544,7 @@ WindowSlot *AllocateWindowSlot(HLib::Task *task, const WindowSpecification &spec
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6571,7 +6571,7 @@ void ClearWindowSlot(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6595,7 +6595,7 @@ void ClearWindowText(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6609,7 +6609,7 @@ void AttachWindowCallback(WindowSlot *window, WindowCallback callback, void *sta
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6625,7 +6625,7 @@ void AdvanceWindowLine(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6642,7 +6642,7 @@ bool GetWindowWritePosition(WindowSlot *window, std::int32_t *column, std::int32
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6672,7 +6672,7 @@ std::int32_t WriteWindowGlyphByte(WindowSlot *window, std::uint8_t flags, std::u
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6695,7 +6695,7 @@ std::uint16_t ConvertWindowCharacterToHalfwidth(std::uint16_t character) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6734,7 +6734,7 @@ std::int32_t WriteWindowCharacter(WindowSlot *window, std::uint16_t character, s
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6756,7 +6756,7 @@ std::uint16_t ConvertWindowShiftJisCharacter(std::uint16_t character) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6771,7 +6771,7 @@ void RecoverWindowSurface(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6782,7 +6782,7 @@ void HideWindowSlot(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6793,7 +6793,7 @@ void ShowWindowSlot(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6804,7 +6804,7 @@ void RevealWindowGlyphs(WindowSlot *window) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 #if SHENMUE_IS_PC
 // @verified - p
@@ -6815,7 +6815,7 @@ void SetWindowColourMode(WindowSlot *window, std::int32_t mode) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void wndEnableMessageDraw() {
     g_wndMessageDrawDisabled = 0;
@@ -6823,7 +6823,7 @@ void wndEnableMessageDraw() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void wndDisableMessageDraw() {
     g_wndMessageDrawDisabled = 1;
@@ -6831,7 +6831,7 @@ void wndDisableMessageDraw() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void RasterizeWindowGlyph(std::uint16_t glyph, void *destination, std::int32_t bytePitch, std::int32_t byteOffset) {
 #if SHENMUE_IS_PC
@@ -6875,7 +6875,7 @@ void RasterizeWindowGlyph(std::uint16_t glyph, void *destination, std::int32_t b
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t RenderWindowTextSurface(
     HLib::Task *task, const char *, std::uint32_t width, std::int16_t colour, std::int16_t shadow, std::int32_t, std::int32_t centered) {
@@ -6899,7 +6899,7 @@ std::uint64_t RenderWindowTextSurface(
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t SetupUIElement(HLib::Task *task, const char *text, std::uint32_t width, std::int16_t colour, std::int16_t shadow, std::int32_t conversionMode) {
@@ -6908,7 +6908,7 @@ std::uint64_t SetupUIElement(HLib::Task *task, const char *text, std::uint32_t w
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t CreateLeftAlignedWindowTextSurface(
@@ -6918,7 +6918,7 @@ std::uint64_t CreateLeftAlignedWindowTextSurface(
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Native wndSetFlag: a null task selects the global WNDT task.
 void wndSetFlag(HLib::Task *task, std::int32_t flag) {
@@ -6935,7 +6935,7 @@ void wndSetFlag(HLib::Task *task, std::int32_t flag) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void LoadAreaSpriteImages() {
@@ -6962,7 +6962,7 @@ void LoadAreaSpriteImages() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetTitleWarningLogo(std::int32_t logoIndex, const void *parameters) noexcept {
     titleWarningLogo = logoIndex < 47 ? logoIndex : 0;
@@ -6976,7 +6976,7 @@ void SetTitleWarningLogo(std::int32_t logoIndex, const void *parameters) noexcep
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void LoadTitleWarningLogo(TitleWarningTaskData *data, std::int32_t texture, std::int32_t x, std::int32_t y) {
@@ -6996,7 +6996,7 @@ void LoadTitleWarningLogo(TitleWarningTaskData *data, std::int32_t texture, std:
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void DrawTitleWarningDecorations(std::int32_t logo, const std::byte *parameters) {
     if (logo == 1 || logo == 4) {
@@ -7040,7 +7040,7 @@ void DrawTitleWarningDecorations(std::int32_t logo, const std::byte *parameters)
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void FreeTitleWarningResources() {
@@ -7051,7 +7051,7 @@ void FreeTitleWarningResources() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SubmitTitleWarningLogo(void *) {
     TitleWarningTaskData *const data = static_cast<TitleWarningTaskData *>(HLib::GetTaskParameter(titleWarningTask));
@@ -7071,7 +7071,7 @@ void SubmitTitleWarningLogo(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void AdvanceTitleWarningColour() noexcept {
     constexpr std::uint32_t maximumStep = 0xff000000U;
@@ -7090,7 +7090,7 @@ void AdvanceTitleWarningColour() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void TitleWarningCallback(void *) {
     if (titleWarningPhase != TitleWarningPhase::Inactive) {
@@ -7120,7 +7120,7 @@ void TitleWarningCallback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void QueueTitleWarningTask() {
     titleWarningPhase = TitleWarningPhase::Inactive;
@@ -7137,7 +7137,7 @@ void QueueTitleWarningTask() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void QueueTitleSaveDependencies() {
     QueueLcdmTask();
@@ -7148,7 +7148,7 @@ void QueueTitleSaveDependencies() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetRetainedSaveSelection(std::int32_t slot) {
@@ -7172,7 +7172,7 @@ void SetRetainedSaveSelection(std::int32_t selection) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ResetPendingPlayerPersistentState() noexcept {
     pendingPlayerPersistentState = {};
@@ -7180,7 +7180,7 @@ void ResetPendingPlayerPersistentState() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ReinitScenarioAndFlags() {
     ResetScenarioPersistentFlags();
@@ -7204,7 +7204,7 @@ void ReinitScenarioAndFlags() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t ReadS1SaveDataByIndex(void *bank, std::int32_t slot) {
@@ -7213,7 +7213,7 @@ std::uint64_t ReadS1SaveDataByIndex(void *bank, std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 bool ValidateS1SaveHeader(const void *header) noexcept {
@@ -7223,7 +7223,7 @@ bool ValidateS1SaveHeader(const void *header) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int32_t FindInheritedMoveIndex(std::int32_t category, std::int32_t move) noexcept {
@@ -7243,7 +7243,7 @@ std::int32_t FindInheritedMoveIndex(std::int32_t category, std::int32_t move) no
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void InitializeInheritedMoveProficiency() {
@@ -7259,7 +7259,7 @@ void InitializeInheritedMoveProficiency() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t ResetItemInventoryState() noexcept {
@@ -7275,7 +7275,7 @@ std::int64_t ResetItemInventoryState() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t ImportS1SaveData(const void *bank, std::int32_t slot) {
@@ -7336,7 +7336,7 @@ std::int64_t ImportS1SaveData(const void *bank, std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void ImportSelectedS1SaveData(const void *bank, std::int32_t slot) {
@@ -7346,7 +7346,7 @@ void ImportSelectedS1SaveData(const void *bank, std::int32_t slot) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -7373,7 +7373,7 @@ std::int32_t MeasureSaveText(const std::uint8_t *text, std::int32_t font) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -7399,7 +7399,7 @@ void DrawSaveText(std::int32_t x, std::int32_t y, const char *source, std::int32
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetScenarioSaveRestoreState(std::int32_t state) {
@@ -7412,7 +7412,7 @@ std::int32_t GetScenarioSaveRestoreState() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetSceneInfos(std::int32_t actNumber, shen_name mapName, std::int32_t entryPoint) {
@@ -7431,7 +7431,7 @@ void SetSceneInfos(std::int32_t actNumber, shen_name mapName, std::int32_t entry
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void GetSceneInfos(std::int32_t *actNumber, shen_name *mapName, std::int32_t *entryPoint) {
@@ -7450,7 +7450,7 @@ void GetSceneInfos(std::int32_t *actNumber, shen_name *mapName, std::int32_t *en
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void CloseSaveScreen() noexcept {
     if (currentSaveState == 0 || !saveTaskData)
@@ -7460,7 +7460,7 @@ void CloseSaveScreen() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Native LoadSave close step: retire the save screen, then hand the sleep-action icon back from its Save submenu.
 void CloseSaveScreenFromLoadSave() noexcept {
@@ -7470,7 +7470,7 @@ void CloseSaveScreenFromLoadSave() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void EnableSaveScreenAdmission() noexcept {
     g_saveScreenAdmission = 1;
@@ -7478,7 +7478,7 @@ void EnableSaveScreenAdmission() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetSaveFrontendMode(std::int32_t mode) noexcept {
@@ -7491,7 +7491,7 @@ void SetSaveFrontendMode(std::int32_t mode) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2SaveScreen_SelectSlot(std::size_t slot) noexcept {
     if (!saveTaskData || slot >= S2SaveSlotCount)
@@ -7501,7 +7501,7 @@ void S2SaveScreen_SelectSlot(std::size_t slot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2SaveScreen_ConfirmSlot(std::size_t slot) noexcept {
     if (currentSaveState == 0 || slot >= S2SaveSlotCount)
@@ -7539,7 +7539,7 @@ bool S2SaveScreen_ConfirmSlot(std::size_t slot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2SaveScreen_CancelPrompt() noexcept {
     if (saveScreenPrompt == SaveScreenPrompt::None)
@@ -7551,7 +7551,7 @@ bool S2SaveScreen_CancelPrompt() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2SaveScreen_HasPrompt() noexcept {
     return saveScreenPrompt != SaveScreenPrompt::None;
@@ -7559,7 +7559,7 @@ bool S2SaveScreen_HasPrompt() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2SaveTask_Begin(std::size_t slot, std::uint8_t clearState, S2SaveTaskCompletion completion) {
     if (slot >= S2SaveSlotCount || currentSaveState != 0 || !saveTask || !saveTask->activeCallback || saveOperation.phase != SaveTaskPhase::Idle) {
@@ -7580,7 +7580,7 @@ bool S2SaveTask_Begin(std::size_t slot, std::uint8_t clearState, S2SaveTaskCompl
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 TitleFileSelectState *InitializeTitleFileSelectState() {
@@ -7613,7 +7613,7 @@ TitleFileSelectState *InitializeTitleFileSelectState() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void TitleContinueControl(void *) {
@@ -7623,7 +7623,7 @@ void TitleContinueControl(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 TitleFileSelectState *AssignActiveTCRL(TitleControlData *control) {
@@ -7634,7 +7634,7 @@ TitleFileSelectState *AssignActiveTCRL(TitleControlData *control) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t StartTitleLoadGame() {
@@ -7665,7 +7665,7 @@ std::int64_t StartTitleLoadGame() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t StartTitleCollectionGame() {
@@ -7680,7 +7680,7 @@ std::int64_t StartTitleCollectionGame() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t StartTitleCompletedGame() {
@@ -7697,7 +7697,7 @@ std::int64_t StartTitleCompletedGame() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void StartTitleImportedGame(TitleControlData *control) {
@@ -7716,7 +7716,7 @@ void StartTitleImportedGame(TitleControlData *control) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint8_t ClearTitleLoadScenarioFlags() {
@@ -7727,7 +7727,7 @@ std::uint8_t ClearTitleLoadScenarioFlags() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void TFSEL_ModChange_Callback(void *) {
@@ -7785,7 +7785,7 @@ void TFSEL_ModChange_Callback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t CompleteSaveMenuLoad() {
@@ -7812,7 +7812,7 @@ std::int64_t CompleteSaveMenuLoad() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void BeginSaveMenuLoad(std::int32_t slot) {
@@ -7825,7 +7825,7 @@ void BeginSaveMenuLoad(std::int32_t slot) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 bool GetSaveMenuSlotEligibility(std::uint32_t slot) noexcept {
@@ -7837,7 +7837,7 @@ bool GetSaveMenuSlotEligibility(std::uint32_t slot) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 TitleFileSelectState *InitializeTitleContinueFlags() {
@@ -7848,7 +7848,7 @@ TitleFileSelectState *InitializeTitleContinueFlags() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 TitleFileSelectState *InitializeTitleNewGameFlags() {
@@ -7859,7 +7859,7 @@ TitleFileSelectState *InitializeTitleNewGameFlags() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 TitleFileSelectState *InitializeTitleCollectionFlags() {
@@ -7870,7 +7870,7 @@ TitleFileSelectState *InitializeTitleCollectionFlags() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void ResetTitleImportSelection() {
@@ -7879,7 +7879,7 @@ void ResetTitleImportSelection() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void StartTitleModuleChange(TitleControlData *, std::int32_t state) {
@@ -7891,7 +7891,7 @@ void StartTitleModuleChange(TitleControlData *, std::int32_t state) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectSprite(std::int32_t group, std::int32_t item, const Vector3 &position) {
@@ -7916,7 +7916,7 @@ void DrawTitleFileSelectSprite(std::int32_t group, std::int32_t item, const Vect
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectNumber(std::int32_t value, std::int32_t digits, std::int32_t padZero, float x, float y) {
@@ -7934,7 +7934,7 @@ void DrawTitleFileSelectNumber(std::int32_t value, std::int32_t digits, std::int
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectDate(std::int32_t x, std::int32_t y, const void *source) {
@@ -7959,7 +7959,7 @@ void DrawTitleFileSelectDate(std::int32_t x, std::int32_t y, const void *source)
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectLocalPreview(std::int32_t area) {
@@ -8000,7 +8000,7 @@ void DrawTitleFileSelectLocalPreview(std::int32_t area) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectAreaPreview(std::int32_t area) {
@@ -8100,7 +8100,7 @@ void DrawTitleFileSelectAreaPreview(std::int32_t area) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectCard(std::int32_t index, std::int32_t game) {
@@ -8168,7 +8168,7 @@ void DrawTitleFileSelectCard(std::int32_t index, std::int32_t game) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleFileSelectScrollbar() {
@@ -8196,7 +8196,7 @@ void DrawTitleFileSelectScrollbar() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void TFSEL_DispFileSelect_Callback(void *) {
@@ -8218,7 +8218,7 @@ void TFSEL_DispFileSelect_Callback(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void TFSEL_DispFileSelect(void *) {
@@ -8232,7 +8232,7 @@ void TFSEL_DispFileSelect(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t SelectTitleS1Save() {
@@ -8263,7 +8263,7 @@ std::int64_t SelectTitleS1Save() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t SelectTitleS2Save(const TitleFileSelectSelectionStates &states, std::int32_t) {
@@ -8316,7 +8316,7 @@ std::int64_t SelectTitleS2Save(const TitleFileSelectSelectionStates &states, std
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t ConfirmTitleS1Save(TitleControlData *control, std::uint32_t, std::uint16_t input) {
@@ -8355,7 +8355,7 @@ std::int64_t ConfirmTitleS1Save(TitleControlData *control, std::uint32_t, std::u
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t ConfirmTitleS2Save(TitleControlData *, std::uint32_t, std::uint16_t pressed) {
@@ -8389,7 +8389,7 @@ std::int64_t ConfirmTitleS2Save(TitleControlData *, std::uint32_t, std::uint16_t
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t ConfirmTitleSceneChange(TitleControlData *, std::uint32_t, std::uint16_t input) {
@@ -8429,7 +8429,7 @@ std::int64_t ConfirmTitleSceneChange(TitleControlData *, std::uint32_t, std::uin
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void TFSEL_NewGameCtrl_Callback(void *data) {
@@ -8519,7 +8519,7 @@ void TFSEL_NewGameCtrl_Callback(void *data) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void StartTitleNewGame(void *) {
@@ -8533,7 +8533,7 @@ void StartTitleNewGame(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void StartTitleCollection(void *) {
@@ -8546,7 +8546,7 @@ void StartTitleCollection(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void StartTitleSnapshotViewer(void *) {
@@ -8561,7 +8561,7 @@ void StartTitleSnapshotViewer(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_NewGameTitleTask(void *) {
     padcCheckControllerConnection();
@@ -8572,7 +8572,7 @@ void S2Save_NewGameTitleTask(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_ContinueTitleTask(void *) {
     RunTitleLoadFlow(false);
@@ -8580,7 +8580,7 @@ void S2Save_ContinueTitleTask(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void S2Save_TitleLoadTask(void *) {
     RunTitleLoadFlow(true);
@@ -8588,7 +8588,7 @@ void S2Save_TitleLoadTask(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t S2Save_GetPendingStartParameters() noexcept {
     return pendingPlayerState ? -1 : 0;
@@ -8596,7 +8596,7 @@ std::int32_t S2Save_GetPendingStartParameters() noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2Save_QueryPendingPlayerTransform(Vector3 &position, std::int32_t &yaw) noexcept {
     position = pendingPlayerTransform.position;
@@ -8606,7 +8606,7 @@ bool S2Save_QueryPendingPlayerTransform(Vector3 &position, std::int32_t &yaw) no
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2Save_ConsumePendingPlayerPersistentState(PlayerPersistentState &state) noexcept {
     if (pendingPlayerPersistentState.present == 0)
@@ -8618,7 +8618,7 @@ bool S2Save_ConsumePendingPlayerPersistentState(PlayerPersistentState &state) no
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool S2Save_RestorePlayerAtStartup() noexcept {
     Character *const character = g_playerRuntime.character;
@@ -8645,7 +8645,7 @@ bool S2Save_RestorePlayerAtStartup() noexcept {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void SaveScreenUpdate(void *taskData) {
     SaveTaskData *save = static_cast<SaveTaskData *>(taskData);
@@ -8718,7 +8718,7 @@ void SaveScreenUpdate(void *taskData) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8741,7 +8741,7 @@ void FinishSaveTask(SaveTaskData &save, S2SaveResult result) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8777,7 +8777,7 @@ void SaveTaskCallback(void *taskData) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8796,7 +8796,7 @@ bool MoveTitleSelection(std::int32_t direction) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8813,7 +8813,7 @@ void EndTitleLoadFlow() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8840,7 +8840,7 @@ void BeginTitleLoadFlow(bool completedOnly) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8909,7 +8909,7 @@ void RunTitleLoadFlow(bool completedOnly) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8925,7 +8925,7 @@ std::filesystem::path MakeTemporaryPath(const std::filesystem::path &destination
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8952,7 +8952,7 @@ bool FlushFileToDisk(const std::filesystem::path &path) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8973,7 +8973,7 @@ void SyncParentDirectory(const std::filesystem::path &destination) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -8986,7 +8986,7 @@ void RemoveTemporaryFile(const std::filesystem::path &path) noexcept {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9008,7 +9008,7 @@ S2SaveResult CommitTemporaryFile(const std::filesystem::path &temporary, const s
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9039,7 +9039,7 @@ void CompleteBackupSave(std::int32_t stage, std::int32_t result, const void *sou
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9062,7 +9062,7 @@ std::int32_t CompleteBackupSaveWrite(void *parameter) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9100,7 +9100,7 @@ bool EnsureBackupParentDirectories(const char *source) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9136,7 +9136,7 @@ void QueueBackupArchiveWrite(const char *path, const void *source, std::uint32_t
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9161,7 +9161,7 @@ std::int32_t CompleteBackupFileRead(void *parameter) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9198,7 +9198,7 @@ void QueueBackupArchiveRead(const char *path, void *destination, std::uint32_t o
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9239,7 +9239,7 @@ std::int32_t PreflightBackupSaveWrite(const char *path, std::uint32_t size) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -9268,7 +9268,7 @@ std::int32_t DeleteBackupArchiveFile(const char *name) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetSaveDataStuff() {
     activeBackupState.store(0, std::memory_order_seq_cst);
@@ -9285,7 +9285,7 @@ void SetSaveDataStuff() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t BupReady(std::int32_t reserve) {
 #if defined(SHENMUE_STEAM)
@@ -9313,7 +9313,7 @@ std::uint64_t BupReady(std::int32_t reserve) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t QueueSaveFileWrite(const char *name, const void *source, std::uint32_t size, BackupSaveCompletion completion) {
     BupReady(1);
@@ -9337,7 +9337,7 @@ std::uint64_t QueueSaveFileWrite(const char *name, const void *source, std::uint
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t QueueSnapshotMetadataWrite(SnapshotMetadataOwner *metadata) {
     return QueueSaveFileWrite("Snap-shots", metadata, 0x1c68) ? 5 : 0;
@@ -9345,7 +9345,7 @@ std::uint32_t QueueSnapshotMetadataWrite(SnapshotMetadataOwner *metadata) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t DeleteSaveFile(const char *name) {
     BupReady(1);
@@ -9364,7 +9364,7 @@ std::int32_t DeleteSaveFile(const char *name) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 BackupListenerNode *HPLG_RegisterCallback(HLib::TaskCallback callback) {
@@ -9388,7 +9388,7 @@ BackupListenerNode *HPLG_RegisterCallback(HLib::TaskCallback callback) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void HPLG_UnregisterCallback(BackupListenerNode *node) {
@@ -9411,7 +9411,7 @@ void HPLG_UnregisterCallback(BackupListenerNode *node) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void HPLG_NotifyCallbacks(BackupHotplugData *data) {
@@ -9421,7 +9421,7 @@ void HPLG_NotifyCallbacks(BackupHotplugData *data) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void HPLG_Callback(void *taskData) {
@@ -9436,7 +9436,7 @@ void HPLG_Callback(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void HPLG_Enqueue() {
@@ -9471,7 +9471,7 @@ void HPLG_Refresh(std::int32_t index) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t GetBackupInfo(std::int32_t index) {
@@ -9490,7 +9490,7 @@ float GetBackupProgressRatio() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSceneInfos(std::int32_t actNumber, std::uint32_t mapName, std::int32_t entryPoint) {
     shenmue::s2::SetSceneInfos(actNumber, shenmue::shen_name(mapName), entryPoint);
 }

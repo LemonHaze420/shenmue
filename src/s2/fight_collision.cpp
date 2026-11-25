@@ -1,6 +1,6 @@
 #include "shenmue.h"
 #include "common/native_sqrt.hpp"
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/fight_stage.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "s2/motion_work_dc.hpp"
@@ -47,7 +47,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t g_vfSelectedReactionAnimation{};
 
@@ -86,7 +86,7 @@ constexpr HitProfile hitProfiles[]{{.attackScale = {1, 1}, .impulseScale = {1, 1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 const VFCollisionShape *PushShapes(const VFActor *actor);
@@ -129,7 +129,7 @@ void vfc_VF_RobCollision_Callback(void *parameter);
 HLib::Task *Queue_vfc_VF_RobCollision(VFMA_t *game);
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -143,7 +143,7 @@ template <class T> T ReadFightData(const void *owner, std::size_t offset) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t GetMoveProficiency(std::uint8_t category, std::uint8_t move);
 
@@ -151,7 +151,7 @@ std::int32_t g_vfSelectedReactionAnimation;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 float GetMoveProficiencyScale(std::uint8_t move);
 
@@ -170,13 +170,13 @@ float vfclCalculateGuardKnockbackFactor(FightActorRuntimePrefix *actor, float) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void EmitFightSmoke(std::uint8_t profile, FightActorRuntimePrefix *actor);
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 template <class T> static inline T &FightCollisionValue(void *actor, std::size_t offset) {
     return *reinterpret_cast<T *>(static_cast<std::byte *>(actor) + offset);
@@ -184,7 +184,7 @@ template <class T> static inline T &FightCollisionValue(void *actor, std::size_t
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static inline std::int32_t FightStyleAnimation(FightActorRuntimePrefix *actor, std::size_t offset) {
     const std::byte *const *data = reinterpret_cast<const std::byte *const *>(reinterpret_cast<const std::byte *>(actor) + 0x38);
@@ -210,7 +210,7 @@ static std::int32_t RandomReactionVariant(FightActorRuntimePrefix *source, Fight
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void vfSetupHitReactionAnim(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target, std::uint16_t animation) {
     if (!animation)
@@ -353,7 +353,7 @@ FindModelComponent
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfclApplyHitResolution(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target);
 
@@ -539,7 +539,7 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -581,7 +581,7 @@ typedef char ActorContactMaskCheck[offsetof(ActorContactState, activeShapeMask) 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -593,7 +593,7 @@ ActorContactState &ContactState(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -605,7 +605,7 @@ const VFCollisionShape *BodyShapes(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -617,7 +617,7 @@ const VFCollisionShape *PushShapes(const VFActor *actor) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -630,7 +630,7 @@ Vector3 ScaleToMagnitude(const Vector3 &input, float magnitude) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -642,7 +642,7 @@ std::uint8_t ActorSlot(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -686,7 +686,7 @@ void MoveReadyEnemy(FCMG_t *group, float x, float z) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -700,7 +700,7 @@ std::int32_t StyleAnimation(const VFActor &actor, std::size_t offset) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *participants, std::int32_t count, std::int32_t phase);
 
@@ -724,7 +724,7 @@ void mtwkTranslateRigInterpolated(MotionWork *work, float x, float y, float z);
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 float vfclGetPushRadius(FightActorRuntimePrefix *actor) {
@@ -742,13 +742,13 @@ float vfclGetPushRadius(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint32_t g_vfIntersectionTagSource;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::byte *GetMapRetainedCharacterState();
 
@@ -807,7 +807,7 @@ float FightIntersectionDistance(FightActorRuntimePrefix *actor, std::uint32_t ya
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclTransformContactShapes(FightActorRuntimePrefix *actor) {
@@ -857,7 +857,7 @@ void vfclTransformContactShapes(VFActor *self) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfInitializeActorCollision(FightRuntimePrefix *game, std::uint8_t index) {
@@ -912,7 +912,7 @@ void vfInitializeActorCollision(VFMA_t *game, std::uint8_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfClCopyMotionData(FightRuntimePrefix *game) {
@@ -941,7 +941,7 @@ void vfClCopyMotionData(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfClRaycastInWorldGrid() {
@@ -1013,7 +1013,7 @@ void vfClRaycastInWorldGrid() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfclApplyDeltaToContactHistory(FightActorRuntimePrefix *actor, float x, float z) {
@@ -1032,7 +1032,7 @@ static void vfclApplyDeltaToContactHistory(FightActorRuntimePrefix *actor, float
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclMoveEntityWithContactHistory(FightActorRuntimePrefix *actor, float x, float z) {
@@ -1091,7 +1091,7 @@ void vfclMoveEntityWithContactHistory(VFActor *self, float x, float z) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
@@ -1212,7 +1212,7 @@ void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclUpdateHeightFlagsForGrid(FightActorRuntimePrefix *actor) {
@@ -1323,7 +1323,7 @@ void vfclUpdateHeightFlagsForGrid(VFActor *self) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclResolvePairedContactDrift(FightRuntimePrefix *game) {
@@ -1415,7 +1415,7 @@ void vfclResolvePairedContactDrift(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclEnforceRingBoundary(VFCL_t *collision) {
@@ -1554,7 +1554,7 @@ void vfclEnforceRingBoundary(VFCL_t *collision) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclResolveWorldContacts(VFCL_t *collision) {
@@ -1614,7 +1614,7 @@ std::uint8_t vfclFindBodyShapeForBone(std::uint8_t bone) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfclSetContactCategory(FightActorRuntimePrefix *a, FightActorRuntimePrefix *b, VFCL_t *collision) {
@@ -1744,7 +1744,7 @@ void vfclSetContactCategory(VFActor *a, VFActor *b, VFCL_t *collision) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1938,7 +1938,7 @@ void vfclComputePenetrationAndOverlap(VFCL_t *collision, VFActor *defender, VFAc
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfclAdjustForSlideAndStick(VFCL_t *collision) {
@@ -2022,7 +2022,7 @@ void vfclAdjustForSlideAndStick(VFCL_t *collision) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t second) {
@@ -2074,13 +2074,13 @@ void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t seco
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t second);
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static float vfResolveHitOutcomeAndImpulse(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target, float impact) {
     const std::uint32_t hit = target->hitStateFlags;
@@ -2173,7 +2173,7 @@ float vfResolveHitOutcomeAndImpulse(VFActor *self, VFActor *other, float impact)
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfApplyEnvAudio(float impact, FightActorRuntimePrefix *source) {
@@ -2218,7 +2218,7 @@ void vfApplyEnvAudio(float impact, VFActor *self) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 struct HitProfile {
     float attackScale[2], impulseScale[4];
@@ -2232,7 +2232,7 @@ static const HitProfile hitProfiles[7] = {{{1, 1}, {1, 1.2f, 1, 1.2f}, {11776, 6
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfmaUpdateCollisionCounter(FightRuntimePrefix *game, std::uint8_t event, std::uint16_t move) {
@@ -2269,7 +2269,7 @@ void vfmaUpdateCollisionCounter(FightRuntimePrefix *game, std::uint8_t event, st
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void vfSetReactionKnockbackFromProfile(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target, float impulse) {
     const std::uint8_t *entry =
@@ -2346,7 +2346,7 @@ void vfSetReactionKnockbackFromProfile(VFActor *self, VFActor *other, float impu
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfAdjustReactionForGround(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
@@ -2358,7 +2358,7 @@ static void vfAdjustReactionForGround(FightActorRuntimePrefix *source, FightActo
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // The attached stage object retains its own velocity and reset state.
 void vfStageObjectApplyImpulse(VFActor *self) {
@@ -2370,7 +2370,7 @@ void vfStageObjectApplyImpulse(VFActor *self) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void vfAssignKnockbackReaction(float impact, float impulse, FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
     static float durationScale = 0.4f;
@@ -2667,7 +2667,7 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #define FIGHT_ACTOR_VALUE(T, actor, offset) (*reinterpret_cast<T *>(reinterpret_cast<std::byte *>(actor) + (offset)))
 
@@ -2681,7 +2681,7 @@ static inline void vfRestoreAuthoredHitProgram(FightActorRuntimePrefix *actor, s
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfclApplyHitResolution(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
@@ -3083,7 +3083,7 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void vfClGetBonePos(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
@@ -3140,7 +3140,7 @@ void vfClGetBonePos(std::uint8_t index, VFActor *first, VFActor *second) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collision) {
@@ -3225,7 +3225,7 @@ bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collisio
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t second) {
@@ -3302,13 +3302,13 @@ void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t s
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t second);
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static Vector3 ScaleContactDisplacement(const Vector3 &value, float length) {
     const float scale = length / ::sqrtf((value.y * value.y + value.x * value.x) + value.z * value.z);
@@ -3318,7 +3318,7 @@ static Vector3 ScaleContactDisplacement(const Vector3 &value, float length) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static Vector3 ReadyContactDisplacement(const Vector3 &separation, const Vector3 &history) {
     const float squared = separation.x * separation.x + separation.z * separation.z;
@@ -3368,7 +3368,7 @@ template <bool ActiveOpponent> Vector3 ReadyContactDisplacement(Vector3 separati
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void ResolveReadyActive(VFCLParticipantTmp *participants, std::int32_t readyIndex, std::int32_t activeIndex) {
     VFCLParticipantTmp &ready = participants[readyIndex], &active = participants[activeIndex];
@@ -3420,7 +3420,7 @@ void ResolveReadyActive(VFCLParticipantTmp &ready, VFCLParticipantTmp &active) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void ResolveReadyReady(VFCLParticipantTmp *participants, std::int32_t firstIndex, std::int32_t secondIndex) {
     VFCLParticipantTmp &first = participants[firstIndex], &second = participants[secondIndex];
@@ -3469,7 +3469,7 @@ void ResolveReadyReady(VFCLParticipantTmp &first, VFCLParticipantTmp &second) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static std::int32_t ParticipantPairInContactRange(VFCLParticipantTmp *participants, std::uint8_t first, std::uint8_t second) {
     const Vector3 *a, *b;
@@ -3509,7 +3509,7 @@ const Vector3 &ParticipantPosition(const VFCLParticipantTmp &participant) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool PairBlockedByWorld(VFCL_t *collision, const FightActorRuntimePrefix *a, const FightActorRuntimePrefix *b) {
@@ -3542,7 +3542,7 @@ bool PairBlockedByWorld(const VFActor *a, const VFActor *b) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *participants, std::int32_t count, std::int32_t phase) {
     FightRuntimePrefix *game = collision->game;
@@ -3638,7 +3638,7 @@ void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *p
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfc_VF_RobCollision_Callback(void *parameter) {
@@ -3809,7 +3809,7 @@ void vfc_VF_RobCollision_Callback(void *parameter) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 HLib::Task *Queue_vfc_VF_RobCollision(FightRuntimePrefix *game) {

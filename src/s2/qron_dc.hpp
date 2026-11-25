@@ -39,7 +39,7 @@ struct QronMapDefinition {
     std::int32_t lightIndex;
     std::uint32_t flags;
 };
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef void (*QronFloorCallback)(Vector3 *, std::uint32_t);
 struct QronFloorDescriptor {
     std::byte retained00[0x14];
@@ -55,7 +55,7 @@ SHENMUE_QRON_LAYOUT(sizeof(QronFloorDescriptor) == 0x20);
 #endif
 struct QronFloorRuntime {
     shen_name areaId;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float baseHeight;
     std::int32_t maximumFloor, minimumFloor;
     shen_name fieldName;
@@ -65,7 +65,7 @@ struct QronFloorRuntime {
     std::byte retainedFloorState[0x18];
 #endif
     std::int32_t floor;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     QronFloorCallback callback;
     std::uint32_t flags;
     const QronStairConnection *connections;
@@ -87,7 +87,7 @@ SHENMUE_QRON_LAYOUT(offsetof(QronMapDefinition, lightIndex) == 0x14);
 SHENMUE_QRON_LAYOUT(offsetof(QronMapDefinition, flags) == 0x18);
 SHENMUE_QRON_LAYOUT(sizeof(QronFloorRuntime) == 0x48);
 SHENMUE_QRON_LAYOUT(offsetof(QronFloorRuntime, floor) == 0x1c);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SHENMUE_QRON_LAYOUT(offsetof(QronFloorRuntime, temporaryFloorHeight) == 0x18);
 SHENMUE_QRON_LAYOUT(offsetof(QronFloorRuntime, callback) == 0x20);
 SHENMUE_QRON_LAYOUT(offsetof(QronFloorRuntime, flags) == 0x24);

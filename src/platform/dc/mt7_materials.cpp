@@ -9,7 +9,7 @@ namespace sdk {
 float g_mt7AmbientIntensity = 0.30000001192092896f;
 float g_mt7SpecularLookup[kMT7SpecularRows][kMT7SpecularSamples] = {};
 const void *g_mt7PaletteData = 0;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector4 g_mt7DiffuseChannels = {1.0f, 1.0f, 1.0f, 0.0f};
 Vector4 g_mt7SpecularChannels = {1.0f, 1.0f, 1.0f, 0.0f};
 #else

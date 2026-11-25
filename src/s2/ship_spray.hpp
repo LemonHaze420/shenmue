@@ -46,7 +46,7 @@ struct ShipSprayEmitter {
     std::int32_t count;
     void *particles;
 };
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char ShipSprayLayout868[(sizeof(ShipSprayEmitter) == 0x4c) ? 1 : -1];
 #else
 typedef char ShipSprayLayout923[(sizeof(ShipSprayEmitter) == 80) ? 1 : -1];

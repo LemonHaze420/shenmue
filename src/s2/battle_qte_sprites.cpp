@@ -1,6 +1,6 @@
 #include "shenmue.h"
 #include "s2/legacy_sprite_types.hpp"
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/battle_qte_sprites.hpp"
 #include "s2/file_loader_dc.hpp"
 #include "s2/map_control_dc.hpp"
@@ -63,7 +63,7 @@
 #include "s2/camera_sequence_dc.hpp"
 #include "s2/face_controller_dc.hpp"
 #include "s2/osage_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #endif
 #include "s2/startup_assets_dc.hpp"
@@ -88,7 +88,7 @@
 #include <math.h>
 #include <float.h>
 #include "s2/camera_conversation_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_dc.hpp"
 #include "s2/motion_ground_dc.hpp"
 #include "s2/door_control_dc.hpp"
@@ -112,7 +112,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::array<FightLoadSpriteRecord, 6> g_fightLoadSprites;
 
@@ -130,7 +130,7 @@ LegacyIconSprite eventSprite{};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int64_t LoadFBQTE();
 std::int64_t fbLoadGauge();
 void FreeFBQTE();
@@ -144,7 +144,7 @@ void DrawBattleQteSprite(
 void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags);
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -159,7 +159,7 @@ void PrepareEventSprite_Callback(void *data) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -189,7 +189,7 @@ std::int64_t LoadBattleSpriteBank(const char *filename, shen_name token, std::si
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 FightRuntimePrefix *vfmaGetTaskParam();
 
@@ -222,7 +222,7 @@ std::uint8_t g_vfMotnNibbles[16];
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadFBQTE();
 void fbLoadGauge();
 void FreeBattleGaugeSprites();
@@ -257,7 +257,7 @@ void DrawBattleQteSprite(
 void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetupLoadSprite() {
@@ -307,7 +307,7 @@ std::int64_t SetupLoadSprite() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ReleaseNamedTexture_Wrapper(std::int32_t index);
 
@@ -348,7 +348,7 @@ void FreeLoadSprites() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void CreateFightLoadMessage() {
@@ -394,7 +394,7 @@ void DrawFightLoadDigit(std::int32_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ControlFightLoadSprites(std::int32_t mode, std::int32_t index) {
@@ -423,7 +423,7 @@ void ControlFightLoadSprites(std::int32_t mode, std::int32_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void FreeVFGW(FightActorRuntimePrefix *actor) {
@@ -436,7 +436,7 @@ void FreeVFGW(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfMotnNibbleSet(std::uint8_t code, std::int32_t value) {
@@ -455,7 +455,7 @@ void vfMotnNibbleSet(std::uint8_t code, std::int32_t value) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void fbLoadGauge() {
@@ -475,7 +475,7 @@ std::int64_t fbLoadGauge() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void LoadFBQTE() {
@@ -495,7 +495,7 @@ std::int64_t LoadFBQTE() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void FreeBattleGaugeSprites() {
@@ -515,7 +515,7 @@ void FreeBattleGaugeSprites() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void FreeFBQTE() {
@@ -535,7 +535,7 @@ void FreeFBQTE() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfDrawBattleGaugeIcon(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha) {
@@ -544,7 +544,7 @@ void vfDrawBattleGaugeIcon(std::uint8_t icon, std::int32_t x, std::int32_t y, fl
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void DrawBattleQteSprite(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha, std::int32_t rotation, std::int32_t flags, float depth) {
@@ -611,7 +611,7 @@ void DrawBattleQteSprite(
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags) {

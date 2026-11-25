@@ -34,13 +34,13 @@ static const std::uint8_t kHelpDirectionMissingOrder[4] = {1, 3, 0, 2}, kHelpDir
 extern HelpIconFlags helpIconPersistent, helpIconFrameOverlay;
 extern HelpDirectionBlink helpDirectionBlinks[4];
 extern std::uint32_t helpIconDeferredRemoval;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int32_t helpIconItemPromptFrames;
 extern std::uint32_t iconSelectFlags;
 void RequestHelpIconItemPrompt();
 void RequestHelpIconSelection(std::uint32_t mask);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::uint8_t kNativeHelpTopicCount = 148;
 extern std::uint8_t helpIconIndex, helpPreviousIconIndex, helpIconMode;
 std::uint32_t GetHelpIconEnabled();

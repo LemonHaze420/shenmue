@@ -5,7 +5,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "common/types.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "common/math.hpp"
 #include "s2/motion_node_dc.hpp"
 #endif
@@ -33,7 +33,7 @@ static const std::uint32_t NPC_BINARY_MEMORY = SHEN_NAME4('N', 'P', 'C', 'B'), N
 static const std::uint32_t NPC_AREA_ROUTE_MEMORY = SHEN_NAME4('S', 'T', 'R', 'L');
 static const std::size_t kNpcEntryMemoryBytes = 0x73eac;
 static const std::size_t kNpcAreaRouteMemoryBytes = 0x2000;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const char *const kNpcBinaryFilenames[6] = {"NPC.BIN", "NPC.BIN", "NPC.BIN", "NPC_Q100.BIN", "NPC_KRN1.BIN", 0};
 #else
 static const char *const kNpcBinaryFilenames[6] = {"NPC.BIN", "NPC.BIN", "NPC.BIN", "NPC_YUAN.BIN", "NPC.BIN", "NPC.BIN"};
@@ -48,7 +48,7 @@ extern std::byte *npcAreaRouteStore;
 extern std::uint32_t npcNewLoadState;
 extern shen_name npcScheduleSeedNames[2];
 extern std::uint32_t hasPendingNpcScheduleSeeds;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct NpcRouteLiveEntry;
 extern const std::byte *pendingNpcScheduleSeeds;
 void RestoreNpcScheduleSeedPayload(const void *payload);
@@ -56,7 +56,7 @@ void CaptureNpcScheduleSeedPayload(void *payload);
 std::int32_t CaptureNpcRouteSeedData(const NpcRouteLiveEntry *entry, std::uint32_t *data);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct NpcAreaProfile {
     union {
         std::uint32_t selectorsOffset;

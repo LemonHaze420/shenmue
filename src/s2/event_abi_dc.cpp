@@ -3,7 +3,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/character_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_state_flags_dc.hpp"
 #endif
 #include "s2/fight.hpp"
@@ -59,7 +59,7 @@ void RemoveWeatherInstructionFlags(std::uint32_t flags);
 
 extern "C" {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool __attribute__((renesas)) shenmue_s2_event_SetMotionIkTargetPosition(shenmue::s2::MotionWork *work, shenmue::Vector3 *position) {
     return shenmue::s2::mtwkSetIkTargetPosition(work, position);
 }
@@ -351,7 +351,7 @@ void __attribute__((renesas)) shenmue_s2_event_SetPersistentHelpIconState(std::u
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void __attribute__((renesas)) shenmue_s2_event_SetButtonHelpIcon(std::uint16_t button, std::int32_t, std::int32_t, std::uint16_t state) {
     if (button == 0x100)
         button = 4;

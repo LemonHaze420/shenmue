@@ -76,7 +76,7 @@ float EvaluateWeibullDensity(float shape, float scale, float value) {
     return term * scaled;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateTMP0_TMP1(float *output, std::uint32_t count, std::uint32_t taps) {
     float *const coefficients = static_cast<float *>(HLib::AllocateTaskData(4U * taps, WEATHER_NOISE_COEFFICIENT_STORAGE));
     float *const history = static_cast<float *>(HLib::AllocateTaskData(4U * taps, WEATHER_NOISE_HISTORY_STORAGE));

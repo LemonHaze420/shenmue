@@ -35,7 +35,7 @@
 #include "s2/screen_film.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "platform/dc/am2_vector.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/model_render_dc.hpp"
 #include "s2/world_render.hpp"
 #endif
@@ -120,7 +120,7 @@ void flddPushIntersectionFlag(std::int16_t flags);
 std::int32_t FindNearestRayIntersection(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
 std::int32_t RaycastInWorldGrid(Vector3 &output, const Vector3 &origin, float radius);
 float shenFindIntersectionWithScene(const Vector3 &position, float maximumY);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);
 #else
 bool GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);
@@ -1399,7 +1399,7 @@ std::uint16_t g_fieldDataFlags;
 
 std::uint16_t g_fieldDataClearFlags;
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint16_t g_fieldDataResetFlags;
 #endif
 
@@ -1411,11 +1411,11 @@ std::uint16_t &g_fieldIntersectionFound = g_fieldIntersection.found;
 
 std::int16_t g_fieldGridCells[128];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_fieldRayUsesGrid;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const Vector3 generatedBoxVertices[8] = {
     {-0.5f, 0.0f, -0.5f},
     {-0.5f, 0.0f, 0.5f},
@@ -1428,7 +1428,7 @@ static const Vector3 generatedBoxVertices[8] = {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const Vector3 generatedBoxNormals[6] = {
     {-1.0f, 0.0f, 0.0f},
     {0.0f, 0.0f, 1.0f},
@@ -1439,7 +1439,7 @@ static const Vector3 generatedBoxNormals[6] = {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const FieldDataPolygon generatedBoxPolygons[6] = {
     {1, 65535, 0, 0, {0, 1, 2, 3}},
     {1, 65535, 1, 1, {1, 4, 5, 2}},
@@ -1454,7 +1454,7 @@ static const FieldDataPolygon generatedBoxPolygons[6] = {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawFixedShadowMesh(std::uint32_t index, float alpha) {
     void *const mesh = GetFixedShadowMesh(index);
     if (!mesh)
@@ -1599,7 +1599,7 @@ std::int32_t TestPointInOrientedCylinder(const Vector3 *start, const Vector3 *en
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindFieldPartEndpointIntersection(Vector3 *output, const Vector3 *destination, const Vector3 *origin) {
     std::int16_t *cell;
@@ -1659,7 +1659,7 @@ std::int32_t FindFieldPartEndpointIntersection(Vector3 *output, const Vector3 *d
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t FindFieldPartSegmentOffsetIntersection(Vector3 *output, const Vector3 *destination, const Vector3 *origin) {
     std::int16_t *cell;
@@ -1759,7 +1759,7 @@ static std::int32_t FindFieldPartSegmentOffsetIntersection(Vector3 *output, cons
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t TestFieldPartSegment(const Vector3 *start, const Vector3 *end) {
     std::int16_t *cell;
@@ -1818,7 +1818,7 @@ std::int32_t IsPointWithinSphere(const Vector3 *point, const Vector3 *centre, fl
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t TestFieldLineSphere(const Vector3 *origin, const Vector3 *end, const Vector3 *centre, float radius) {
     const float radiusSquared = radius * radius;
@@ -1937,7 +1937,7 @@ void ProjectPointToFieldPlane(Vector3 *output, const Vector3 *position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindFieldGridCell(const Vector3 *position) {
     const FieldDataGridConfig *const grid = g_currentFieldData->grid;
@@ -1959,7 +1959,7 @@ std::int32_t FindFieldGridCell(const Vector3 *position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GatherFieldSegmentGridCells(const Vector3 *start, const Vector3 *end, std::int16_t *cells) {
     std::int32_t count, stepX, stepY, stepZ, nextX, nextY, nextZ, previous, crossX, crossY, crossZ;
     std::int32_t spanX, spanY, spanZ;
@@ -2114,7 +2114,7 @@ bool IsPointAboveFieldPlane(const Vector3 *position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool FieldPolygonContainsPoint(const Vector3 *position) {
     Vector3 edgeStorage;
     Vector3 offsetStorage;
@@ -2235,7 +2235,7 @@ bool ResolveFieldPolygonSphereOverlap(Vector3 *output, const Vector3 *position, 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void OffsetPointFromFieldPlane(Vector3 *output, const Vector3 *position, float amount) {
     const float *normal = &g_currentFieldPlane.normal.x;
@@ -2302,7 +2302,7 @@ std::int32_t GetFieldPolygonFlags(std::int16_t index) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SelectFieldPolygon(std::int16_t index) {
     float *target = &g_currentFieldPlane.normal.x;
     FieldDataRoot *data = g_currentFieldData;
@@ -2499,7 +2499,7 @@ std::int32_t GatherFieldGridCells(const Vector3 *position, std::int16_t *cells) 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::uint32_t ResolveFieldPartSphereVolume(Vector3 *output, const Vector3 *position, float radius) {
     std::uint32_t result = 0;
@@ -2583,7 +2583,7 @@ static std::uint32_t ResolveFieldPartSphereVolume(Vector3 *output, const Vector3
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::uint32_t TestFieldPartSphereRegion(Vector3 *output, const Vector3 *position, float radius) {
     std::int16_t *cell;
@@ -2673,7 +2673,7 @@ static std::uint32_t TestFieldPartSphereRegion(Vector3 *output, const Vector3 *p
 #endif
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float FindFieldPartIntersectionHeight(const Vector3 *position) {
     std::int16_t *cell;
@@ -2755,7 +2755,7 @@ float FindFieldPartIntersectionHeight(const Vector3 *position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GatherFieldGridCellsUpward(const Vector3 *position, std::int16_t *cells) {
     const FieldDataGridConfig *const grid = g_currentFieldData->grid;
@@ -2792,7 +2792,7 @@ std::int32_t GatherFieldGridCellsUpward(const Vector3 *position, std::int16_t *c
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float FindFieldPartMinimumHeight(const Vector3 *position) {
     std::int16_t *cell;
@@ -2917,7 +2917,7 @@ void FLDD_FreeFieldData() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResolveFightFieldProbe(FightFieldProbe *, MapControlData *) {
 }
@@ -2927,7 +2927,7 @@ void ResolveFightFieldProbe(FightFieldProbe *, MapControlData *) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindRayIntersectionInGridWithinRadius(const Vector3 *origin, const Vector3 *destination, float radius) {
     std::int16_t *cell;
@@ -2974,7 +2974,7 @@ std::int32_t FindRayIntersectionInGridWithinRadius(const Vector3 *origin, const 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetOccupancyForThisFieldSegment(shen_name name, const Vector3 *position, std::int32_t yaw) {
     if (!position)
@@ -3023,7 +3023,7 @@ std::int32_t SetOccupancyForThisFieldSegment(shen_name partName, const Vector3 *
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t flddQueryStairConnection(const Vector3 *position, Vector3 *anchor, std::int32_t *yaw, std::int32_t *connectionId) {
     flddPushIntersectionFlag(0x20);
@@ -3085,7 +3085,7 @@ std::uint32_t flddQueryStairConnection(const Vector3 &position, float maximumY, 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t scenFindIntersection(const Vector3 *position) {
     flddPushIntersectionFlag(0x80);
@@ -3153,7 +3153,7 @@ std::uint32_t flddQueryCameraIntersection(const Vector3 &position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t flddQueryStairOrigin(const Vector3 *position, Vector3 *origin, std::int32_t *yaw) {
     Vector3 local = *position;
@@ -3280,7 +3280,7 @@ std::int32_t ParseFieldData(void *data, shen_name name, std::int32_t relocate) {
     std::int32_t index = g_fieldPartCount;
     if (!data || index >= 8 || FindFieldDataPart(name))
         return -1;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     FieldDataRoot *root;
     if (relocate)
         root = RelocateFieldData(data);
@@ -3403,7 +3403,7 @@ std::int32_t FLDD_ReadFieldData(void *chunk) {
     g_currentFieldPart = 0;
     ClearFieldIntersection();
     ResetFieldDataFlags();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_fieldRayUsesGrid = 0;
 #else
     g_fieldDataResetFlags = 0;
@@ -3421,7 +3421,7 @@ std::int32_t FLDD_ReadFieldData(void *chunk) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t FieldDataNullsub() {
     return 0;
 }
@@ -3533,7 +3533,7 @@ float FindFieldIntersectionHeight(const Vector3 *position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float FindFieldIntersectionHeightAbove(const Vector3 *position) {
     Vector3 probe;
     probe.x = position->x;
@@ -3582,7 +3582,7 @@ float FindFieldMinimumHeightInWorld(const Vector3 *position) {
     return minimum;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float TransformClippedPoint(const Vector3 *position) {
     float minimum = FLT_MAX;
     flddPushIntersectionFlag(8);
@@ -3644,7 +3644,7 @@ std::uint32_t ResolveFieldSphereVolumeInWorld(Vector3 *output, const Vector3 *po
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindNearestRayIntersection(Vector3 *output, const Vector3 *destination, const Vector3 *origin) {
     Vector3 localEnd = *destination;
@@ -3743,7 +3743,7 @@ std::int32_t FindNearestRayIntersection(Vector3 *output, const Vector3 *destinat
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t TestFieldWorldSegment(const Vector3 *start, const Vector3 *end) {
     std::int32_t result = 0;
@@ -3774,7 +3774,7 @@ std::int32_t TestFieldWorldSegment(const Vector3 *start, const Vector3 *end) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius) {
     std::uint32_t result = 0;
     ClearFieldIntersection();
@@ -3802,7 +3802,7 @@ std::int32_t GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &des
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GlobalCapsuleIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius) {
     std::uint32_t result = 0;
     ClearFieldIntersection();
@@ -4100,7 +4100,7 @@ void TransformAgainstIntersectionResult(Vector3 &point) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void transformIntersectionResult(Vector2s *angles) {
     FieldDataRuntimePart *const part = g_fieldIntersection.part;
@@ -4484,7 +4484,7 @@ std::int32_t flddGetIntersectionReference(FieldIntersectionReference *reference)
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t flddGetIntersectionNormal(Vector3 *normal, const FieldIntersectionReference *reference) {
     FieldDataRuntimePart *const part = FindFieldDataPart(reference->part);
     if (!part)
@@ -4595,7 +4595,7 @@ void FieldQueryNullsub() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const std::uint32_t *FindFieldCategoryRecord(std::uint32_t category) {
     if (!static_cast<std::uint8_t>(g_fieldIntersection.found))
@@ -4748,7 +4748,7 @@ std::uint32_t flddQueryCategory6InRadius(const Vector3 *position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t plymDoIntersectionTest(const Vector3 *position) {
     flddPushIntersectionFlag(0x200U);
@@ -4796,7 +4796,7 @@ std::uint32_t flddQueryDoorIntersection(const Vector3 &position) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ToggleFlagOnFieldEntity(shen_name name, std::int32_t enabled) {
     std::int32_t result = 0;
     std::uint32_t category = 8;
@@ -4947,7 +4947,7 @@ bool InitializeGeneratedFieldData() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool flddAssignGeneratedBox(std::int32_t mode, const Vector3 &position, const Vector3 &scale, std::int32_t yaw) {
     FieldDataRoot *const root = g_generatedFieldData;
@@ -5093,7 +5093,7 @@ std::span<const FieldDataPart> flddGetParts() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool flddClearAllGeneratedVolumes() {
     FieldDataRoot *const root = g_generatedFieldData;
@@ -5139,7 +5139,7 @@ void flddClearAllGeneratedVolumes() {
 } // namespace shenmue
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ToggleFlagOnFieldEntity(std::uint32_t name, std::int32_t enabled) {
     return shenmue::s2::ToggleFlagOnFieldEntity(shenmue::shen_name(name), enabled);
 }
@@ -5148,7 +5148,7 @@ extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ToggleFlagOnFi
 extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_IsWithinRadiusFromVector3PolyIntersectTest(const shenmue::Vector3 *position, float radius) {
     return shenmue::s2::IsWithinRadiusFromVector3PolyIntersectTest(position, radius);
 }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_FindNearestRayIntersection(
     shenmue::Vector3 *output, const shenmue::Vector3 *destination, const shenmue::Vector3 *origin) {
     return shenmue::s2::FindNearestRayIntersection(output, destination, origin);

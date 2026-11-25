@@ -5,7 +5,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // GameJam keeps the texture-animation offset and the motion rig's pose mode in the same word.
 Vector2 modelTextureOffset asm("_shenmue_s2_texanim_pose_word") = {0.0f, 0.0f};
 #else

@@ -21,7 +21,7 @@ namespace std {}
 #include "s2/startup_assets_dc.hpp"
 #include "s2/pak_dc.hpp"
 #include "s2/scenario_flags_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_control_dc.hpp"
 #include "s2/map_event_transition_dc.hpp"
 #include "s2/field_query_dc.hpp"
@@ -285,7 +285,7 @@ std::uintptr_t eventExecutionRegions[4] = {
 #else
 constexpr std::array<std::uintptr_t, 4> eventExecutionRegions{
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     0x0df80000U, 0x0c328000U, 0x0c338000U, 0x0c348000U
 #else
     0x8df80000U, 0x8c328000U, 0x8c338000U, 0x8c348000U
@@ -308,7 +308,7 @@ void InitializeEventExecutionRegions() {
 }
 
 const void *InstallEventOverlay(const void *payload, const char *stem, std::size_t length, EventFunctionType functionType) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     void *const destination = GetEventExecutionRegion(functionType);
     if (!destination)
         return SHENMUE_EVENT_NULL;
@@ -343,7 +343,7 @@ void ExecuteEventOverlay(std::uint32_t slot, std::uintptr_t argument) {
     RunEventOverlay(slot, argument);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static HLib::Task *areaEventEntryTask = SHENMUE_EVENT_NULL;
 static HLib::Task *startupFadeTask = SHENMUE_EVENT_NULL;
 static AreaStartupFadeState startupFadeState;
@@ -475,7 +475,7 @@ void QueueImmediateNextFadeTask(HLib::Task *task) {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_QueueImmediateNextFadeTask(shenmue::s2::HLib::Task *task) {
     shenmue::s2::QueueImmediateNextFadeTask(task);
 }

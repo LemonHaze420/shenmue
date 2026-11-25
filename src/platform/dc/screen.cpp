@@ -14,7 +14,7 @@ namespace sdk {
 std::int32_t g_screenTextureError = 0;
 std::int32_t g_screenTextureTransformEnabled = 0;
 #endif
-#if SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ScreenNullsub() {
 }
 #endif
@@ -150,7 +150,7 @@ void ResetScreenTextureState() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::int32_t kmSetUserClipping(
     KMVERTEXBUFFDESC *descriptor, std::uint32_t list, std::int32_t left, std::int32_t top, std::int32_t right, std::int32_t bottom);
 

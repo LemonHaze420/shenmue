@@ -190,7 +190,7 @@ void AnimateFlagCallback(Character *character, void *payload) {
                 Matrix4x4::RotateAroundZ_Wrapper(placement->rotationZ);
             if (placement->rotationY)
                 Matrix4x4::RotateAroundY_Wrapper(placement->rotationY);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             DrawCharacterModelBranch(object->root);
 #else
             reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(object->root);

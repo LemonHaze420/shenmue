@@ -2,7 +2,7 @@
 #include "s2/legacy_sprite_types.hpp"
 #include "common/native_sqrt.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/navigation.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "s2/navi_data_dc.hpp"
@@ -46,7 +46,7 @@
 #include <float.h>
 #include <math.h>
 #include <cstring>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
 #endif
@@ -87,7 +87,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -113,7 +113,7 @@ std::int32_t naviWindowPreviewTexture;
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t NaviFolderEntryMask(std::int32_t page, std::uint16_t excludedFlags);
 std::int32_t NaviFolderEntryCount(std::int32_t page, std::uint16_t excludedFlags);
 bool NaviIsDisplayable(bool skipMapItemRequirement);
@@ -146,7 +146,7 @@ void NVW_CtrlNaviWindow_Callback(void *);
 } // namespace
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 struct NativeNaviWindowState {
     std::int32_t phase, page, requestedPage;
@@ -226,7 +226,7 @@ LegacyIconSprite naviFloorLabelSprite = nativeNaviFloorLabelSprite;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t naviAreaConfigCount = 57;
 
@@ -240,7 +240,7 @@ std::int32_t navGetNumEntriesFor(shen_name map) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SelectNaviMapMarkers() {
@@ -263,7 +263,7 @@ void SelectNaviMapMarkers() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #define INIT_NAVI_PACKET(packet)                                                                                                                               \
     do {                                                                                                                                                       \
@@ -325,7 +325,7 @@ void InitializeNaviIcons() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool NaviIsDisplayable(bool skipMapItemRequirement) {
@@ -387,7 +387,7 @@ bool NaviIsDisplayable(bool skipMapItemRequirement) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const char *GetNaviFolderLabel(std::int32_t page) {
     return naviFolderPages[static_cast<std::size_t>(page)].label;
@@ -395,7 +395,7 @@ const char *GetNaviFolderLabel(std::int32_t page) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const char *GetNaviFolderEntryLabel(std::int32_t page, std::int32_t entry) {
     return naviFolderPages[static_cast<std::size_t>(page)].entries[entry].label;
@@ -403,9 +403,9 @@ const char *GetNaviFolderEntryLabel(std::int32_t page, std::int32_t entry) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *g_naviTask;
 std::uint32_t naviFlags;
 std::uint8_t *g_naviTrailTexturePixels = 0;
@@ -517,7 +517,7 @@ static std::uint32_t naviFlags;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -532,7 +532,7 @@ void BeginNaviClipping(const NaviTaskData &task) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -546,7 +546,7 @@ void EndNaviClipping(const NaviTaskData &task) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -565,7 +565,7 @@ bool NaviFloorMaskIncludes(const std::uint64_t *mask, std::int32_t floor) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -607,7 +607,7 @@ void DrawNaviFloorImages(const Matrix4x4 &transform, const NaviTaskData &task, f
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -625,7 +625,7 @@ void StampNaviTrail(std::int32_t x, std::int32_t y, std::uint8_t colour, std::in
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool IsCurrentAreaQA11();
 
@@ -661,7 +661,7 @@ void DrawNaviFloorNumber(std::int32_t floor) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void PrepareNaviFrame(void *data) {
     NaviTaskData *task = static_cast<NaviTaskData *>(data);
@@ -823,7 +823,7 @@ void PrepareNaviFrame(void *data) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void NAVI_DummyWait_Callback(void *data) {
     NaviTaskData &task = *static_cast<NaviTaskData *>(data);
@@ -850,7 +850,7 @@ void NAVI_DummyWait_Callback(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void NAVI_CtrlNavi_Callback(void *data) {
@@ -938,7 +938,7 @@ void NAVI_CtrlNavi_Callback(void *taskData) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static std::int32_t IsQronNaviArea(shen_name area);
 
@@ -1014,7 +1014,7 @@ HLib::Task *NAVI_DummyWait_Enqueue(std::uint8_t nextFunctionIndex) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void InitializeNaviWindowSprites() {
@@ -1079,7 +1079,7 @@ void InitializeNaviWindowSprites() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void ResetNaviWindowState(NativeNaviWindowState *work) {
     work->phase = 0;
@@ -1126,7 +1126,7 @@ HLib::Task *NVW_CtrlNaviWindow_Enqueue(std::uint8_t nextFunctionIndex) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 bool IsCurrentMapNaviFolderAvailable() {
@@ -1140,7 +1140,7 @@ bool IsCurrentMapNaviFolderAvailable() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 const NativeNaviFolderPage *navGetFolderPage(std::uint32_t page) {
@@ -1154,7 +1154,7 @@ const NativeNaviFolderPage *navGetFolderPage(std::uint32_t page) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 const NativeNaviFolderEntry *navGetFolderEntries(std::uint32_t page) {
@@ -1168,7 +1168,7 @@ const NativeNaviFolderEntry *navGetFolderEntries(std::uint32_t page) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t NaviFolderEntryCount(std::uint32_t page, std::uint16_t excluded) {
@@ -1198,7 +1198,7 @@ std::int32_t NaviFolderEntryCount(std::int32_t page, std::uint16_t excludedFlags
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t NaviFolderEntryMask(std::uint32_t page, std::uint16_t excluded) {
@@ -1238,7 +1238,7 @@ std::uint32_t NaviFolderEntryMask(std::int32_t page, std::uint16_t excludedFlags
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void *LoadNaviFolderSprite(std::uint32_t page) {
@@ -1248,7 +1248,7 @@ void *LoadNaviFolderSprite(std::uint32_t page) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void ReleaseNaviWindowStrips(std::uint32_t flags) {
     if ((flags & 3U) == 0)
@@ -1292,7 +1292,7 @@ void ReleaseNaviWindowStrips(std::uint8_t flags) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void ReleaseNaviWindowAllocations(NativeNaviWindowState *work) {
@@ -1323,7 +1323,7 @@ void ReleaseNaviWindowAllocations() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void PublishNaviWindowLabel(NativeNaviWindowState &work, const char *label, const char *secondary, std::int32_t slot) {
@@ -1360,7 +1360,7 @@ void PublishNaviWindowLabel(NaviWindowState &work, const char *label, const char
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool BuildNaviWindowHeading(std::int32_t slot, std::int32_t category) {
@@ -1393,7 +1393,7 @@ std::uint32_t BuildNaviWindowHeading(std::int32_t slot, std::int32_t category) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void BuildNaviWindowRootLabels(NativeNaviWindowState &work) {
@@ -1421,7 +1421,7 @@ void BuildNaviWindowRootLabels(NaviWindowState &work) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1433,7 +1433,7 @@ const NaviFolderEntry *GetNaviWindowFolderEntries(std::int32_t category) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void BuildNaviWindowFolderLabels(NativeNaviWindowState &work, std::int32_t category) {
@@ -1480,7 +1480,7 @@ void BuildNaviWindowFolderLabels(NaviWindowState &work, std::int32_t category) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void LoadNaviWindowPageSource(NativeNaviWindowState *work) {
@@ -1512,7 +1512,7 @@ void LoadNaviWindowPageSource() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void RefreshNaviWindowPreview(NativeNaviWindowState *work) {
     TextureChunk *cursor = static_cast<TextureChunk *>(work->mapImageData);
@@ -1602,7 +1602,7 @@ void RefreshNaviWindowPreview() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1624,7 +1624,7 @@ std::uint64_t AllocateNaviWindowLabelTextures() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1653,7 +1653,7 @@ std::int64_t InitializeNaviWindowResources() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void DrawNaviWindowLabel(std::uint32_t row, const Vector2 &position, std::uint32_t colour) {
@@ -1694,7 +1694,7 @@ void DrawNaviWindowLabel(std::int32_t row, const Vector2 &position, std::uint32_
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static void DrawNaviWindowScaleBar(const Vector2 *position, std::int16_t width, float depth) {
     naviWindowHeadingSprite.alignment = 6;
@@ -1851,7 +1851,7 @@ void DrawNaviWindow(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1867,7 +1867,7 @@ void ReleaseNaviWindowPreviewTextures() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void NVW_CtrlNaviWindow_Callback(void *) {
@@ -2129,7 +2129,7 @@ void NVW_CtrlNaviWindow_Callback(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void CreateNaviWindowLabelTextures(NativeNaviWindowState &work) {
@@ -2148,7 +2148,7 @@ static void CreateNaviWindowLabelTextures(NativeNaviWindowState &work) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t OpenNaviWindow() {
@@ -2230,7 +2230,7 @@ std::int64_t OpenNaviWindow() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t UpdateNaviWindow() {
@@ -2241,7 +2241,7 @@ std::int32_t UpdateNaviWindow() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t CloseNaviWindow(std::int32_t force) {
@@ -2274,7 +2274,7 @@ std::int64_t CloseNaviWindow(std::int32_t force) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ReleaseNavigationTaskOwners() {
     (void)CloseNaviWindow(1);
@@ -2290,7 +2290,7 @@ void ReleaseNavigationTaskOwners() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t navCreate(const Vector3 &position, std::int32_t type) {
@@ -2348,7 +2348,7 @@ std::int32_t navCreate(const Vector3 &position, std::int32_t type) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void navPlaceMarker(const Vector3 *position, std::int32_t type) {
@@ -2373,7 +2373,7 @@ void navPlaceMarker(const Vector3 *position, std::int32_t type) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t IsNaviActive() {
@@ -2382,7 +2382,7 @@ std::int32_t IsNaviActive() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t SetNaviDisplayOverride(std::int32_t enabled) {
@@ -2396,7 +2396,7 @@ std::uint32_t SetNaviDisplayOverride(std::int32_t enabled) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool CanReuseNaviTrailTexture(shen_name previous, shen_name current) {
@@ -2408,7 +2408,7 @@ static bool CanReuseNaviTrailTexture(shen_name previous, shen_name current) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static std::int32_t DoesNaviTrailTextureMatch(const TextureChunk *texture) {
@@ -2431,7 +2431,7 @@ static std::int32_t DoesNaviTrailTextureMatch(const TextureChunk *texture) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #define NAVI_RETAINED_TRAIL_TEXTURE reinterpret_cast<TextureChunk *>(eventExecutionRegions[2] + 0x7800)
 #define INITIALIZE_NAVI_TRAIL_TEXTURE(texture)                                                                                                                 \
@@ -2444,7 +2444,7 @@ static std::int32_t DoesNaviTrailTextureMatch(const TextureChunk *texture) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void LoadNaviBackground() {
@@ -2457,7 +2457,7 @@ static void LoadNaviBackground() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static bool LoadNaviFloorImages(const NativeNaviFloorDefinition &definition) {
@@ -2475,7 +2475,7 @@ static bool LoadNaviFloorImages(const NativeNaviFloorDefinition &definition) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool ConstructNaviMap(std::uint32_t configIndex) {
     bool result;
@@ -2530,7 +2530,7 @@ bool ConstructNaviMap(std::uint32_t configIndex) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 

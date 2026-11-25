@@ -51,6 +51,7 @@ src/s2/data_list_dc.cpp
 src/s2/dynamic_tracks.cpp
 src/s2/particle_effects.cpp
 src/s2/hiki.cpp
+src/s2/hiki_model.cpp
 src/s2/elevator.cpp
 src/s2/event_vector_dc.cpp
 src/s2/event_character_transform_dc.cpp

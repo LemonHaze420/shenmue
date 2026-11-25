@@ -8,7 +8,7 @@
 namespace shenmue { namespace s2 {
 
 static const std::uintptr_t kColdArchiveAddress =
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     0x0c400000;
 #else
     0x8c400000;

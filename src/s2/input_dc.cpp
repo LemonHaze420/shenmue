@@ -79,7 +79,7 @@ void SnapshotPeripheralInputs() {
 }
 
 void UpdateInputsFromInputDevices() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t index = 0;
     do {
         const PDS_PERIPHERAL *const peripheral = pdGetPeripheral(index * 6);
@@ -209,7 +209,7 @@ std::uint32_t EVT_GetControllerInput(std::uint8_t userIndex, std::int32_t select
     return value;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 PeripheralInputSnapshot *GetControllerEventWork(std::uint8_t userIndex) {
     return &g_peripheralInputSnapshots[userIndex & 3U];
@@ -221,7 +221,7 @@ PeripheralInputSnapshot *GetControllerEventWork(std::uint8_t userIndex) {
 #undef SHENMUE_INPUT_PORT_DATA
 #undef SHENMUE_INPUT_DATA_BUFFER
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" shenmue::s2::PeripheralInputSnapshot *__attribute__((renesas)) shenmue_s2_event_GetControllerEventWork(std::uint32_t userIndex) {
     return shenmue::s2::GetControllerEventWork(static_cast<std::uint8_t>(userIndex));
 }

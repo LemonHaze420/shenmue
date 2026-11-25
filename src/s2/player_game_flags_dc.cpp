@@ -138,7 +138,7 @@ std::uint32_t SetPlayerGameFlags(std::uint32_t mode, void *parameter) {
     return result;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t EV_setHoldStatesFlagsEx(std::uint32_t mode) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
     PlayerModelState *const model = runtime->model;

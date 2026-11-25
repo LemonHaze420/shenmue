@@ -36,7 +36,7 @@ void DrawFloorTitle(std::int16_t centreY);
 void DrawFloorNumber(std::int32_t value, std::int32_t special);
 void DrawLoadNumber(std::int32_t value, std::uint32_t mode, std::int32_t x, std::int32_t y, std::int32_t digits);
 void DrawLoadingLabel(std::uint32_t colour);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void scenSetTaskFlags(std::int32_t mode);
 #else
 void scenSetTaskFlags(std::uint8_t mode);

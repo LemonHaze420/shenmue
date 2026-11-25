@@ -19,12 +19,12 @@ namespace shenmue {
 namespace s2 {
 
 void figpUpdateBlurModelState(FigurePose *figure) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (figure->startTime != 0 && figure->motionScale != 0 && !shenIsGamePaused() && figure->mode != 0) {
 #else
     if (figure->startTime != 0 && figure->motionScale != 0 && (g_loadingFlag & 2U) == 0 && figure->mode != 0) {
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         --figure->counter;
 #else
         figure->counter = static_cast<std::int16_t>(static_cast<std::uint16_t>(static_cast<std::uint16_t>(figure->counter) - 1U));
@@ -39,7 +39,7 @@ void figpUpdateBlurModelState(FigurePose *figure) {
             entry.flags |= 1U;
             entry.mode = figure->mode;
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             figure->entryIndex = static_cast<std::uint8_t>(figure->entryIndex) + 1;
             if (static_cast<std::uint8_t>(figure->entryIndex) >= blurWorkEntryCount)
                 figure->entryIndex = 0;
@@ -55,7 +55,7 @@ void figpUpdateBlurModelState(FigurePose *figure) {
     }
     if ((figure->flags & 4U) != 0) {
         figure->mode = 0;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         for (std::uint8_t index = 0; index < blurWorkEntryCount; ++index) {
 #else
         for (std::size_t index = 0; index < blurWorkEntryCount; ++index) {

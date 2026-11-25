@@ -38,7 +38,7 @@ NJS_TEXSURFACE *CreateWeatherTextureSurface(std::int32_t width, std::int32_t hei
     return surface;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadWeatherTextureSurface(NJS_TEXSURFACE *surface, const void *pixels) {
     kmLoadTexture(reinterpret_cast<KMSURFACEDESC *>(surface), const_cast<Uint32 *>(static_cast<const Uint32 *>(pixels)), 0, 0);
 }

@@ -63,7 +63,7 @@ void SCEN_ShowEventMessage(HLib::Task *scenarioTask, std::int32_t mode, const ch
 void dbgPrintEventMessage(const char *message);
 bool scenHasActiveSubtitles(HLib::Task *task);
 void ForceScenarioSubtitles(HLib::Task *task);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RequestForcedScenarioSubtitles(HLib::Task *task);
 #endif
 std::int32_t scenEvaluateCurrentSequence(shen_name name, std::int8_t mode);

@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "s2/pak_dc.hpp"
@@ -26,11 +26,9 @@
 #include "s2/game_runtime.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/hlib.hpp"
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_area_route.hpp"
 #include "s2/character_control_dc.hpp"
 #include "s2/motion_work_dc.hpp"
@@ -47,9 +45,7 @@
 #include "s2/map_control.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/math.hpp"
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/matrix_stack.hpp"
@@ -70,11 +66,9 @@
 #include <cctype>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cmath>
-#endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/matrix.hpp"
 #include "platform/dc/am2_vector.hpp"
 #include "s2/character_placement_dc.hpp"
@@ -84,10 +78,8 @@
 #include <cstdint>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstdio>
 #include <cstring>
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <limits>
@@ -100,7 +92,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RestartNpcAreaRouteContext(Character *character, NpcRouteStateContextPrefix *context);
 
 bool RequestNpcRouteMotion(Character *character, NpcRouteStateContextPrefix *context, std::int32_t explicitRequest);
@@ -119,11 +111,11 @@ bool AttachScenarioFreeTalkCharacter(Character *character, const std::byte *sour
 #endif
 
 namespace {
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 char npcHumanFilename[8] = {};
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const char *GetNpcHumanFilename(shen_name name) {
     std::memcpy(npcHumanFilename, &name, sizeof(name));
@@ -131,7 +123,7 @@ const char *GetNpcHumanFilename(shen_name name) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetNpcHumanTextureSize(std::int32_t index) {
     const std::int32_t *words = reinterpret_cast<const std::int32_t *>(npcHumanIndex);
@@ -141,7 +133,7 @@ std::int32_t GetNpcHumanTextureSize(std::int32_t index) {
 #endif
 
 } // namespace
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void npcSetupHumans() {
     char directory[32];
@@ -153,7 +145,7 @@ void npcSetupHumans() {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags) {
     if (!npcHumansReady)
@@ -229,7 +221,7 @@ std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::u
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PakGlobalData *npcGetHumanPak(std::int32_t index) {
     if (index >= 0 && npcHumanSlots[index].state == NpcHumanPakState::Attached)
         return npcHumanSlots[index].pak;
@@ -237,7 +229,7 @@ PakGlobalData *npcGetHumanPak(std::int32_t index) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcTimedMotionSlotPrefix npcTimedMotionSlots[2] = {};
 
 std::int32_t npcTimedMotionCount = 0;
@@ -255,7 +247,7 @@ std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState *state, NpcRouteLiveEntr
 void ApplyNpcAreaMotion(NpcRouteLiveEntry *entry, std::uint16_t motion);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool AllocateNpcTimedMotion(NpcRouteLiveEntry *entry) {
     if (npcTimedMotionCount != 2) {
@@ -274,11 +266,11 @@ bool AllocateNpcTimedMotion(NpcRouteLiveEntry *entry) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t AcquireNpcTimedMotionSlot(NpcRouteLiveEntry *entry);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry) {
     if (!entry->timedMotionHandle) {
         if (!AcquireNpcTimedMotionSlot(entry))
@@ -310,7 +302,7 @@ fail:
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void NpcRouteCollisionNullsub(void *) {
 }
@@ -990,7 +982,7 @@ std::int64_t EV_NPC_NewLoadSw(std::uint32_t state) {
 } // namespace s2
 } // namespace shenmue
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_SetNpcMotionTransition(
     shenmue::s2::NpcRouteStateContextPrefix *context, std::uint32_t name, std::int32_t operation) {
     shenmue::s2::SetNpcRouteMotionState(context, shenmue::shen_name(name), operation);

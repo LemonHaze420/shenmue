@@ -207,14 +207,14 @@ HLib::Task *WAR_CallbackParticleResource_Enqueue(float rainSpawnLimit, float sec
     return EnqueueWeatherParticleResource();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetWeatherGroupSpawnVolume(const WeatherParticleGroup *group) {
     return group ? group->spawnVolume : 0.0f;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherGroupRain(WeatherParticleGroup *group) {
     if (group && group->rainParticles) {
@@ -301,7 +301,7 @@ float GetRainGroupMotionDamping(WeatherParticleGroup *group) {
     return group->rainMotionDamping;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherGroupRipples(WeatherParticleGroup *group) {
     if (!group)
@@ -330,7 +330,7 @@ void SetRippleGroupTimeStep(WeatherParticleGroup *group, float step) {
         group->rippleDeltaTime = step;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetRippleGroupTimeStep(const WeatherParticleGroup *group) {
     return group ? group->rippleDeltaTime : 0.0f;
@@ -391,7 +391,7 @@ void SetWeatherRippleCameraY(WeatherParticleGroup *group, float y) {
     group->cameraY = y;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetWeatherGroupBoundsMaxY(const WeatherParticleGroup *group) {
     return group ? group->boundsMaxY : 0.0f;
@@ -639,7 +639,7 @@ void SetWeatherRipplePressureParameters(float pressure) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetWeatherSphereClipPlanesSet0(
     WeatherSphereGroup *group, const Vector2 *first, const Vector2 *second, const Vector2 *third, float clipY0, float clipY1, const Vector2 *fourth) {
@@ -700,7 +700,7 @@ WeatherParticleGroup *AllocateWeatherFixcDirectGroup(const Vector3 *center, floa
     return group;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherParticleGroup(WeatherParticleGroup *group) {
     if (group) {
@@ -758,7 +758,7 @@ void UpdateWeatherDirectGroup(WeatherParticleGroup *group, const Vector3 *positi
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void WeatherDirectGroupNullsub() {
 }
@@ -844,7 +844,7 @@ WeatherParticleGroup *AllocateWeatherParticleGroup(const Vector3 *center, float 
     return group;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainMode0Group(WeatherParticleGroup *group) {
     if (group) {
@@ -994,7 +994,7 @@ WeatherParticleGroup *AllocateWeatherClipParticleGroup(const Vector3 *center, fl
     return group;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainMode1Group(WeatherParticleGroup *group) {
     if (group) {
@@ -1044,7 +1044,7 @@ void PrepareWeatherRainMode1(
 }
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareWeatherRippleMode1(WeatherParticleGroup *group, const Vector3 *position, const Vector3 *, const Vector3 *, const Vector3 *) {
 #else
 void PrepareWeatherRippleMode1(WeatherParticleGroup *group, const Vector3 *position) {
@@ -1141,7 +1141,7 @@ HLib::Task *EnqueueWeatherParticleResource() {
     return weatherParticleResourceTask;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DestroyWeatherParticleResource() {
     HLib::DestroyTaskInternal(weatherParticleResourceTask);
 }
@@ -1154,7 +1154,7 @@ void AppendWeatherParticleGroup(WeatherParticleGroup *group) {
     ++weatherWarState;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RemoveWeatherParticleGroup(WeatherParticleGroup *group) {
     if (!group->previous)
@@ -1164,7 +1164,7 @@ void RemoveWeatherParticleGroup(WeatherParticleGroup *group) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetRainAndRippleFlagsTo(std::int32_t state) {
     WeatherParticleGroup *group = weatherGroupList;
@@ -1182,7 +1182,7 @@ void SetRainAndRippleFlagsTo(std::int32_t state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetWeatherForceFlag() {
     return g_currentWeatherForceFlag;
 }
@@ -1200,7 +1200,7 @@ void InsertWeatherParticleGroup(WeatherParticleGroup *previous, WeatherParticleG
     LinkWeatherParticleGroups(group, next);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DetachWeatherParticleGroup(WeatherParticleGroup *group) {
     WeatherParticleGroup *const previous = group->previous;
@@ -1211,7 +1211,7 @@ void DetachWeatherParticleGroup(WeatherParticleGroup *group) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LinkWeatherParticleGroups(WeatherParticleGroup *previous, WeatherParticleGroup *next) {
     if (previous)
@@ -1221,7 +1221,7 @@ void LinkWeatherParticleGroups(WeatherParticleGroup *previous, WeatherParticleGr
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SplitWeatherParticleGroups(WeatherParticleGroup *previous, WeatherParticleGroup *next) {
     if (previous)
@@ -1238,7 +1238,7 @@ WeatherParticleGroup *GetLastWeatherParticleGroup(WeatherParticleGroup *group) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 WeatherParticleGroup *GetNextWeatherParticleGroup(const WeatherParticleGroup *group) {
     if (!group)

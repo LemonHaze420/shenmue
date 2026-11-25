@@ -1,5 +1,5 @@
 #include "s2/magic_room.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/sdk.hpp"
 #endif
 
@@ -29,7 +29,7 @@ std::int32_t roomEntityCount;
 std::int32_t roomEntityCapacity;
 std::byte *roomEntityBuffer;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t roomTransformReflection;
 
 void TransformMagicRoomPlacements(
@@ -134,7 +134,7 @@ void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
     float v9;
 
     outDim->x = model->dimensions.x;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float *outZ = &outDim->z;
     *outZ = model->dimensions.z;
 #else
@@ -143,20 +143,20 @@ void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
 #endif
     switch (model->category) {
     case 4:
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         outDim->z = outDim->z * 1.5f;
 #else
         outDim->z = Z * 1.5f;
 #endif
         break;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     case 6:
 #else
     case 5:
     case 6:
     case 9:
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         outDim->x = outDim->x * 1.2f;
         outDim->z = outDim->z * 3.0f;
 #else
@@ -172,7 +172,7 @@ void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
         break;
 #endif
     case 11:
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         v6 = outDim->x / outDim->z;
         if (v6 > 0.89999998f && v6 < 1.1f) {
             outDim->x = outDim->x + 1.6f;
@@ -193,7 +193,7 @@ void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
         outDim->z = v8;
 #endif
         break;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     case 5:
     case 9:
         outDim->x = outDim->x * 1.2f;
@@ -217,7 +217,7 @@ void ExpandMagicRoomDimensions(MagicRoomModel *model, Vector3 *outDim) {
     case 40:
     case 41:
     case 43:
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         v9 = sqrtf((float)(outDim->x * outDim->x) + (float)(outDim->z * outDim->z));
 #else
         v9 = sqrtf((float)(Z * Z) + (float)(outDim->x * outDim->x));
@@ -523,7 +523,7 @@ MagicRoomInteger FindMagicRoomBaseCandidates(int a1, float a2, float a3) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MagicRoomInteger ConstructMagicRoomSecondaryPlacement(MagicRoomPlacement *out, int modelIndex, int remaining, float *usedWidth, float *usedDepth) {
     MagicRoomModel *model;
     MagicRoomModel *partner;
@@ -915,7 +915,7 @@ MagicRoomInteger ConstructMagicRoomBasicPlacement(MagicRoomPlacement *a1, int a2
     *a4 = p_Z->x;
     *a5 = v14;
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     a1->position.y = 0.0f;
 #else
     a1->position.y = 0.02f;
@@ -1099,7 +1099,7 @@ MagicRoomInteger FillMagicRoomLowerRightCorner(MagicRoomPlacement *a1, int a2) {
 #endif
 
 MagicRoomInteger FillMagicRoomRightWall(MagicRoomPlacement *a1, int a2) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float v2;
     float d2;
     int v7;
@@ -1366,7 +1366,7 @@ MagicRoomInteger FillMagicRoomLowerLeftCorner(MagicRoomPlacement *a1, int a2) {
 #endif
 
 MagicRoomInteger FillMagicRoomLeftWall(MagicRoomPlacement *a1, int a2) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float Z;
     int v6;
     float v7;
@@ -1554,7 +1554,7 @@ MagicRoomInteger ConstructMagicRoomSpecialPlacement(MagicRoomPlacement *a1, int 
 #endif
 
 MagicRoomInteger ConstructMagicRoomGroupedPlacement(MagicRoomPlacement *a1, int a2, int a3, float *a4, float *a5) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     MagicRoomModel *model;
     MagicRoomModel *partner;
     std::int32_t partnerIndex;
@@ -1944,7 +1944,7 @@ int AddMagicRoomSurfaceDecoration(MagicRoomPlacement *outChild, const MagicRoomP
     outChild->position.x =
         (float)((float)((float)((float)(((unsigned int)(0x41C64E6DU * v8 + 0x8707) >> 16) & 0x7FFF) / 32767.0f) - 0.5f) * v13) + parent->position.x;
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             outChild->position.y = parent->height;
 #else
             outChild->position.y = (float)(parent->height + parent->position.y) + 0.0099999998f;
@@ -1983,7 +1983,7 @@ int TryAddMagicRoomSurfaceDecoration(MagicRoomPlacement *outChild, const MagicRo
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MagicRoomInteger ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placements, int modelIndex, int remaining, float *usedWidth, float *usedDepth) {
     MagicRoomModel *model;
     MagicRoomModel *secondary;
@@ -2184,7 +2184,7 @@ MagicRoomInteger ConstructMagicRoomSeatingPlacement(MagicRoomPlacement *placemen
     return written;
 }
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 MagicRoomInteger FillMagicRoomInterior(MagicRoomPlacement *placements, std::int32_t capacity) {
     float x;
@@ -2295,7 +2295,7 @@ void InitializeMagicRoomGeneration() {
     roomCapacity[41] = 1;
 #endif
 }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FillMagicRoomCategorySeeds() {
     std::int32_t index;
     for (index = 0; index < 9; ++index) {
@@ -2317,7 +2317,7 @@ MagicRoomUnsigned FillMagicRoomCategorySeeds() {
 #endif
 void SetMagicRoomDimensions(float width, float height, float depth) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     roomGeneration.dimensions.x = width * 0.5f - 0.2f;
 #else
     roomGeneration.dimensions.x = width * 0.5f - 0.15000001f;
@@ -2341,7 +2341,7 @@ void GetMagicRoomDimensions(Vector3 *dimensions) {
     dimensions->z = roomDimensions.y;
 #endif
 }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMagicRoomModeSeed(std::int32_t seed) {
     roomGeneration.modeSeed = seed;
 }
@@ -2410,7 +2410,7 @@ void AddMagicRoomEntityMatrix(const Matrix4x4 *matrix) {
         ++roomEntityCount;
     }
 }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MagicRoomInteger GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::int32_t capacity, std::int32_t seed) {
 #else
 MagicRoomUnsigned GenerateMagicRoomPlacements(MagicRoomPlacement *placements, std::int32_t capacity, std::int32_t seed) {
@@ -2420,7 +2420,7 @@ MagicRoomUnsigned GenerateMagicRoomPlacements(MagicRoomPlacement *placements, st
         placements[index].extraRotationX = 0;
         placements[index].yaw = 0;
         placements[index].extraRotationZ = 0;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
         placements[index].fadeAlpha = 0.0f;
 #endif
     }
@@ -2531,7 +2531,7 @@ MagicRoomUnsigned GenerateMagicRoomPlacements(MagicRoomPlacement *placements, st
     if (roomModes[5] == 0 && count < limit)
         count += static_cast<std::int32_t>(FillMagicRoomLeftWall(placements + count, limit - count));
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (roomGeneration.modes[4] == 0 && count < capacity)
         count += FillMagicRoomInterior(placements + count, capacity - count);
 #endif

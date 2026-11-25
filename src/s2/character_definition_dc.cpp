@@ -67,7 +67,7 @@
 #include "s2/input_dc.hpp"
 #include "s2/system_modules_dc.hpp"
 #include "s2/ui_state_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -103,7 +103,7 @@ void ReadMapDisabledLayers(const MapInfoChunk *chunk);
 void LoadMap(std::int32_t act, shen_name area, MapInfoChunk *mapInfo);
 void SetDirtAngle(std::int32_t angle);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool ApplyCharacterEntryOverride(CharacterEntryOverride *state, const CharacterTableArgument *arguments, std::int32_t count, std::int32_t entry) {
 #else
 // @verified - d
@@ -169,7 +169,7 @@ void ApplyMapEventCharacterFlag(Character *character, const CharacterTableArgume
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline void InitializeCharacterTableNode(CharacterNode *node) {
     node->parent = 0;
     node->position.x = node->position.y = node->position.z = 0.0f;
@@ -560,7 +560,7 @@ void ApplyCharacterDefinition(Character *character, const std::uint32_t *source,
         if (components[CC_Cloth].source && components[CC_Cloth].count > 0) {
             const float value = components[CC_Cloth].arguments[0].value.floating;
             std::int32_t integer;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             integer = TruncateToInt32(value);
 #else
             asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(integer) : "f"(value) : "fpul");
@@ -785,7 +785,7 @@ void Mapinfo_MAP_Reader(std::int32_t act, shen_name area, void *mapInfo) {
     InitializeAirPresentation(mapInfo);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EventBase_Wrapper(void *mapInfo) {
     MapInfoChunk *chunk = FindNativeChunk("DIRT", static_cast<MapInfoChunk *>(mapInfo));
@@ -866,7 +866,7 @@ const std::byte *dynaRead(const std::uint8_t name[4]) {
     return reinterpret_cast<const std::byte *>(FindNativeChunk(reinterpret_cast<const char *>(name), first));
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MapInfoChunk *GetCurrentSceneExtensionChunk() {
     return FindNativeChunk("SCEX", GetCurrentMapInfo());
 }

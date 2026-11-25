@@ -4,13 +4,13 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/map_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/scenario_control_dc.hpp"
 #endif
 #include "s2/player_model_dc.hpp"
 #include "s2/player_movement_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_dc.hpp"
 #include "s2/character_pose_dc.hpp"
 #include "s2/character_state_flags_dc.hpp"
@@ -28,14 +28,14 @@ namespace s2 {
 
 std::int32_t plymBeginSpecialTargetMotionSequence(shen_name name);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t plymGetSpecialMode() {
     return (g_playerRuntimePointer->flags >> 10U) & 1U;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t plymSetSpecialMode(std::int32_t enabled) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
@@ -48,7 +48,7 @@ std::uint32_t plymSetSpecialMode(std::int32_t enabled) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymGetSpecialFlag() {
     const PlayerRuntimeState *const runtime = g_playerRuntimePointer;
@@ -56,7 +56,7 @@ std::int32_t plymGetSpecialFlag() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymBeginSpecialMode() {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
@@ -75,7 +75,7 @@ std::int32_t plymBeginSpecialMode() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymFinishRegionInteraction() {
     PlayerModelState *const model = g_playerRuntimePointer->model;
@@ -88,7 +88,7 @@ std::int32_t plymFinishRegionInteraction() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymHasRyoBag(std::int32_t mode) {
     PlayerModelState *model = g_playerRuntimePointer->model;
@@ -104,14 +104,14 @@ std::int32_t plymHasRyoBag(std::int32_t mode) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymCheckAuthorTargetRequested() {
     return plymEvaluateAuthorTargetRequest();
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymSetSpecialModeTargetPosition(const Vector3 *position, std::int32_t mode) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
@@ -129,7 +129,7 @@ std::int32_t plymSetSpecialModeTargetPosition(const Vector3 *position, std::int3
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymBeginSpecialTargetMotionSequence(shen_name name) {
     PlayerRuntimeState *runtime = g_playerRuntimePointer;
@@ -143,7 +143,7 @@ std::int32_t plymBeginSpecialTargetMotionSequence(shen_name name) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymContinueSpecialTargetMotionSequence() {
     PlayerRuntimeState *runtime = g_playerRuntimePointer;
@@ -156,7 +156,7 @@ std::int32_t plymContinueSpecialTargetMotionSequence() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymRequestSpecialPoseSequence(std::int32_t) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
@@ -169,7 +169,7 @@ std::int32_t plymRequestSpecialPoseSequence(std::int32_t) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymRequestRetryScene(std::int16_t act, shen_name area, std::int16_t entry) {
     PlayerModelState *model = g_playerRuntimePointer->model;
@@ -185,7 +185,7 @@ std::int32_t plymRequestRetryScene(std::int16_t act, shen_name area, std::int16_
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymRequestClockSet(std::int32_t hour, std::int32_t minute) {
     PlayerModelState *model = g_playerRuntimePointer->model;
     if (model && !model->heldStateMode) {
@@ -198,7 +198,7 @@ std::int32_t plymRequestClockSet(std::int32_t hour, std::int32_t minute) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymEndSpecialMode(std::int32_t mode) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
@@ -233,7 +233,7 @@ std::int32_t plymEndSpecialMode(std::int32_t mode) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymSetSceneContext(std::int16_t startMinute, std::int16_t endMinute, std::int16_t act, shen_name area, std::int16_t entry) {
     PlayerModelState *const model = g_playerRuntimePointer->model;
@@ -248,7 +248,7 @@ std::int32_t plymSetSceneContext(std::int16_t startMinute, std::int16_t endMinut
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t BuildTargetDateFromFrameClock(DateTime &target) {
     const PlayerModelState *const model = g_playerRuntimePointer->model;
@@ -272,7 +272,7 @@ std::int32_t BuildTargetDateFromFrameClock(DateTime &target) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EV_plymRequestSceneContext(std::int16_t minute, std::int16_t act, shen_name area, std::int16_t entry) {
     PlayerModelState *const model = g_playerRuntimePointer->model;
     if (!model)
@@ -283,7 +283,7 @@ std::int32_t EV_plymRequestSceneContext(std::int16_t minute, std::int16_t act, s
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float ctrlGetLookOverlayWeight() {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -291,7 +291,7 @@ float ctrlGetLookOverlayWeight() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymSetCallback(void (*callback)()) {
     PlayerModelState *model;
@@ -302,7 +302,7 @@ std::int32_t plymSetCallback(void (*callback)()) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymIsRetrySceneStepPending() {
     const PlayerModelState *const model = g_playerRuntimePointer->model;
     if (!model)
@@ -313,7 +313,7 @@ std::int32_t plymIsRetrySceneStepPending() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymScheduleCycleFlagCallback(std::int16_t minute) {
     PlayerModelState *const model = g_playerRuntimePointer->model;
@@ -336,7 +336,7 @@ std::int32_t plymScheduleCycleFlagCallback(std::int16_t minute) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void plymAdvanceTime(std::uint8_t hours, std::uint8_t minutes) {
     PlayerModelState *const model = g_playerRuntimePointer->model;
@@ -439,13 +439,13 @@ std::uint32_t EV_setHoldStatesFlags(std::int32_t mode) {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_plymAdvanceTime(std::uint8_t hours, std::uint8_t minutes) {
     shenmue::s2::plymAdvanceTime(hours, minutes);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace shenmue {
 namespace s2 {

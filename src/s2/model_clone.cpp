@@ -138,13 +138,13 @@ std::int32_t modelSlotFlag;
 
 void *modelSlots[256];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t unusedReloadWord0, unusedReloadWord1, unusedReloadWord2;
 #else
 std::uint32_t unusedReloadWords[3];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const Matrix4x4 *characterModelFrameStream = 0;
 #endif
 
@@ -154,7 +154,7 @@ const Matrix4x4 *characterModelFrameStream = 0;
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetModelSoundMaterial(const MT7Node *node) {
     const MT7NodeSoundData *const data = reinterpret_cast<const MT7NodeSoundData *>(node + 1);
@@ -168,7 +168,7 @@ std::uint32_t GetModelSoundMaterial(const MT7Node *node) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetModelSoundEnvironment(const MT7Node *node) {
     const MT7NodeSoundData *const data = reinterpret_cast<const MT7NodeSoundData *>(node + 1);
@@ -180,7 +180,7 @@ std::uint32_t GetModelSoundEnvironment(const MT7Node *node) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t UpdateMT7NodeTextureCoordinates(const MT7Node *node) {
     void *mesh = node->mesh;
@@ -225,7 +225,7 @@ void FindAirMeshPackets(MT7Node *node, void *output) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMT7ClothNodeKinds(MT7Node *node) {
     switch (node->id) {
     default:
@@ -358,7 +358,7 @@ std::uint32_t GetModelNodeCountForClone(const MT7Node *node) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetModelMdcCloneBlockSize(const MT7Node *node) {
     std::uint32_t size = 0, count, words, block;
     const std::byte *chunk;
@@ -1015,7 +1015,7 @@ MT7Model *ReadAirCloudModel(void *source, std::int32_t *textures) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RebindMT7ModelTextures(MT7Model *model, const MemoTextureName *names, std::int32_t count, const std::int32_t *) {
 #else
 void RebindMT7ModelTextures(MT7Model *model, const MemoTextureName *names, std::int32_t count) {
@@ -1314,7 +1314,7 @@ MT7Node *FindMT7Node(MT7Node *node, std::int16_t id) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ClearShadowNodeTransforms(MT7Node *node) {
     if (node) {
@@ -1331,7 +1331,7 @@ void ClearShadowNodeTransforms(MT7Node *node) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindShadowNodeTransforms(MT7Node *source, MT7Node *destination) {
     destination->transformOverride = 0;
@@ -1351,7 +1351,7 @@ void BindShadowNodeTransforms(MT7Node *source, MT7Node *destination) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PublishSharedShadowNodeTransforms(MT7Node *source, MT7Node *destination) {
     if (source && destination && source != destination)
@@ -1677,7 +1677,7 @@ void DrawAlphaCharacterModelNodes(const MT7Node *node, float alpha) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawCharacterModelBranch(MT7Node *node) {
 #else
 void DrawCharacterModelBranch(MT7Node *node, float) {
@@ -1720,7 +1720,7 @@ void charaApplyScale(const MT7Node *node, float) {
 
 // @verified - d
 void DrawSingleCharacterModel(MT7Node *node) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     DrawCharacterModelBranch(node);
 #else
     reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(node);
@@ -1787,7 +1787,7 @@ void TraverseModelNodeTransforms(const MT7Node *node) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t ClearModelSlotFlag() {
     modelSlotFlag = 0;
@@ -1849,7 +1849,7 @@ void GetMT7NodeTransformMatrix(Matrix4x4 *output, MT7Node *root, const MT7Node *
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ClearModelSlots() {
     for (std::int32_t i = 0; i < 256; ++i)
@@ -1905,7 +1905,7 @@ void RebaseMT7Model(MT7Node *previous, MT7Node *current) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResetUnusedReloadState() {
     unusedReloadWord1 = 0;
     unusedReloadWord0 = 0;
@@ -1963,7 +1963,7 @@ std::int32_t ModelHasFaceNode(const MT7ModelChunk *chunk) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GraftFacialModelNode(void *face, MT7Node *root) {
     FacialModelData *data = static_cast<FacialModelData *>(face);
     if (data->reserved10 || data->reserved14)
@@ -2085,7 +2085,7 @@ void GraftFacialModelNode(void *face, MT7Node *root) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawCharacterModelFrameNodes(MT7Node *node, const Matrix4x4 *parentFrame) {
     const Matrix4x4 *const frame = characterModelFrameStream;
@@ -2114,7 +2114,7 @@ void DrawCharacterModelFrameNodes(MT7Node *node, const Matrix4x4 *parentFrame) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawCharacterMatrixFrames(MT7Node *model, float alpha, const Matrix4x4 *frames) {
     matrix_stack::Matrix4x4_Push(0);

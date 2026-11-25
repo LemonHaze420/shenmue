@@ -47,7 +47,7 @@ extern std::byte *g_doorDataCursor;
 
 void ReadDiscNumber();
 void LoadAreaTable();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 AreaTableEntry *GetAreaTableEntry(shen_name area);
 #endif
 void LoadDoorTable();

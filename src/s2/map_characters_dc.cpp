@@ -40,7 +40,7 @@
 #include "s2/input_dc.hpp"
 #include "s2/system_modules_dc.hpp"
 #include "s2/ui_state_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -91,7 +91,7 @@ PadControlEntry *AllocatePadControlEntry();
 PadControlEntry *BindPadControlEntry(PadControlEntry *entry);
 void SetupDefaultFogParams();
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void npcInit();
 #endif
 
@@ -119,7 +119,7 @@ std::int32_t initlcdTask();
 void init_search_ctrl();
 void authResetLoadFlag();
 void SCEX_Reader(const MapInfoChunk *chunk);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void tree_Callback_Enqueue(char index);
 #else
 void tree_Callback_Enqueue(std::uint8_t index);
@@ -216,7 +216,7 @@ void MapControlTask_Enqueue(std::int8_t nextFunctionIndex) {
     BindPadControlEntry(static_cast<PadControlEntry *>(control->padControl));
     control->retainedTaskD = QueueWindowTask(2);
     SetupDefaultFogParams();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     LoadShadowSprite();
 #else
     npcInit();
@@ -340,7 +340,7 @@ void shenQueueChangeModuleAndScene(SystemModule module, std::int32_t actNumber, 
 // @verified - d
 void SetMapControlStatusFlag(std::int32_t bit, std::int32_t enabled) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     std::uint32_t flags = control->statusFlags;
     if (enabled)
         flags |= 1U << bit;
@@ -532,7 +532,7 @@ bool IsCharacterInCurrentMap(const Character *character) {
 void KillCharactersByModelName(shen_name name, std::int32_t mode) {
     MapCharacterIterator iterator;
     BeginMapCharacterIteration(&iterator, 0);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     while (iterator.character) {
         Character *const character = iterator.character;
         if (GetCharacterResourceOwner(character) == name)
@@ -552,7 +552,7 @@ void KillCharactersByModelName(shen_name name, std::int32_t mode) {
 void ReadMapCharacterTable(const char *name, std::int32_t entry) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     const MapInfoChunk *const chunk = FindNativeChunk(name, static_cast<MapInfoChunk *>(control->mapInfo));
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     union {
         shen_name packed;
         char characters[4];
@@ -610,7 +610,7 @@ HLib::Task *UNUSED_Task_Enqueue(std::uint8_t) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UNUSED_TaskNullsub0() {
 }
 

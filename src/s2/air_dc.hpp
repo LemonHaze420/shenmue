@@ -74,7 +74,7 @@ extern AirDrawState g_airDrawState;
 void InitializeAirLayers();
 void ResetAirDrawState();
 void SetPlanetRotByIndex(const Vector3i &rotation, std::int32_t index);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetIsSkySetup(std::int32_t value);
 void SetPlanetLayerParameter(float value, std::int32_t layer);
 float GetPlanetLayerParameter(std::int32_t layer);

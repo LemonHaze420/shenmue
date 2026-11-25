@@ -1,7 +1,7 @@
 #pragma once
 
 #include "s2/hlib.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/input_dc.hpp"
 #endif
 
@@ -9,7 +9,7 @@
 
 namespace shenmue { namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct SavedSceneInfo {
     std::int32_t actNumber;
     shen_name mapName;
@@ -71,7 +71,7 @@ struct SaveTaskData;
 static const std::size_t kSaveScreenUpdateCallbackOffset = 0x5dc;
 extern SaveTaskData *saveTaskData;
 extern std::uint32_t currentSaveState;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::int32_t g_saveScreenAdmission;
 std::int32_t GetSaveScreenAdmission();
 void SetSaveScreenAdmission(std::int32_t enabled);

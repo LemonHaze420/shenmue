@@ -5,7 +5,7 @@ namespace shenmue {
 namespace s2 {
 const std::int16_t SUBTITLE_STACK_Y[4] = SHENMUE_SUBTITLE_STACK_Y_VALUES;
 const std::int16_t SUBTITLE_STACK_HEIGHT[4] = SHENMUE_SUBTITLE_STACK_HEIGHT_VALUES;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ReleaseNamedTexture_Wrapper(std::int32_t index);
 #endif
 } // namespace s2
@@ -799,7 +799,7 @@ const std::array<FloorTitleEntry, 5> floorTitles{{
 std::int32_t loadTitleDigitCount;
 const MapInfoChunk *loadTitleScene = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const LoadTitleEntry *FindLoadTitle(std::uint32_t sourceName, std::int32_t entry) {
     char key[5];
     std::uint32_t name = sourceName;
@@ -874,7 +874,7 @@ void ST_LoadTitleFadeIn_Callback(void *) {
     HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, 0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ST_LoadTitleFadeOut_Callback(void *) {
     if (g_loadingDrawActive)
         RetireLoadingDraw();
@@ -1230,7 +1230,7 @@ void ST_FadeInSubTitle_Callback(void *taskData) {
 }
 
 // Native ST_FadeOutSubTitle_Callback: once alpha passes zero it releases the textures, the TASK block and the task.
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ST_FadeOutSubTitle_Callback(void *taskData) {
     SubtitleSpriteWork *work = static_cast<SubtitleSpriteWork *>(taskData);
     work->rotation += SUBTITLE_ROTATION_STEP;
@@ -1372,7 +1372,7 @@ void ReleaseLoadTitleFade() {
     g_loadTitleTask = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int ResolveQronLoadLocation(std::uint32_t *subarea);
 bool IsCurrentAreaQA11();
 
@@ -1581,7 +1581,7 @@ void ST_LoadTitleFadeIn() {
     } while (g_loadTitleAlpha < 256);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ST_LoadTitleFade() {
     std::int32_t show = 0;
     if (loadTitleDigitCount || g_loadTitleFadeMode == 6 || g_loadTitleFadeMode == 1)

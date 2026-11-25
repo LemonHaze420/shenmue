@@ -1,6 +1,6 @@
 #include "s2/title_save_dc.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/backup_hotplug_dc.hpp"
 #include "s2/legacy_sprite_dc.hpp"
 #include "s2/title_dc.hpp"

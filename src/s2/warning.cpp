@@ -1,6 +1,6 @@
 #include "s2/warning.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/window.hpp"
 #include "s2/font.hpp"
 #include "s2/hlib.hpp"
@@ -22,7 +22,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -105,7 +105,7 @@ std::int32_t reconnectLeft{};
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 std::uint32_t WRN_BlendColour(std::int32_t weight, std::uint32_t from, std::uint32_t to);
@@ -124,7 +124,7 @@ std::uint32_t WRN_SetBaseColour(std::uint32_t colour);
 std::int16_t *WRN_GetWarningTextures();
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -137,7 +137,7 @@ std::uint32_t RasterizeKanjiLineNullsub(std::byte *, std::int32_t, const char *,
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -161,7 +161,7 @@ void AdmitWarningTextBank(std::byte *text, shen_name owner, std::array<std::int1
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -181,7 +181,7 @@ std::uint32_t UploadTextLine(std::byte *text, const std::array<std::int16_t, WAR
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -194,7 +194,7 @@ std::uint32_t WRN_UploadReconnectLine(std::int16_t slot) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -248,7 +248,7 @@ std::uint32_t warnBlink = 0;
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t WRN_UploadWarningLine(std::int16_t slot, const char *line) {
@@ -273,7 +273,7 @@ std::uint32_t WRN_UploadWarningLine(std::int16_t slot) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 const std::int16_t *WRN_GetWarningTextures() {
@@ -289,7 +289,7 @@ std::int16_t *WRN_GetWarningTextures() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static std::uint32_t WRN_BlendChannel(std::int32_t weight, std::uint32_t from, std::uint32_t to) {
     if (weight < 0)
@@ -340,7 +340,7 @@ std::uint32_t WRN_BlendColour(std::int32_t weight, std::uint32_t from, std::uint
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -422,7 +422,7 @@ void WRN_DrawFrame(std::int32_t frame, std::uint32_t fill, std::uint32_t border)
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -529,7 +529,7 @@ void WRN_DrawWarning(void *) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -593,7 +593,7 @@ void WRN_DrawReconnect(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -728,7 +728,7 @@ void WRN_LayoutWarning(const char *text) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -767,7 +767,7 @@ void WRN_LayoutReconnect(const char *text) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -962,7 +962,7 @@ void WRN_CtrlWarning_Callback(void *) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void WRN_CtrlWarning_Enqueue() {
     std::int32_t index;
@@ -1057,7 +1057,7 @@ void *WRN_CtrlWarning_Enqueue() {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void *AllocateWARP(std::int32_t textureSize) {
@@ -1077,7 +1077,7 @@ void *AllocateWARP(std::int32_t textureSize) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void WRN_SetWarning(std::int32_t warning, std::int32_t value) {
@@ -1097,7 +1097,7 @@ void WRN_SetWarning(std::int32_t warning, std::int32_t value) {
 
 #endif
 
-#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void WRN_RequestReconnectPrompt() {
@@ -1106,7 +1106,7 @@ void WRN_RequestReconnectPrompt() {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t WRN_SetBaseColour(std::uint32_t colour) {

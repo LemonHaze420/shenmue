@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/pad_control_dc.hpp"
 #include "s2/map_event_character_dc.hpp"
@@ -35,13 +35,13 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CameraLerpAngle(std::int32_t target, std::int32_t base, float amount);
 #endif
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static LegacyInputSlot playerInputSnapshot;
 
 struct PackedStickDirection {
@@ -115,9 +115,8 @@ std::uint8_t plymTriggerHistoryValue(std::uint8_t trigger) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 void plymSampleInput(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.padFlags &= ~0x1000U;
     state.isLookAround = 0;
     if (IsPadControlEntryBound(GetMapPadControlEntry())) {
@@ -462,11 +461,10 @@ void plymSampleInput(PlayerModelState &state) {
         state.padFlags |= 0x02000000U;
 #endif
 }
-#endif
 
 } // namespace player_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float ctrlSetLookOverlayWeight(float alpha) {
     PlayerModelState *const model = g_playerRuntimePointer->model;
@@ -584,11 +582,10 @@ std::int16_t CopyHeading(const Vector3 &from, const Vector3 &to);
 
 namespace player_detail {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymComputeTurnInput(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int8_t *const direction = reinterpret_cast<const std::int8_t *>(&state.packedDirection);
     const float x = static_cast<float>(-direction[0]);
     const float y = static_cast<float>(direction[1]);
@@ -610,7 +607,7 @@ void plymComputeTurnInput(PlayerModelState &state) {
 #endif
     state.turnInput = turn;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.inputTargetYaw = static_cast<std::int16_t>(turn + camera);
     state.inputBaseYaw = camera;
 #endif
@@ -620,7 +617,6 @@ void plymComputeTurnInput(PlayerModelState &state) {
     state.inputBaseYaw = cameraYaw;
 #endif
 }
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint8_t Abs8(std::int8_t value) {
@@ -633,10 +629,9 @@ bool IsLookMovingRootState(std::uint32_t rootYawState) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateLookAround(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const LegacyInputSlot *const input = state.inputSnapshot;
     std::int8_t x, y;
     std::int32_t directions;
@@ -1109,17 +1104,15 @@ finishState:
         state.padFlags &= ~0x10000U;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t rotationOnlyPullThreshold = 120;
 std::int32_t largeTurnInputFrames;
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateCameraInput(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.retainedMovementMode = state.currentMovementMode;
     state.currentMovementMode = 1;
     state.movementInterpolation = 0.0f;
@@ -1300,12 +1293,12 @@ void plymUpdateCameraInput(PlayerModelState &state) {
 // @verified - d
 void UpdatePlayerYawFromInput(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int16_t delta;
 #endif
     state.yawDelta = 0;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!(state.flags & 2U))
 #endif
 
@@ -1314,7 +1307,7 @@ void UpdatePlayerYawFromInput(PlayerModelState &state) {
 #endif
         return;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (static_cast<std::int8_t>(state.inputActive) == 1) {
         state.desiredYaw =
             static_cast<std::int16_t>(static_cast<std::int32_t>(-static_cast<float>(state.stickX) / 127.0f * 8192.0f + static_cast<float>(state.inputBaseYaw)));
@@ -1352,7 +1345,7 @@ void UpdatePlayerYawFromInput(PlayerModelState &state) {
 #endif
     } else {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         delta = state.turnInput;
 #endif
 
@@ -1367,7 +1360,7 @@ void UpdatePlayerYawFromInput(PlayerModelState &state) {
 #endif
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.desiredYaw = static_cast<std::int16_t>(state.currentYaw + delta);
     if (state.currentMovementMode == 6)
         state.desiredYaw = static_cast<std::int16_t>(state.currentYaw + 0x8000);
@@ -1393,9 +1386,8 @@ void UpdatePlayerYawFromInput(PlayerModelState &state) {
     state.yawDelta = static_cast<std::int16_t>(desired - state.currentYaw);
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool IsHeldTransitionReady(const PlayerModelState &state);
 #endif
 
@@ -1422,10 +1414,9 @@ Vector3 PlymHeadLookPoint(const PlayerModelState &state, std::uint16_t yaw, std:
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateAutomaticLook(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t expired = 0;
     Vector3 head, position;
     state.padFlags &= ~0x10000000U;
@@ -1735,7 +1726,7 @@ void plymUpdateAutomaticLook(PlayerModelState &state) {
 // @verified - d
 void plymUpdateLookTarget(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!(state.flags & 2U))
 #endif
 
@@ -1745,7 +1736,7 @@ void plymUpdateLookTarget(PlayerModelState &state) {
         return;
     plymUpdateAutomaticLook(state);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t requested = 0;
     if (state.padFlags & 0x100U)
         requested = 1;
@@ -1797,7 +1788,7 @@ void plymUpdateLookTarget(PlayerModelState &state) {
 #endif
         }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     } else if (mtwkSetExtraFlag(state.motion, 59, 1)) {
         mtwkUpdateWithPosition(state.motion, 0, 0x504);
         mtwkUpdateWithPosition(state.motion, 0, 0);
@@ -1833,9 +1824,8 @@ void plymUpdateLookTarget(PlayerModelState &state) {
     state.lookTargetMode = 0;
     state.lookTargetFlags = 0;
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int16_t camCtrlGetPitchYawWithOffsetsFrom(const PlayerModelState &state) {
     std::int16_t angles[2];

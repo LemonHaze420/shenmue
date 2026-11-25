@@ -30,7 +30,7 @@ struct ConversationDialogueRecord {
     float duration;
     Character *speaker, *listener;
 };
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ConversationCameraState {
     std::uint32_t flags, sceneFlags;
     Character *root, *specialTarget, *packetSpeaker, *packetListener, *targetActor, *eyeActor;
@@ -85,7 +85,7 @@ struct ConversationCameraState {
 #else
 struct ConversationCameraState {
     std::uint32_t flags;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::byte retained04[0x40];
     std::uint32_t shotStartTime, pauseStartTime;
     std::byte retained4c[0xde];
@@ -93,7 +93,7 @@ struct ConversationCameraState {
     std::byte retainedHeader[0x126];
 #endif
     std::int8_t forcedCandidate;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::byte retainedConversationState[0x7e];
     std::int8_t memberCount;
     std::byte retainedConversationMembers[0x186];
@@ -116,7 +116,7 @@ typedef char Layout_camera_conversation_dc_1[(offsetof(ConversationCameraState, 
 typedef char Layout_camera_conversation_dc_2[(offsetof(ConversationCameraState, candidates) == 0x330) ? 1 : -1];
 typedef char Layout_camera_conversation_dc_3[(offsetof(ConversationCameraState, candidateCount) == 0x4b0) ? 1 : -1];
 typedef char Layout_camera_conversation_dc_4[(offsetof(ConversationCameraState, history) == 0x4b4) ? 1 : -1];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char Layout_camera_conversation_dc_5[(offsetof(ConversationCameraState, previousHistory) == 0x4f4) ? 1 : -1];
 typedef char Layout_camera_conversation_dc_6[(offsetof(ConversationCameraState, historyIndex) == 0x4f8) ? 1 : -1];
 #else
@@ -133,7 +133,7 @@ typedef char Layout_camera_conversation_dc_8[(sizeof(ConversationCameraDescripto
 std::int32_t camCtrlSetConversationFlag4000(std::int32_t enabled);
 extern ConversationCameraState g_conversationCamera;
 extern ConversationCameraState *g_conversationCameraState;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct Character;
 static const std::size_t kConversationCameraMemberOffset = 0x1ac;
 typedef char Layout_camera_conversation_dc_9[(offsetof(ConversationCameraState, memberCount) == 0x1a9) ? 1 : -1];
@@ -354,7 +354,7 @@ static const std::uint32_t conversationMovingShotParameters[48][26] = {
         0x3fea3d71U, 0x0000fa98U, 0xbebd70a4U},
 };
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlShakeFightCamera(float amount);
 std::int16_t FightCameraYawBetween(float x1, float z1, float x2, float z2);
 void FightCameraSubtract(const Vector3 &from, const Vector3 &to, Vector3 &result);

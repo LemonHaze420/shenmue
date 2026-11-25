@@ -181,7 +181,7 @@ void mhndSetPrimaryRotation(CharacterHandComponent *hand, std::int32_t x, std::i
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mhndGetPrimaryRotation(const CharacterHandComponent *hand, Vector3i *rotation) {
     if (!hand->primaryNode) {
@@ -357,7 +357,7 @@ void mhndInit(MhndComponent *component) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void mhndBeginHand(
     MhndHand &hand, MT7Node *node, const Vector3i (&current)[4], const Vector3i *target, std::int32_t side, std::int32_t shape, std::int32_t frames) {
@@ -786,7 +786,7 @@ void MHND_Callback(Character *character, void *payload) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t mhndSetHandShape(MhndComponent *component, MT7Node *model, std::int32_t mode, std::int32_t shape, std::int32_t frames) {
     Vector3i current[4];
@@ -858,7 +858,7 @@ std::int32_t mhndSetHandShape(MhndComponent *component, MT7Node *model, std::int
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t mhndSetHandPose(MhndComponent *component, MT7Node *model, std::int32_t mode, const Vector3i *pose, std::int32_t frames) {
     Vector3i current[4];
@@ -921,7 +921,7 @@ std::int32_t mhndSetHandPose(MhndComponent *component, MT7Node *model, std::int3
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void mhndStepHand(MhndHand &hand, std::int32_t side) {
     Vector3i *const pose = hand.current;
@@ -966,7 +966,7 @@ void mhndStepHand(MhndHand &hand, std::int32_t side) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void mhndRunPoseScript(Character *character, MhndPoseScript *script, MhndHand *hand) {
     std::int32_t opcode;
@@ -1158,7 +1158,7 @@ void MHND_Callback(Character *character, void *data) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void hmdlSetFlagsFor(Character *character, std::int32_t mode, std::int32_t shape, std::int32_t frames) {
     if (!character || shape > 14 || mode > 2)
@@ -1310,7 +1310,7 @@ void hmdlSetFlagsFor(Character *character, std::int32_t mode, std::int32_t shape
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void hmdlSetPoseFor(Character *character, std::int32_t mode, const Vector3i *pose, std::int32_t frames) {
     if (!character || mode > 2)
@@ -1515,7 +1515,7 @@ void mhndSetupHuman(Character *character) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void AssignHandPoseScript(Character *character, std::int32_t mode, const std::int32_t *commands) {
     if (!character || mode > 2 || !character->model)
@@ -1618,7 +1618,7 @@ void SetupHandPoseScript(Character *character) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void mhndIdlePoseCallback(Character *character, MhndPoseScript *script, MhndHand *hand) {
     MhndComponent *component;
@@ -1673,7 +1673,7 @@ void mhndIdlePoseCallback(Character *character, MhndPoseScript *script, MhndHand
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void SetupHandIdlePoseCallback(Character *character) {
     MhndPoseScript *script;
@@ -1729,7 +1729,7 @@ MhndPoseScriptCallback SetupHandIdlePoseCallback(Character *character) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t GetHandShapeFor(Character *character, std::int32_t mode) {
     MhndComponent *component;

@@ -8,7 +8,7 @@ namespace shenmue {
 namespace s2 {
 
 std::int32_t GetCharacterWorldYaw(const Character *character);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetCharacterLocalYaw(const Character *character);
 #endif
 void SetCharacterWorldYaw(Character *character, std::int32_t yaw);

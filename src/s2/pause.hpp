@@ -22,7 +22,7 @@ inline shen_name PauseTaskName() {
 inline constexpr shen_name TASK_PAUS{SHEN_NAME(PAUS)};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #if SHENMUE_S2_GCC295
 inline shen_name PauseDeveloperArea() {
     return shen_name(make_shen_name('H', 'G', '0', '0'));
@@ -47,7 +47,7 @@ bool GetNotPausedOrLoading();
 void RequestExecPause();
 std::uint64_t GetLoadingBusyFlag();
 void RequestFightTelopPause();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RequestFightTelopResume();
 bool IsLoadingFlag10Set();
 #else

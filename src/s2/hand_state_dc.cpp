@@ -23,7 +23,7 @@
 #include "s2/screen_film_dc.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/scenario_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #endif
 #include "shenmue.h"
@@ -116,11 +116,11 @@ MotionOverride g_searchHandMotionOverride SHENMUE_HAND_INITIALIZE{};
 
 std::int32_t g_searchHandOverrideEnabled = 0, g_searchHandChestOverrideEnabled = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HandIKConfig g_searchHandConfigurations[2] SHENMUE_HAND_INITIALIZE{};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t g_searchHandSolveStatus = 0, g_searchHandPreviousSolveStatus = 0;
 #endif
 
@@ -138,7 +138,7 @@ std::int16_t HandSignedAngle(std::uint16_t bits) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkIsSearchHandActive(const MotionWork *work) {
     if (work == g_searchHandMotionWork) {
@@ -150,7 +150,7 @@ bool mtwkIsSearchHandActive(const MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkClearSearchHandRequests(MotionWork *work) {
     if (!mtwkIsSearchHandActive(work))
@@ -172,7 +172,7 @@ bool mtwkClearSearchHandRequests(MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkAssignCallbacks(MotionWork *work) {
     if (mtwkIsSearchHandActive(work))
@@ -813,7 +813,7 @@ void ResetCharacterHandComponent(CharacterHandComponent &hand) {
     hand.pose.step = 0.0f;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ParseHandPoseJoint() {
     std::int32_t values[3], base[3];
     const HandPoseModelJoint *joint = g_handPoseJointCursor;
@@ -964,7 +964,7 @@ void ConfigureHandPoseSequence(CharacterHandComponent &hand, std::int16_t pose, 
     hand.pose.secondaryPoseWork = SHENMUE_HAND_NULL;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t mtwkGetCustomOverrideFlags(const MotionWork *work) {
     if (!work || !g_searchHandMotionWork || !mtwkIsSearchHandActive(work) || !g_searchHandOverrideEnabled)
@@ -973,7 +973,7 @@ std::int32_t mtwkGetCustomOverrideFlags(const MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]) {
     g_motionInterpolationType = (work.sequenceFlags >> 24U) & MI_Linear;
@@ -1017,7 +1017,7 @@ void GetSearchHandWristAngles(MotionWork &work, std::int16_t (&angles)[4]) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkResetBlends() {
     if (g_searchHandMotionWork) {
@@ -1046,7 +1046,7 @@ void mtwkResetBlends() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsHandPoseInactive(const CharacterHandComponent &hand) {
     if ((hand.pose.flags & HandPoseInactive) != 0)
@@ -1055,7 +1055,7 @@ bool IsHandPoseInactive(const CharacterHandComponent &hand) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetHandPoseFlags(CharacterHandComponent &hand, std::int16_t enabled, std::uint16_t flags) {
     const std::int32_t reverse = hand.pose.flags & HandPoseReverse;
@@ -1079,7 +1079,7 @@ void SetHandPoseFlags(CharacterHandComponent &hand, std::int16_t enabled, std::u
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetHandPoseStep(CharacterHandComponent &hand, float step) {
     if (step > 0.0f)
@@ -1087,7 +1087,7 @@ void SetHandPoseStep(CharacterHandComponent &hand, float step) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetHandEndpointPosition(const CharacterHandComponent &hand, std::int32_t endpoint, Vector3 &position) {
     const Vector3 &source = hand.pose.jointPositions[handEndJointIds[endpoint]];
@@ -1097,7 +1097,7 @@ void GetHandEndpointPosition(const CharacterHandComponent &hand, std::int32_t en
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ParseHandPoseCommand(CharacterHandComponent &hand, std::byte *command, std::int16_t ticks) {
     HandPoseState &state = hand.pose;
@@ -1135,7 +1135,7 @@ void ParseHandPoseCommand(CharacterHandComponent &hand, std::byte *command, std:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ParseHandPoseDegreeCommand(CharacterHandComponent &hand, const std::int8_t *degrees, float ticks) {
     HandPoseState &state = hand.pose;
     std::int32_t index;
@@ -1161,7 +1161,7 @@ void ParseHandPoseDegreeCommand(CharacterHandComponent &hand, const std::int8_t 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyCharacterHandPoseCommand(Character *character, std::int32_t side, std::byte *command, std::int32_t ticks) {
     if (CharacterHandComponent *const hand = GetCharacterHand(character, side))
@@ -1169,7 +1169,7 @@ void ApplyCharacterHandPoseCommand(Character *character, std::int32_t side, std:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void WriteHandPoseCommand(const CharacterHandComponent *hand, std::byte *command) {
     const HandPoseState *const state = &hand->pose;
@@ -1183,7 +1183,7 @@ void WriteHandPoseCommand(const CharacterHandComponent *hand, std::byte *command
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetHandPoseAnimationResult(const CharacterHandComponent &hand) {
     if (hand.pose.poseMode)
@@ -1193,7 +1193,7 @@ std::int32_t GetHandPoseAnimationResult(const CharacterHandComponent &hand) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetHandSecondaryPoseWork(CharacterHandComponent &hand, Character *work) {
     if (hand.pose.secondaryPoseWork == work)
@@ -1204,7 +1204,7 @@ void SetHandSecondaryPoseWork(CharacterHandComponent &hand, Character *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetHighModelXYZ(Character *character, std::int32_t region, std::int32_t side, std::int32_t pose) {
     if (CharacterHandComponent *const hand = GetCharacterHand(character, side)) {
@@ -1214,7 +1214,7 @@ void SetHighModelXYZ(Character *character, std::int32_t region, std::int32_t sid
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetHandRegionXYZWithFlags(Character *character, std::int32_t region, std::int32_t side, std::int32_t pose, std::int8_t alphaPolicy) {
     if (CharacterHandComponent *const hand = GetCharacterHand(character, side)) {
@@ -1515,7 +1515,7 @@ void AdvanceGripAngles(CharacterHandComponent *hand, std::int32_t collide, std::
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void UpdateGripPose(CharacterHandComponent *hand, std::uint32_t flags) {
     HandPoseState *state = &hand->pose;
@@ -1532,7 +1532,7 @@ static void UpdateGripPose(CharacterHandComponent *hand, std::uint32_t flags) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SolveHandGripPose(CharacterHandComponent *hand, const Matrix4x4 *base, MT7Node *geometry, const Matrix4x4 *, std::int32_t flags, std::byte *beginCommand,
     std::byte *endCommand) {
@@ -1600,7 +1600,7 @@ std::uint32_t GetLoadedHandModelFlags(Character *character) {
     return flags;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetLoadedSecondaryHandModelFlags(Character *character) {
     std::uint32_t flags = 0;
     CharacterHandComponent *hand = AllocateHNDL(character);
@@ -1709,7 +1709,7 @@ std::uint32_t SetLowQualityHands(Character *character) {
     return result;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t RetireHandModels(Character *character, CharacterHandComponent &hand) {
     if (!character)
@@ -1745,7 +1745,7 @@ std::uint32_t RetireHandModels(Character *character, CharacterHandComponent &han
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t hndlSetFlags(Character *character) {
     std::uint32_t result = 0;
@@ -1757,7 +1757,7 @@ std::uint32_t hndlSetFlags(Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetCharacterHandRotation(Character *character, std::int32_t right, Vector3i *rotation) {
     rotation->z = 0;
     rotation->y = 0;
@@ -1861,7 +1861,7 @@ std::int32_t hndlDrawPrimaryHand(CharacterHandComponent *hand, float alpha) {
         matrix_stack::Matrix4x4_Push(0);
         dc::sdk::PushGraphicsWorkspace();
         if (alpha > kHandOpaqueAlpha)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             DrawCharacterModelBranch(node);
 #else
             reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(node);
@@ -1882,7 +1882,7 @@ std::int32_t hndlDrawSecondaryHand(CharacterHandComponent *hand, float alpha) {
         matrix_stack::Matrix4x4_Push(0);
         dc::sdk::PushGraphicsWorkspace();
         if (alpha > kHandOpaqueAlpha)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             DrawCharacterModelBranch(root);
 #else
             reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(root);
@@ -1904,7 +1904,7 @@ std::int32_t hndlDrawSecondaryHand(CharacterHandComponent *hand, float alpha) {
 #undef SHENMUE_HAND_FMA
 #undef SHENMUE_HAND_ANGLE
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 
 void __attribute__((renesas)) shenmue_s2_event_ApplyCharacterHandPoseCommand(

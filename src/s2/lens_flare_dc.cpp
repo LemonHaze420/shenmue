@@ -11,7 +11,7 @@
 #include "s2/weather_air_dc.hpp"
 #include "platform/dc/sdk.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_pose_dc.hpp"
 #include "s2/motion_work_dc.hpp"
 #include "s2/field_sphere_dc.hpp"
@@ -38,7 +38,7 @@ void UpdateSunForDateTime(const DateTime &date, float latitude, Vector3 &directi
 MT7Model *g_lensFlareModels[14] = {};
 LensFlareState g_lensFlareState = {};
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const Vector3 *g_sunOcclusionOrigin = 0, *g_sunOcclusionEnd = 0;
 #endif
 
@@ -95,7 +95,7 @@ void UpdateSunLensFlare() {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateSunFilmFade(float, float falloff) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -104,7 +104,7 @@ void UpdateSunFilmFade(float, float falloff) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t TestSunOcclusionCharacter(Character *character, void *) {
     Vector3 position;
     Vector3 origin;
@@ -138,7 +138,7 @@ std::int32_t TestSunOcclusionCharacter(Character *character, void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t IsSunOccluded(const Vector3 *origin, const Vector3 *direction) {
     Vector3 end;
@@ -155,7 +155,7 @@ std::int32_t IsSunOccluded(const Vector3 *origin, const Vector3 *direction) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawLensFlareBillboard(std::int32_t index, float depth, float scale, float alpha) {
     Matrix4x4 current;
@@ -179,7 +179,7 @@ void DrawLensFlareBillboard(std::int32_t index, float depth, float scale, float 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RotateLensFlareAlignment(const Vector3 *direction) {
     Vector3 axis;
@@ -202,7 +202,7 @@ void RotateLensFlareAlignment(const Vector3 *direction) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawSunLensFlare(void *parameter) {
     Vector3 screenPosition, view, alignment, eye, delta, projection, base;
     Vector2 screen;

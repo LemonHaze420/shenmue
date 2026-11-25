@@ -20,7 +20,7 @@ std::uint32_t g_textureCreationCount = 0;
 
 TextureSourceCallback g_textureSourceCallback = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t *g_lastLoadedTexturePixels = 0;
 #endif
 
@@ -103,7 +103,7 @@ std::uint32_t CreateTextureCacheSurface(const TextureImage *image, std::int32_t 
     }
 
     kmLoadTexture(&surface.surface, static_cast<Uint32 *>(const_cast<void *>(pixels)));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_lastLoadedTexturePixels = reinterpret_cast<std::uint8_t *>(reinterpret_cast<std::uintptr_t>(surface.surface.pSurface) + 0x04000000U);
 #endif
     return 0;
@@ -112,7 +112,7 @@ std::uint32_t CreateTextureCacheSurface(const TextureImage *image, std::int32_t 
 // @verified - d
 void ReloadTextureCacheSurface(std::int32_t surfaceIndex, const void *pixels) {
     kmLoadTexture(&g_textureCacheSurfaces[surfaceIndex].surface, static_cast<Uint32 *>(const_cast<void *>(pixels)));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_lastLoadedTexturePixels =
         reinterpret_cast<std::uint8_t *>(reinterpret_cast<std::uintptr_t>(g_textureCacheSurfaces[surfaceIndex].surface.pSurface) + 0x04000000U);
 #endif

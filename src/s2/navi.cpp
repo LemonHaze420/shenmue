@@ -4,7 +4,7 @@
 #include "s2/navi.hpp"
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hlib.hpp"
 #include "s2/event_overlay.hpp"
 #include "common/math.hpp"
@@ -38,9 +38,7 @@
 #include <cstdio>
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstring>
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/area_names.hpp"

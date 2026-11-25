@@ -2,7 +2,7 @@
 
 #include "shenmue.h"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hlib.hpp"
 #include "s2/legacy_sprite_types.hpp"
 

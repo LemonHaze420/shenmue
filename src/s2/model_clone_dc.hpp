@@ -38,7 +38,7 @@ MT7Node *CloneImageSelection(MT7Model *source, std::uint32_t child, std::int32_t
 void ReleaseMT7ModelNodeTreeClone(MT7Node *root);
 struct MemoTextureName;
 MT7Model *ReadMT7ModelTextureNames(void *source, MemoTextureName *names, std::int32_t *textures);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RebindMT7ModelTextures(MT7Model *model, const MemoTextureName *names, std::int32_t count, const std::int32_t *originalTextures);
 #else
 void RebindMT7ModelTextures(MT7Model *model, const MemoTextureName *names, std::int32_t count);

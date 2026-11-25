@@ -24,7 +24,7 @@ std::int32_t g_canDoAreaJump;
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t unusedCtrlFlag;
 #endif
 
@@ -46,7 +46,7 @@ void CaptureCurrentPlayerState(SavedAreaJumpLocation *location, std::byte *place
 
 // @verified - d
 bool GetSavedAreaJumpLocation(Vector3 &position, std::int32_t &yaw) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     position = g_savedAreaJumpLocation.position;
     yaw = g_savedAreaJumpLocation.yaw;
     if (HasSavedAreaJumpLocation())
@@ -59,7 +59,7 @@ bool GetSavedAreaJumpLocation(Vector3 &position, std::int32_t &yaw) {
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EV_ApplyTranslationClockVisibility(std::uint32_t) {
     SavedAreaJumpLocation *location = &g_savedAreaJumpLocation;
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -93,14 +93,14 @@ void EV_ApplyTranslationClockVisibility(std::uint32_t) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetUnusedCtrlFlag(std::uint8_t value) {
     unusedCtrlFlag = value;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetUnusedFlag() {
     if (unusedCtrlFlag)
@@ -126,7 +126,7 @@ void ResetGlobalStateFlags() {
     g_savedAreaJumpLocationActive = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ConsumeSavedAreaJumpRequest() {
     if (g_savedAreaJumpLocationRequested) {
         --g_savedAreaJumpLocationRequested;

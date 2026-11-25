@@ -35,14 +35,14 @@ void srchComputeLockOn(SearchTaskData &search);
 bool srchProcessSearchIK(SearchTaskData &search);
 void srchLoadSignBoardModelForArea(SearchTaskData &search);
 void srchReset();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchSetLookMode();
 #endif
 float ctrlGetLookOverlayWeight();
 std::int32_t npcGetCanInteract(shen_name name);
 void mtwkResetBlends();
 std::int32_t mtwkSetOverridesEnabled(std::int32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ProjectConversationActorToScreen(const Vector3 &world, Vector3 &screen);
 #else
 void ProjectConversationActorToScreen(const Vector3 &world, Vector3 &screen);

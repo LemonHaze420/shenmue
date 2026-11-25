@@ -59,7 +59,7 @@ void DrawBlurObjectInterpolations(FigurePose *figure);
 void AttachObjectBlur(Character *character, const CharacterTableRecord *record);
 void BlendMatrices(const MT7Node *model, float alpha);
 void FreeBlurWork(Character *character, void *payload);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadBlurModel(FigurePose *figure, const char *filename);
 void AssignBlurCallbacks(Character *character);
 void BlurWork(Character *character);

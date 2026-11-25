@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/player_movement_dc.hpp"
 #include "s2/math.hpp"
@@ -37,7 +37,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CameraLerpAngle(std::int32_t target, std::int32_t base, float amount);
 void SetDebugScreenTextPosition(std::int32_t column, std::int32_t line);
 std::int32_t GetNpcRouteMotionMode(shen_name name);
@@ -62,13 +62,13 @@ std::int32_t PartyGuideCallbackAdvance(float distance);
 
 namespace model_component_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right);
 #endif
 
 } // namespace model_component_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace model_component_detail
 
 // @verified - d
@@ -88,7 +88,7 @@ std::int16_t plymGetAuthorPlacementYaw(shen_name name) {
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool IsHeldTransitionReady(const PlayerModelState &state);
 std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, const Vector3 &destination);
 
@@ -523,10 +523,9 @@ void plymUpdateRegionInteraction(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdatePlacementNode(PlayerPlacementNode *node) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     am2Vector3Subtract(&node->delta, &node->position, &node->previousPosition);
     if (std::fabs(node->delta.x) >= 0.00000011920929f && std::fabs(node->delta.z) >= 0.00000011920929f)
         node->movementBearingYaw = static_cast<std::int32_t>(dc::sdk::ArcTan2Fixed(node->delta.x, node->delta.z)) - 0x8000;
@@ -618,7 +617,7 @@ void plymUpdatePlacementNode(PlayerPlacementNode *node) {
 PlayerPlacementNode *plymUpdatePlacementChain(PlayerPlacementNode *node) {
     if (!node)
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         return 0;
 #endif
 
@@ -627,12 +626,12 @@ PlayerPlacementNode *plymUpdatePlacementChain(PlayerPlacementNode *node) {
 #endif
     Character *const character = node->character;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PlayerPlacementNode *last = node;
 #endif
     plymUpdatePlacementNode(node);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     for (node = last->next; node; node = last->next) {
         node->character = character;
         last = node;
@@ -646,7 +645,7 @@ PlayerPlacementNode *plymUpdatePlacementChain(PlayerPlacementNode *node) {
         plymUpdatePlacementNode(node);
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     return last;
 #endif
 
@@ -659,7 +658,7 @@ PlayerPlacementNode *plymUpdatePlacementChain(PlayerPlacementNode *node) {
 // @verified - d
 float plymGetApproachStepDistance(float previous, const Vector3 &delta) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     float change = NativeSqrt(delta.x * delta.x + delta.z * delta.z) - previous;
     change = (change < -0.050000001f ? -0.050000001f : change) < 0.050000001f ? (change < -0.050000001f ? -0.050000001f : change) : 0.050000001f;
     previous = InterpolateTo(previous + change, previous, 0.5f);
@@ -676,7 +675,7 @@ float plymGetApproachStepDistance(float previous, const Vector3 &delta) {
 
 
 int plymResolvePlacementMovement(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PlayerPlacementNode *const node = state.selectedPlacementNode;
     float result = 0.0f;
     std::uint32_t mode;
@@ -910,7 +909,6 @@ int plymResolvePlacementMovement(PlayerModelState &state) {
     return code;
 #endif
 }
-#endif
 
 } // namespace player_detail
 
@@ -1146,13 +1144,12 @@ const Vector3 *plymGetPlacementFromHistory(const PlayerModelState &state, int co
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateScriptedPlacementTarget(PlayerModelState &state) {
     state.motionInputEcho = 0.0f;
     PlayerPlacementNode *const node = plymUpdatePlacementChain(&state.placementRoot);
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.selectedPlacementNode = state.activePlacementNode = node;
 #endif
 
@@ -1162,14 +1159,14 @@ void plymUpdateScriptedPlacementTarget(PlayerModelState &state) {
 #endif
     const std::int16_t bearing = node->characterBearingYaw;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float &distance = node->distance;
 #endif
     state.approachStepDistance = plymGetApproachStepDistance(state.approachStepDistance, node->delta);
     if (node->flags & 0x4000U) {
         state.desiredYaw = bearing;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         state.activeMovementMode = 3;
         if (distance < 0.25f)
             state.activeMovementMode = 1;
@@ -1182,7 +1179,7 @@ void plymUpdateScriptedPlacementTarget(PlayerModelState &state) {
         plymResolvePlacementMovement(state);
         if (state.movementResult != 0.0f)
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             state.movementResult = InterpolateTo(state.movementResult, state.previousMovementResult, 0.5f);
 #endif
 
@@ -1191,9 +1188,8 @@ void plymUpdateScriptedPlacementTarget(PlayerModelState &state) {
 #endif
     }
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool plymRecordPlacementHistory(PlayerModelState &state, const Vector3 &position) {
     bool recorded = false;
@@ -1287,10 +1283,9 @@ void plymUpdateLockOnCharacter(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateLockOnMovement(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Character *character;
     shen_name name;
     PlayerPlacementNode *node;
@@ -1463,9 +1458,8 @@ selectedHistory:
     state.desiredYaw = node->characterBearingYaw;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymUpdateSpecialMode(PlayerModelState &state) {
     PlayerMovementState *const movement = state.movementState;
@@ -1880,10 +1874,9 @@ bool plymCanLatchInteractionTarget(shen_name name) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateInteractionPlacementTarget(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PlayerPlacementNode &root = state.placementRoot;
     float range = 20.0f;
     std::uint32_t latchFlags = 0;
@@ -2213,7 +2206,7 @@ void plymUpdateInteractionPlacementTarget(PlayerModelState &state) {
 
 
 void plymBuildInteractionPlacementContext(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 offset, hit, player, target, delta, candidate, previous;
     Matrix4x4 transform;
     Vector3 sample;
@@ -2537,7 +2530,6 @@ publish:
     return;
 #endif
 }
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // Counter branches of native plymUpdateSpecialMode; the high byte selects the authored sequence.

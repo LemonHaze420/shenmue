@@ -24,7 +24,7 @@ std::int32_t StepCharacterYawTowardPoint(Character *character, const Vector3 *ta
     const std::uint32_t angle = dc::sdk::ArcTan2Fixed(target->x - position.x, target->z - position.z);
     const std::int32_t difference = AngleDifference16(static_cast<std::uint16_t>(angle + 0x8000), rotation.y);
     std::int32_t turning;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t stepLimit = step;
     if (difference < 0 ? -difference > step : difference > stepLimit) {
 #else
@@ -76,7 +76,7 @@ void vfPlacePairFromMotionRoots(Character *first, Character *second) {
     SetCharacterLocalPosition(second, &secondPosition);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void vfPlacementNullsub() {
 }
 #endif

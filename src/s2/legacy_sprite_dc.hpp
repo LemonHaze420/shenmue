@@ -30,7 +30,7 @@ void LoadLoadScreenSpriteTexture(PakGlobalData *package);
 const std::int8_t *FindCommonIconRectangle(std::int16_t icon);
 std::int32_t GetCommonIconTextureIndex(std::uint32_t icon);
 void PrepareDrawSimple(const LegacyIconSprite &sprite, std::uint32_t colour);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::int8_t *GetCommonIconRect(std::int32_t icon);
 void InitializeLegacyIconSprite(LegacyIconSprite &sprite);
 extern LegacyIconSprite itemWindowEdges[4], itemWindowSelection, quantityDigits[8], quantityBrackets[2];

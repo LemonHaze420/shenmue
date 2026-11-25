@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/math.hpp"
 #include "s2/player_movement_dc.hpp"
@@ -43,7 +43,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetCharacterCollisionRadius(const Character *character);
 static std::int32_t plymRequestSpecialModeTarget(shen_name character);
 float mtwkGetRegionTimeOverride(const MotionWork *work, std::uint32_t region);
@@ -1218,10 +1218,9 @@ std::int32_t RequestPlayerMotion(PlayerMovementState &movement, std::int32_t req
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 Vector3 GetPlayerTargetWorldPosition() {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 position = {0.0f, 0.0f, 0.0f};
     if (g_playerRuntimePointer->model)
         GetPlayerTargetWorldPosition(&position);
@@ -1248,9 +1247,8 @@ Vector3 GetPlayerTargetWorldPosition() {
     return position;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymIntersectionTest() {
     Vector3 position;
@@ -1405,7 +1403,7 @@ float plymGetSpeedZ() {
 
 namespace model_component_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right);
 #endif
 
@@ -1413,7 +1411,7 @@ float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right);
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t ReachedMotionRootMode(std::uint32_t motionId);
 float ReachedMotionSpeed(std::uint32_t motionId);
 std::int16_t movingFrames, stationaryFrames, turningFrames;
@@ -1489,13 +1487,12 @@ void ProcessPlayerMotionFlagCursor(PlayerMovementState &movement) {
 
 } // namespace player_detail
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
  // namespace player_detail
 
 // @verified - d
 std::int32_t plymGetMovingFrames() {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     return player_detail::movingFrames;
 #endif
 
@@ -1508,7 +1505,7 @@ std::int32_t plymGetMovingFrames() {
 // @verified - d
 std::int32_t plymGetTurningFrames() {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     return player_detail::turningFrames;
 #endif
 
@@ -1516,9 +1513,8 @@ std::int32_t plymGetTurningFrames() {
     return turningFrames;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdatePlayerMovementState(PlayerMovementState &movement) {
     MotionWork *const motion = movement.motion;
     if (!motion)
@@ -1574,7 +1570,7 @@ std::int16_t CameraLerpAngle(std::int32_t target, std::int32_t base, float amoun
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t camCtrlGetPitchYawWithOffsetsFrom(const PlayerModelState &state);
 void plymAdjustControllerGroundTarget(std::uint32_t controller, Vector3 *position, MotionWork *work, void *user);
 
@@ -1831,7 +1827,7 @@ bool plymIsInteractionPlacementBlocked(const PlayerModelState &state);
 
 } // namespace player_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace player_detail
 
 void PlayerModuleNullsubA(void *, float);
@@ -2008,7 +2004,7 @@ void plymSetDialogueMode() {
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t UpdatePlayerMountYaw(PlayerModelState &state) {
     std::int16_t yaw = state.yaw;
@@ -3123,7 +3119,7 @@ void ApplyPlayerMotionRequestAngles(PlayerMovementState &movement) {
 
 } // namespace player_detail
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace player_detail
 
 // @verified - d
@@ -3246,7 +3242,7 @@ std::int32_t RequestPlayerMotion(PlayerMovementState &movement, std::int32_t req
 
 namespace player_detail {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ConfigurePlayerIdleRequest(PlayerMotionRequest &request) {
     switch (request.previousMotion) {
@@ -3499,10 +3495,9 @@ void UpdateReachedRootConsumer(PlayerMovementState &movement) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 std::uint8_t ReachedMotionRootMode(std::uint32_t motionId) {
 
-#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && SHENMUE_S2_GCC295)
+#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && SHENMUE_S2_GCC295)
     std::uint8_t mode = 10;
     switch (static_cast<std::int32_t>(motionId)) {
     case 0xf002 ... 0xf004:
@@ -3532,7 +3527,7 @@ std::uint8_t ReachedMotionRootMode(std::uint32_t motionId) {
         break;
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && !SHENMUE_S2_GCC295))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_S2_GCC295))
     if (motionId >= 0xf002U && motionId <= 0xf004U)
         return 0;
     if (motionId == 0xf005U || motionId == 0xf009U || motionId == 0xf02bU || (motionId >= 0xf035U && motionId <= 0xf03dU)) {
@@ -3540,11 +3535,11 @@ std::uint8_t ReachedMotionRootMode(std::uint32_t motionId) {
 #endif
     }
 
-#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && SHENMUE_S2_GCC295)
+#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && SHENMUE_S2_GCC295)
     return mode;
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && !SHENMUE_S2_GCC295))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_S2_GCC295))
     if (motionId == 0xf006U || motionId == 0xf008U || motionId == 0xf02aU || motionId == 0xf12eU || motionId == 0xf12fU) {
         return 6;
     }
@@ -3561,7 +3556,7 @@ std::uint8_t ReachedMotionRootMode(std::uint32_t motionId) {
 
 float ReachedMotionSpeed(std::uint32_t motionId) {
 
-#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && SHENMUE_S2_GCC295)
+#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && SHENMUE_S2_GCC295)
     float speed = 1.0f;
     switch (motionId) {
     case 0xf005:
@@ -3577,17 +3572,17 @@ float ReachedMotionSpeed(std::uint32_t motionId) {
         break;
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && !SHENMUE_S2_GCC295))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_S2_GCC295))
     if (motionId == 0xf005U || (motionId >= 0xf02cU && motionId <= 0xf033U)) {
         return 1.3f;
 #endif
     }
 
-#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && SHENMUE_S2_GCC295)
+#if ((SHENMUE_IS_DC && SHENMUE_IS_S2) && SHENMUE_S2_GCC295)
     return speed;
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) && !SHENMUE_S2_GCC295))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || (((SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_S2_GCC295))
     if (motionId == 0xf006U || (motionId >= 0xf035U && motionId <= 0xf03dU)) {
         return 1.075f;
     }
@@ -3596,7 +3591,6 @@ float ReachedMotionSpeed(std::uint32_t motionId) {
     return 1.0f;
 #endif
 }
-#endif
 
 } // namespace player_detail
 

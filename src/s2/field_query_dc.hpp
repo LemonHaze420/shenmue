@@ -7,7 +7,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MapControlData;
 struct FightFieldProbe {
     std::int32_t kind, mode;
@@ -21,7 +21,7 @@ typedef char FightFieldProbeSizeCheck[sizeof(FightFieldProbe) == 0x28 ? 1 : -1];
 void ResolveFightFieldProbe(FightFieldProbe *probe, MapControlData *control);
 std::int32_t FindNearestRayIntersection(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
 std::int32_t TestFieldWorldSegment(const Vector3 *start, const Vector3 *end);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);
 #else
 bool GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);

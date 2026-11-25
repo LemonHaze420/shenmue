@@ -4,7 +4,7 @@
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/date_time.hpp"
 #endif
 
@@ -19,7 +19,7 @@ std::uint32_t EV_setHoldStatesFlags(std::int32_t mode);
 bool plymIsSearchBlocked();
 std::int32_t plymIsInterpolationActive();
 std::uint32_t plymGetAreaExitState();
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymFinishRegionInteraction();
 std::int32_t plymGetSpecialFlag();
 std::uint32_t plymGetSpecialMode();

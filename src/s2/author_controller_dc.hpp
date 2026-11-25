@@ -131,7 +131,7 @@ extern HLib::Task *g_authorMaskTask;
 extern AuthSubcontrollerSlot g_authorEyesControllers[32], g_authorPartsControllers[32];
 extern Vector4 g_authorReflectorValues;
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct AuthDynamicCommand {
     std::int32_t frame;
     std::int16_t operation, length;

@@ -2,7 +2,7 @@
 
 #include "s2/easy_option_state_dc.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace shenmue { namespace s2 {
 

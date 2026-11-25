@@ -58,7 +58,7 @@ void ResetButtonMediation(ButtonMediationControl *control);
 void btnButtonMediationCtrl_Callback(void *data);
 HLib::Task *Queue_ButtonMediation(std::uint8_t nextFunctionIndex);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t RegisterButtonMediation(shen_name name, const Vector3 *position, std::uint32_t flags);
 ButtonMediationResult *FindButtonMediationResult(shen_name name);
 std::uint32_t GetMediatedButtonBindings(shen_name name);

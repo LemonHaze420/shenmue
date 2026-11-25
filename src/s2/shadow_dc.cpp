@@ -5,7 +5,7 @@
 #include "s2/character_dc.hpp"
 #include "s2/hlib.hpp"
 #include "platform/dc/ninja.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/matrix.hpp"
 #include "platform/dc/sdk.hpp"
 #include "s2/modifier_volume_dc.hpp"
@@ -18,7 +18,7 @@
 #include "s2/search_dc.hpp"
 #include "shenmue.h"
 #include "s2/object_draw_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #include "s2/maze_dc.hpp"
 #include "s2/motion_rig.hpp"
@@ -75,7 +75,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/character_alpha_dc.hpp"
 #include "s2/character_state_flags_dc.hpp"
 #include "s2/reflector_board_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/hand_dc.hpp"
 #include "s2/pause.hpp"
 #endif
@@ -119,7 +119,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/input_dc.hpp"
 #include "s2/system_modules_dc.hpp"
 #include "s2/ui_state_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -133,7 +133,7 @@ namespace s2 {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct WaveLighting {
     std::uint32_t flags;
     float cellSize;
@@ -145,26 +145,26 @@ struct WaveLighting {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char WaveLightingSizeCheck[sizeof(WaveLighting) == 0x2c ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char WaveLightingSpecularCheck[offsetof(WaveLighting, specular) == 0x18 ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct WaveVertex {
     float height;
     std::uint32_t normal, diffuse, specular, retained10;
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char WaveVertexSizeCheck[sizeof(WaveVertex) == 0x14 ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct WaveState {
     WaveLighting lighting;
     float textureU, textureV;
@@ -176,7 +176,7 @@ struct WaveState {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char WaveStateScrollCheck[offsetof(WaveState, scrollU) == 0x34 ? 1 : -1];
 typedef char WaveStateReflectionCheck[offsetof(WaveState, reflectionDiffuse) == 0x3c ? 1 : -1];
 typedef char WaveStateRealCheck[offsetof(WaveState, real) == 0x44 ? 1 : -1];
@@ -186,7 +186,7 @@ typedef char WaveStateVerticesCheck[offsetof(WaveState, vertices) == 0xe4c ? 1 :
 typedef char WaveStateSizeCheck[sizeof(WaveState) == 0x24e0 ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct WaveMeshVertex {
     Vector3 position;
     std::uint32_t normal, diffuse, specular;
@@ -194,11 +194,11 @@ struct WaveMeshVertex {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char WaveMeshVertexSizeCheck[sizeof(WaveMeshVertex) == 0x20 ? 1 : -1];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct WaterSurfaceCandidate {
     float distance;
     Vector3 position;
@@ -243,11 +243,11 @@ void InitializeShadowDrawBuffers(std::byte *memory, const ShadowDrawParameters &
 void InitializeShadowDrawBuffers(std::byte *memory, const ShadowDrawParameters &parameters);
 MT7Node *g_sydRoot;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_shadowRenderingEnabled = 1;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_shadowDistanceFadeWidth = 1.0f;
 #endif
 
@@ -269,7 +269,7 @@ Vector3 *g_shadowFaceLightVectors;
 std::uint32_t g_shadowStripHeader[2];
 std::uint32_t g_shadowStripLastHeader[2];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_shadowOpacityScale = 128.0f / 255.0f;
 #else
 float g_shadowOpacityScale = 0.0f;
@@ -278,72 +278,72 @@ float g_shadowOpacityScale = 0.0f;
 float g_shadowParameter = 0.0f;
 std::int32_t g_shadowPointLightMode = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_mazeUnitDrawDistance;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_mazeTerrainDrawEnabled;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_mazeAuxiliaryWord = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_mazeRetainedSetting = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_mazeRetainedValue = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float g_waveLightAmbient = 0.0f;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 g_waveLightDirection = {};
 #endif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 WaveState waveState = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 waterQueryPosition;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 WaterSurfaceCandidate waterCandidates[4];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 waterSurfacePositions[17][17], waterSurfaceQuery;
 float floatingSurfaceOriginX, floatingSurfaceOriginY, floatingSurfaceOriginZ;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t waterSurfaceCell = -1, floatingSurfaceNodeCount = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t floatingSurfacePreviousAngles[30][2];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void *fixedShadowMeshes[2] = {fixedCharacterShadowMesh0, fixedCharacterShadowMesh1};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 floatingSurfaceSample0 = {0.0f, 0.0f, 3.8f}, floatingSurfaceSample1 = {1.4f, 0.0f, -3.98f}, floatingSurfaceSample2 = {-1.4f, 0.0f, -3.98f};
 #endif
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 ShadowShapeNode *g_mapShadowShapes[10];
 MapShadowPlacement g_mapShadowPlacements[101];
 #else
@@ -355,11 +355,11 @@ ShadowVolume *g_mapShadowVolumes[2] = {};
 ShadowModelCacheEntry g_shadowModelCache[10];
 std::int32_t g_shadowModelCacheCount = 0;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MT7Node *g_shadowSprite;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetNaviTaskEnabled(std::int32_t enabled);
 #endif
 
@@ -379,166 +379,166 @@ void InitSYD() {
     g_shadowParameter = 0.0f;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeTerrainDrawEnabled() {
     return g_mazeTerrainDrawEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeRoadDrawEnabled() {
     return g_mazeRoadDrawEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeRoadPropsEnabled() {
     return g_mazeRoadPropsEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeUnitDrawEnabled() {
     return g_mazeUnitDrawEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeWireframeEnabled() {
     return g_mazeWireframeEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeNaviEnabled() {
     return g_mazeRouteDrawEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeCullingAngleLimit() {
     return g_mazeCullingSteps << 10;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeModelOverride() {
     return g_mazeModelOverride;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeUnitWallsEnabled() {
     return g_mazeUnitWallsEnabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetMazeUnitDrawDistance() {
     return g_mazeUnitDrawDistance;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetMazeUnitDrawDistance(float distance) {
     g_mazeUnitDrawDistance = distance;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeRetainedSetting() {
     return g_mazeRetainedSetting;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeRetainedSetting(std::int32_t value) {
     g_mazeRetainedSetting = value;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeRoadDrawEnabled(std::int32_t enabled) {
     g_mazeRoadDrawEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeCullingSteps(std::int32_t steps) {
     g_mazeCullingSteps = steps;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetMazeTerrainDrawEnabled(std::int32_t enabled) {
     g_mazeTerrainDrawEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeRoadPropsEnabled(std::int32_t enabled) {
     g_mazeRoadPropsEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeUnitDrawEnabled(std::int32_t enabled) {
     g_mazeUnitDrawEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeWireframeEnabled(std::int32_t enabled) {
     g_mazeWireframeEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeUnitWallsEnabled(std::int32_t enabled) {
     g_mazeUnitWallsEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeNaviEnabled(std::int32_t enabled) {
     SetNaviTaskEnabled(enabled);
     g_mazeRouteDrawEnabled = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeModelOverride(std::int32_t enabled) {
     g_mazeModelOverride = enabled;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeAuxiliaryWord(std::int32_t value) {
     g_mazeAuxiliaryWord = value;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeAuxiliaryWord() {
     return g_mazeAuxiliaryWord;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMazeRetainedValue(std::int32_t value) {
     g_mazeRetainedValue = value;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetMazeRetainedValue() {
     return g_mazeRetainedValue;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void *GetFixedShadowMesh(std::uint32_t index) {
     void *mesh;
@@ -557,7 +557,7 @@ void SetShadowOpacityScale(float opacity) {
     g_shadowOpacityScale = opacity;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetShadowOpacityScale() {
     return g_shadowOpacityScale;
 }
@@ -569,7 +569,7 @@ void SetShadowPointLightMode(std::int32_t mode) {
         g_shadowPointLightMode = mode;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void MVTR_Reader() {
     MapInfoChunk *mapInfo = GetCurrentMapInfo();
     std::int32_t *cursor = reinterpret_cast<std::int32_t *>(FindNativeChunk("MVTR", mapInfo));
@@ -667,7 +667,7 @@ void MVTR_Reader() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyCharacterShadowBoneTransform(MT7Node *model, std::int16_t boneId) {
     MT7Node *const node = FindMT7Node(model, boneId);
@@ -680,7 +680,7 @@ void ApplyCharacterShadowBoneTransform(MT7Node *model, std::int16_t boneId) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawCharacterShadowShapeNodes(MT7Node *model, ShadowShapeNode *shape) {
     ShadowVolume *const volume = reinterpret_cast<ShadowVolume *>(&shape->data[2]);
@@ -703,7 +703,7 @@ void DrawCharacterShadowShapeNodes(MT7Node *model, ShadowShapeNode *shape) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawCharacterShadowShape(MT7Node *model, ShadowShapeNode *shape) {
     matrix_stack::Matrix4x4_Push(0);
@@ -712,7 +712,7 @@ void DrawCharacterShadowShape(MT7Node *model, ShadowShapeNode *shape) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawObject_AssignShadow(const Vector3 *position, float groundY, MT7Node *model, std::int32_t, Character *character) {
     if (g_shadowVolumesDisabled || !g_shadowRenderingEnabled || !model || !character)
         return;
@@ -841,7 +841,7 @@ void DrawObject_AssignShadow(const Vector3 *position, float groundY, MT7Node *mo
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawShenmueEntity(void *parameter) {
     Character *const character = static_cast<Character *>(parameter);
     MT7Node *const model = character->model;
@@ -946,7 +946,7 @@ void DrawShenmueEntity(void *parameter) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GenerateFFT(float cellSize) {
     WaveState *state = &waveState;
@@ -964,7 +964,7 @@ void GenerateFFT(float cellSize) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void InitializeWaveBinPhases(WaveBin *bins) {
     for (std::int32_t row = 0; row < 8; ++row) {
         for (std::int32_t column = 0; column < 8; ++column) {
@@ -1005,7 +1005,7 @@ float *GenerateDistanceKernel(float exponent, float *output) {
     return output;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void *FillFftKernel(float scale, void *kernel) {
     float *const values = static_cast<float *>(kernel);
@@ -1024,7 +1024,7 @@ void *FillFftKernel(float scale, void *kernel) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FillFftDistance(const void *kernel) {
     const float *distance = static_cast<const float *>(kernel);
@@ -1035,7 +1035,7 @@ void FillFftDistance(const void *kernel) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyFft(const void *first, const void *second) {
     const float *speedA = static_cast<const float *>(first);
@@ -1050,7 +1050,7 @@ void ApplyFft(const void *first, const void *second) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FinalizeFft(float scrollU, float scrollV) {
     waveState.scrollU = scrollU;
@@ -1058,7 +1058,7 @@ void FinalizeFft(float scrollU, float scrollV) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetWaveLighting(float ambient, const Vector3 *direction) {
     g_waveLightAmbient = ambient;
@@ -1068,7 +1068,7 @@ void SetWaveLighting(float ambient, const Vector3 *direction) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FillWaveSpectrum(float *real, float *imaginary, const WaveBin *bins) {
     for (std::int32_t row = 0; row < 8; ++row) {
@@ -1102,7 +1102,7 @@ void FillWaveSpectrum(float *real, float *imaginary, const WaveBin *bins) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float EvaluateCurve(std::int32_t count, const MotionRigKey *keys, float time) {
     std::int32_t index = 0, kind = 3;
     for (; index < count; ++index, ++keys) {
@@ -1119,7 +1119,7 @@ float EvaluateCurve(std::int32_t count, const MotionRigKey *keys, float time) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float EvaluateCurveSegment(const MotionRigKey *key, std::int32_t kind, float time) {
     float value = 0.0f;
     switch (kind) {
@@ -1140,7 +1140,7 @@ float EvaluateCurveSegment(const MotionRigKey *key, std::int32_t kind, float tim
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float EvaluateCurveSegmentCubic(const MotionRigKey *previous, const MotionRigKey *key, float time) {
     const float end = key->timeSeconds, endValue = key->value, endTangent = key->tangentIn;
     const float start = previous->timeSeconds, startValue = previous->value, startTangent = previous->tangentOut;
@@ -1160,7 +1160,7 @@ float EvaluateCurveSegmentCubic(const MotionRigKey *previous, const MotionRigKey
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MotionRigCurve {
     const std::int32_t *count;
     MotionRigKey *keys;
@@ -1196,7 +1196,7 @@ void SwapCurveKeys(MotionRigCurve *first, MotionRigCurve *second) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float EvaluateCurveSlope(std::int32_t count, const MotionRigKey *keys, float time) {
     std::int32_t index = 0, kind = 3;
     for (; index < count; ++index, ++keys) {
@@ -1213,7 +1213,7 @@ float EvaluateCurveSlope(std::int32_t count, const MotionRigKey *keys, float tim
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float EvaluateCurveSlopeSegment(const MotionRigKey *key, std::int32_t kind, float time) {
     float slope = 0.0f;
     switch (kind) {
@@ -1234,7 +1234,7 @@ float EvaluateCurveSlopeSegment(const MotionRigKey *key, std::int32_t kind, floa
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float EvaluateCurveSlopeCubic(const MotionRigKey *previous, const MotionRigKey *key, float time) {
     const float end = key->timeSeconds, endValue = key->value, endTangent = key->tangentIn;
     const float start = previous->timeSeconds, startValue = previous->value, startTangent = previous->tangentOut;
@@ -1255,7 +1255,7 @@ float EvaluateCurveSlopeCubic(const MotionRigKey *previous, const MotionRigKey *
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BuildWaveLightingTable(std::uint32_t flags, float ambient, float, float diffuseR, float diffuseG, float diffuseB, float specularR, float specularG,
     float specularB, float exponent, float intensity) {
@@ -1277,7 +1277,7 @@ void BuildWaveLightingTable(std::uint32_t flags, float ambient, float, float dif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateWaveSpectrum(WaveState *state) {
     std::int32_t i, j;
@@ -1329,7 +1329,7 @@ void UpdateWaveSpectrum(WaveState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateWaveNormals(WaveState *state) {
     float (*const real)[17] = state->real;
@@ -1414,7 +1414,7 @@ void UpdateWaveNormals(WaveState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define PUBLISH_WAVE_VERTEX(packet, vertex)                                                                                                                    \
     {                                                                                                                                                          \
         output = reinterpret_cast<WaveMeshVertex *>(packet);                                                                                                   \
@@ -1510,7 +1510,7 @@ void PublishWaveMesh(WaveState *state, void *mesh) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveformToMesh(void *mesh) {
     UpdateWaveSpectrum(&waveState);
@@ -1521,7 +1521,7 @@ void ApplyWaveformToMesh(void *mesh) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveNode(WaveState *state, MT7Node *node) {
     if (!(node->kind & 0x10) && (node->mesh || node->child)) {
@@ -1546,7 +1546,7 @@ void ApplyWaveNode(WaveState *state, MT7Node *node) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveformToNode(MT7Node *node) {
     UpdateWaveSpectrum(&waveState);
@@ -1555,13 +1555,13 @@ void ApplyWaveformToNode(MT7Node *node) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyCurrentWaveformToNode(MT7Node *node) {
     ApplyWaveNode(&waveState, node);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveformToModel(MT7ModelChunk *model) {
     WaveState *state = &waveState;
@@ -1576,7 +1576,7 @@ void ApplyWaveformToModel(MT7ModelChunk *model) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PrepareWaveReflectionColours(WaveState *state) {
     const Vector3 diffuse = state->lighting.diffuse;
@@ -1592,7 +1592,7 @@ void PrepareWaveReflectionColours(WaveState *state) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveReflectionMesh(WaveState *state, void *mesh) {
     const std::uint32_t diffuse = state->reflectionDiffuse, specular = state->reflectionSpecular;
@@ -1626,7 +1626,7 @@ void ApplyWaveReflectionMesh(WaveState *state, void *mesh) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveReflectionToMesh(void *mesh) {
     PrepareWaveReflectionColours(&waveState);
@@ -1636,7 +1636,7 @@ void ApplyWaveReflectionToMesh(void *mesh) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveReflectionTree(WaveState *state, MT7Node *node) {
     if (!(node->kind & 0x10) && (node->mesh || node->child)) {
@@ -1661,7 +1661,7 @@ void ApplyWaveReflectionTree(WaveState *state, MT7Node *node) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyWaveReflectionToNode(MT7Node *node) {
     PrepareWaveReflectionColours(&waveState);
@@ -1671,7 +1671,7 @@ void ApplyWaveReflectionToNode(MT7Node *node) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define READ_WATER_SURFACE_POINT(position, packet)                                                                                                             \
     {                                                                                                                                                          \
         Vector3 *const target = &(position);                                                                                                                   \
@@ -1680,7 +1680,7 @@ namespace {
     }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReadWaterSurfaceGrid(void *mesh) {
     std::int32_t row;
@@ -1713,7 +1713,7 @@ void ReadWaterSurfaceGrid(void *mesh) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CollectWaterSurfaceCandidates(MT7Node *node) {
     if (node->mesh || node->child) {
@@ -1759,7 +1759,7 @@ void CollectWaterSurfaceCandidates(MT7Node *node) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateFloatingSurfaceNode(MT7Node *node) {
     if (node->mesh) {
@@ -1815,7 +1815,7 @@ void UpdateFloatingSurfaceNode(MT7Node *node) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float FindWaterSurfaceHeight(Vector3 position, MT7Node *root) {
     std::int32_t i;
@@ -1846,7 +1846,7 @@ float FindWaterSurfaceHeight(Vector3 position, MT7Node *root) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateFloatingSurfaceModels(std::int32_t surfaceSlot, const FloatingSurfaceBinding *bindings) {
     MT7Node *const surface = GetMapModelRoot(surfaceSlot);
@@ -1867,7 +1867,7 @@ void InitializeDefaultCharacterShadow(Character *character) {
     charaSetDisplayEnabledFlag(character, 0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawMapModifierVolumes(void *) {
     g_shadowStrengthLimit = 255;
     if (g_shadowVolumesDisabled || !g_shadowRenderingEnabled || GetCurrentActiveLight() != 1 || GetSelectedLightKind(0) != 2)
@@ -1931,7 +1931,7 @@ void DrawMapModifierVolumes(void *) {
 // @verified - d
 void DrawMapModifierVolumes(void *) {
     g_shadowStrengthLimit = 255;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (g_shadowVolumesDisabled || !g_shadowRenderingEnabled || GetCurrentActiveLight() != 1 || GetSelectedLightKind(0) != 2)
 #else
     if (g_shadowVolumesDisabled || !g_worldDrawingEnabled || GetCurrentActiveLight() != 1 || GetSelectedLightKind(0) != 2)
@@ -2096,7 +2096,7 @@ MT7Node *GetSHDS() {
     return g_sydRoot;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadShadowSprite() {
     g_shadowModelCacheCount = 0;
@@ -2168,7 +2168,7 @@ ShadowShapeNode *LoadShadowShape(const char *name) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool ContainsWaterSurfaceQuad(std::int32_t first, std::int32_t stride) {
     if (waterSurfaceCell != -1)
@@ -2197,7 +2197,7 @@ bool ContainsWaterSurfaceQuad(std::int32_t first, std::int32_t stride) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SelectWaterSurfaceCell(std::int32_t first, std::int32_t stride) {
     if (waterSurfaceCell != -1)
@@ -2218,7 +2218,7 @@ void SelectWaterSurfaceCell(std::int32_t first, std::int32_t stride) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SampleWaterSurfaceHeight() {
     WaveState *state = &waveState;
@@ -2256,7 +2256,7 @@ found:
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ProjectFireFftPoint(const Vector3 &point, Vector3 &output);
 
 void UpdateFloatingSurfaceProjection(void *mesh, float refraction) {
@@ -2353,6 +2353,13 @@ void UpdateFloatingSurfaceProjectionTree(MT7Node *node, float refraction) {
     if (node->sibling)
         UpdateFloatingSurfaceProjectionTree(node->sibling, refraction);
 }
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const float *GetWaveHeights() {
+    return &waveState.real[0][0];
+}
+
 #endif
 
 } // namespace s2

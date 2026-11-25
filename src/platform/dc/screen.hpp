@@ -12,7 +12,7 @@ void SubmitScreenTextureStrip(const float *vertices, std::int32_t texture, std::
 #if SHENMUE_IS_S2
 void ResetScreenTextureState();
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetScreenUserClipMode(std::uint32_t mode);
 void SetVertexListClipMode(std::uint32_t lists, std::uint32_t mode);
 void SetVertexListClipping(std::int32_t left, std::int32_t top, std::int32_t right, std::int32_t bottom, std::uint32_t lists);

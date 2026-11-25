@@ -8,7 +8,7 @@ namespace shenmue {
 namespace s2 {
 
 DoorRuntimeStatePrefix g_doorRuntimeState = {};
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DoorDestination g_doorDestination = {};
 shen_name g_doorQueuedAuthor = 0;
 std::int32_t g_doorCachedSceneId = 0;
@@ -37,7 +37,7 @@ shen_name GetCurrentDoorAuthor() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 void __attribute__((renesas)) shenmue_s2_event_SetAreaCleanupCallback(shenmue::s2::DoorAreaCleanupCallback callback) {
     shenmue::s2::SetDoorAreaCleanupCallback(callback);

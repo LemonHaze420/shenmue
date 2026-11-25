@@ -86,7 +86,7 @@ float FixedAngleCos(std::uint16_t angle) {
     return FixedAngleSin(static_cast<std::uint16_t>(0x4000U - folded));
 }
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void Matrix4x4_BuildAndApplyRotationMatrix(const Vector3 &axis, float sine, float cosine) {
     const float x = axis.x, y = axis.y, z = axis.z;
@@ -107,7 +107,7 @@ void Matrix4x4_BuildAndApplyRotationMatrix(const Vector3 &axis, float sine, floa
 }
 #endif
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void Matrix4x4_ApplyAngleRotationToVector(const Vector3 &axis, std::uint16_t angle) {
     Vector3 normalized = axis;

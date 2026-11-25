@@ -6,7 +6,7 @@
 #include "s2/flag_data.hpp"
 #include "s2/inventory_dc.hpp"
 #include "s2/story_state.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/flag_context_dc.hpp"
 #include "s2/player_control_state_dc.hpp"
 #include "s2/player_movement_dc.hpp"
@@ -126,7 +126,7 @@ std::int32_t GetScenarioFlagNotificationShown() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetShenmueFlag(std::int32_t flag);
 #endif
 
@@ -179,7 +179,7 @@ void EV_SetPlayerFlag(PlayerFlagWriteMode mode, std::int16_t flag, std::int32_t 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t stepUpdateFlagUtil(std::int32_t flag, std::int32_t mode) {
     std::uint32_t result = 0;
     std::int32_t running = 1;
@@ -260,7 +260,7 @@ const std::int32_t *FindFlagDefinition(std::int32_t flag) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static const std::int32_t *stepGetFlagCommands(std::int32_t flag, std::uint32_t mode) {
     const std::int32_t *const definition = FindFlagDefinition(flag);
@@ -275,7 +275,7 @@ static const std::int32_t *stepGetFlagCommands(std::int32_t flag, std::uint32_t 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t stepExecuteExtendedCommand(std::uint32_t operation, const std::int32_t *arguments) {
     switch (static_cast<StepFlagExtendedOp>(operation)) {
@@ -299,7 +299,7 @@ static std::int32_t stepExecuteExtendedCommand(std::uint32_t operation, const st
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void stepSelectSleepSchedule(const std::int32_t *flags) {
     const std::int8_t lateSleepWindow = static_cast<std::int8_t>(GetShenmueFlag(528));
     GetCurrentStep();
@@ -346,7 +346,7 @@ static void stepSelectSleepSchedule(const std::int32_t *flags) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t stepFindSleepSchedule(std::int32_t flag) {
     for (std::int32_t index = 0; sleepScheduleEntries[index].area; ++index) {
@@ -361,7 +361,7 @@ static std::int32_t stepFindSleepSchedule(std::int32_t flag) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void stepSetDefaultStats(const std::int32_t *) {
     for (std::int32_t stat = 16; stat < 32; ++stat)
@@ -373,7 +373,7 @@ static void stepSetDefaultStats(const std::int32_t *) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
     std::int32_t index = 1;
@@ -393,7 +393,7 @@ static std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool GetInternalFlag(std::int32_t flag) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (flag <= 4095) {
         const std::uint8_t *data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, internal);
         data += flag >> 3;
@@ -473,7 +473,7 @@ std::int64_t SetScenarioByteStat(std::int32_t index, std::int32_t value) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool GetStoryFlag(std::int32_t flag) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (flag <= 63) {
         const std::uint8_t *data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, story);
         data += flag >> 3;
@@ -504,7 +504,7 @@ std::uint8_t GetScenarioByteStat(std::int32_t index) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetScenarioPersistentFlags() {
 #else
 std::int64_t ResetScenarioPersistentFlags() {
@@ -515,7 +515,7 @@ std::int64_t ResetScenarioPersistentFlags() {
         g_scenarioPersistentFlags.internal[index] = 0;
     for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioPersistentFlags.stats)); ++index)
         g_scenarioPersistentFlags.stats[index] = 0;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     return 0;
 #endif
 }

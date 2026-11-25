@@ -55,7 +55,7 @@ std::int32_t GetCharacterMotionWorldYaw(const Character *character);
 void mtwkSetEntityRotation(MotionWork *work, const Vector3i *rotation);
 std::int32_t GetCharacterControlSlotIndex(const CharacterNode *node);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 Character *ctrlGetCharaByName(shen_name name) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -220,7 +220,7 @@ std::int32_t RotateCharacter(Character *character, std::uint32_t flags, const Ve
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool charRequestMotion(Character *character, std::int32_t motion, MotionRegion region);
 std::uint32_t charSetMotionRegionFlag(Character *character, std::uint32_t flag, std::int32_t operation, MotionRegion region);
 
@@ -247,7 +247,7 @@ std::int32_t ExecuteMotionworkUtility(Character *character, std::uint32_t yaw, f
 #endif
 
 float AssignCharacterMotionYaw(Character *character, std::int32_t yaw, const std::uint16_t *customMotions, std::uint32_t flags) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::uint16_t rounded = static_cast<std::uint16_t>(static_cast<std::uint32_t>(yaw) - charGetMotionWorkYaw(character) + 0x1000U);
     const std::uint32_t direction = (static_cast<std::uint32_t>(rounded) >> 13) & 7U;
     std::int32_t difference;
@@ -316,7 +316,7 @@ float AssignCharacterMotionYaw(Character *character, std::int32_t yaw, const std
 void GetScenarioCharacterEulerAngles(shen_name name, Vector3i *rotation, std::uint32_t flags) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const character = scenFindChara(control->scenarioTask, name);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t zero;
     std::int32_t (*readYaw)(const Character *);
     void (*readRotation)(const Character *, Vector3i *);
@@ -403,7 +403,7 @@ shen_name EV_SCEN_FindChar_Wrapper(shen_name name) {
 }
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EV_scenApplyPosOrRotToPartOf(shen_name name, std::uint32_t part, Vector3 *position, Vector3i *rotation, EventCharacterPartTransformMode mode) {
 #else
 void EV_scenApplyPosOrRotToPartOf(shen_name name, std::uint16_t part, Vector3 *position, Vector3i *rotation, EventCharacterPartTransformMode mode) {
@@ -415,7 +415,7 @@ void EV_scenApplyPosOrRotToPartOf(shen_name name, std::uint16_t part, Vector3 *p
     MT7Node *const node = FindMT7Node(character->model, static_cast<std::int16_t>(part));
     if (!node)
         return;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (position) {
         switch (mode) {
         case EventCharacterPartTransformMode_Absolute:
@@ -485,7 +485,7 @@ void EV_scenApplyPosOrRotToPartOf(shen_name name, std::uint16_t part, Vector3 *p
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t TurnScenarioCharacterTowardPosition(
     shen_name name, const Vector3 *target, const std::uint16_t *customMotions, std::uint32_t *yaw, float *angularStep, std::uint32_t flags) {
@@ -501,7 +501,7 @@ std::int32_t TurnScenarioCharacterTowardPosition(
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t scenMotionworkUtil(shen_name name, std::uint32_t yaw, float angle, std::uint32_t flags, const void *motionData) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -509,7 +509,7 @@ std::int32_t scenMotionworkUtil(shen_name name, std::uint32_t yaw, float angle, 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawPIN(shen_name name, std::int32_t, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     const MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -534,7 +534,7 @@ void DrawPIN(shen_name name, std::int32_t, const Vector3 *position, const Vector
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyTranslationRotationScaleXYZToCharaByID(shen_name name, std::int32_t, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     const MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -559,7 +559,7 @@ void ApplyTranslationRotationScaleXYZToCharaByID(shen_name name, std::int32_t, c
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawScenarioModelChild(shen_name name, std::int32_t ordinal, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     const MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -582,7 +582,7 @@ void DrawScenarioModelChild(shen_name name, std::int32_t ordinal, const Vector3 
     }
     if (scale)
         Matrix4x4::Scale(scale->x, scale->y, scale->z);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     DrawCharacterModelBranch(node);
 #else
     DrawCharacterModelBranch(node, 0.0f);
@@ -662,7 +662,7 @@ void __attribute__((renesas)) shenmue_s2_event_scenApplyPosOrRotToChildId(
 }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 __attribute__((renesas)) std::int32_t shenmue_s2_event_scenMotionworkUtil(
     std::uint32_t name, std::uint32_t yaw, float angle, std::uint32_t flags, const void *motionData) {

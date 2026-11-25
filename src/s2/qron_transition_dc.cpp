@@ -9,7 +9,7 @@
 #include "s2/map_event_transition_dc.hpp"
 #include "s2/player_stats_dc.hpp"
 #include "s2/scene_state_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/air_dc.hpp"
 #include "s2/character_placement_dc.hpp"
 #include "s2/elevator.hpp"
@@ -23,7 +23,7 @@
 #include "s2/weather.hpp"
 #include "platform/dc/matrix.hpp"
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #endif
 #include <cfloat>
 #include <cstring>
@@ -56,7 +56,7 @@
 #include "s2/input_dc.hpp"
 #include "s2/system_modules_dc.hpp"
 #include "s2/texture_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -91,7 +91,7 @@ std::uint32_t g_qronSceneChange[7] = {};
 
 namespace {
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t QronFloorFromHeight(float height, float baseHeight) {
     const float difference = (height - baseHeight) + 0.1f;
@@ -112,7 +112,7 @@ std::int32_t QronFloorFromHeight(float height, float baseHeight) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float QronFloorHeight(std::int32_t floor, float baseHeight) {
     switch (g_currentMap) {
@@ -138,7 +138,7 @@ const QronMapDefinition *FindQronMapDefinition(shen_name areaId) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void qron_task_Enqueue() {
     QronFloorRuntime &runtime = g_qronFloorRuntime;
@@ -177,7 +177,7 @@ void qron_task_Enqueue() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResolveQronEntryLocation(const QronMapDefinition &definition, Vector3 &position, std::int32_t &yaw) {
     const QronSceneChange *change = reinterpret_cast<const QronSceneChange *>(g_qronSceneChange);
     std::int32_t floor;
@@ -219,7 +219,7 @@ clampFloor:
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t qronSetFloorDescriptor(const QronFloorDescriptor *descriptor) {
     QronFloorRuntime &runtime = g_qronFloorRuntime;
@@ -283,14 +283,14 @@ std::int32_t GetQronNextStream() {
     return g_qronFloorRuntime.areaId ? g_qronFloorRuntime.floor : -1000;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetQronTemporaryFloorHeight() {
     return g_qronFloorRuntime.areaId ? g_qronFloorRuntime.temporaryFloorHeight : FLT_MAX;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetQronFloorAtPosition(const Vector3 &position) {
     if (g_qronFloorRuntime.areaId) {
@@ -302,7 +302,7 @@ std::int32_t GetQronFloorAtPosition(const Vector3 &position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetQronFloorHeight(std::int32_t floor) {
     QronFloorRuntime *runtime = &g_qronFloorRuntime;
@@ -312,7 +312,7 @@ float GetQronFloorHeight(std::int32_t floor) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetQronMaximumFloor() {
     return g_qronFloorRuntime.areaId ? g_qronFloorRuntime.maximumFloor : -1000;
 }
@@ -322,14 +322,14 @@ std::int32_t GetQronMinimumFloor() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetQronCurrentFlags() {
     return g_qronFloorRuntime.areaId ? g_qronFloorRuntime.flags : 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float FindQronIntersectionHeight(const Vector3 *position, std::int32_t floor) {
     QronFloorRuntime *runtime = &g_qronFloorRuntime;
@@ -347,7 +347,7 @@ float FindQronIntersectionHeight(const Vector3 *position, std::int32_t floor) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetAreaFogParams() {
     if (!g_qronFloorRuntime.areaId)
@@ -362,7 +362,7 @@ std::int32_t SetAreaFogParams() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t mapSetupLighting(std::int32_t enabled) {
     QronFloorRuntime *runtime = &g_qronFloorRuntime;
@@ -381,7 +381,7 @@ std::int32_t mapSetupLighting(std::int32_t enabled) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResolveQronLoadLocation(std::uint32_t *subarea) {
     const QronMapDefinition *const definition = FindQronMapDefinition(g_currentMap);
     if (!definition)
@@ -394,7 +394,7 @@ std::int32_t ResolveQronLoadLocation(std::uint32_t *subarea) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool IsCurrentAreaQA11() {
     if (g_currentMap == AREA_QA11)
         return true;
@@ -402,7 +402,7 @@ bool IsCurrentAreaQA11() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetQronRelocatedFloor(std::int32_t floor, std::int32_t) {
     QronFloorRuntime &runtime = g_qronFloorRuntime;
@@ -451,7 +451,7 @@ std::int32_t SetQronRelocatedFloor(std::int32_t floor, std::int32_t) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetQronStackedFloor(std::int32_t floor) {
     QronFloorRuntime &runtime = g_qronFloorRuntime;
@@ -464,7 +464,7 @@ std::int32_t SetQronStackedFloor(std::int32_t floor) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t qronSetFloor(std::int32_t floor) {
     QronFloorRuntime *runtime = &g_qronFloorRuntime;
@@ -478,7 +478,7 @@ std::int32_t qronSetFloor(std::int32_t floor) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t qronRepositionPlayerForFloor(std::int32_t floor) {
     QronFloorRuntime *runtime = &g_qronFloorRuntime;
@@ -507,7 +507,7 @@ std::int32_t qronRepositionPlayerForFloor(std::int32_t floor) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RefreshQronUpperFloorPlacements(QronFloorRuntime *runtime) {
     Vector3 position;
@@ -529,7 +529,7 @@ std::int32_t RefreshQronUpperFloorPlacements(QronFloorRuntime *runtime) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t EnableQronUpperFloorPlacements(QronFloorRuntime *runtime) {
     if ((runtime->flags & 1U) == 0)
@@ -547,7 +547,7 @@ std::int32_t EnableQronUpperFloorPlacements(QronFloorRuntime *runtime) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RestoreQronUpperFloorPlacements(QronFloorRuntime *runtime) {
     if ((runtime->flags & 1U) == 0)
@@ -566,7 +566,7 @@ std::int32_t RestoreQronUpperFloorPlacements(QronFloorRuntime *runtime) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ChangeQronStairArea(std::int32_t direction, std::int32_t connectionId, const Vector3 *anchor, std::int32_t yaw) {
     QronFloorRuntime *runtime = &g_qronFloorRuntime;
@@ -599,7 +599,7 @@ std::int32_t ChangeQronStairArea(std::int32_t direction, std::int32_t connection
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void QueueQronElevatorSceneChange(shen_name area, std::int32_t entry, std::int32_t floor, const Vector3 *position, std::int32_t yaw) {
     g_qronSceneChange[0] = area;
@@ -612,7 +612,7 @@ void QueueQronElevatorSceneChange(shen_name area, std::int32_t entry, std::int32
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void QronFloorControl_Callback(void *) {
     QronFloorRuntime &runtime = g_qronFloorRuntime;
@@ -683,7 +683,7 @@ void QronSceneChange_Callback(void *) {
 
 namespace {
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool FindMapEventEntryTransform(shen_name areaId, std::int32_t entryId, Vector3 &position, std::int32_t &yaw) {
     const AreaTableEntry *const area = GetAreaTableEntry(areaId);
@@ -705,13 +705,13 @@ bool FindMapEventEntryTransform(shen_name areaId, std::int32_t entryId, Vector3 
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" float __attribute__((renesas)) shenmue_s2_event_shenFindIntersectionWithScene(const shenmue::Vector3 *position) {
     return shenmue::s2::FindFieldIntersectionHeight(position);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_qronSetFloorDescriptor(const shenmue::s2::QronFloorDescriptor *descriptor) {
     return shenmue::s2::qronSetFloorDescriptor(descriptor);
 }

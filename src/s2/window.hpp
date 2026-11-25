@@ -497,7 +497,7 @@ void UploadWindowShadowSurface(WindowSlot *window, GeneratedTextureSurface *surf
 const std::byte *GetWindowGlyphBitmap(FontRuntimeData *font, std::uint16_t glyph);
 void RasterizeWindowGlyph(FontRuntimeData *font, std::uint16_t glyph, void *destination, std::int32_t bytePitch, std::uint16_t colour, std::uint16_t shadow,
     std::uint16_t background);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void wndSetFlag(HLib::Task *task, std::int32_t flag);
 void RasterizeWindowGlyph4bpp(FontRuntimeData *font, std::uint16_t glyph, std::byte *destination, std::int32_t pixelX);
 std::int32_t RasterizeWindowTextLine4bpp(std::byte *destination, std::int32_t width, const char *text, std::int32_t mode, std::int32_t centered);
@@ -511,7 +511,7 @@ std::int32_t RenderWindowTextSurface(
 std::int32_t SetupUIElement(HLib::Task *task, const char *text, std::int32_t width, std::uint16_t colour, std::uint16_t shadow, std::int32_t conversionMode);
 std::int32_t CreateCenteredWindowTextSurface(
     HLib::Task *task, const char *text, std::int32_t width, std::uint16_t colour, std::uint16_t shadow, std::int32_t conversionMode);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t CreateVerticalWindowTextSurface(HLib::Task *task, const char *text, std::int32_t height, std::uint16_t colour, std::uint16_t shadow);
 #endif
 void HideWindowSlot(WindowSlot *window);

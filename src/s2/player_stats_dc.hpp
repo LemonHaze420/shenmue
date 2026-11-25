@@ -48,7 +48,7 @@ extern std::uint16_t g_playerResetCounter;
 extern ArcadeStatistics g_arcadeStatistics[4];
 extern std::int16_t g_playerSaveSelections[3];
 extern std::uint16_t g_playerSelectionCounter;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint8_t g_scenarioTalkOccurrences[512];
 void RecordScenarioTalkGroup(std::int32_t index);
 void RecordRecentScenarioTalk(std::int32_t index);
@@ -92,7 +92,7 @@ extern std::uint32_t g_stepDebugFrames;
 extern std::int32_t g_stepElapsedSeconds;
 extern std::uint32_t g_stepRangeElapsedFrames;
 extern std::int32_t g_previousStoryStep, g_stepRangeStart, g_stepRangeEnd;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetStepCounterSlot(std::int32_t step);
 #else
 std::int32_t GetStepCounterSlot();

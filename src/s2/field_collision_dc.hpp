@@ -52,7 +52,7 @@ struct FieldDataRuntimePart {
     std::int32_t transformed;
     std::byte retained14[4];
     std::int32_t yaw;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 position;
 #else
     std::byte retained1c[0x0c];
@@ -87,7 +87,7 @@ SHENMUE_FIELD_DATA_LAYOUT(offsetof(FieldDataRuntimePart, data) == 8);
 SHENMUE_FIELD_DATA_LAYOUT(offsetof(FieldDataRuntimePart, enabled) == 0x0c);
 SHENMUE_FIELD_DATA_LAYOUT(offsetof(FieldDataRuntimePart, transformed) == 0x10);
 SHENMUE_FIELD_DATA_LAYOUT(offsetof(FieldDataRuntimePart, yaw) == 0x18);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SHENMUE_FIELD_DATA_LAYOUT(offsetof(FieldDataRuntimePart, position) == 0x1c);
 #endif
 SHENMUE_FIELD_DATA_LAYOUT(offsetof(FieldDataRuntimePart, transform) == 0x28);
@@ -105,7 +105,7 @@ extern FieldDataRuntimePart *g_currentFieldPart;
 extern FieldDataRoot *g_currentFieldData;
 extern std::uint16_t g_fieldDataFlags;
 extern std::uint16_t g_fieldDataClearFlags;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 extern std::uint16_t g_fieldDataResetFlags;
 #endif
 extern FieldPlane g_currentFieldPlane;
@@ -126,8 +126,8 @@ void ClearFieldIntersection();
 float FindFieldIntersectionHeight(const Vector3 *position);
 std::int32_t GatherFieldGridCells(const Vector3 *position, std::int16_t *cells);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool flddAssignGeneratedBox(std::int32_t mode, const Vector3 &position, const Vector3 &scale, std::int32_t yaw);
 #else
 bool flddAssignGeneratedBox(std::int32_t mode, const Vector3 &position, const Vector3 &scale, std::uint16_t yaw);

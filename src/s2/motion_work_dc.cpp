@@ -4,7 +4,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include <cstring>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/motion_rig.hpp"
 #include "s2/model_image_component_dc.hpp"
@@ -57,7 +57,7 @@
 #include "s2/door_state_dc.hpp"
 #include "s2/scene_state_dc.hpp"
 #include "s2/pak_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #include "s2/field_collision_dc.hpp"
 #endif
@@ -80,7 +80,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/character_alpha_dc.hpp"
 #include "s2/character_state_flags_dc.hpp"
 #include "s2/reflector_board_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_transparency_dc.hpp"
 #include "s2/pause.hpp"
 #endif
@@ -97,7 +97,7 @@ namespace s2 {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 enum MotionRegionFlag {
     MRF_Unknown01 = 0x1U,
     MRF_Unknown02 = 0x2U,
@@ -115,7 +115,7 @@ enum MotionRegionFlag {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 enum MotionCopyFlag {
     MCF_Unknown01 = 0x1U,
     MCF_Unknown02 = 0x2U,
@@ -171,7 +171,7 @@ std::int32_t UpdateMotionTransitionControllers(Character *character);
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct CopyMotionContext {
     Character &character;
     MotionWork &work;
@@ -273,7 +273,7 @@ static const std::uint32_t *const motionRigDefaultRecords[17] = {motionRigDefaul
     motionRigDefaults[11], motionRigDefaults[12], motionRigDefaults[13], motionRigDefaults[14], motionRigDefaults[15], motionRigDefaults[16]};
 MotionRigConstantTables g_motionConstData = {motionRigNames, motionRigDefaultRecords, motionRigDimensionTable};
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_mtwkCurrentIsRyo = 0;
 
 struct MotionCopyState {
@@ -295,19 +295,19 @@ struct MotionCopyState {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Character *g_transitionCharacter = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MotionWork *g_transitionWork = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t *g_copyTransitionState = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SHENMUE_COPY_TYPED (*reinterpret_cast<MotionCopyState *>(g_copyTransitionState))
 #define SHENMUE_COPY_STATE (*reinterpret_cast<MotionWork *>(g_copyTransitionState - offsetof(MotionWork, copyOperationState)))
 struct MotionCopyAnimationView {
@@ -321,43 +321,43 @@ struct MotionCopyAnimationView {
     (reinterpret_cast<type *>(g_copyTransitionState)[(offsetof(MotionWork, field) - offsetof(MotionWork, copyOperationState)) / sizeof(type)])
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_transitionHadMotion = 0;
 #endif
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t mtwkEvaluateMotionFrame(MotionWork *work);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void figpToggleMotionworkFlag(Character *character, MotionWork *work);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AddCharacterChildSpacePosition(Character *character, const Vector3 *position);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t PlayFootstepForNode(std::uint32_t flags, Character *character);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_motionUseOverride = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_motionRigError = 0;
 #endif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_entity_rigs.inc"
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::uint32_t motionControllerIndices[9] = {0, 1, 2, 3, 4, 5, 6, 7, 8};
 #endif
 
@@ -367,7 +367,7 @@ static const std::uint32_t motionControllerIndices[9] = {0, 1, 2, 3, 4, 5, 6, 7,
 std::int32_t g_motionUseEnvironment;
 void *charFindComp(const Character *character, shen_name token);
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_motionDrawOverridesEnabled = 1;
 #else
 std::int32_t g_motionDrawOverridesEnabled = 0;
@@ -375,7 +375,7 @@ std::int32_t g_motionDrawOverridesEnabled = 0;
 
 void GetCharacterLocalPosition(const Character *character, Vector3 *position);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkTransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pelvis) {
     IKRig &rig = reinterpret_cast<MotionWorkBindings *>(work)->rig;
@@ -390,7 +390,7 @@ void mtwkTransformWithoutIKEnabled(MotionWork *work, Vector3 *foot, Vector3 *pel
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool MOTN_HasHoldCommand(std::uint16_t animation) {
     if (MOTN_FindAnimationExtraRecord(animation, 24))
         return true;
@@ -407,7 +407,7 @@ std::int32_t MOTN_IsEndlessMotion(std::uint16_t animation) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const std::byte *mtwkFindFrameEvent(const MotionWork *work, std::int32_t eventType, std::int32_t occurrence) {
     return MOTN_FindFrameEvent(static_cast<std::int8_t>(eventType), work->currentMotionId[0],
@@ -415,14 +415,14 @@ const std::byte *mtwkFindFrameEvent(const MotionWork *work, std::int32_t eventTy
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const std::byte *mtwkFindHandPoseEvent(const MotionWork *work, std::int32_t occurrence) {
     return mtwkFindFrameEvent(work, 18, occurrence);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t mtwkGetFrameEvent52Parameter(const MotionWork *work) {
     const std::byte *const event = mtwkFindFrameEvent(work, 52, 1);
     if (event)
@@ -431,7 +431,7 @@ std::uint32_t mtwkGetFrameEvent52Parameter(const MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MotionRegistryEntry *FindFreeMotionBankEntry() {
     std::int32_t index = static_cast<std::uint8_t>(g_motionBankCount);
     while (index < 32 && g_motionRegistry[index].handle != UINT32_MAX)
@@ -484,7 +484,7 @@ std::uint32_t DeleteMotionProps(std::int32_t handle) {
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindMotionTargetParameters(MotionTargetParameters *parameters, MotionRigAxis *axes, Vector4 *pva, const std::uint32_t *controller) {
     parameters->channels[0] = reinterpret_cast<MotionRigChannel *>(axes);
@@ -499,7 +499,7 @@ void BindMotionTargetParameters(MotionTargetParameters *parameters, MotionRigAxi
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeMotionTargetOverrides(MotionWork *work) {
     MotionWorkBindings *const bindings = reinterpret_cast<MotionWorkBindings *>(work);
@@ -522,7 +522,7 @@ void InitializeMotionTargetOverrides(MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindMotionRotationParameters(MotionRotationParameters *parameters, MotionRigAxis *axes, MotionRotationBasis *basis, float *blendAlpha) {
     parameters->channels[0] = reinterpret_cast<MotionRigChannel *>(axes);
@@ -535,7 +535,7 @@ void BindMotionRotationParameters(MotionRotationParameters *parameters, MotionRi
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindMotionTwoJointRotationParameters(MotionRotationParameters *parameters, MotionRigAxis *axes, MotionRotationBasis *basis, float *blendAlpha) {
     const std::uintptr_t base = reinterpret_cast<std::uintptr_t>(axes);
@@ -546,7 +546,7 @@ void BindMotionTwoJointRotationParameters(MotionRotationParameters *parameters, 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeMotionRotationPointers(MotionWork *work) {
     BindMotionRotationParameters(&reinterpret_cast<MotionWorkBindings *>(work)->rotations[0],
@@ -641,7 +641,7 @@ void InitializeMotionRotationPointers(MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeMotionClockRates(MotionWork *work) {
     work->lowerBodyClock.playbackSpeed = 1.0f;
@@ -652,7 +652,7 @@ void InitializeMotionClockRates(MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeMotionRuntime(MotionWork *work, std::uint32_t rigType) {
     MotionOverrideRig *const overrides = work->overrides;
@@ -693,7 +693,7 @@ void InitializeMotionRuntime(MotionWork *work, std::uint32_t rigType) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ReleaseMotionRuntime(MotionWork *work) {
     if (work && work->overrides) {
@@ -703,7 +703,7 @@ void ReleaseMotionRuntime(MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void MotionWorkReleaseNullsub(MotionWork *) {
 }
 
@@ -712,7 +712,7 @@ void charReleaseMotionWork(Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void MotionWorkCleanup(Character *, void *payload) {
     ReleaseMotionRuntime(static_cast<MotionWork *>(payload));
@@ -733,7 +733,7 @@ std::uint32_t mtwkApplyTransforms(const Matrix4x4 *matrix) {
     do {
         rotation.rows[3].x = rotation.rows[3].y = rotation.rows[3].z = 0.0f;
         matrix_stack::Matrix4x4_Push(&rotation);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         Matrix4x4::TransformPoint(axis, direction);
         matrix_stack::GetMatrix(&rotation);
 #else
@@ -750,7 +750,7 @@ std::uint32_t mtwkApplyTransforms(const Matrix4x4 *matrix) {
         else
             axis.y = -1.0f;
         matrix_stack::Matrix4x4_Push(&rotation);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         Matrix4x4::TransformPoint(axis, direction);
         matrix_stack::GetMatrix(&rotation);
 #else
@@ -762,7 +762,7 @@ std::uint32_t mtwkApplyTransforms(const Matrix4x4 *matrix) {
     return dc::sdk::ArcTan2Fixed(-direction.x, -direction.z);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkGetArmHandPoseChanges(MotionWork *work, std::int32_t *shapes, std::int32_t *frames) {
     const std::uint16_t independent = 0x100U, mirroredFlag = 0x40U, transition = 0x10U;
@@ -839,13 +839,13 @@ void Queue_mot_Callback_MotFileManageTaskEntry(std::uint8_t nextFunctionIndex) {
     HLib::EnqueueTaskWithParameter(MotFileManageTaskEntry_Callback, parameter, 2, 4, TASK_MOTF);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void mtwkClearRetiredMotionRanges() {
     ClearRetiredMotionRanges();
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkCreateForChara(Character *character, std::int32_t) {
     MotionWork *const work = static_cast<MotionWork *>(AllocateModelComponent(character, CHARACTER_MOTION, sizeof(MotionWork), MotionWorkUpdate));
@@ -870,7 +870,7 @@ void mtwkCreateForChara(Character *character, std::int32_t) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void MotionRigVersionError(std::uint32_t error) {
     g_motionRigError = error;
@@ -879,7 +879,7 @@ void MotionRigVersionError(std::uint32_t error) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static float motionRigVersion = 1.1f;
 
 void InitializeMotionRig(IKRig *rig, MotionOverrideRig *overrides, std::uint32_t rigType) {
@@ -1038,7 +1038,7 @@ void mtwkRequestRegionDetach(MotionWork *work, MotionRegion region) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkInitFlags(MotionWork *work, std::uint32_t region) {
     if (!work)
@@ -1112,7 +1112,7 @@ float mtwkGetEndFrame(const MotionWork *work, MotionRegion region) {
     return maximum;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkGetRegionLoopStartOverride(const MotionWork *work, std::uint32_t region) {
     if (!work || region > 4 || !(work->regionFlags[region] & MRF_Transition))
         return -1.0f;
@@ -1122,7 +1122,7 @@ float mtwkGetRegionLoopStartOverride(const MotionWork *work, std::uint32_t regio
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkGetRegionTimeOverride(const MotionWork *work, std::uint32_t region) {
     if (!work || region > 4 || !(work->regionFlags[region] & MRF_Transition))
         return -1.0f;
@@ -1132,7 +1132,7 @@ float mtwkGetRegionTimeOverride(const MotionWork *work, std::uint32_t region) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkGetRegionEndFrameOverride(const MotionWork *work, std::uint32_t region) {
     if (!work || region > 4 || !(work->regionFlags[region] & MRF_Transition))
         return -1.0f;
@@ -1206,7 +1206,7 @@ void mtwkSetSpeed(MotionWork *work, float speed, MotionRegion region) {
     clocks[static_cast<std::uint32_t>(region)]->playbackSpeed = speed;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkGetRootPosition(const MotionWork *work, Vector3 *position) {
     position->x = work->cachedRootPosition.x;
@@ -1215,7 +1215,7 @@ void mtwkGetRootPosition(const MotionWork *work, Vector3 *position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkUpdateRootDeltaVector(const MotionWork *work, Vector3 *delta) {
     if (work->motionFlags & 1U) {
@@ -1230,7 +1230,7 @@ void mtwkUpdateRootDeltaVector(const MotionWork *work, Vector3 *delta) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkSetRootPosition(MotionWork *work, const Vector3 *position) {
     work->cachedRootPosition.x = position->x;
@@ -1239,14 +1239,14 @@ void mtwkSetRootPosition(MotionWork *work, const Vector3 *position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t mtwkGetEntityYaw(const MotionWork *work) {
     return work->entityYaw;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkGetEntityRotation(const MotionWork *work, Vector3i *rotation) {
     rotation->x = work->entityRotationX;
@@ -1413,7 +1413,7 @@ std::uint32_t RestoreMotionSnapshotPlacement(shen_name subject, std::uint32_t in
     return 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool charRequestMotion(Character *character, std::int32_t motion, MotionRegion region) {
     return mtwkRequestMotion(static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION)), motion, region);
 }
@@ -1458,7 +1458,7 @@ bool HasCharacterMotionWork(const Character *character) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CopyRecursiveModelNodeTransform(MT7Node *node, std::uint32_t selector, Matrix4x4 *output) {
     if (node->sibling)
@@ -1476,7 +1476,7 @@ void CopyRecursiveModelNodeTransform(MT7Node *node, std::uint32_t selector, Matr
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CopyCharacterSourceTransform(const Character *source, std::uint32_t selector, Matrix4x4 *output) {
     matrix_stack::Matrix4x4_Push();
@@ -1498,7 +1498,7 @@ void CopyCharacterSourceTransform(const Character *source, std::uint32_t selecto
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyCharacterSourcePosition(const Character *source, std::uint32_t selector, Vector3 *position) {
     Matrix4x4 transform;
     CopyCharacterSourceTransform(source, selector, &transform);
@@ -1520,7 +1520,7 @@ void mtwkSetEntityRotation(MotionWork *work, const Vector3i *rotation) {
     work->entityRotationZ = rotation->z;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void mtwkTranslateRigInterpolated(MotionWork *work, float x, float y, float z) {
     if (!work)
         return;
@@ -1625,7 +1625,7 @@ std::int32_t ParentBoneId(std::uint32_t selector) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ControllerBoneId(std::uint32_t controller) {
     switch (controller) {
     case 0:
@@ -1652,7 +1652,7 @@ std::int32_t ControllerBoneId(std::uint32_t controller) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateMotionFootstepAttributes(Character *character) {
     MotionWork *const work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
@@ -1667,7 +1667,7 @@ void UpdateMotionFootstepAttributes(Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t charGetFootstepAttributes(Character *character, std::int32_t foot, std::uint32_t *secondary) {
     MotionWork *const work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
@@ -1698,7 +1698,7 @@ std::int32_t charFindFootstepAttributes(Character *character, std::uint32_t prim
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void MotionWorkUpdate(Character *character, void *payload) {
     MotionWork *work;
@@ -1789,7 +1789,7 @@ void MotionWorkUpdate(Character *character, void *payload) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RebaseSolvedMatrix(Matrix4x4 *matrix, const Matrix4x4 *root) {
     matrix_stack::Matrix4x4_Push();
@@ -1804,7 +1804,7 @@ void RebaseSolvedMatrix(Matrix4x4 *matrix, const Matrix4x4 *root) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ClampMotionTimePair(MotionTimePair *pair, float split, float ticks, float maximum) {
     if (!(0.0f > maximum) && pair->maxTime > maximum)
         pair->maxTime = maximum;
@@ -1822,7 +1822,7 @@ float ClampMotionTimePair(MotionTimePair *pair, float split, float ticks, float 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkRebaseSolvedMatrices(MotionWork *work) {
     matrix_stack::PushUnitMatrix();
@@ -1885,14 +1885,14 @@ std::uint16_t mtwkGetAnimationId(const MotionWork *work, MotionRegion region) {
     return work && index <= 5 ? work->currentMotionId[index] : 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint16_t mtwkGetPreviousAnimationId(const MotionWork *work, MotionRegion region) {
     const std::uint32_t index = static_cast<std::uint32_t>(region);
     return work && index <= 5 ? work->previousMotionId[index] : 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint16_t mtwkGetQueuedAnimationId(const MotionWork *work, MotionRegion region) {
     return work && static_cast<std::uint32_t>(region) <= 5U ? work->queuedMotionId[region] : 0;
@@ -1970,7 +1970,7 @@ void SetCharacterMotionEnabled(Character *character, std::int32_t enabled) {
         work->executionFlags &= ~1U;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool charIsMotionworkEnabled(Character *character) {
     const MotionWork *const work = SHENMUE_MOTION_CONST_CAST(MotionWork, charFindComp(character, CHARACTER_MOTION));
@@ -1990,7 +1990,7 @@ void mtwkSetEnabled(MotionWork *work, std::int32_t enabled) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkSetActive(MotionWork *work) {
     g_activeMotionWork = work;
@@ -2013,7 +2013,7 @@ void SetCharacterUnknownFlag(Character *character, std::uint32_t enabled) {
         work->executionFlags &= ~8U;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void mtwkSampleQueuedMotionRoot(MotionWork *work, float frame, Vector3 *output) {
     const std::uint32_t bone = mtwkGetRigBoneId(work);
     const std::uint16_t queued = work->queuedMotionId[0];
@@ -2033,8 +2033,8 @@ void mtwkSampleQueuedMotionRoot(MotionWork *work, float frame, Vector3 *output) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkSampleCurrentMotion(MotionWork *work, float frame, Vector3 *output) {
     const std::int32_t bone = static_cast<std::int32_t>(mtwkGetRigBoneId(work));
@@ -2076,7 +2076,7 @@ void mtwkSampleCurrentMotion(MotionWork *work, float frame, Vector3 *output) {
 #endif
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool charIsMotionworkCulled(Character *character) {
     const MotionWork *const work = SHENMUE_MOTION_CONST_CAST(MotionWork, charFindComp(character, CHARACTER_MOTION));
@@ -2101,7 +2101,7 @@ void SetCharacterMotionClipMode(Character *character, std::int32_t mode) {
     mtwkSetClipMode(static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION)), mode);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void charSetTransformSource(
     Character *character, std::uint32_t mode, Character *source, std::int32_t index, const Vector3 *position, const Vector3i *rotation) {
     MotionWork *const work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
@@ -2128,7 +2128,7 @@ void charSetTransformSource(
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t charMotionNullsubA() {
     return 0;
 }
@@ -2142,7 +2142,7 @@ float charMotionNullsubFloat() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkSetIkTargetPosition(MotionWork *work, Vector3 *position) {
     if (!work)
@@ -2162,14 +2162,14 @@ std::int32_t MotionRootSignedWord(std::uint32_t bits) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkSetPelvisYawStep(MotionWork *work, std::int16_t step) {
     work->pelvisYawStep = step;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkHasRegionTracks(const MotionWork *work) {
     bool found = false;
@@ -2182,7 +2182,7 @@ bool mtwkHasRegionTracks(const MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkGetHandTrackValue(const MotionWork *work) {
     return *reinterpret_cast<const float *>(work->retainedHandTrackState);
 }
@@ -2194,7 +2194,7 @@ void mtwkSetHandTrackValue(MotionWork *work, float value) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindMotionNode(MT7Node *model, std::int16_t id, const Matrix4x4 *matrix) {
     MT7Node *const node = FindMT7Node(model, id);
@@ -2205,7 +2205,7 @@ void BindMotionNode(MT7Node *model, std::int16_t id, const Matrix4x4 *matrix) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindMotionControllerMatricesToModelNodes(MotionWork *work, MT7Node *model) {
     IKRig &rig = reinterpret_cast<MotionWorkBindings *>(work)->rig;
@@ -2252,7 +2252,7 @@ void BindMotionControllerMatricesToModelNodes(MotionWork *work, MT7Node *model) 
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ClassifyCurrentLocomotionPhase(const MotionWork *work) {
     const std::uint16_t motion = work->currentMotionId[0];
@@ -2270,7 +2270,7 @@ std::int32_t ClassifyCurrentLocomotionPhase(const MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CommitCopyMotionTransition(MotionWork *work) {
     if (work->copyFlags & 1U)
@@ -2302,7 +2302,7 @@ void CommitCopyMotionTransition(MotionWork *work) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkCopyTransition(MotionWork *work, const Vector3 *position, std::int32_t yaw, std::int32_t operation, std::int32_t copyType) {
     if (!work)
@@ -2702,7 +2702,7 @@ bool mtwkCopyTransition(MotionWork *work, const Vector3 *position, std::int32_t 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkRequestPositionTransition(MotionWork *work, const Vector3 *position, std::int32_t yaw, std::uint32_t motion, float startFrame) {
     if (!work)
@@ -2741,7 +2741,7 @@ bool mtwkRequestPositionTransition(MotionWork *work, const Vector3 *position, st
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint8_t GetTargetFacingMotionClass(const MotionWork *work) {
     switch (work->rigBoneId) {
@@ -2764,7 +2764,7 @@ std::uint8_t GetTargetFacingMotionClass(const MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void PlayTargetFacingTurn(MotionWork *work, bool moving, std::int32_t left, std::int16_t yaw) {
     const std::int32_t absolute = static_cast<std::int32_t>(std::fabs(static_cast<float>(yaw)));
@@ -2840,7 +2840,7 @@ void PlayTargetFacingTurn(MotionWork *work, bool moving, std::int32_t left, std:
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkRequestTargetFacing(MotionWork *work, const Vector3 *target, std::uint32_t flags) {
     if (!work || work->useMatrixOverrides)
@@ -3330,7 +3330,7 @@ bool mtwkSetBoneTarget(MotionWork *work, std::int32_t selector, const Vector3 *p
     return true;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool mtwkSetControllerTarget(MotionWork *work, std::uint32_t controller, const Vector3 *position) {
     if (!position) {
         work->activeConstraintTarget[controller] = 0;
@@ -3379,13 +3379,13 @@ float mtwkGetBoneTargetStepLimit(const MotionWork *work, MotionBoneId bone) {
     return controller == -1 ? 0.0f : work->constraintStepLimit[controller];
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkGetConstraintStepLimit(const MotionWork *work, std::int32_t controller) {
     return work->constraintStepLimit[controller];
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t mtwkGetConstraintAngle(const MotionWork *work) {
     return static_cast<std::int32_t>(work->constraintStepLimit[2] * 10430.378f) & 0xFFFFU;
@@ -3402,7 +3402,7 @@ bool mtwkSetBoneTargetStepLimit(MotionWork *work, MotionBoneId bone, float limit
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool mtwkSetConstraintStepLimit(MotionWork *work, std::int32_t controller, float limit) {
     if (limit < 0.0f)
         return false;
@@ -3411,7 +3411,7 @@ bool mtwkSetConstraintStepLimit(MotionWork *work, std::int32_t controller, float
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkSetConstraintAngle(MotionWork *work, std::int32_t angle) {
     const float value = static_cast<float>(angle);
@@ -3422,7 +3422,7 @@ bool mtwkSetConstraintAngle(MotionWork *work, std::int32_t angle) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t mtwkGetFootstepAttributes(const MotionWork *work, std::uint8_t *attributes) {
     return MOTN_GetFootstepAttributes(mtwkGetAnimationId(work, static_cast<MotionRegion>(0)), attributes);
 }
@@ -3456,7 +3456,7 @@ bool mtwkSetSequenceParameter3(MotionWork *work, std::uint32_t value) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkAssignTargetCallback(MotionWork *work, MotionTargetCallback callback, std::int32_t selector) {
     if (!work)
@@ -3503,7 +3503,7 @@ bool mtwkAssignTargetCallback(MotionWork *work, MotionTargetCallback callback, s
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkAssignTargetParameter(MotionWork *work, void *parameter, std::int32_t selector) {
     if (!work)
@@ -3550,7 +3550,7 @@ bool mtwkAssignTargetParameter(MotionWork *work, void *parameter, std::int32_t s
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 MotionTargetCallback mtwkGetTargetCallback(const MotionWork *work, std::int32_t selector) {
     if (!work)
@@ -3587,7 +3587,7 @@ MotionTargetCallback mtwkGetTargetCallback(const MotionWork *work, std::int32_t 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void *mtwkGetTargetParameter(const MotionWork *work, std::int32_t selector) {
     if (!work)
@@ -3624,7 +3624,7 @@ void *mtwkGetTargetParameter(const MotionWork *work, std::int32_t selector) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t mtwkGetBonePairHeading(MotionWork *work, MotionBoneId first, MotionBoneId second) {
     Vector3 a, b;
     mtwkGetBonePosition(work, first, &a);
@@ -3663,7 +3663,7 @@ std::int32_t GetCharacterMotionWorldYaw(const Character *character) {
     return work ? mtwkGetEntityYaw(work) : GetCharacterWorldYaw(character);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t charGetBonePairHeading(Character *character, MotionBoneId first, MotionBoneId second) {
     MotionWork *const work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
     if (!work)
@@ -3763,7 +3763,7 @@ bool mtwkGetParentBoneWrapper(MotionWork *work, std::int32_t selector) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkSetRootTransformOverride(MotionWork *work, const Matrix4x4 *transform) {
     if (work)
@@ -3771,7 +3771,7 @@ void mtwkSetRootTransformOverride(MotionWork *work, const Matrix4x4 *transform) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkSetEnvironmentEnabled(MotionWork *work, std::uint32_t enabled) {
     if (work)
@@ -3779,7 +3779,7 @@ void mtwkSetEnvironmentEnabled(MotionWork *work, std::uint32_t enabled) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkIsRightFootLower(MotionWork *work) {
     Vector3 left, right;
@@ -3811,7 +3811,7 @@ bool mtwkIsRightFootTargetAhead(MotionWork *work) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t mtwkSetProjectionAngle(MotionWork *work, std::int32_t angle, std::int32_t slot) {
     switch (slot) {
@@ -3829,7 +3829,7 @@ std::uint32_t mtwkSetProjectionAngle(MotionWork *work, std::int32_t angle, std::
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t mtwkGetProjectionAngle(const MotionWork *work, std::int32_t slot) {
     float value;
@@ -3871,7 +3871,7 @@ void charaGetMotLocalPos(Character *character, std::int32_t bone, Vector3 *posit
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool charaLatchBoneTarget(Character *character, std::int32_t selector, const Vector3 *position) {
     MotionWork *const work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
@@ -3894,13 +3894,13 @@ bool LatchCharacterMotionTargetInParentSpace(Character *character, std::int32_t 
     return mtwkLatchBoneTarget(work, selector, &transformed);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t charMotionTargetNullsub() {
     return 1;
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool ApplyCharacterMotionToPose(Character *character, Vector3 *position, Vector3i *rotation, float frame, std::uint16_t motion) {
     if (character) {
         MotionWork *const work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
@@ -3962,7 +3962,7 @@ bool SampleNativeMotionRoot(std::uint16_t animation, std::int32_t boneId, float 
     return true;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t charGetMotionRigType(const Character *character) {
     const std::int32_t type = GetCharacterImageSourceType(character);
@@ -3972,7 +3972,7 @@ std::int32_t charGetMotionRigType(const Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t charSetExtraFlag(Character *character, std::uint32_t flag, std::int32_t operation) {
     return mtwkSetExtraFlag(static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION)), flag, operation);
 }
@@ -3986,7 +3986,7 @@ bool mtwkAssignRigYawOffset(MotionWork *work, std::int32_t offset) {
     return true;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float mtwkSetRigScale(MotionWork *work, float scale) {
     float result = -1.0f;
     const MotnAnimationHeader *sequence = 0;
@@ -4010,7 +4010,7 @@ float mtwkSetRigScale(MotionWork *work, float scale) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetCashOrSegaCoins() {
     if (moneyIconFlags & 0x20U)
         return;
@@ -4031,13 +4031,13 @@ void SetMoneyRelatedUIElementCopy(std::int16_t maximum, std::int16_t duration, s
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t CopyAbs(std::int32_t value) {
     return value < 0 ? -value : value;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3i CopyGetRotation(const Character *character) {
     Vector3i rotation;
     GetCharacterWorldRotation(character, &rotation);
@@ -4045,25 +4045,25 @@ Vector3i CopyGetRotation(const Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CopyYawDifference(std::int32_t a, std::int32_t b) {
     return static_cast<std::int16_t>(a - b);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float CopySine(std::int32_t yaw) {
     return dc::sdk::SinFixed(static_cast<std::int16_t>(yaw));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float CopyCosine(std::int32_t yaw) {
     return dc::sdk::CosFixed(static_cast<std::uint16_t>(yaw));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float CopyDistance(const Vector3 &a, const Vector3 &b) {
     const Vector3 delta = {a.x - b.x, 0.0f, a.z - b.z};
     return Vector3::CalcMagnitude(delta);
@@ -4072,7 +4072,7 @@ float CopyDistance(const Vector3 &a, const Vector3 &b) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CopyHeading(const Vector3 &from, const Vector3 &to) {
     return static_cast<std::int16_t>(InverseFixedAtan2(to.x - from.x, to.z - from.z));
 }
@@ -4080,45 +4080,45 @@ std::int16_t CopyHeading(const Vector3 &from, const Vector3 &to) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t CopyDirection(const Vector3 &from, const Vector3 &to, std::int16_t zeroYaw) {
     return CopyDistance(from, to) <= 0.00000011920929f ? zeroYaw : CopyHeading(from, to);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyMoveForward(Vector3 &position, std::int16_t yaw, float distance) {
     position.x -= CopySine(yaw) * distance;
     position.z -= CopyCosine(yaw) * distance;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint16_t CopyGaitMotion(const MotionWork &state) {
     return state.defaultAnimations[(state.copyFlags & MCF_AlternateLocomotion) ? 4 : 1];
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float CopyStride(const MotionWork &work) {
     return GetMotionRigScale(work.rigBoneId, 8, 0) * ((work.copyFlags & MCF_Running) ? 1.2f : 0.55000001f);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t CopyScaledDelay(const MotionWork &state, float frames) {
     return static_cast<std::uint8_t>(TruncateToInt32(1.0f / state.motionScale * frames));
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopySetState(MotionWork &state, std::uint8_t operation, std::uint8_t phase) {
     state.copyOperationState = operation;
     state.copyPhase = phase;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyRequestFootEventEarly(MotionWork &work) {
     if (work.copyFlags & MCF_LeadFoot)
         mtwkGetParentBoneWrapper(&work, 0x4000001e);
@@ -4127,7 +4127,7 @@ void CopyRequestFootEventEarly(MotionWork &work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyRequestFootEvent(MotionWork &work) {
     if (work.copyFlags & MCF_LeadFoot)
         mtwkGetParentBoneWrapper(&work, 0x6000001e);
@@ -4136,7 +4136,7 @@ void CopyRequestFootEvent(MotionWork &work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopySetLeadFoot(MotionWork &work, std::int32_t stepping, std::int32_t motion, std::int32_t reversePhase, std::int32_t splitWindow) {
     std::int32_t halfPhase = -1;
     if (stepping)
@@ -4161,7 +4161,7 @@ void CopySetLeadFoot(MotionWork &work, std::int32_t stepping, std::int32_t motio
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyPlayAt(MotionWork &work, const Vector3 &position, std::int32_t yaw, std::uint16_t motion, std::uint16_t mode, std::uint32_t frames) {
     Vector3i rotation;
     SetCharacterWorldPosition(g_transitionCharacter, &position);
@@ -4177,7 +4177,7 @@ void CopyPlayAt(MotionWork &work, const Vector3 &position, std::int32_t yaw, std
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyReleaseLook(MotionWork &work) {
     if (!(work.copyFlags & MCF_LookSuppressed))
         return;
@@ -4186,7 +4186,7 @@ void CopyReleaseLook(MotionWork &work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyAdvanceScale(MotionWork &work) {
     MotionWork &state = work;
     --state.copyScaleCountdown;
@@ -4198,7 +4198,7 @@ void CopyAdvanceScale(MotionWork &work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t CopyStepWindowFrames(const MotionWork &work, std::uint16_t motion, std::uint8_t full) {
     if (work.copyFlags & MCF_Running) {
         if (full)
@@ -4211,7 +4211,7 @@ std::uint32_t CopyStepWindowFrames(const MotionWork &work, std::uint16_t motion,
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyToggleLeadFoot(MotionWork &work) {
     if (work.copyFlags & MCF_LeadFoot)
         work.copyFlags &= ~MCF_LeadFoot;
@@ -4220,7 +4220,7 @@ void CopyToggleLeadFoot(MotionWork &work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool CopyReachedStepWindow(MotionWork &work, std::uint16_t motion) {
     float frame, speed, window, end, limit;
     bool result = false;
@@ -4283,7 +4283,7 @@ bool CopyReachedStepWindow(MotionWork &work, std::uint16_t motion) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyChooseFinalFoot(MotionWork &state, std::int32_t yaw, std::int32_t mode) {
     const std::int32_t travel = static_cast<std::int16_t>(state.copyTravelYaw - yaw);
     const std::int32_t final = static_cast<std::int16_t>(state.transitionStartFrame - yaw);
@@ -4320,7 +4320,7 @@ void CopyChooseFinalFoot(MotionWork &state, std::int32_t yaw, std::int32_t mode)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t CopyRequestLook(const Vector3 &destination, std::int16_t targetYaw) {
     Vector3 target;
     Vector3 position;
@@ -4382,7 +4382,7 @@ std::uint8_t CopyRequestLook(const Vector3 &destination, std::int16_t targetYaw)
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyUpdateLook(std::uint8_t pending) {
     Vector3 destination;
     if (!pending) {
@@ -4414,7 +4414,7 @@ int CopyUpdateLook(std::uint8_t pending) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t CopyAngleDelta(std::int32_t from, std::int32_t to, std::int32_t keepSign) {
     std::int32_t delta = static_cast<std::int16_t>(to - from);
     if (!keepSign)
@@ -4423,7 +4423,7 @@ std::int32_t CopyAngleDelta(std::int32_t from, std::int32_t to, std::int32_t kee
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyPrepareSpline(MotionCopyState &state, const Vector3 &position, std::int32_t preserveYaw, float stride) {
     Vector3 delta;
     Vector3 target;
@@ -4514,7 +4514,7 @@ void CopyPrepareSpline(MotionCopyState &state, const Vector3 &position, std::int
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool CopyBuildSpline(std::uint8_t preserveYaw) {
     Vector3 position;
     Vector3 delta;
@@ -4548,7 +4548,7 @@ bool CopyBuildSpline(std::uint8_t preserveYaw) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyAdjustStride(MotionWork &work, const Vector3 &position, std::int32_t yaw, std::uint16_t motion, float stride) {
     if (work.copyFlags & MCF_Unknown40000)
         return 0;
@@ -4754,7 +4754,7 @@ int CopyAdjustStride(MotionWork &work, const Vector3 &position, std::int32_t yaw
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyBeginStep(std::uint8_t directional) {
     Vector3 position;
     Vector3 delta;
@@ -4834,7 +4834,7 @@ int CopyBeginStep(std::uint8_t directional) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyFinishStep(std::uint8_t continueWalking) {
     Vector3 position;
     Vector3i rotation;
@@ -4972,13 +4972,13 @@ int CopyFinishStep(std::uint8_t continueWalking) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 inline std::int32_t CopyStepFrames() {
     return (SHENMUE_COPY_STATE.copyFlags & (MCF_Running | MCF_AlternateLocomotion)) ? 8 : 16;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyTurnStep(std::uint8_t towardPosition) {
     Vector3 position;
     Vector3 delta;
@@ -5218,13 +5218,13 @@ int CopyTurnStep(std::uint8_t towardPosition) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 inline std::int32_t CopyStrideFrames() {
     return (SHENMUE_COPY_TYPED.copyFlags & MCF_Running) ? 8 : 16;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t CopyTranslateStep() {
     Vector3 position;
     Vector3 delta;
@@ -5396,7 +5396,7 @@ std::int32_t CopyTranslateStep() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CopyLocalOffset(std::int32_t yaw, const Vector3 &offset, Vector3 &local) {
     matrix_stack::PushUnitMatrix();
     Matrix4x4::RotateAroundY_Wrapper(-yaw);
@@ -5405,7 +5405,7 @@ void CopyLocalOffset(std::int32_t yaw, const Vector3 &offset, Vector3 &local) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyContinueStep(std::uint8_t stopAtYaw, std::uint8_t recheck) {
     Vector3 position;
     Vector3 offset;
@@ -5584,7 +5584,7 @@ int CopyContinueStep(std::uint8_t stopAtYaw, std::uint8_t recheck) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int CopyCanStart() {
     if (SHENMUE_COPY_TYPED.copyFlags & 0x10U) {
         Vector3 position, delta;
@@ -5621,7 +5621,7 @@ int CopyCanStart() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool CopyRetryUnlessArrived() {
     if (SHENMUE_COPY_STATE.copyFlags & MCF_LookPending) {
@@ -5644,7 +5644,7 @@ bool CopyRetryUnlessArrived() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UpdateCopyToPosition() {
     std::uint8_t next = 1;
     bool result = false;
@@ -5775,7 +5775,7 @@ std::int32_t UpdateCopyToPosition() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UpdateCopyAlongHeading() {
     std::uint8_t next = 1;
     bool result = false;
@@ -5916,7 +5916,7 @@ std::int32_t UpdateCopyAlongHeading() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UpdateCopySideStep() {
     std::uint8_t next = 1;
     bool result = false;
@@ -6027,7 +6027,7 @@ std::int32_t UpdateCopySideStep() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateCopyMotionTransition() {
     if (g_transitionWork->queuedMotionId[0]) {
         CommitCopyMotionTransition(g_transitionWork);
@@ -6090,7 +6090,7 @@ void UpdateCopyMotionTransition() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float ScaleLookProjection(float cotangent, float scale) {
     const std::int32_t angle = static_cast<std::int32_t>(dc::sdk::ArcTanFixed(std::fabs(cotangent)));
@@ -6104,7 +6104,7 @@ float ScaleLookProjection(float cotangent, float scale) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateCopyLookTransition(MotionWork *work) {
     struct LookBitFlags {
@@ -6212,7 +6212,7 @@ void UpdateCopyLookTransition(MotionWork *work) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateTargetFacingTransition(MotionWork *work) {
     Vector3 position;
@@ -6335,7 +6335,7 @@ void UpdateTargetFacingTransition(MotionWork *work) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t UpdateMotionTransitionControllers(Character *character) {
     g_transitionCharacter = character;
@@ -6358,7 +6358,7 @@ std::int32_t UpdateMotionTransitionControllers(Character *character) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool mtwkSetDrawOverrideData(MotionWork *work, const Matrix4x4 *matrix) {
     if (!work)
@@ -6368,15 +6368,15 @@ bool mtwkSetDrawOverrideData(MotionWork *work, const Matrix4x4 *matrix) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const Matrix4x4 *mtwkGetDrawOverrideData(const MotionWork *work) {
     return work ? work->drawOverrideData : 0;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool mtwkSetDrawOverrideParameter(MotionWork *work, void *parameter) {
     if (!work)
         return false;
@@ -6404,7 +6404,7 @@ float mtwkGetClusterPosition(const MotionWork *work, Vector3 *position) {
     return work->clusterRadius;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t charSetMotionRegionFlag(Character *character, std::uint32_t flag, std::int32_t operation, MotionRegion region) {
     return mtwkSetRegionFlag(static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION)), flag, operation, region);
 }
@@ -6459,7 +6459,7 @@ std::int32_t mtwkSetOverridesEnabled(std::int32_t enabled) {
     return previous;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t mtwkGetOverridesEnabled() {
     return g_motionDrawOverridesEnabled;
 }
@@ -6475,7 +6475,7 @@ std::int32_t mtwkGetLinkedVerticesEnabled() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t mtwkUpdateWithPosition(MotionWork *work, const Vector3 *position, std::uint32_t operation) {
     if (!work)
         return 0;
@@ -6605,7 +6605,7 @@ std::uint32_t mtwkUpdateWithPosition(MotionWork *work, const Vector3 *position, 
 } // namespace shenmue
 
 #undef SHENMUE_MOTION_ROOT_SIGNED_WORD
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #undef SHENMUE_COPY_STATE
 #undef SHENMUE_COPY_ANIMATION
 #endif

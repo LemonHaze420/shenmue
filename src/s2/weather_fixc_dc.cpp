@@ -71,7 +71,7 @@ void ApplyWeatherRainOwnerClipMode0(
     WeatherRainOwner *owner, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1);
 void ApplyWeatherRippleOwnerClipMode0(
     WeatherRainOwner *owner, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetRainOwnerCount(WeatherRainOwner *owner);
 float ReleaseRainOwnerRippleGroup(WeatherRainOwner *owner);
 void SetWeatherClipPlanes(
@@ -119,7 +119,7 @@ void FreeWeatherRainMode1Group(WeatherParticleGroup *group);
 void PrepareWeatherRainMode1(
     WeatherParticleGroup *group, const Vector3 *, const Vector3 *target, const Vector3 *backwards, const Vector3 *wind, std::int32_t side);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareWeatherRippleMode1(WeatherParticleGroup *group, const Vector3 *position, const Vector3 *target, const Vector3 *backwards, const Vector3 *wind);
 #else
 void PrepareWeatherRippleMode1(WeatherParticleGroup *group, const Vector3 *position);
@@ -155,7 +155,7 @@ void SetWeatherGroupBounds(WeatherParticleGroup *group, const Vector3 *center, f
 void PrepareWeatherRainMode1(
     WeatherParticleGroup *group, const Vector3 *, const Vector3 *target, const Vector3 *backwards, const Vector3 *wind, std::int32_t side);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareWeatherRippleMode1(WeatherParticleGroup *group, const Vector3 *position, const Vector3 *target, const Vector3 *backwards, const Vector3 *wind);
 #else
 void PrepareWeatherRippleMode1(WeatherParticleGroup *group, const Vector3 *position);
@@ -189,7 +189,7 @@ void UpdateWeatherInteractionCamera() {
     AdvanceWeatherInteractionCamera(weatherInteractionCamera);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ReleaseWeatherInteractionCamera() {
     FreeWeatherInteractionCamera(weatherInteractionCamera);
 }
@@ -212,7 +212,7 @@ WeatherFixcOwner *AllocateWeatherFixc(std::int32_t fov) {
     return owner;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 WeatherFixcOwner *AllocateWeatherFixcGroup(const Vector3 *center, float spanX, float spanY, float spanZ) {
     WeatherFixcOwner *const owner = static_cast<WeatherFixcOwner *>(HLib::AllocateTaskData(sizeof(WeatherFixcOwner), SHEN_NAME4('F', 'I', 'X', 'G')));
     owner->mode = 6;
@@ -326,7 +326,7 @@ void ApplyWeatherClipSet0ToFixcRain(
         ApplyWeatherRainOwnerClipMode0(static_cast<WeatherRainOwner *>(owner->cara), first, second, third, fourth, clipY0, clipY1);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetWeatherFixcRainFlags(const WeatherFixcOwner *owner) {
     switch (owner->mode) {
@@ -382,7 +382,7 @@ void BeginWeatherFixcRainCountTransition(WeatherFixcOwner *owner, float pressure
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetWeatherFixcRainCount(WeatherFixcOwner *owner) {
     switch (owner->mode) {
     case 0:
@@ -445,7 +445,7 @@ WeatherRainOwner *AllocateWeatherRainOwner(std::int32_t fov) {
     return owner;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainOwnerMode0(WeatherRainOwner *owner) {
     FreeWeatherRainOwnerRainMode0(owner);
@@ -635,7 +635,7 @@ void FreeWeatherRainOwnerDirectRain(WeatherRainOwner *owner) {
     owner->rain1 = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainOwnerRainMode0(WeatherRainOwner *owner) {
     FreeWeatherRainMode0Group(owner->rain0);
@@ -660,7 +660,7 @@ void FreeWeatherRainOwnerDirectRipples(WeatherRainOwner *owner) {
     owner->rippleGroup = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainOwnerRipplesMode0(WeatherRainOwner *owner) {
     FreeWeatherRainMode0Group(owner->rippleGroup);
@@ -766,7 +766,7 @@ void ApplyWeatherClipSet0ToFixcRipple(
         ApplyWeatherRippleOwnerClipMode0(static_cast<WeatherRainOwner *>(owner->cara), first, second, third, fourth, clipY0, clipY1);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t GetWeatherFixcRippleFlags(const WeatherFixcOwner *owner) {
     switch (owner->mode) {
@@ -846,7 +846,7 @@ void BeginWeatherFixcRippleTransition(WeatherFixcOwner *owner, float pressure, s
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetWeatherFixcRippleCount(WeatherFixcOwner *owner) {
     switch (owner->mode) {
     case 0:
@@ -923,7 +923,7 @@ void RemoveWeatherWindLink(WeatherFixcOwner *owner, WeatherWind *wind) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainOwnerMode1(WeatherRainOwner *owner) {
     FreeWeatherRainOwnerRainMode1(owner);
@@ -962,7 +962,7 @@ void UpdateWeatherRainOwnerMode1(
         group->frustumSpan = span;
         ComputeWeatherGroupCentre(group, position, previousBackwards, &centre);
         SetWeatherGroupBounds(group, &centre, span);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         PrepareWeatherRippleMode1(group, position, target, backwards, wind);
 #else
         PrepareWeatherRippleMode1(group, position);
@@ -988,7 +988,7 @@ void EnsureWeatherRainOwnerMode1(WeatherRainOwner *owner, float scale) {
     SetWeatherGroupFrustumDistance(owner->rain1, 6.0f);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainOwnerRainMode1(WeatherRainOwner *owner) {
     FreeWeatherRainMode1Group(owner->rain0);
@@ -1002,7 +1002,7 @@ void ApplyWeatherRainOwnerClipMode0(
     SetWeatherClipPlanesSet0(owner->rain1, first, second, third, clipY0, clipY1, fourth);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyWeatherRainOwnerClipMode1(
     WeatherRainOwner *owner, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1) {
     SetWeatherClipPlanes(owner->rain0, first, second, third, fourth, clipY0, clipY1);
@@ -1020,7 +1020,7 @@ void EnsureWeatherRippleOwnerMode1(WeatherRainOwner *owner, float scale) {
     SetWeatherGroupFrustumDistance(owner->rippleGroup, 4.0f);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FreeWeatherRainOwnerRipplesMode1(WeatherRainOwner *owner) {
     FreeWeatherRainMode1Group(owner->rippleGroup);
@@ -1033,7 +1033,7 @@ void ApplyWeatherRippleOwnerClipMode0(
     SetWeatherClipPlanesSet0(owner->rippleGroup1, first, second, third, clipY0, clipY1, fourth);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyWeatherRippleOwnerClipMode1(
     WeatherRainOwner *owner, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1) {
     SetWeatherClipPlanes(owner->rippleGroup, first, second, third, fourth, clipY0, clipY1);
@@ -1108,7 +1108,7 @@ void AdvanceWeatherInteractionCamera(WeatherInteractionCamera *camera) {
     am2Vector3NormalizeInPlace(backwards);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 WeatherRainOwner *GetWeatherFixcMode1RainOwner(const WeatherFixcOwner *owner) {
     if (owner->mode == 1)
         return static_cast<WeatherRainOwner *>(owner->cara);
@@ -1134,7 +1134,7 @@ float GetRainOwnerMotionDamping(WeatherRainOwner *owner) {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_EV_WeatherEffectUtil_Impl(std::uint32_t fov, float rainScale, float unused, float rippleScale) {
     shenmue::s2::EV_WeatherEffectUtil_Impl(fov, rainScale, unused, rippleScale);
 }

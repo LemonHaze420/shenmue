@@ -21,7 +21,7 @@ std::int16_t F32ToF16(float value);
 void EnableLightEntry(std::uint32_t index);
 std::int32_t GetSelectedLightEnabled(std::uint32_t index);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_characterShadowSavedLightMode;
 Vector4 g_characterShadowSavedAmbient;
 float g_lightChunkVersion = 1.1f;
@@ -49,7 +49,7 @@ std::uint32_t GetGeometryLightColour(Vector4 *colour) {
     return 0;
 }
 
-#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM || SHENMUE_TARGET_S2_DC_JP_1001
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindUnusedSelectedLight() {
     switch (static_cast<std::uint32_t>(GetCurrentActiveLight())) {
@@ -290,7 +290,7 @@ void ResetSelectedLightEntry(std::uint32_t index) {
         DisableSelectedLight(index);
         SetLightKind(index, 0);
     }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     shenSetLightColour(index, *reinterpret_cast<const Vector4 *>(&defaults.vectors[0]));
 #else
     shenSetLightColour(index, (Vector4){disabledLight.vectors[0].x, disabledLight.vectors[0].y, disabledLight.vectors[0].z, disabledLight.vectors[1].x});
@@ -299,7 +299,7 @@ void ResetSelectedLightEntry(std::uint32_t index) {
     SetSelectedLightRange(index, 2.0f);
     SetSelectedLightFalloff(index, 0.6f);
     SetSelectedLightPosition(index, *GetRuntimeLightWorldPosition(&defaults));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     SetSelectedLightDirection(index, *reinterpret_cast<const Vector3 *>(&defaults.values2c[0]));
 #else
     SetSelectedLightDirection(index, (Vector3){disabledLight.values2c[0], disabledLight.values2c[1], disabledLight.value34});
@@ -324,7 +324,7 @@ float GetSelectedLightSceneIntensity(std::uint32_t index) {
 
 // @verified - d
 void SetSelectedLightSceneIntensity(std::uint32_t index, float intensity) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if ((intensity < 0.0f ? -intensity : intensity) < 0.0001f)
         intensity = 0.0f;
     if (index < 16)
@@ -346,7 +346,7 @@ void GetSelectedLightColour(std::uint32_t index, Vector4 *colour) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SetPublishedDiffuseChannels(float red, float green, float blue) {
     dc::sdk::g_mt7DiffuseChannels.x = red;
     dc::sdk::g_mt7DiffuseChannels.y = green;
@@ -492,14 +492,14 @@ void UpdateSdkLightTransforms() {
     dc::sdk::TransformLightRecords();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ImmediateLightWork(void *) {
     PublishGlobalLighting();
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetLightRuntimeRange(std::uint32_t index) {
     if (index < 256)

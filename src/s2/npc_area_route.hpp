@@ -2,7 +2,7 @@
 
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #else
 #include "s2/npc.hpp"
@@ -12,7 +12,7 @@
 #include <cstddef>
 #include <cstdint>
 #endif
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <span>
 #endif
 
@@ -107,7 +107,7 @@ SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaControlRow, forwardOffset) == 0x24);
 SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaOwnerRow) == 0x20);
 SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaOwnerRow, position) == 0x14);
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct NpcAreaStoreSlot {
     NpcAreaRouteState *state;
     NpcAreaStoreSlot *previous;

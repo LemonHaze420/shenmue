@@ -4,7 +4,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "platform/dc/matrix.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/sdk.hpp"
 #endif
 #include "s2/debug.hpp"
@@ -39,7 +39,7 @@ void HMT_HandCalcSkin(HandPoseState *state, Matrix4x4 *matrices) {
             const HandSkinInfluenceGroup &entry = *reinterpret_cast<const HandSkinInfluenceGroup *>(cursor);
             cursor += sizeof(HandSkinInfluenceGroup);
             if (entry.count > 0) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 matrix_stack::LoadMatrix(matrices + entry.joint);
 #else
                 const float *matrix = matrices[entry.joint].rows[0].data();
@@ -53,7 +53,7 @@ void HMT_HandCalcSkin(HandPoseState *state, Matrix4x4 *matrices) {
             for (std::int32_t influence = 0; influence < entry.count; ++influence) {
                 const HandSkinInfluence &source = *reinterpret_cast<const HandSkinInfluence *>(cursor);
                 HandSkinVertex &vertex = vertices[source.vertex];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 Vector3 position, normal;
                 Matrix4x4::TransformPoint(vertex.position, position);
                 Matrix4x4::Transform(vertex.normal, normal);
@@ -86,7 +86,7 @@ void HMT_HandCalcSkin(HandPoseState *state, Matrix4x4 *matrices) {
             const HandSkinRemap *mapping = reinterpret_cast<const HandSkinRemap *>(remap + 1);
             for (std::int32_t index = 0; index < remap->count; ++index) {
                 const HandSkinVertex &source = vertices[vertex];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 const std::int32_t destinationOffset = mapping[index].destinationByteOffset;
                 const std::int32_t nextVertex = mapping[index].nextVertex;
                 std::uint32_t values[6];

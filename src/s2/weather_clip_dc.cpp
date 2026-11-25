@@ -19,7 +19,7 @@ void ApplyWeatherClipSet0ToFixcRain(
 void ApplyWeatherClipSet0ToFixcRipple(
     WeatherFixcOwner *owner, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyWeatherRainOwnerClipMode1(
     WeatherRainOwner *owner, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1);
 void ApplyWeatherRippleOwnerClipMode1(
@@ -33,7 +33,7 @@ ScenarioWindowRecord *scenarioWindowRecord = 0;
 ScenarioWindowRecord **g_pSCNW = 0;
 } // namespace event_runtime_detail
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 #endif
 
@@ -62,7 +62,7 @@ void SetWeatherClipPlanes(
     group->clipB.edgeX[2] = first->y - fourth->y;
 }
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 } // namespace
 #endif
 
@@ -72,7 +72,7 @@ void ApplyWeatherClipToRain(
     WeatherFixcOwner *fixc, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1) {
     if (fixc->mode != 1)
         return;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ApplyWeatherRainOwnerClipMode1(static_cast<WeatherRainOwner *>(fixc->cara), first, second, third, fourth, clipY0, clipY1);
 #else
     WeatherRainOwner *const owner = static_cast<WeatherRainOwner *>(fixc->cara);
@@ -89,7 +89,7 @@ void ApplyWeatherClipToRipple(
     WeatherFixcOwner *fixc, const Vector2 *first, const Vector2 *second, const Vector2 *third, const Vector2 *fourth, float clipY0, float clipY1) {
     if (fixc->mode != 1)
         return;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ApplyWeatherRippleOwnerClipMode1(static_cast<WeatherRainOwner *>(fixc->cara), first, second, third, fourth, clipY0, clipY1);
 #else
     WeatherRainOwner *const owner = static_cast<WeatherRainOwner *>(fixc->cara);
@@ -122,7 +122,7 @@ void ApplyWeatherClipSet0ToRipple(const Vector2 *first, const Vector2 *second, c
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetWeatherRipplePressureImmediate(float pressure) {
     for (WeatherFixcNode *node = g_weatherExecution.weatherEffects; node; node = GetNextWeatherFixcNode(node))
         SetWeatherFixcRippleCountImmediate(static_cast<WeatherFixcOwner *>(GetWeatherFixcNodeData(node)), pressure);
@@ -145,7 +145,7 @@ void ApplyWeatherClipSet1(const Vector2 *first, const Vector2 *second, const Vec
 
 namespace {
 
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
 struct WeatherClipPayload {
     WeatherClipVolume volume;
     Vector3 center;
@@ -199,7 +199,7 @@ const WeatherClipEntry *SelectWeatherClipEntry(const WeatherClipSet &set) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EV_wthrApplyRainGroups(const Vector2 *clip) {
     ApplyWeatherClipSet0ToRain(&clip[0], &clip[1], &clip[2], &clip[3], clip[4].x, clip[4].y);
@@ -247,7 +247,7 @@ void SetWeatherVolumeEnabled(std::int32_t index, std::uint32_t enabled, std::int
 }
 
 void Weather_LoadWCCPEntries(const void *entries, std::int32_t count, std::int32_t setIndex) {
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     weatherClipSets[setIndex].enabled = 1;
     weatherClipSets[setIndex].count = count;
     if (weatherClipSets[setIndex].entries)
@@ -293,7 +293,7 @@ void Weather_ResetWCCPClipSet1() {
 }
 
 void Weather_UpdateWCCPClipSet0() {
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     const WeatherClipEntry *const entries = weatherClipSets[0].entries;
     if (!entries || !weatherClipSets[0].enabled)
         return;
@@ -321,7 +321,7 @@ void Weather_UpdateWCCPClipSet0() {
 }
 
 void Weather_UpdateWCCPClipSet1() {
-#if SHENMUE_S2_GCC295 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_S2_GCC295 && (SHENMUE_IS_DC && SHENMUE_IS_S2)
     const WeatherClipEntry *const entries = weatherClipSets[1].entries;
     if (!entries || !weatherClipSets[1].enabled)
         return;
@@ -358,7 +358,7 @@ ScenarioWindowRecord *AllocateSCNW(HLib::Task *task) {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_EV_wthrApplyRainGroups(const shenmue::Vector2 *clip) {
     shenmue::s2::EV_wthrApplyRainGroups(clip);
 }

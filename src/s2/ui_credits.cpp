@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/ui_credits.hpp"
 #include "s2/file_loader_dc.hpp"
 #include "s2/texture_dc.hpp"
@@ -10,6 +10,10 @@
 #include "s2/title_dc.hpp"
 #include "s2/system_modules_dc.hpp"
 #include "s2/frame_dc.hpp"
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/opening_staff_roll.hpp"
+#include "s2/scene_data.hpp"
+#endif
 #include <string.h>
 
 namespace shenmue {
@@ -177,6 +181,103 @@ void StaffRoll(void *) {
     SM_Init_Enqueue(1);
     HLib::SetupTimedTask(task, 90);
 }
+
+
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+struct OpeningStaffRollTaskData {
+    std::int32_t textures[3];
+    float alpha;
+    std::int32_t item, phase;
+    float clock;
+};
+
+static HLib::Task *openingStaffRollTask;
+
+static void DrawOpeningStaffRoll(void *parameter) {
+    const OpeningStaffRollTaskData *const data = reinterpret_cast<const OpeningStaffRollTaskData *>(parameter);
+    const std::uint32_t colour = (static_cast<std::uint32_t>(data->alpha * 255.0f) << 24) | 0x00ffffffU;
+    for (std::int32_t index = 0; index < 2; ++index) {
+        const std::int32_t item = OPENING_STAFF_ROLL_ITEMS[data->item + 1][index];
+        if (item == -1)
+            continue;
+        LegacySpritePacket packet = {};
+        packet.quad.flags = 0x400;
+        packet.colour = colour;
+        packet.uv[2] = packet.uv[3] = 1.0f;
+        std::int32_t texture = 0;
+        if (item == 10 || item == 11) {
+            AdjustScreenAspectRatio(packet.quad, HorizontalStretch, 320, item == 10 ? 176 : 304, 512, 128);
+            texture = item == 10 ? 1 : 2;
+        } else {
+            const float left = item >= 5 ? 0.546875f : 0.0f;
+            const float right = (item / 5 ? 0.453125f : 0.546875f) + left;
+            const float top = item == 3 ? 0.625f : item == 4 ? 0.375f : 1.0f - static_cast<float>(item % 5) * 0.125f;
+            const float bottom = item == 3 ? 0.375f : item == 4 ? 0.25f : top - 0.125f;
+            packet.uv[0] = left; packet.uv[1] = bottom; packet.uv[2] = right; packet.uv[3] = top;
+            const std::int32_t side = OPENING_STAFF_ROLL_SIDES[item];
+            AdjustScreenAspectRatio(packet.quad, static_cast<ScreenAlignment>(OPENING_STAFF_ROLL_ALIGNMENTS[side]),
+                static_cast<std::int32_t>(OPENING_STAFF_ROLL_POSITIONS[side][0]), static_cast<std::int32_t>(OPENING_STAFF_ROLL_POSITIONS[side][1]),
+                static_cast<std::int32_t>((right - left) * 512.0f), static_cast<std::int32_t>((top - bottom) * 512.0f));
+        }
+        if (data->textures[texture] >= 0)
+            DrawLegacySpritePacket(packet, data->textures[texture], 0.1f);
+    }
+}
+
+static void OP_StaffRoll_Callback(void *parameter) {
+    OpeningStaffRollTaskData *const data = static_cast<OpeningStaffRollTaskData *>(parameter);
+    if (data->item < 0) {
+        HLib::DestroyCurrentTask();
+        openingStaffRollTask = 0;
+        return;
+    }
+    if (data->clock >= 0.0f) {
+        if (data->clock >= OPENING_STAFF_ROLL_INTERVALS[data->item][1] && data->phase == 3) {
+            data->phase = 1;
+            data->alpha = 1.0f;
+        } else if (data->clock >= OPENING_STAFF_ROLL_INTERVALS[data->item][0] && data->phase == 2) {
+            data->phase = 0;
+            data->alpha = 0.0f;
+        }
+    }
+    if (data->phase == 0) {
+        data->alpha += 0.033333335f;
+        if (data->alpha > 1.0f) {
+            data->alpha = 1.0f;
+            data->phase = 3;
+        }
+    } else if (data->phase == 1 && data->alpha > 0.0f) {
+        data->alpha -= 0.033333335f;
+        if (data->alpha < 0.0f) {
+            data->alpha = 0.0f;
+            data->phase = 2;
+            if (++data->item >= 8)
+                data->item = -1;
+        }
+    }
+    data->clock += 1.0f;
+    HLib::ExecuteCallbackNow(DrawOpeningStaffRoll, data);
+}
+
+void Queue_OP_StaffRoll() {
+    openingStaffRollTask = HLib::EnqueueTaskWithParameter(OP_StaffRoll_Callback, 8, 0, sizeof(OpeningStaffRollTaskData), SHEN_NAME4('O', 'P', 'S', 'T'));
+    if (!openingStaffRollTask)
+        return;
+    OpeningStaffRollTaskData *const data = static_cast<OpeningStaffRollTaskData *>(HLib::GetTaskParameter(openingStaffRollTask));
+    if (!data)
+        return;
+    data->textures[0] = data->textures[1] = data->textures[2] = -1;
+    data->alpha = 0.0f;
+    data->item = 0;
+    data->phase = 2;
+    data->clock = -68.0f;
+    void *const allocation = shenLoadFile(Filepath_Gen(4), "OPST.SPR", SHEN_NAME4('O', 'P', 'S', 'S'));
+    if (allocation) {
+        LoadTextureChunks(reinterpret_cast<const TextureChunk *>(allocation), HLib::GetTaskDataSize(allocation), data->textures);
+        HLib::FreeTaskData(allocation);
+    }
+}
+#endif
 
 } // namespace s2
 } // namespace shenmue

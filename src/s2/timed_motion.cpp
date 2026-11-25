@@ -144,7 +144,7 @@ int UpdateTimedMotion(TimedMotionState *state) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyTimedMotionAtFrame(const TimedMotion *motion, MT7Node *node, float frame) {
     ApplyTimedMotionFrame(motion, node, static_cast<int>(frame), 0.0f, 0);
 }

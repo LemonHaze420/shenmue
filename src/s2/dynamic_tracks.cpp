@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/dynamic_tracks.hpp"
 #include "s2/map_info.hpp"
 #include "s2/pak_dc.hpp"
@@ -12,13 +12,13 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 using namespace event_runtime_detail;
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace event_runtime_detail {
 
 template <typename T> T ReadDynamicValue(const std::byte *source);
@@ -28,7 +28,7 @@ template <typename T> T ReadDynamicValue(const std::byte *source);
 std::uint64_t dynaEvaluate(const void *data, std::int32_t track, std::int32_t frame, float *position, Vector3i *rotation);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MapInfoChunk *GetCurrentDynamicMap();
 void dynaEvaluate(const void *data, std::int32_t track, std::int32_t frame, float *position, Vector3i *rotation);
 
@@ -58,7 +58,7 @@ std::uint64_t dynaEvaluate(const void *data, std::int32_t track, std::int32_t fr
 std::uint64_t dynaReadEvaluate(std::int32_t track, std::int32_t frame, float *position, Vector3i *rotation, const std::uint8_t name[4]);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -85,7 +85,7 @@ float EvaluateDynamicChannel(const std::byte *channel, std::int32_t frame) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void dynaEvaluate(const void *data, std::int32_t track, std::int32_t frame, float *position, Vector3i *rotation) {
@@ -124,7 +124,7 @@ std::uint64_t dynaEvaluate(const void *data, std::int32_t track, std::int32_t fr
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t dynaReadEvaluate(std::int32_t track, std::int32_t frame, float *position, Vector3i *rotation, const std::uint8_t name[4]) {
     return dynaEvaluate(dynaRead(name) + 8, track, frame, position, rotation);
@@ -132,7 +132,7 @@ std::uint64_t dynaReadEvaluate(std::int32_t track, std::int32_t frame, float *po
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 MapInfoChunk *GetCurrentDynamicMap() {
@@ -141,7 +141,7 @@ MapInfoChunk *GetCurrentDynamicMap() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace event_runtime_detail {
 
@@ -183,7 +183,7 @@ std::int32_t DynamicFixedAngle(float degrees) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const std::byte *dynaRead(const std::uint8_t name[4]) {
     if (const std::byte *package = FindPackageDynamicMap(name))

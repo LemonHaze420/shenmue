@@ -16,7 +16,7 @@ std::uint32_t AllocSpline(CameraSplineTrack &track);
 void SeekAnimatedCameraSequence(std::uint32_t frame);
 void camCtrlBuildScriptCamSpline(std::int32_t name, const void *eye, const void *target);
 void camCtrlCreateSpline(const std::uint32_t *record, const void *eye, const void *target);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t *camCtrlFindEventCamera(std::int32_t index);
 std::int32_t GetSplineMaxDistinctKeyRun(const CameraSplineTrack &track);
 std::int32_t GetSplineSegmentBufferSize(const CameraSplineTrack &track);

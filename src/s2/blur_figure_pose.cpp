@@ -125,15 +125,15 @@ void AllocateBLWK(FigurePose *figure);
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int32_t blurBoneSelectors[15] = {3, 5, 9, 12, 14, 16, 19, 21, 22, 23, 24, 26, 28, 29, 31};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int32_t blurModelNodeIds[15] = {1, -67, 5, 6, -65, 10, 11, -66, 14, 16, 17, 18, 21, 22, 23};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int16_t blurBranchNodes[10][2] = {{0, 0}, {1, -1}, {1, 14}, {14, -1}, {5, -1}, {10, -1}, {16, -1}, {21, -1}, {1, 14}, {1, 14}};
 #endif
 
@@ -204,7 +204,7 @@ std::uintptr_t LoadBlurModel(FigurePose *figure, const char *filename, bool area
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AssignBlurCallbacks(Character *character) {
     FigurePose *const figure = static_cast<FigurePose *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -268,7 +268,7 @@ FigurePose *figpAssignModeForCharacter(Character *character, std::int8_t mode) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction) {
     FigurePoseControlPrefix *const figure = static_cast<FigurePoseControlPrefix *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -313,7 +313,7 @@ std::uintptr_t figpAssignMotScaleAndDirFor(Character *character, std::int8_t sca
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 FigurePoseControlPrefix *EV_figpAssignFlagsFor(Character *character, std::uint8_t bitIndex, std::uint8_t enabled) {
     FigurePoseControlPrefix *const figure = static_cast<FigurePoseControlPrefix *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -348,7 +348,7 @@ std::uintptr_t EV_figpAssignFlagsFor(Character *character, std::uint8_t bitIndex
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t figpGetFlagMask(Character *character, std::uint8_t bitIndex) {
     FigurePoseControlPrefix *const figure = static_cast<FigurePoseControlPrefix *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -360,7 +360,7 @@ std::uint32_t figpGetFlagMask(Character *character, std::uint8_t bitIndex) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetBlurModel(Character *character, const char *filename, float time) {
     FigurePose *figure = static_cast<FigurePose *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -420,7 +420,7 @@ void mtFindBlurModel(Character *character, const char *path, const float *time) 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void figpToggleMotionworkFlag(Character *character, MotionWork *work) {
     FigurePoseControlPrefix *const figure = static_cast<FigurePoseControlPrefix *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -497,7 +497,7 @@ std::uintptr_t figpToggleMotionworkFlag(Character *character, MotionWork *work) 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawBlurFigurePoseEntries(FigurePose *figure) {
     Vector3 accumulated;
@@ -573,7 +573,7 @@ void DrawBlurFigurePoseEntries(FigurePose *figure) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawBlurFigurePoseInterpolations(FigurePose *figure) {
     const std::uint8_t direction = static_cast<std::uint8_t>(figure->directionFlag);
@@ -640,7 +640,7 @@ void DrawBlurFigurePoseInterpolations(FigurePose *figure) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BlurWork(Character *character) {
     FigurePose *const figure = static_cast<FigurePose *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -725,7 +725,7 @@ void BlurWork(Character *character) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawBlurBranch(FigurePose *figure, std::uint8_t mode, float time) {
     MT7Node *const root = figure->targetRootInstance;
@@ -1241,7 +1241,7 @@ void FreeBlurWork(Character *character, void *payload) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadExistingBlurModel(Character *character, const char *filename) {
     FigurePose *const figure = static_cast<FigurePose *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -1300,7 +1300,7 @@ std::uintptr_t figpSetFlagsBlendForBlur(shen_name character, std::int8_t scale, 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadBlurModelForCharacter(shen_name name, const char *filename, float time) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -1320,7 +1320,7 @@ void LoadBlurModelForCharacter(shen_name character, const char *path, float time
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyFightCharacterDefinition(Character *character, const CharacterTableArgument *arguments, std::int32_t count) {
     FigurePose *const figure = static_cast<FigurePose *>(charFindComp(character, MODEL_FIGURE_POSE));
@@ -1344,7 +1344,7 @@ void ApplyFightCharacterDefinition(Character *character, const CharacterTableArg
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadBlurModel(FigurePose *figure, const char *filename) {
     if (!std::strcmp(figure->filename, filename))

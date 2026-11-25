@@ -166,7 +166,7 @@ void OpenPakAfsRead(PakLoadTaskData *task, PakGlobalData *slot, std::int32_t fil
 const char *BuildPakFilename(const char *name, const char *extension);
 void OpenPakLooseRead(PakLoadTaskData *task, PakGlobalData *slot, const char *directory, const char *filename);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 namespace PakCategory {
 enum Value SHENMUE_PAK_ENUM_TYPE(std::int32_t) { Package = 0, Partition = 1, Task = 2, Reserved = 3, LoadPackageWithMode = 4, LoadAfsWithMode = 5 };
 }

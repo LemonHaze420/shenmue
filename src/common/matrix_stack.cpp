@@ -873,11 +873,11 @@ void Matrix4x4::NormalizeAndSetTransformMatrix() {
 }
 #endif
 
-#if !SHENMUE_IS_DC || (SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))))
+#if !SHENMUE_IS_DC || (SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2))))
 // @verified - d
 Matrix4x4 *Matrix4x4::GetTransformMatrix(Matrix4x4 *output) {
 
-#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))))
+#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2)))
     return matrix_stack::GetMatrix(output);
 #endif
 
@@ -890,7 +890,7 @@ Matrix4x4 *Matrix4x4::GetTransformMatrix(Matrix4x4 *output) {
 }
 #endif
 
-#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))))
+#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2)))
 // @verified - d
 void Matrix4x4::AffineProjectionSwap() {
     Matrix4x4 matrix;
@@ -908,11 +908,11 @@ void Matrix4x4::AffineProjectionSwap() {
 }
 #endif
 
-#if !SHENMUE_IS_DC || (SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))))
+#if !SHENMUE_IS_DC || (SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2))))
 // @verified - d
 void Matrix4x4::SetActiveTransform(const Matrix4x4 *transform) {
 
-#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))))
+#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2)))
     matrix_stack::LoadMatrix(transform);
 #endif
 
@@ -927,7 +927,7 @@ void Matrix4x4::SetActiveTransform(const Matrix4x4 *transform) {
 // @verified - d
 void Matrix4x4::SetPrePassToTempTransform() {
 
-#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))))
+#if SHENMUE_IS_DC && ((SHENMUE_IS_S2 && (SHENMUE_IS_DC && SHENMUE_IS_S2)))
     matrix_stack::UnitCurrentMatrix();
 #endif
 

@@ -61,7 +61,7 @@ std::uint32_t ApplyGeometryLightTree(MT7Node *root, const LightRuntimeEntry *lig
 void SetupModelDataDefaultVS(MT7Node *root);
 void InitializeMapFieldDepthSlots();
 void FreeMapFieldDepthSlot(std::int32_t index);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 PakGlobalData *RequestMapPackage(const char *directory, const char *name);
 #endif
 std::uint32_t ApplyGeometryLightTree(MT7Node *root, const LightRuntimeEntry *lights, std::int32_t count, const Vector4 *colour);
@@ -355,7 +355,7 @@ void LoadMapPackages(std::int32_t count, const char *directory) {
     for (std::int32_t index = 0; index < count; ++index) {
         char name[64];
         std::sprintf(name, "MPK%02d", static_cast<int>(index));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         RequestMapPackage(directory, name);
 #else
         ReadPakFileFromDirectory(directory, name, 0);
@@ -364,7 +364,7 @@ void LoadMapPackages(std::int32_t count, const char *directory) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadMap(std::int32_t act, shen_name area, MapInfoChunk *mapInfo) {
     const volatile std::int32_t count = ReadMapPackCount(FindNativeChunk("MAPR", mapInfo));
     const shen_name *const overrideArea = ReadMapAreaOverride(FindNativeChunk("MAPP", mapInfo));
@@ -453,7 +453,7 @@ void ResetPropReaderSlots() {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdatePropRoot() {
     MT7Node *root = g_propState.root;
     if (!root)
@@ -543,7 +543,7 @@ void *LoadPackageProp(void *data, std::uint32_t *handle) {
     return model;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RemovePropReader(std::uint32_t slotIndex) {
     if (!g_propState.root || slotIndex > 16)
         return;
@@ -635,7 +635,7 @@ void ReleasePropReader(std::uint32_t index) {
     ReleaseMT7Model(model);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void LoadPROPs(std::int32_t act, shen_name area) {
     g_propState.root = 0;
     g_propState.position.x = g_propState.position.y = g_propState.position.z = 0.0f;
@@ -689,7 +689,7 @@ MT7Node *GetPropRoot() {
     return g_propState.root;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetPropVector3(const Vector3 *position) {
     g_propState.position = *position;
@@ -703,7 +703,7 @@ void GetPropVector4(Vector3 *position) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetPropHierarchyDisplayFlag(MT7Node *node, std::uint32_t enabled) {
     if (!node)
@@ -721,7 +721,7 @@ void SetPropHierarchyDisplayFlag(MT7Node *node, std::uint32_t enabled) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetDisplayFlagForProp(shen_name name, std::uint32_t enabled) {
     if (!g_propState.root)
@@ -738,7 +738,7 @@ void SetDisplayFlagForProp(shen_name name, std::uint32_t enabled) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t HasPropCharacterZeroUpperSignature(shen_name name) {
     std::uint32_t result = 0;
@@ -820,7 +820,7 @@ void GetMapModelPosition(Vector3 *position, std::int32_t index) {
     position->z = g_mapModelSlots[index].position.z;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetMapModelSlotPosition(const Vector3 *position, std::int32_t index) {
     if (index >= 32)
@@ -831,7 +831,7 @@ void SetMapModelSlotPosition(const Vector3 *position, std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t SetMapModelSlotRotation(std::int32_t rotationY, std::int32_t index) {
     const std::uint32_t offset = static_cast<std::uint32_t>(index) * static_cast<std::uint32_t>(sizeof(MapModelRuntimeSlot));
@@ -840,7 +840,7 @@ std::uint32_t SetMapModelSlotRotation(std::int32_t rotationY, std::int32_t index
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t SetMapModelSlotTransform(std::int32_t index, const Vector3 *position, std::int32_t rotationY) {
     SetMapModelSlotPosition(position, index);
@@ -889,7 +889,7 @@ std::int32_t ReadMapPackCount(const MapInfoChunk *chunk) {
     return count;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const shen_name *ReadMapAreaOverride(const MapInfoChunk *chunk) {
     if (!chunk)
         return 0;
@@ -922,7 +922,7 @@ void ReadMapBlockSize(const MapInfoChunk *chunk) {
     SetMapCellSize(size);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool ReadEntryMapLayers(const MapInfoChunk *chunk) {
     if (!chunk)
         return false;
@@ -1166,7 +1166,7 @@ void SetMapLightingPlacementEnabled(std::int32_t value, std::int32_t index) {
         g_mapLoadState.placements[index].enabled = value;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetMapLightingPlacementPosition(Vector3 *output, std::int32_t index) {
     output->x = g_mapLoadState.placements[index].position.x;
     output->y = g_mapLoadState.placements[index].position.y;
@@ -1176,7 +1176,7 @@ std::uint32_t GetMapLightingPlacementPosition(Vector3 *output, std::int32_t inde
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index) {
     if (index > 31)
         return;
@@ -1263,7 +1263,7 @@ void RestoreGeometryLightPositionScratch() {
     HLib::FreeTaskData(savedLightPositions);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t AssignLightForMapLayer(Vector3 *output, std::int32_t mapSlot) {
     for (std::int32_t index = 0; index < 32; ++index) {
@@ -1296,7 +1296,7 @@ void SetupLightConfig() {
     RestoreGeometryLightPositionScratch();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetDefaultVSByIndex(std::int32_t index) {
     if (index >= 32)
@@ -1309,7 +1309,7 @@ void SetDefaultVSByIndex(std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetMapModelDataDefaultVertexShader() {
     for (std::int32_t index = 0; index < 32; ++index)
@@ -1322,7 +1322,7 @@ void SetMapModelDataDefaultVertexShader() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetDefaultVS() {
     MT7Node *const root = GetPropRoot();
@@ -1345,7 +1345,7 @@ std::uint32_t GetPropLightingTraversalResult() {
     return g_propState.lightingTraversalResult;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t SetMapModelVertexShaderType(std::int32_t index, std::int32_t value) {
     const std::uint32_t offset = static_cast<std::uint32_t>(index) * static_cast<std::uint32_t>(sizeof(MapModelRuntimeSlot));
@@ -1521,7 +1521,7 @@ void MapVertexCacheNullsub() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 std::uint32_t __attribute__((renesas)) shenmue_s2_event_SetMapModelSlotTransform(std::int32_t index, const shenmue::Vector3 *position, std::int32_t rotationY) {
     return shenmue::s2::SetMapModelSlotTransform(index, position, rotationY);
@@ -1537,7 +1537,7 @@ void __attribute__((renesas)) shenmue_s2_event_SetMapModelDataDefaultVertexShade
 }
 }
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 void __attribute__((renesas)) shenmue_s2_event_SetPropVector3(const shenmue::Vector3 *position) {
     shenmue::s2::SetPropVector3(position);

@@ -62,7 +62,7 @@ bool srchLockTarget(SearchTaskData &search, shen_name name, bool faceTarget);
 void srchLoadSignBoardModelForArea(SearchTaskData &search);
 void srchIncrementTemporaryModel();
 void srchReadSelectionSounds(const std::byte *config);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchGetPropIKLookup(std::uint32_t marker);
 #else
 std::int32_t srchGetPropIKLookup(std::uint16_t marker);

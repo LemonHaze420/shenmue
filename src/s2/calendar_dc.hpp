@@ -13,7 +13,7 @@ static const std::int8_t calendarMonthDays[16] = {31, 31, 28, 31, 30, 31, 30, 31
 
 static const std::int32_t calendarMonthStartDays[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetCurrentCalendarRecord(DateTime &record);
 #endif
 extern float g_secondsPerGameMinute;

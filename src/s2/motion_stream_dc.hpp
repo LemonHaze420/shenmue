@@ -5,7 +5,7 @@
 #if !SHENMUE_S2_GCC295
 #include <bit>
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #endif
 
@@ -21,7 +21,7 @@ struct MotnAnimationHeader {
     std::uint16_t retainedVersion, flags, frameCount;
     std::int16_t keyDataOffset;
 };
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 struct MotionRigKey {
     float timeSeconds, tangentIn, tangentOut, value;
 };
@@ -55,7 +55,7 @@ SHENMUE_MOTION_STREAM_LAYOUT(offsetof(MotionRigChannel, bias) == 0x38);
 SHENMUE_MOTION_STREAM_LAYOUT(sizeof(MotionRigAxis) == 0x40);
 
 static const float kMotionStreamFrameSeconds = 0.033333335f;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 static const std::uint32_t motionInitStream = 1, MI_Linear = 1;
 static const std::uint16_t motionWideKeyCounts = 0x100;
 #endif

@@ -79,7 +79,7 @@ SECTIONS
     ASSERT(__dc_loaded_act_begin == ADDR(.boot) + 0x118 && __dc_loaded_act_end == ADDR(.boot) + 0x11c, "S2 loaded act changed layout")
     ASSERT(__dc_loader_word_end <= __dc_loaded_act_begin && __dc_loaded_act_end <= __dc_file_directory_begin, "S2 header words overlap")
     ASSERT(__dc_story_step_begin == ADDR(.boot) + 0x178 && __dc_story_step_end == ADDR(.boot) + 0x17c, "S2 story step changed layout")
-    ASSERT(SIZEOF(.event_functions) == 850 * 4, "S2 event function table changed layout")
+    ASSERT(SIZEOF(.event_functions) == __dc_event_function_count * 4, "S2 event function table changed layout")
     ASSERT(__dc_stack_bottom < __dc_stack_top, "S2 boot header overlaps its native stack")
     ASSERT(__dc_bss_end <= __dc_image_limit, "S2 image overlaps the native heap or validation output")
     ASSERT(__dc_crt_heap_begin < __dc_crt_heap_end, "S2 resident storage overlaps the runtime heap")

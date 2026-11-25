@@ -25,7 +25,7 @@ void LoadLensflare();
 void shenLoadSetLensflare();
 void SetSunDirectionVector(const Vector3 *direction);
 void UpdateSunLensFlare();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct Character;
 extern const Vector3 *g_sunOcclusionOrigin, *g_sunOcclusionEnd;
 void UpdateSunFilmFade(float facing, float falloff);

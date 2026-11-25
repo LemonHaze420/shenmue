@@ -8,7 +8,7 @@
 #include "s2/startup_assets_dc.hpp"
 #include <cstdio>
 #include <cstring>
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/date_time.hpp"
 #include "s2/motion_registry_dc.hpp"
 #include "s2/scenario_flags_dc.hpp"
@@ -45,161 +45,161 @@ std::uint32_t npcNewLoadState = 0;
 
 shen_name npcScheduleSeedNames[2];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 char npcScheduleFilename[32] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const Matrix4x4 *npcMotionClipFrames[8] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t npcMotionClipBoneCounts[8] = {}, npcMotionClipFrameCounts[8] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint16_t npcMotionClipFallbackAnimations[8] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcRouteSpline *npcRouteNodes = SHENMUE_NPC_NULL;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 npcRouteOrigin = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcSavedDateTimeFlag = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *npcRegistryTask = SHENMUE_NPC_NULL;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcAuthoredEntryCount = 0, npcRouteEntryCount = 0, npcRouteTableReady = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t npcFrameCount;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcScheduleRecordCount = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::byte **npcScheduleRecords = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcRouteSpline *npcScriptRouteTable;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint16_t npcRouteMovementMask;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t npcUsesMainSchedule;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int8_t npcRouteMovementCursor;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcRouteStateContextPrefix *npcActiveRouteContext;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *npcPendingRegistryTask = 0, *npcRegistryRetainedTask = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcScheduleAct;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name npcScheduleArea;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t npcScheduleVersion = 0, npcScheduleFlags = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::byte *npcScheduleOriginData = 0, *npcScheduleEntryData = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcScheduleAreaPointCount = 0, npcScheduleRouteCount = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcRouteLiveEntry *npcCrowdHead = 0, *npcCrowdBookmark = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcAreaRestriction npcAreaRestrictions[8];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcAreaRestrictionCount, npcScheduleFloor = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcActiveStreamCost = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcPoolTarget = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t npcSlotFlags[0x1c0];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcRouteResetGroupHeader *npcRouteResetGroup = SHENMUE_NPC_NULL;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 shen_name npcLoadedArea;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcTransitionRuntimeSlot npcTransitionRuntimeSlots[4];
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareNpcAreaRoutes();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CoreNPCTask();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawNpcTransitions();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RegisterAuthoredNpcEntries(std::byte **records, NpcRouteSpline *routes);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RebuildNpcRuntimeAfterReload();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void NpcRegistryTask_Nullsub(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 HLib::Task *npc_Callback_Enqueue(std::int8_t index, std::int32_t act, shen_name area) {
     npcLoadedArea = area;
@@ -226,7 +226,7 @@ HLib::Task *npc_Callback_Enqueue(std::int8_t index, std::int32_t act, shen_name 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetNpcRouteOrigin() {
     npcRouteOrigin.x = npcRouteOrigin.z = 0.0f;
@@ -243,7 +243,7 @@ void ResetNpcRouteOrigin() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadCurrentNpcSchedule(const char *filename, std::int32_t loadResources) {
     if (!loadResources)
@@ -281,7 +281,7 @@ void LoadCurrentNpcSchedule(const char *filename, std::int32_t loadResources) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void NPC_Route_Control() {
     if (!npcPendingRegistryTask)
@@ -294,7 +294,7 @@ void NPC_Route_Control() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EV_LoadNPCTable(const char *filename) {
     if (!npcPendingRegistryTask)
@@ -304,7 +304,7 @@ void EV_LoadNPCTable(const char *filename) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeNpcRouteContext(NpcRouteLiveEntry *entry) {
     NpcRouteStateContextPrefix &context = entry->stateContext;
@@ -319,7 +319,7 @@ void InitializeNpcRouteContext(NpcRouteLiveEntry *entry) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializeNpcInterpreterState(NpcRouteLiveEntry *entry, std::int32_t slot) {
     static std::byte npcFallbackScriptRecord[0x38] = {'M', 'O', 'V', 'E', 0, 20, 1, 1};
     std::byte *const record = entry->scriptRecord;
@@ -372,7 +372,7 @@ void InitializeNpcInterpreterState(NpcRouteLiveEntry *entry, std::int32_t slot) 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 NpcRouteLiveEntry *GetNpcRouteEntryByIndex(std::int32_t index);
 
 // @verified - d
@@ -396,7 +396,7 @@ void SetNpcRouteMovementCount(std::int32_t count) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint16_t SelectNpcRunningMotion(const Character *character);
 bool mtwkCopyTransition(MotionWork *work, const Vector3 *position, std::int32_t yaw, std::int32_t operation, std::int32_t copyType);
 std::uint32_t mtwkSetTimeRelated(MotionWork *work, std::uint32_t mode, std::uint16_t slot, std::uint16_t motionId);
@@ -415,7 +415,7 @@ void SetNpcRouteTransitionMotion(NpcRouteLiveEntry *entry, const Vector3 *positi
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t SelectNpcRouteMovementSlot() {
     const std::int32_t mask = npcRouteMovementMask;
@@ -429,7 +429,7 @@ std::uint32_t SelectNpcRouteMovementSlot() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadNPCFiles(NpcRouteSpline *routes) {
     npcScriptRouteTable = routes;
@@ -446,7 +446,7 @@ void LoadNPCFiles(NpcRouteSpline *routes) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t MatchNpcAreaSelector(shen_name selector, shen_name area) {
     const char *selectorChars = reinterpret_cast<const char *>(&selector);
@@ -458,7 +458,7 @@ std::int32_t MatchNpcAreaSelector(shen_name selector, shen_name area) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LoadNpcMotionClipFile(const char *filename, std::int32_t slot, std::uint16_t fallbackMotion) {
     char directory[64];
@@ -474,7 +474,7 @@ void LoadNpcMotionClipFile(const char *filename, std::int32_t slot, std::uint16_
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ReadNPCArea(shen_name area, std::int32_t loadResources, const char *filename) {
     char directory[64];
@@ -566,21 +566,21 @@ std::int32_t ReadNPCArea(shen_name area, std::int32_t loadResources, const char 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetNpcSavedDateTimeFlag() {
     return npcSavedDateTimeFlag;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetNpcSavedDateTimeFlag() {
     npcSavedDateTimeFlag = 1;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ClearNpcSavedDateTimeFlag() {
     npcSavedDateTimeFlag = 0;
@@ -649,14 +649,14 @@ std::int32_t npcCancelHumanPak(shen_name name) {
 
 // @verified - d
 void ResetNpcLoadState() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     npcScheduleFilename[0] = 0;
 #else
     npcNewLoadState = 0;
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 char *GetNpcScheduleFilename() {
     return npcScheduleFilename;
 }
@@ -678,7 +678,7 @@ void npcInitData() {
     ClearNpcScheduleSeeds();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetNpcScheduleState() {
     ResetNpcLoadState();
     ClearNpcScheduleSeeds();
@@ -689,7 +689,7 @@ void ResetNpcScheduleState() {
 } // namespace shenmue
 #undef SHENMUE_NPC_NULL
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_npcResetDateTimeIfNeeded() {
     shenmue::s2::SaveNpcDateTime();
 }

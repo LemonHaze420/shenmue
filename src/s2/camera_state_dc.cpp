@@ -48,7 +48,7 @@
 #include "s2/title_sprite_dc.hpp"
 #include "s2/legacy_sprite_dc.hpp"
 #include "s2/window.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/frame_dc.hpp"
 #include "s2/character_dc.hpp"
 #include "s2/motion_ground_dc.hpp"
@@ -91,7 +91,7 @@
 #include "s2/reflector_board_dc.hpp"
 #include "s2/scenario_flags_dc.hpp"
 #include "s2/conversation_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #endif
 #include "s2/startup_assets_dc.hpp"
@@ -113,7 +113,7 @@ typedef std::int32_t (*FightFrameCallback)(FightActorRuntimePrefix *);
 } // namespace
 
 void camCtrlInitialize(CameraRuntime &camera);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t ResolveFieldSphereVolumeInWorld(Vector3 *output, const Vector3 *position, float radius);
 #endif
 void camCtrlCalculateFov(CameraRuntime &camera);
@@ -352,7 +352,7 @@ void camCtrlInitialize(CameraRuntime &camera) {
     ResetCameraPresetCache(camera);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlCreatePerspectiveMatrix(CameraRuntime &camera) {
     matrix_stack::SetupStack();
@@ -382,7 +382,7 @@ void camCtrlCreatePerspectiveMatrix(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlApply(CameraRuntime &camera) {
     camera.motionScale.x = camera.motionVector.x;
     camera.motionScale.y = camera.motionVector.y;
@@ -417,7 +417,7 @@ std::int32_t camCtrlIsConversationActive() {
     return static_cast<std::int32_t>(g_conversationCameraState->flags) >> 1 & 1;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlRecalcFov(CameraRuntime &camera) {
     if (!(camera.flags & 0x8000U))
@@ -445,7 +445,7 @@ void camCtrlRecalcFov(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetup(CameraRuntime &camera) {
     if (!camera.savedPresetIndex)
         return;
@@ -487,7 +487,7 @@ void camCtrlSetup(CameraRuntime &camera) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlHandleStates(CameraRuntime &camera) {
     const std::uint32_t rebuild = camera.flags & 6U;
@@ -555,7 +555,7 @@ void camCtrlHandleStates(CameraRuntime &camera) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GenerateOscillationForCamera(std::int32_t phase) {
     const float first = dc::sdk::SinFixed(22 * phase);
@@ -566,7 +566,7 @@ float GenerateOscillationForCamera(std::int32_t phase) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const volatile float cameraDefaultMaximumScale = 0.08399999886751175f;
 static const volatile std::int32_t cameraDefaultMaximumSpeed = 8;
 static const volatile float cameraDefaultMinimumScale = 0.09399999678134918f;
@@ -662,7 +662,7 @@ void camCtrlSmoothMotion(CameraRuntime &camera) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyRotationMatrixFromTransform(CameraRuntime &camera) {
     if (!(camera.flags & CameraSmoothMotion))
         return;
@@ -682,7 +682,7 @@ void ApplyRotationMatrixFromTransform(CameraRuntime &camera) {
 
 std::int32_t FindFieldSegmentOffsetInWorld(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlCheckCollision(CameraRuntime &camera) {
     float pull = 0.0f;
@@ -748,7 +748,7 @@ std::int32_t camCtrlGetContextMode() {
     return g_cameraControl->contextMode;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlGetActiveContextMode() {
     return g_cameraControl->contextMode;
 }
@@ -782,7 +782,7 @@ std::int32_t camCtrlSetContext(std::int32_t enabled, std::int32_t retainSettings
     return previous;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void camCtrlApplyJitterAdjustment(CameraRuntime &camera) {
     if (::fabsf(camera.shakeAmplitude.x) < 0.003f)
@@ -823,7 +823,7 @@ void camCtrlSetRotationXYZ(float x, float y, float duration) {
     camCtrlSetShakeAmplitude(x, y, duration);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlResolveNextPositionCollision(CameraRuntime &camera) {
     ResolveFieldSphereVolumeInWorld(&camera.nextPosition, &camera.nextPosition, 0.1f);
 }
@@ -881,7 +881,7 @@ std::int32_t camCtrlSetState(std::int32_t state) {
     return camera->previousState;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlRestorePreviousState() {
     camCtrlSetState(g_cameraControl->previousState);
 }
@@ -902,7 +902,7 @@ std::int32_t camCtrlGetState() {
     return g_cameraControl->state;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlGetDefaultState() {
     return g_cameraControl->defaultState;
 }
@@ -932,7 +932,7 @@ void camCtrlSetTargetPosition(const Vector3 &position) {
     g_cameraControl->targetPosition.z = position.z;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetAnchorOffset(const Vector3 &offset) {
     g_cameraControl->anchorOffset.x = offset.x;
     g_cameraControl->anchorOffset.y = offset.y;
@@ -962,7 +962,7 @@ Vector3 *camCtrlGetTargetPosition(Vector3 *position) {
     return &camera->targetPosition;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetOrbitDistance(float distance) {
     g_cameraControl->orbitDistance = distance;
 }
@@ -1037,7 +1037,7 @@ std::int32_t camCtrlGetNextRoll() {
     return g_cameraControl->nextRotation.z;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetNextRollWrapper(std::int32_t roll) {
     camCtrlSetNextRoll(roll);
 }
@@ -1059,7 +1059,7 @@ std::int32_t camCtrlGetNextRotY() {
     return g_cameraControl->nextRotation.y;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlGetOffsetFromBase(Vector3 *translation, Vector3s *rotation) {
     CameraRuntime *const camera = g_cameraControl;
     if (translation) {
@@ -1170,7 +1170,7 @@ std::int32_t camCtrlGetPerspectiveWrapper() {
     return camCtrlGetPerspective();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float camCtrlGetViewHeightScale() {
     return g_cameraControl->viewHeightScale;
@@ -1285,7 +1285,7 @@ bool ScreenVisCheck(const Vector3 &position, float radius, float depth) {
     return !(transformed.y > vertical) && transformed.y > -vertical;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 Matrix4x4 *camCtrlGetViewMatrix(Matrix4x4 *output) {
     if (output)
@@ -1294,7 +1294,7 @@ Matrix4x4 *camCtrlGetViewMatrix(Matrix4x4 *output) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *camCtrlSetXform(const Matrix4x4 *transform) {
     if (transform) {
         g_cameraControl->finalTransform = *transform;
@@ -1326,7 +1326,7 @@ CameraUpdateCallback camCtrlSetUpdateCallback(CameraUpdateCallback callback) {
     return previous;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 CameraUpdateCallback camCtrlSetProjectionCallback(CameraUpdateCallback callback) {
     const CameraUpdateCallback previous = *reinterpret_cast<CameraUpdateCallback *>(g_cameraControl->retainedCallbackState);
     *reinterpret_cast<CameraUpdateCallback *>(g_cameraControl->retainedCallbackState) = callback;
@@ -1428,7 +1428,7 @@ std::int32_t camCtrlToggleSmoothing(std::int32_t enabled) {
     return previous;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void camCtrlSetMotionOscillation(float maximumScale, float minimumScale, std::int16_t maximumSpeed, std::int16_t minimumSpeed) {
     g_cameraControl->currentMaximumScale = maximumScale;
     g_cameraControl->cameraMinimumScale = minimumScale;

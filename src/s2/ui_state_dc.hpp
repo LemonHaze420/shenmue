@@ -6,7 +6,7 @@
 
 #include "s2/hlib.hpp"
 #include "s2/legacy_sprite_types.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/item_effect.hpp"
 #include "common/math.hpp"
 #endif
@@ -24,7 +24,7 @@ struct PadControlEntry;
 enum RenderIconSlot { Any = 0, ItemSelect = 1, ActionSelector = 2, Qte = 3, MoneyMessage = 4, ItemEffectMessage = 5, SleepAction = 6 };
 extern std::uint32_t renderIconFlags, activeIconFlags;
 extern std::uint32_t currentItemSelectState;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint8_t mainIconPhase;
 #else
 extern std::uint32_t mainIconPhase;
@@ -57,7 +57,7 @@ extern std::int32_t moneyIconTarget;
 extern std::int32_t moneyIconMaximum, moneyIconStepAmount;
 extern std::uint32_t moneyIconFlags;
 extern float moneyIconFrames;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct ConversationBuffer;
 struct TextureChunk;
 extern HLib::Task *itemEffectIconTask;
@@ -246,7 +246,7 @@ void SetQteButtonState(std::uint16_t mask) UI_NOEXCEPT;
 std::int32_t GetCurrentQteStatus() UI_NOEXCEPT;
 #endif
 void SetMoneyIconPhase(std::uint8_t phase);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void KeepMoneyIconOpen();
 void CloseMoneyIcon();
 #endif
@@ -256,7 +256,7 @@ void SetMoneyRelatedUIElement_0(std::int32_t maximum, std::int16_t duration, std
 bool GetShouldRenderIcons(RenderIconSlot slot);
 std::uint8_t GetParentMenu();
 std::uint32_t GetCurrentItemSelectState();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool IsModeBitActive(std::uint32_t mode);
 std::uint32_t ConsumeItemMenuRequest();
 #endif

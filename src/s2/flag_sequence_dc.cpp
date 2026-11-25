@@ -1,6 +1,6 @@
 #include "s2/flag_context_dc.hpp"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/map_control_dc.hpp"
 #include "s2/character_dc.hpp"
@@ -57,12 +57,12 @@
 #include "s2/frame_dc.hpp"
 #include "s2/flag_data.hpp"
 #include "s2/story_state.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/sdk.hpp"
 #include "s2/legacy_sprite_dc.hpp"
 #endif
 #include "s2/hlib.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_fade_dc.hpp"
 #include "s2/conversation_playback_dc.hpp"
 #endif
@@ -136,7 +136,7 @@ bool GetInternalFlag(std::int32_t flag);
 const std::int32_t *FindFlagDefinition(std::int32_t flag);
 std::uint32_t stepUpdateFlagUtil(std::int32_t flag, std::int32_t mode);
 bool EV_FreeAuthorPak(std::int32_t operation, const char *name);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer);
 #else
 bool cvsHasValidConverseData(const ConversationBuffer *buffer);
@@ -335,7 +335,7 @@ void AllocateFlagWork() {
     ResetFlagWorkFromDescriptor();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode) {
     std::int32_t minimumStep = 3000000, maximumStep = 0, scanning = 1;
@@ -410,7 +410,7 @@ std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const char *GetFlagName(std::uint32_t flag);
 void PrintFlagHundredths(std::int32_t value);
 
@@ -599,7 +599,7 @@ std::int16_t shenGetSleepScheduleFlag() {
 
 // @verified - d
 void InitializeFlagWeatherMode() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     WSCN_SetWeatherShouldUpdateDay(EV_GetPlayerFlag(PlayerFlagReadMode_Internal, 1001) != 0);
 #else
     SetWeatherShouldUpdateDay(EV_GetPlayerFlag(PlayerFlagReadMode_Internal, 1001) != 0);
@@ -630,7 +630,7 @@ std::int32_t Queue_FLAG_CheckTask(shen_name area) {
     plymSetCallback(shenRestartPlayerDataFlagEvaluation);
     InitializeFlagWeatherMode();
     const std::int32_t initialized = flagInitContext(shenPlayerData, area);
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     shenPlayerData.callbackContext = FLAG_CALLBACK_CYCLE;
 #else
     std::memcpy(reinterpret_cast<std::byte *>(&shenPlayerData) + kFlagCallbackContextOffset, &FLAG_CALLBACK_CYCLE, sizeof(FLAG_CALLBACK_CYCLE));
@@ -894,7 +894,7 @@ std::int32_t shenEvaluateFlagFor(std::int32_t subject, std::int8_t mode) {
     return shenEvaluateFlag(shenPlayerData, 3);
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // GameJam copies these two indeterminate scratch fields without initializing the context first.
 // Defined evaluator paths must not depend on their values; retail initializes its different-sized owner here.
 void shenRestartPlayerDataFlagEvaluation() {
@@ -2062,7 +2062,7 @@ void initCtrlSystemManage() {
     systemManageSource[0] = '\0';
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void flagDrawDebugScreenRect(std::int16_t x, std::int16_t y, std::int16_t width, std::int16_t height, std::uint32_t colour) {
     LegacySpritePacket packet;
     INIT_LEGACY_SPRITE_PACKET(packet);

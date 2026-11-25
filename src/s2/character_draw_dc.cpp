@@ -52,19 +52,19 @@ void SetMapModelAlternateTraversalEnabled(std::uint32_t enabled, std::int32_t in
 Matrix4x4 characterMirrorMatrix;
 std::int32_t g_characterMirroredTransformEnabled;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const shen_name CHARACTER_MIRROR_STORAGE = SHEN_NAME4('M', 'I', 'R', 'M');
 #endif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *characterMirroredControllerMatrices = 0;
 #endif
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetScenarioCharacterDrawControl(shen_name name, std::int32_t mode, std::int32_t argument) {
     Character *character;
@@ -91,7 +91,7 @@ void SetScenarioCharacterDrawControl(shen_name name, std::int32_t mode, std::int
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 ReflectorBoardWork *SetScenarioReflectorBoardValues(shen_name name, const Vector4 *values) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -99,7 +99,7 @@ ReflectorBoardWork *SetScenarioReflectorBoardValues(shen_name name, const Vector
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetScenarioReflectorBoardMode(shen_name name, std::int32_t sector) {
     const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -112,7 +112,7 @@ void EV_SetMapModelAlternateTraversalEnabled(std::uint32_t enabled, std::int32_t
     SetMapModelAlternateTraversalEnabled(enabled, index);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EV_SetCharacterMirrorPlane(const CharacterMirrorPlane *plane, const Vector3i *rotation) {
     SetCharacterMirrorPlane(plane, rotation);
 }
@@ -120,7 +120,7 @@ void EV_SetCharacterMirrorPlane(const CharacterMirrorPlane *plane, const Vector3
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AllocateCharacterMirrorMatrices(std::int32_t enabled) {
     if (enabled) {
@@ -132,7 +132,7 @@ void AllocateCharacterMirrorMatrices(std::int32_t enabled) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BindMirroredMotionNode(MT7Node *model, std::int16_t id, const Matrix4x4 *matrix, std::int32_t index) {
     MT7Node *const node = FindMT7Node(model, id);
@@ -152,7 +152,7 @@ void ResetCharacterMirrorAdmission() {
     dc::sdk::SetMirroredModelDrawMode(0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ApplyCharacterMirrorPlane(const CharacterMirrorPlane *plane) {
     Matrix4x4 reflection;
     const float x = plane->normal.x;
@@ -209,7 +209,7 @@ void SetCharacterMirrorPlane(const CharacterMirrorPlane *plane, const Vector3i *
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void mtwkBindMirroredControllerMatricesToModelNodes(MotionWork *work, MT7Node *model) {
     matrix_stack::Matrix4x4_Push(0);
@@ -268,7 +268,7 @@ std::int32_t IsCharacterMirrorEnabled() {
     return g_characterMirroredTransformEnabled;
 }
 
-#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM || SHENMUE_TARGET_S2_DC_JP_1001
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawKnifeCharacter(Character *character) {
     const MT7Node *const model = character->model;

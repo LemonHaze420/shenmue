@@ -10,7 +10,7 @@ namespace s2 {
 struct Character;
 struct ShadowVolumeVertex;
 struct ShadowShapeNode {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int16_t boneId;
     std::uint16_t retained02;
 #else
@@ -56,7 +56,7 @@ struct ShadowDrawParameters {
     Vector3 lightDirection;
 };
 typedef char Layout_shadow_dc_6[(sizeof(ShadowShapeNode) == 0x28) ? 1 : -1];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char Layout_shadow_dc_7[(offsetof(ShadowShapeNode, boneId) == 0) ? 1 : -1];
 typedef char Layout_shadow_dc_8[(offsetof(ShadowShapeNode, retained02) == 2) ? 1 : -1];
 #endif
@@ -80,7 +80,7 @@ extern ShadowShapeCacheEntry g_shadowShapeCache[8];
 extern std::int32_t g_shadowShapeCacheCount;
 extern ShadowModelCacheEntry g_shadowModelCache[10];
 extern std::int32_t g_shadowModelCacheCount;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SHADOW_SPRITE_MEMORY SHEN_NAME4('S', 'H', 'D', 'M')
 extern MT7Node *g_shadowSprite;
 extern std::int32_t g_shadowRenderingEnabled;
@@ -103,7 +103,7 @@ extern float g_shadowRange, g_shadowRangeInverse;
 float GetShadowRange();
 void EV_SetAlignedShadowRange(float range);
 void SHRG_Reader(const void *chunk);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern ShadowShapeNode *g_mapShadowShapes[10];
 extern MapShadowPlacement g_mapShadowPlacements[101];
 #else
@@ -121,7 +121,7 @@ void InitSYD();
 ShadowShapeNode *ReadShadowShape(ShadowShapeHeader *header);
 ShadowShapeNode *LoadShadowShape(const char *name);
 void SetShadowOpacityScale(float opacity);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetShadowOpacityScale();
 std::int32_t GetMazeTerrainDrawEnabled();
 std::int32_t GetMazeRoadDrawEnabled();

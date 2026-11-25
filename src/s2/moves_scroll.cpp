@@ -3859,7 +3859,7 @@ void DrawWazamakiPreview() {
     Matrix4x4::SetViewMatrixFromEuler(pitch, wazamakiPreview.yaw + wazamakiPreviewMotionYaw, wazamakiPreview.roll);
     Matrix4x4::Scale(wazamakiPreview.scale, wazamakiPreview.scale, wazamakiPreview.scale);
     Matrix4x4::preTranslate(0.0f, -1.0f, 0.0f);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     DrawCharacterModelBranch(wazamakiPreview.groundRoot);
 #else
     reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(wazamakiPreview.groundRoot);

@@ -1,9 +1,7 @@
 #include "shenmue.h"
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/effect_fft.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/event_matrix_dc.hpp"
 #endif
 
@@ -13,11 +11,9 @@
 #include "s2/motion_work.hpp"
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "common/math.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/particle_effects.hpp"
 #include "platform/dc/matrix.hpp"
 #include "s2/modifier_volume_dc.hpp"
@@ -28,11 +24,9 @@
 #include <array>
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cmath>
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include <cstring>
 #endif
 
@@ -47,7 +41,7 @@ namespace s2 {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BuildFireSpectrum(const float *phases, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff);
 void UpdateFireSpectrum(float *phases, const float *phaseRates, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff);
 void InitializeFirePhases(float *phases);
@@ -406,7 +400,7 @@ std::uint32_t ExpandArgb4444(std::uint16_t packed) noexcept {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 void SetFireFftPalette(std::int32_t index, const std::uint16_t *palette);
@@ -624,7 +618,7 @@ void UpdateFireFft(FireFftData &data, std::uint16_t flags) noexcept {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t FireTextureSize(std::uint32_t size) {
     switch (size) {
@@ -652,7 +646,7 @@ std::uint32_t FireTextureSize(std::uint32_t size) {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -757,7 +751,7 @@ void SetFireFftScalar(std::int32_t index, float scalar) {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TwiddleFirePixels(std::uint16_t *pixels) {
     std::uint32_t columnStep = 0x55555556U, rowStep = 0xaaaaaaabU, columnMask = 0xaaaaaaaaU, rowMask = 0x55555555U;
@@ -801,7 +795,7 @@ void ResetFireBillboardAxes() {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -890,7 +884,7 @@ void DrawFireFft(std::int32_t index, float alpha) {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateFireSpectrum(float *phases, const float *phaseRates, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff) {
     for (std::int32_t row = 0; row < 16; ++row) {
@@ -951,7 +945,7 @@ void InitializeFirePhases(float *phases) {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -970,7 +964,7 @@ void GenerateFirePhaseRates(float *steps, float scalar) {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BuildFireSpectrum(const float *phases, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff) {
     real[0][0] = falloff[0];
     imaginary[0][0] = 0.0f;

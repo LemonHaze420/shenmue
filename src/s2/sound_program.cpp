@@ -1,9 +1,7 @@
 #include "shenmue.h"
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/sound_program.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/conversation_dc.hpp"
 #include "platform/dc/aica.hpp"
 #include "s2/camera_dc.hpp"
@@ -27,11 +25,9 @@
 #include "s2/character.hpp"
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/date_time.hpp"
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_info.hpp"
 #include "s2/scenario_flags_dc.hpp"
 #include "s2/scene_state_dc.hpp"
@@ -51,9 +47,7 @@
 #include "s2/pak.hpp"
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/story_state.hpp"
-#endif
 
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/weather.hpp"
@@ -64,11 +58,9 @@
 #include <cstdlib>
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cstring>
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/file_loader_dc.hpp"
 #include "s2/directory_cache.hpp"
 #include <sg_xpt.h>
@@ -81,11 +73,14 @@
 #include <string_view>
 #endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 std::int32_t syCfgInit(void *buffer);
 std::int32_t syCfgExit();
 std::int32_t syCfgGetSoundMode(std::int32_t *mode);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+std::int32_t syCfgGetLanguage(std::int32_t *language);
+#endif
 std::int32_t syCfgSetSoundMode(std::int32_t mode);
 }
 #include "s2/math.hpp"
@@ -103,7 +98,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::uint16_t *soundEnvironmentKeyRows[8][6] = {{soundEnvironmentKeys + 0, soundEnvironmentKeys + 0, soundEnvironmentKeys + 0, soundEnvironmentKeys + 0,
                                                           soundEnvironmentKeys + 12, soundEnvironmentKeys + 16},
     {soundEnvironmentKeys + 0, soundEnvironmentKeys + 0, soundEnvironmentKeys + 4, soundEnvironmentKeys + 8, soundEnvironmentKeys + 32,
@@ -183,7 +178,7 @@ std::int32_t g_forceDreamcastSoundData{};
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MaterialSoundPair materialSounds[369] = {};
 SampleProgramRecord sampleRecords[85] = {};
 #endif
@@ -859,7 +854,7 @@ std::int32_t snddProgramSceneCount() noexcept {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 MaterialSoundBank g_materialSoundBanks[8] = {
@@ -3117,11 +3112,10 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void SoundProgramControl_Callback(void *) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_soundCallbackParity ^= 1U;
 #endif
 
@@ -3130,7 +3124,7 @@ void SoundProgramControl_Callback(void *) {
 #endif
     const bool fadeCommandIssued = UpdateVolumeFades();
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (g_soundPauseDepth == 0)
         AdvanceSelectedSoundProgram(fadeCommandIssued);
     UpdateSampleProgram(SelectSampleProgram(g_samplePrograms));
@@ -3160,7 +3154,7 @@ void SoundProgramControl_Callback(void *) {
 #endif
         }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     }
     UpdateSampleProgramDucking(SelectSampleProgram(g_samplePrograms), fadeCommandIssued);
     UpdateSampleProgramDucking(SelectSampleProgram(g_secondarySamplePrograms), fadeCommandIssued);
@@ -3174,9 +3168,8 @@ void SoundProgramControl_Callback(void *) {
     RefreshSampleExecutionState();
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void QueueSoundProgramControl() {
     HLib::EnqueueTaskWithoutParameter(SoundProgramControl_Callback, 14, 3, SHEN_NAME4('S', 'O', 'N', 'D'));
@@ -3622,11 +3615,35 @@ void EVT_AT_FadeBGM(std::int32_t frames, std::int32_t mode, std::int32_t delay) 
 }
 #endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+std::int32_t g_systemLanguage;
+
+void InitializeSystemLanguage() {
+    void *const configuration = HLib::AllocateTaskData(0x4000, SHEN_NAME4('B', 'R', 'O', 'M'));
+    syCfgInit(configuration);
+    syCfgGetLanguage(&g_systemLanguage);
+    syCfgExit();
+    HLib::FreeTaskData(configuration);
+}
+
+std::int32_t GetGameLanguage() {
+    switch (g_systemLanguage) {
+    case 2: return 1;
+    case 3: return 2;
+    case 4: return 3;
+    default: return 0;
+    }
+}
+#endif
+
+#endif
+
 } // namespace s2
 
 } // namespace shenmue
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace shenmue
 
 extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_PlayFootstepForNode(std::uint32_t flags, shenmue::s2::Character *character) {

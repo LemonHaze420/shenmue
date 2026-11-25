@@ -66,13 +66,14 @@ std::int32_t FindNamedTextureIndex(std::uint32_t nameLow, std::uint32_t nameHigh
 std::int32_t LoadAndFindTEXN(const TextureChunk *chunk);
 std::int32_t LoadAndFindTEXN_Wrapper(const TextureChunk *chunk);
 std::int32_t LoadTextureChunks(const TextureChunk *chunk, std::int32_t *textures);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MemoTextureName;
 std::int32_t LoadTextureChunks(const TextureChunk *chunk, std::uint32_t bytes, std::int32_t *textures, MemoTextureName *names);
-#else
+#endif
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 std::int32_t LoadTextureChunks(const TextureChunk *chunk, std::uint32_t bytes, std::int32_t *textures);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void QueryFreeTextureMemory(KMUINT32 *total, KMUINT32 *largest);
 std::int32_t GetTextureStorageSize(std::uint32_t format, std::int32_t height, std::int32_t width);
 bool ParseGuiPtx(TextureChunk *texture, std::int32_t height, std::int32_t width, std::uint32_t idLow, std::uint32_t idHigh, std::uint32_t format);

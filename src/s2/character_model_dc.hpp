@@ -71,7 +71,7 @@ void DrawSingleCharacterModel(MT7Node *node);
 void DrawCharacterModelNodes(const MT7Node *node);
 void DrawAlphaCharacterModelNodes(const MT7Node *node, float alpha);
 
-#if SHENMUE_TARGET_S2_DC_JP_GAMEJAM || SHENMUE_TARGET_S2_DC_JP_1001
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawKnifeModel(const MT7Node *node);
 void DrawKnifeCharacter(Character *character);
 #endif

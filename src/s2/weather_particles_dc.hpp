@@ -30,7 +30,7 @@ struct WeatherRippleParticle {
     std::uint32_t flags;
     WeatherRippleParticleUpdate update;
     Vector3 position;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     union {
         std::int32_t rotationPitch;
         std::int32_t angleX;
@@ -142,14 +142,14 @@ void UpdateWeatherParticleGroundCameraPosition();
 void SetRainGroupDrawingEnabled(WeatherParticleGroup *group, std::int32_t enabled);
 void SetRippleGroupDrawingEnabled(WeatherParticleGroup *group, std::int32_t enabled);
 void SetWeatherParticleDrawingEnabled(std::int32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetRainGroupUpdatesEnabled(WeatherParticleGroup *group, std::int32_t enabled);
 void SetRippleGroupUpdatesEnabled(WeatherParticleGroup *group, std::int32_t enabled);
 WeatherParticleGroup *GetNextWeatherParticleGroup(const WeatherParticleGroup *group);
 void SetRainAndRippleFlagsTo(std::int32_t paused);
 #endif
 void UpdateWeatherParticleGroups();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void WeatherParticle_Callback(void *groups);
 #endif
 struct WeatherParticleGroup {
@@ -172,7 +172,7 @@ struct WeatherParticleGroup {
     float spawnDriftZ;
     Vector3 driftVariance;
     Vector3 filteredRainMotion;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t snowFlags;
     WeatherRainParticle *snowParticles;
     std::int32_t snowCapacity, snowLiveCount, snowDrawCount;
@@ -300,7 +300,7 @@ void RemoveWeatherWindLink(WeatherFixcOwner *owner, WeatherWind *wind);
 void Weather_RegisterActiveFIXCAndInitEffects();
 void EnsureWeatherFixcRegistered();
 void UnregisterActiveWeatherFixc();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FreeWeatherFixc(WeatherFixcOwner *owner);
 void Weather_FreeActiveFIXC();
 void EV_WeatherEffectUtil_Impl(std::uint32_t fov, float rainScale, float unused, float rippleScale);

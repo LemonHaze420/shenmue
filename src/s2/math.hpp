@@ -14,7 +14,7 @@ namespace shenmue {
 namespace s2 {
 
 std::uint16_t FloatToShort(float value);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InverseTransformPointByMatrix(const Matrix4x4 *transform, Vector3 *position);
 void TransformCharacterPoseByMatrix(const Matrix4x4 *transform, Vector3 *position, Vector3i *rotation);
 #endif
@@ -28,7 +28,7 @@ void InvertModelWorkTransform();
 // work matrix about a normalized axis through the retained tmpRotationXform.
 extern Matrix4x4 g_motionAxisRotationMatrix;
 void Matrix4x4_BuildAndApplyRotationMatrix(const Vector3 &axis, float sine, float cosine);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void Matrix4x4_ApplyNormalizedAngleRotation(const Vector3 &axis, std::int32_t angle);
 void Matrix4x4_ApplyAngleRotationToVector(const Vector3 &axis, std::int32_t angle) asm(
     "__ZN7shenmue2s236Matrix4x4_ApplyAngleRotationToVectorERKNS_8Vector3TIfEEt");

@@ -68,7 +68,7 @@ void SetTaskHeapData(void *allocation) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SceneTextHeapUnusedNullsub() {
 }
 

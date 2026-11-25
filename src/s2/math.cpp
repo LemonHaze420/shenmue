@@ -61,7 +61,7 @@ std::uint16_t FloatToShort(float value) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void NormalizeVector3(Vector3 *vector) {
     const float x = vector->x, y = vector->y, z = vector->z;
     const float length = __builtin_sqrtf((x * x + y * y) + z * z);
@@ -132,7 +132,7 @@ void InvertModelWorkTransform() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ComputeTriangleNormal(const Vector3 &first, const Vector3 &second, const Vector3 &third, Vector3 &normal) {
     const Vector3 incoming = {second.x - first.x, second.y - first.y, second.z - first.z};
@@ -171,7 +171,7 @@ std::int32_t ComputeTriangleNormal(const Vector3 &first, const Vector3 &second, 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void Matrix4x4_ApplyNormalizedAngleRotation(const Vector3 &axis, std::int32_t angle) {
     const float sine = dc::sdk::njSin(angle);
@@ -184,7 +184,7 @@ void Matrix4x4_ApplyNormalizedAngleRotation(const Vector3 &axis, std::int32_t an
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void Matrix4x4_ApplyAngleRotationToVector(const Vector3 &axis, std::int32_t angle) {
     Vector3 normalized = axis;
@@ -252,7 +252,7 @@ std::int32_t ComputeNormalizedAngleRatio(float ratio) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void Matrix4x4_BuildAndApplyRotationMatrix(const Vector3 &axis, float sine, float cosine) {
     const float x = axis.x, y = axis.y, z = axis.z, complement = 1.0f - cosine;
@@ -341,7 +341,7 @@ std::int32_t Vector3_ToFixed16EulerAngles(const Vector3 &direction, Vector3s &an
 
 // @verified - d
 float FixedAngleTangent(std::int32_t angle) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector2 values;
     CalculateFixedSinCos(static_cast<std::uint32_t>(angle), &values);
     const float sine = values.x, cosine = values.y;
@@ -456,7 +456,7 @@ void ExtractMatrixEulerAnglesFixed(const Matrix4x4 *transform, Vector3i *rotatio
     if (sine < 1.0f) {
         if (sine > -1.0f) {
             float cosine = 1.0f - sine * sine;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             cosine = __builtin_sqrtf(cosine);
 #else
             asm volatile("fsqrt %0" : "+f"(cosine));
@@ -513,7 +513,7 @@ void ExtractMatrixEulerAnglesFixed(const Matrix4x4 *transform, Vector3i *rotatio
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InverseTransformPointByMatrix(const Matrix4x4 *transform, Vector3 *position) {
     const Matrix4x4 matrix = *transform;
@@ -605,7 +605,7 @@ std::int32_t Vector3_ComputeAngleBetween(const Vector3 &first, const Vector3 &se
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void Matrix4x4_BuildRotationMatrix(const Vector3 &from, const Vector3 &to) {
     Vector3 axis;

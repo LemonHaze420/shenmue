@@ -26,6 +26,10 @@ extern float g_frameMicrosecondsHistory[32];
 extern std::uint32_t g_previousFrameTimer;
 extern std::uint32_t g_previousVblankCounter;
 extern std::int32_t g_discTrayFrames;
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+extern std::int32_t g_renderCallbackState;
+void InitializeSystemLanguage();
+#endif
 extern std::int32_t g_exitOnSoftReset;
 extern std::uint32_t g_pvrTaOlBase;
 extern std::uint32_t g_vertexBufferUsage[5];

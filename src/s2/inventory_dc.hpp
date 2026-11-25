@@ -59,7 +59,7 @@ std::uint32_t GetInventoryItemFlags(std::uint32_t category, std::uint32_t index)
 std::uint32_t GetInventoryItemId(std::uint32_t category, std::uint32_t index) INV_NOEXCEPT;
 std::uint32_t hasItemRegistered(std::uint32_t item) INV_NOEXCEPT;
 std::int32_t AddInventoryItem(std::uint32_t item, std::uint8_t amount, std::uint32_t flags = 0);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 enum InventoryBankIndex { IB_KeyItems, IB_Capsules, IB_Photos, IB_Maps, IB_Moves, IB_Pawn };
 enum InventoryItemFlag { IIF_Stackable = 0x01, IIF_RetainOne = 0x02, IIF_HelpNotice = 0x10 };
 enum { kKeyItemStateCount = 384 };

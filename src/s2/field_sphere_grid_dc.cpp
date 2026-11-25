@@ -8,7 +8,7 @@ namespace s2 {
 // @verified - d
 std::int32_t GatherFieldSphereGridCells(const Vector3 *position, float radius, std::int16_t *cells) {
     const FieldDataGridConfig *const grid = g_currentFieldData->grid;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!grid) {
         *cells++ = 0;
         *cells = -1;
@@ -48,14 +48,14 @@ std::int32_t GatherFieldSphereGridCells(const Vector3 *position, float radius, s
         cells[0] = -1;
         return 0;
     }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     maximumX = static_cast<std::int32_t>((highX - originX) * reciprocal);
     maximumZ = static_cast<std::int32_t>((highZ - originZ) * reciprocal);
 #else
     asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(maximumX) : "f"(lastX) : "fpul");
     asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(maximumZ) : "f"(lastZ) : "fpul");
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int32_t plane = depth * width;
     std::int32_t row = minimumZ * width;
     const std::int32_t lastRow = maximumZ * width;

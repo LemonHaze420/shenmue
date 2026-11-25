@@ -259,7 +259,7 @@ void IncrementDateTimeBySeconds(std::uint32_t seconds, DateTime &dateTime) {
     ComputeDayOfWeek(dateTime);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t CompareDateTimeSeconds(const DateTime &first, const DateTime &second) {
     const std::uint32_t firstSeconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(first, 0));
@@ -272,13 +272,13 @@ std::int32_t CompareDateTimeSeconds(const DateTime &first, const DateTime &secon
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DateTime_AddInPlace(DateTime &dateTime, const DateTime &increment) {
     IncrementDateTimeBySeconds(static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime, 0) + ComputeSecondsSince1980(increment, 0)), dateTime);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t DateTime_SubtractInPlace(DateTime &dateTime, const DateTime &subtrahend) {
     const std::int32_t seconds = ComputeSecondsSince1980(dateTime, 0) - ComputeSecondsSince1980(subtrahend, 0);
@@ -287,19 +287,19 @@ std::int32_t DateTime_SubtractInPlace(DateTime &dateTime, const DateTime &subtra
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DateTime_AddSecondsInPlace(DateTime &dateTime, std::int32_t seconds) {
     IncrementDateTimeBySeconds(static_cast<std::uint32_t>(ComputeSecondsSince1980(dateTime, 0) + seconds), dateTime);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DateTime_AddMinutesInPlace(DateTime &dateTime, std::int32_t minutes) {
     DateTime_AddSecondsInPlace(dateTime, minutes * 60);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t DiffMinutes(const DateTime &first, const DateTime &second) {
     const std::uint32_t firstSeconds = static_cast<std::uint32_t>(ComputeSecondsSince1980(first, 0));
@@ -308,7 +308,7 @@ std::int32_t DiffMinutes(const DateTime &first, const DateTime &second) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetCurrentCalendarRecord(DateTime &record) {
     record = g_calendarRecords[0];
@@ -335,7 +335,7 @@ void AddDaysAndCalculateWeekday(DateTime &dateTime, std::int16_t days) {
     ComputeDayOfWeek(dateTime);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void shenGetDayInMonth(const DateTime &input, DateTime &output) {
     output.day = input.day;
@@ -486,7 +486,7 @@ DateComparisonResult SetCalendarCompareDate(const DateTime &dateTime) {
     return CompareDates(g_calendarRecords[0], g_calendarRecords[1]);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetCalendarTimeRange(std::int8_t startHour, std::int8_t startMinute, std::int8_t endHour, std::int8_t endMinute) {
     g_calendarRecords[2].year = g_calendarRecords[0].year;
@@ -509,7 +509,7 @@ void SetCalendarTimeRange(std::int8_t startHour, std::int8_t startMinute, std::i
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t CalendarQueryNullsub() {
     return 0;

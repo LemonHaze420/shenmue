@@ -9,7 +9,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PrepareDrawSimpleBlack(const LegacyIconSprite &sprite, std::uint32_t colour);
 #endif
 
@@ -22,7 +22,7 @@ void TimeProgramHudCallback(void *parameter) {
             g_timeWatchSprites[index].scaleX = position->z * timeWatchScaleX[index];
             g_timeWatchSprites[index].scaleY = position->z * timeWatchScaleY[index];
         }
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         PrepareDrawSimpleBlack(g_timeWatchSprites[0], 0xccffffffU);
         PrepareDrawSimpleBlack(g_timeWatchSprites[1], 0x7fffffffU);
         PrepareDrawSimpleBlack(g_timeWatchSprites[2], 0x7fffffffU);
@@ -70,7 +70,7 @@ void TimeProgramHudCallback(void *parameter) {
             g_timeCompassSprite.x = position->x;
             g_timeCompassSprite.y = position->y;
             g_timeCompassSprite.scaleX = g_timeCompassSprite.scaleY = position->z * 1.2f;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             PrepareDrawSimpleBlack(g_timeCompassSprite, static_cast<std::uint32_t>(175 * g_timeCompassAlpha / 100) << 24 | 0x00ffffffU);
 #else
             PrepareDrawSimple(g_timeCompassSprite, static_cast<std::uint32_t>(175 * g_timeCompassAlpha / 100) << 24 | 0x00ffffffU);

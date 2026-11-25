@@ -3,10 +3,13 @@
 #include "s2/frame_pacing.hpp"
 #endif
 #include "s2/pause.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/texture_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/input_dc.hpp"
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+#include "s2/frame_dc.hpp"
+#endif
 #endif
 #if !SHENMUE_IS_DC
 #include "s2/mt7.hpp"
@@ -114,7 +117,7 @@ struct TaskQueuePauseState {
     bool paused;
     std::uint8_t firstIndex, lastIndex;
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Task *previousTask;
     Task *currentNextInQueue;
     Task *previousTaskNextInQueue;
@@ -127,7 +130,7 @@ bool taskQueuePaused = false;
 std::uint8_t pauseFirstIndex = 0;
 std::uint8_t pauseLastIndex = 0;
 #endif
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Task *previousTask = SHENMUE_HLIB_NULL;
 Task *currentNextInQueue = SHENMUE_HLIB_NULL;
 Task *previousTaskNextInQueue = SHENMUE_HLIB_NULL;
@@ -466,7 +469,7 @@ void *AllocateStaticOrDynamicBlock(std::size_t size, shen_name name) {
 }
 
 std::intptr_t AllocateHeapSpace(void *taskData, std::size_t size, shen_name name) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const shen_name freeToken = SHEN_NAME4('f', 'R', 'E', 'e');
     const shen_name usedToken = SHEN_NAME4('U', 'S', 'E', ' ');
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(taskData);
@@ -663,7 +666,7 @@ std::intptr_t FreeHeapSpace(void *taskData, std::int32_t taskName) {
 
 static void *GetNextTaskData(void *taskData);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void *AnalyzeFreeList(std::size_t *totalUsable, std::size_t *largestBlock, std::size_t *fragmentationOut) {
     std::size_t total = 0;
@@ -721,7 +724,7 @@ void *AnalyzeFreeHeap(std::size_t *totalFree, std::size_t *largestContiguousFree
     return largestBlock;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void syMallocStat(std::uint32_t *totalFreeSpace, std::uint32_t *largestFree);
 
 // @verified - d
@@ -747,13 +750,13 @@ std::intptr_t TryGetFreeHeapStats(std::size_t *totalFreeSpace, std::size_t *larg
 // @verified - pd
 std::size_t WouldAllocationFail(std::size_t requiredForRegion, std::intptr_t requiredForHeap) {
     std::size_t excludedLargest, largestBlock, totalHeap, totalSpace, regionFree;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     AnalyzeFreeList(&excludedLargest, &largestBlock, &totalHeap);
 #else
     AnalyzeFreeHeap(&excludedLargest, &largestBlock, &totalHeap);
 #endif
     const bool exceedsHeap = static_cast<std::size_t>(requiredForHeap) + 32U > largestBlock;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     QueryFreeTextureMemory(&totalSpace, &regionFree);
 #else
     TryGetFreeHeapStats(&totalSpace, &regionFree);
@@ -766,7 +769,7 @@ std::size_t WouldAllocationFail(std::size_t requiredForRegion, std::intptr_t req
 }
 
 void *PartitionSceneHeap() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::size_t totalFree, largestSize, remainingFree;
     void *const largestBlock = AnalyzeFreeList(&totalFree, &largestSize, &remainingFree);
     TaskData *const block = headerFromData(largestBlock);
@@ -804,7 +807,7 @@ void *PartitionSceneHeap() {
 }
 
 void ValidateOrResetHeap() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     TaskData *previous = dynamicFirstFree->previous;
     TaskData *const tail = dynamicListHead;
     if ((previous->alignment & 0x80) && (tail->alignment & 0x80)) {
@@ -919,13 +922,21 @@ void *GetDynamicUseStoragePtr() {
 }
 
 void *GetPointerFromDynamicHeapOffsetBase(std::int32_t offset) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return reinterpret_cast<void *>(offset);
+#else
     return reinterpret_cast<void *>(reinterpret_cast<std::uintptr_t>(DynamicHeapBase) + sizeof(StaticStorageEntry) + offset);
+#endif
 }
 
 std::int32_t GetDynamicHeapOffset(const void *pointer) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    return reinterpret_cast<std::int32_t>(pointer);
+#else
     const std::intptr_t offset = reinterpret_cast<std::intptr_t>(pointer) - reinterpret_cast<std::intptr_t>(DynamicHeapBase) - sizeof(StaticStorageEntry);
     assert(offset >= SHENMUE_HLIB_INT_MIN && offset <= SHENMUE_HLIB_INT_MAX);
     return static_cast<std::int32_t>(offset);
+#endif
 }
 
 std::uint32_t GetTaskDataName(const void *taskData) {
@@ -1022,7 +1033,7 @@ bool ShrinkTaskData(void *taskData, std::size_t size) {
 }
 
 Task *InitializeTasks(TaskCallback callback) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     SHENMUE_HLIB_MEMSET(&rootTask, 0, sizeof(Task));
     for (std::size_t index = 0; index < kTaskCount - 1; ++index) {
         SHENMUE_HLIB_MEMSET(&taskQueue[index], 0, sizeof(Task));
@@ -1046,7 +1057,7 @@ Task *InitializeTasks(TaskCallback callback) {
     rootTask.next = &rootTask;
     rootTask.nextInQueue = &rootTask;
     NextTask = &taskQueue[0];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     taskQueuePause.paused = 0;
 #endif
 #if SHENMUE_S2_GCC295
@@ -1054,7 +1065,7 @@ Task *InitializeTasks(TaskCallback callback) {
         moduleTaskQueue[index] = &rootTask;
     for (std::size_t index = 0; index < SHENMUE_HLIB_COUNT(postUpdateTasks); ++index)
         postUpdateTasks[index] = 0;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     for (std::size_t index = 0; index < SHENMUE_HLIB_COUNT(postUpdateData); ++index)
         postUpdateData[index] = 0;
 #endif
@@ -1064,7 +1075,7 @@ Task *InitializeTasks(TaskCallback callback) {
     postUpdateData.fill(SHENMUE_HLIB_NULL);
 #endif
     postUpdateCount = 0;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #if SHENMUE_S2_GCC295
     for (std::size_t index = 0; index < SHENMUE_HLIB_COUNT(preservedCallbacks); ++index) {
         preservedCallbacks[index].task = 0;
@@ -1076,7 +1087,7 @@ Task *InitializeTasks(TaskCallback callback) {
 #endif
 #endif
     preservedCallbackCount = 0;
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     taskQueuePaused = false;
 #endif
     CurrentTask = &rootTask;
@@ -1443,7 +1454,7 @@ std::intptr_t DestroyTasksAtIndex(std::int8_t taskIndex, std::int8_t nextTaskInd
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t PauseTaskRangeExecution(std::int32_t firstTaskIndex, std::int32_t lastTaskIndex) {
     const std::int8_t first = static_cast<std::int8_t>(firstTaskIndex);
     const std::int8_t last = static_cast<std::int8_t>(lastTaskIndex);
@@ -1499,7 +1510,7 @@ void PauseTaskRangeExecution(std::uint16_t firstTaskIndex, std::uint16_t lastTas
 #endif
 
 void UnpauseTaskEnqueue() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!taskQueuePause.paused)
         return;
     Task *const previous = taskQueuePause.previousTask;
@@ -1668,6 +1679,9 @@ Task *GetLastTaskAtIndex(std::int8_t taskIndex) {
 #endif
 
 std::intptr_t ExecuteCallbackNow(TaskCallback callback, void *taskData) {
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    if (g_renderCallbackState)
+#endif
     callback(taskData);
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
@@ -1704,7 +1718,7 @@ void CancelPreservedCallbacks(void *taskData) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t debugPauseBlinkFrame = 0;
 
 namespace {
@@ -2172,6 +2186,13 @@ void StopLoopedTask(Task *task) {
 void SetScaledDeltaTick(float ticks) {
     scaledDeltaTick = ticks;
 }
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::uint32_t g_memoryMonitorActive;
+void DisableMemoryMonitor() {
+    g_memoryMonitorActive = 0;
+}
+#endif
 
 float GetScaledDeltaTick() {
     return scaledDeltaTick;

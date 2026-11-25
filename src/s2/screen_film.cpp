@@ -1,6 +1,6 @@
 #include "s2/screen_film.hpp"
 #include "s2/legacy_sprite_types.hpp"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/screen_film_dc.hpp"
 #include "s2/screen_film_bars_dc.hpp"
 #include "s2/legacy_sprite_dc.hpp"
@@ -33,7 +33,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SavedFilmTarget savedFilmTarget = {};
 
 // @verified - d
@@ -53,21 +53,21 @@ void ResetTaskWaitFlags() {
 }
 #endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - pd
 std::uint32_t GetIsWaitingFlag() {
     return savedFilmTarget.active;
 }
 #endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (!defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (!(SHENMUE_IS_DC && SHENMUE_IS_S2))
 // @verified - pd
 std::uint64_t GetIsWaitingFlag() {
     return savedFilmTarget.active;
 }
 #endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 // Native GetFadedClearColour: the retained film target packed as ARGB.
 std::uint32_t GetFadedClearColour() {
@@ -338,7 +338,7 @@ std::int32_t g_authoredFilmTrackSelection = -1;
 // @verified - d
 HLib::Task *Queue_SCF_Callback_ScreenFilmTaskEntry(std::uint8_t nextFunctionIndex) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int8_t index = nextFunctionIndex;
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(ScreenFilmTask_Callback, index, 2, sizeof(ScreenFilmWork), SHEN_NAME4('F', 'I', 'L', 'M'));
     ScreenFilmWork *const work = static_cast<ScreenFilmWork *>(HLib::GetTaskParameter(task));
@@ -359,7 +359,7 @@ HLib::Task *Queue_SCF_Callback_ScreenFilmTaskEntry(std::uint8_t nextFunctionInde
     return task;
 }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ScreenFilmTask_Callback(void *data) {
     ScreenFilmWork &work = *static_cast<ScreenFilmWork *>(data);
@@ -415,7 +415,7 @@ void SetScreenFilmFade(std::uint32_t frames, std::uint8_t startAlpha, std::uint8
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawScreenFade(void *data) {
     const ScreenFadeState &state = *reinterpret_cast<const ScreenFadeState *>(data);
@@ -425,7 +425,7 @@ void DrawScreenFade(void *data) {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -455,7 +455,7 @@ bool UpdateScreenFade(ScreenFadeState *state) {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawCinemaBars(void *data) {
     const CinemaBarState &state = *reinterpret_cast<const CinemaBarState *>(data);
@@ -466,7 +466,7 @@ void DrawCinemaBars(void *data) {
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -494,7 +494,7 @@ bool UpdateCinemaBars(CinemaBarState *state) {
 // @verified - d
 void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &request, std::int32_t mode) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ScreenFadeState &state = static_cast<ScreenFilmWork *>(HLib::GetTaskParameter(filmTask))->fade;
     if (mode == 2 && savedFilmTarget.active) {
         state.alpha = static_cast<std::int32_t>(savedFilmTarget.target[0]) << 16U;
@@ -518,7 +518,7 @@ void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &reques
 #endif
     } else {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         state.alpha = static_cast<std::int32_t>(request.start[0]) << 16U;
         state.red = static_cast<std::int32_t>(request.start[1]) << 16U;
         state.green = static_cast<std::int32_t>(request.start[2]) << 16U;
@@ -533,7 +533,7 @@ void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &reques
 #endif
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     state.targetAlpha = static_cast<std::int32_t>(request.target[0]) << 16U;
     state.targetRed = static_cast<std::int32_t>(request.target[1]) << 16U;
     state.targetGreen = static_cast<std::int32_t>(request.target[2]) << 16U;
@@ -568,7 +568,7 @@ void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &reques
 #endif
     } else {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         savedFilmTarget.active = 0;
 #endif
 
@@ -580,7 +580,7 @@ void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &reques
 #endif
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t duration;
     if (request.durationFrames < 0) {
         duration = -request.durationFrames;
@@ -600,7 +600,7 @@ void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &reques
 #endif
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (duration) {
         state.alphaStep = (state.targetAlpha - state.alpha) / duration;
         state.blueStep = (state.targetBlue - state.blue) / duration;
@@ -617,7 +617,7 @@ void WaitForNextTask(HLib::Task *filmTask, const ScreenFilmColourRequest &reques
     HLib::ResolveDeferredCallback(filmTask);
 }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool DoesScreenFilmColourExist(const HLib::Task *filmTask) {
     const ScreenFilmWork *const work = reinterpret_cast<const ScreenFilmWork *>(HLib::GetTaskParameter(const_cast<HLib::Task *>(filmTask)));
@@ -668,7 +668,7 @@ float GetCinemaBarHeight(HLib::Task *task) {
 // @verified - d
 void WaitForNextTask_0(HLib::Task *filmTask, std::int32_t mode, std::uint32_t durationFrames) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     ScreenFilmColourRequest request = {};
     request.durationFrames = SHENMUE_FILM_SIGNED_FRAMES(durationFrames);
 #endif
@@ -683,7 +683,7 @@ void WaitForNextTask_0(HLib::Task *filmTask, std::int32_t mode, std::uint32_t du
         break;
     case 2:
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         for (unsigned i = 0; i < 4; ++i)
             request.start[i] = 255;
         request.target[0] = 0;
@@ -698,7 +698,7 @@ void WaitForNextTask_0(HLib::Task *filmTask, std::int32_t mode, std::uint32_t du
         break;
     case 3:
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         request.start[0] = 0;
         for (unsigned i = 1; i < 4; ++i)
             request.start[i] = 255;
@@ -718,7 +718,7 @@ void WaitForNextTask_0(HLib::Task *filmTask, std::int32_t mode, std::uint32_t du
     WaitForNextTask(filmTask, request, 0);
 }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void filmSetFadeColourTo(HLib::Task *task, std::uint32_t colour) {
     ScreenFilmColourPair *const flash = &static_cast<ScreenFilmWork *>(HLib::GetTaskParameter(task))->flash;
@@ -1034,13 +1034,13 @@ std::int32_t GetPostFxFilterTransitionState() noexcept {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawScreenFlash(void *data);
 #endif
 
 } // namespace
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
  // namespace
 
 // @verified - d
@@ -1054,7 +1054,7 @@ void UpdateScreenFlash(ScreenFilmColourPair *state) {
 
 namespace {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawScreenFlash(void *data) {
     const ScreenFilmColourPair &state = *reinterpret_cast<const ScreenFilmColourPair *>(data);

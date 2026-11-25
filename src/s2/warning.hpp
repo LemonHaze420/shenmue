@@ -2,7 +2,7 @@
 
 #include "common/types.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include <stddef.h>
 namespace shenmue { namespace s2 {
 typedef std::int32_t WarningState;

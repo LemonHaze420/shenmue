@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/fight_stage.hpp"
 #include "s2/fight_dialogue_tables.hpp"
 #include "s2/battle_qte.hpp"
@@ -62,7 +62,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t InstructionAssignMotScaleAndDir(Character *character, std::uint8_t scale, std::uint8_t direction);
 std::uint8_t *InstructionAssignFigureMode(Character *character, std::uint8_t mode);
 void InstructionSetRegionEvalTime(float frame, Character *character);
@@ -79,7 +79,7 @@ float InstructionMotionFrame(Character *character);
 std::uint32_t InstructionSetExtraFlag(Character *character, std::int32_t unused);
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -179,7 +179,7 @@ std::int32_t instructionCompletionDelay{};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 template <class T> void InstructionStore(VFHD_t *owner, std::size_t offset, T value);
@@ -224,7 +224,7 @@ std::int32_t vfApplyMoveInstructionConfiguration(VFHD_t *owner);
 void vfUpdateVFHDState(VFActor *actor);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -482,7 +482,7 @@ std::int32_t instructionCompletionDelay = 0;
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void vfSetMoveInstructionConfiguration(shen_name character, shen_name secondCharacter, std::int16_t program, std::int16_t secondProgram, std::byte *result);
 std::int32_t vfApplyStoredMoveInstructionConfiguration(VFHD_t *owner);
 void vfInitializeFightDialogue(FightRuntimePrefix *game);
@@ -608,7 +608,7 @@ void PublishInstructionResult(VFHD_t *owner, const InstructionState &first, cons
 } // namespace
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfSetMoveInstructionConfiguration(shen_name character, shen_name secondCharacter, std::int16_t program, std::int16_t secondProgram, std::byte *result) {
@@ -644,7 +644,7 @@ std::byte *vfSetMoveInstructionConfiguration(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // VFHD owns its aligned native task-data allocation.
 // @verified - p
@@ -658,7 +658,7 @@ VFHD_t *AllocateVFHD(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void vfFreeVFHDSpace(VFMA_t *game) {
@@ -670,7 +670,7 @@ void vfFreeVFHDSpace(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -682,7 +682,7 @@ template <class T> inline T &DialogueValue(void *owner, std::size_t offset) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -704,7 +704,7 @@ FightDialogueRecord *DialogueBank(const VFMA_t &game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfUpdateVFHDState(FightActorRuntimePrefix *actor) {
     VFHD_t *owner;
@@ -935,7 +935,7 @@ FindMotionWork
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int32_t SetTrainingFightReaction(std::uint16_t reaction) {
@@ -969,7 +969,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1019,7 +1019,7 @@ bool InstructionFacesCamera(const VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1058,7 +1058,7 @@ void QueueInstructionDialogue(VFHD_t *owner, std::int32_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1072,7 +1072,7 @@ void TickInstructionDialogue(VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1084,7 +1084,7 @@ bool InstructionPartnerReady(shen_name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1101,7 +1101,7 @@ std::int32_t InstructionPartnerWithinRange(const VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1148,7 +1148,7 @@ bool InstructionHitWindowAdmitted(const VFHD_t *owner, shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1207,7 +1207,7 @@ std::int32_t PlaceInstructionCharacterPair(Character *first, Character *second) 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1275,7 +1275,7 @@ std::int16_t DecodeInstructionInput(const VFHD_t *owner, std::uint8_t input) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1290,7 +1290,7 @@ void CountInstructionCollisionInput(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1330,7 +1330,7 @@ void RecordInstructionInput(VFActor *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1369,7 +1369,7 @@ std::int16_t LastInstructionDirection(const VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1427,7 +1427,7 @@ std::uint8_t DirectionSector(std::uint8_t direction) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1458,7 +1458,7 @@ bool InstructionDirectionChanged(std::uint8_t first, std::uint8_t second) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1502,7 +1502,7 @@ std::uint8_t InstructionCloseBetweenCharacters(const VFHD_t *owner, const Instru
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1554,7 +1554,7 @@ void QueueInstructionMotion(VFHD_t *owner, std::int32_t motion) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1592,7 +1592,7 @@ std::int32_t PeekProgramInstruction(const InstructionState &state, std::int8_t i
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1636,7 +1636,7 @@ std::uint8_t InstructionRequiredInputs(const InstructionState &state) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1658,7 +1658,7 @@ bool SuccessfulInstruction(const VFHD_t *owner, const InstructionState &first, c
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1690,7 +1690,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1714,7 +1714,7 @@ void ResetInstructionPreview(VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1790,7 +1790,7 @@ void PublishInstructionResult(VFHD_t *owner, const InstructionState &first, cons
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1807,7 +1807,7 @@ std::uint8_t MaximumInstructionInputs(const InstructionState &first, const Instr
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2261,7 +2261,7 @@ void RunInstructionProgram(VFActor *actor, VFHD_t *owner, InstructionState &stat
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2283,7 +2283,7 @@ std::uint8_t InstructionMaskDiagnosis(std::int32_t mask, bool missing, bool dire
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2695,7 +2695,7 @@ InstructionDiagnosis DiagnoseInstructionProgram(VFHD_t *owner, InstructionState 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3057,7 +3057,7 @@ std::int8_t UpdateInstructionPrograms(VFActor *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3392,7 +3392,7 @@ FindMotionWork
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Names belong to FENE, not a separately manufactured character view.
 VFActor *vfGetActorFromSlot(VFMA_t *game, shen_name name) {
@@ -3404,7 +3404,7 @@ VFActor *vfGetActorFromSlot(VFMA_t *game, shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t vfApplyMoveInstructionConfiguration(
     VFHD_t *input, shen_name character, shen_name secondCharacter, std::uint16_t program, std::uint16_t secondProgram, std::byte *result) {
@@ -3461,7 +3461,7 @@ std::int32_t vfApplyMoveInstructionConfiguration(VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3541,7 +3541,7 @@ void InitializeInstructionHistory(VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3592,7 +3592,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3641,7 +3641,7 @@ void ConvergeInstructionYaw(Character *character, const Vector3 &target, std::in
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3665,7 +3665,7 @@ void AdjustInstructionPairPosition(VFActor *actor, const Vector3 &start, const V
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3693,7 +3693,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3751,7 +3751,7 @@ void InitializeInstructionState(InstructionState &state) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3768,7 +3768,7 @@ void InstructionFailureNullsub() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3790,7 +3790,7 @@ InstructionState &FirstInstruction(VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3812,7 +3812,7 @@ InstructionState &SecondInstruction(VFHD_t *owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3834,7 +3834,7 @@ const InstructionHistory &InstructionHistoryAt(const VFHD_t *owner, std::int64_t
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3876,7 +3876,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfClAicaReact(std::uint32_t flags, const Vector3 *position) {
@@ -3893,7 +3893,7 @@ void vfClAicaReact(std::uint32_t flags, const Vector3 *position) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfInitializeFightDialogue(FightRuntimePrefix *game) {
@@ -3924,7 +3924,7 @@ void vfInitializeFightDialogue(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool vfRequestFightDialogue(FightRuntimePrefix *game, std::int16_t index) {
@@ -3940,7 +3940,7 @@ bool vfRequestFightDialogue(FightRuntimePrefix *game, std::int16_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfSetFightDialogue(FightRuntimePrefix *game, std::int16_t index) {
@@ -3964,7 +3964,7 @@ void vfSetFightDialogue(VFMA_t *game, std::int16_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 const char *vfGetFightDialogueVoice(FightRuntimePrefix *game, std::int16_t index) {
@@ -3983,7 +3983,7 @@ const char *vfGetFightDialogueVoice(VFMA_t *game, std::int16_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool vfHasDialoguePlayerFocus() {
@@ -3998,7 +3998,7 @@ bool vfHasDialoguePlayerFocus() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfTryFightDialogue(FightRuntimePrefix *game, std::int16_t index) {
@@ -4009,7 +4009,7 @@ void vfTryFightDialogue(FightRuntimePrefix *game, std::int16_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfTryReactionDialogue(FightActorRuntimePrefix *actor, std::uint8_t kind) {
     FightRuntimePrefix *const game = actor->game;
@@ -4036,7 +4036,7 @@ void vfTryReactionDialogue(FightActorRuntimePrefix *actor, std::uint8_t kind) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfmaSetupDialogueReactionsEtc(FightRuntimePrefix *game) {
     std::uint32_t request[3];
@@ -4221,7 +4221,7 @@ void vfmaSetupDialogueReactionsEtc(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4247,7 +4247,7 @@ template <class T> T InstructionValue(const VFHD_t *owner, std::size_t offset) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4269,7 +4269,7 @@ template <class T> void InstructionStore(VFHD_t *owner, std::size_t offset, T va
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4283,7 +4283,7 @@ std::int16_t DialogueIndex(const VFMA_t &game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4295,7 +4295,7 @@ void SetDialogueIndex(VFMA_t &game, std::int16_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4307,7 +4307,7 @@ template <class T> T &InstructionActorValue(void *owner, std::size_t offset) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4321,7 +4321,7 @@ Vector3 InstructionCharacterPosition(Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4335,7 +4335,7 @@ Vector3i InstructionCharacterRotation(Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4349,7 +4349,7 @@ std::int32_t InstructionCharacterYaw(CharacterNode *node) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4361,7 +4361,7 @@ void SetInstructionState(VFHD_t *owner, std::uint8_t state) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 

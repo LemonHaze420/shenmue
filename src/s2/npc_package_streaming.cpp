@@ -1,7 +1,7 @@
 #include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #include "s2/npc_area_route.hpp"
 #include "s2/character_dc.hpp"
@@ -102,13 +102,13 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 using namespace npc_package_detail;
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace npc_package_detail {
 
 std::int32_t npcLoadFromPak(shen_name name);
@@ -163,7 +163,7 @@ std::int32_t PrepareNpcAllFromArray();
 std::uint64_t GetNpcNewLoadState();
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
 
@@ -501,17 +501,17 @@ void DrawNpcTransitions();
 
 std::uint32_t hasPendingNpcScheduleSeeds;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::byte *pendingNpcScheduleSeeds = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DateTime npcSavedDateTime;
 #endif
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t UpdateNpcViewVisibility(NpcRouteLiveEntry *entry);
 NpcRouteLiveEntry *GetNpcRouteEntryByIndex(std::int32_t index);
 shen_name npcFindAreaPointOccupant(shen_name owner);
@@ -726,9 +726,9 @@ void ConditionalNpcLoadCallback(void *data);
 } // namespace npc_package_detail
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDrawCallback callback) {
     if (character) {
@@ -742,7 +742,7 @@ CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDraw
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t IsNpcRegistryTaskActive() SHENMUE_NPC_NOEXCEPT {
@@ -751,7 +751,7 @@ std::int32_t IsNpcRegistryTaskActive() SHENMUE_NPC_NOEXCEPT {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t GetNpcNewLoadState() SHENMUE_NPC_NOEXCEPT {
@@ -766,7 +766,7 @@ std::uint64_t GetNpcNewLoadState() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t EV_NPC_NewLoadSw(std::uint32_t state) SHENMUE_NPC_NOEXCEPT {
@@ -776,7 +776,7 @@ std::uint32_t EV_NPC_NewLoadSw(std::uint32_t state) SHENMUE_NPC_NOEXCEPT {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool QueryNpcSceneMotionPlaying(shen_name name) {
@@ -806,9 +806,9 @@ std::uint64_t QueryNpcSceneMotionPlaying(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void NpcRegistryTask_Callback(void *) {
     npcHumansInUse = 1;
@@ -1488,7 +1488,7 @@ void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry &entry, std::int32_t mode) {
     if (entry.loadHumanResult < 0)
@@ -1520,7 +1520,7 @@ std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry &entry, std::int32_t m
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool RequestNpcStreamOut(NpcRouteLiveEntry &entry, std::int32_t type) {
     if (!(entry.flags & 2U) || (entry.flags & 0x18U))
@@ -1536,7 +1536,7 @@ bool RequestNpcStreamOut(NpcRouteLiveEntry &entry, std::int32_t type) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool CanRevealNpcStream(const NpcRouteLiveEntry &entry) {
     if (entry.streamRadius + npcPlayerRadius > NpcDistanceXZ(npcPlayerCenter, entry.streamCenter))
@@ -1560,7 +1560,7 @@ bool CanRevealNpcStream(const NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool HasNpcRuntimeEntry(shen_name character) {
     return FindActiveNpcEntry(character) != nullptr;
@@ -1568,7 +1568,7 @@ bool HasNpcRuntimeEntry(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t npcReleasePak(shen_name name) {
@@ -1594,7 +1594,7 @@ std::int32_t npcReleasePak(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT {
@@ -1608,7 +1608,7 @@ std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t npcViewCullingEnabled = 0;
 
@@ -1636,7 +1636,7 @@ NpcRouteLiveEntry *GetNpcRouteEntryByIndex(std::int32_t index) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool SetNpcRouteYaw(shen_name name, std::int32_t yaw) {
@@ -1649,7 +1649,7 @@ bool SetNpcRouteYaw(shen_name name, std::int32_t yaw) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 shen_name npcFindAreaPointOccupant(shen_name owner) {
@@ -1688,7 +1688,7 @@ shen_name npcFindAreaPointOccupant(shen_name owner) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t AcquireNpcTimedMotionSlot(NpcRouteLiveEntry *entry) {
     if (npcTimedMotionCount == 2)
@@ -1707,7 +1707,7 @@ std::int32_t AcquireNpcTimedMotionSlot(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Parks (1) or restores (0) an answering NPC's eye-control or route-direction mode, saving
 // the other in +0x338 (negated for an eye mode).
@@ -1745,7 +1745,7 @@ std::int64_t npcSetDoorAnswerMode(shen_name character, std::int32_t enabled) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ReleaseNpcTimedMotion(NpcRouteLiveEntry *entry) {
@@ -1761,7 +1761,7 @@ void ReleaseNpcTimedMotion(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ReplaceNpcStateCallback(NpcRouteLiveEntry *entry, std::int32_t (*callback)(NpcRouteLiveEntry *)) {
@@ -1773,7 +1773,7 @@ std::int32_t ReplaceNpcStateCallback(NpcRouteLiveEntry *entry, std::int32_t (*ca
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool npcExists(shen_name name) {
     if (FindNpcRouteEntry(name))
@@ -1791,7 +1791,7 @@ std::int32_t HasHiddenNpcWithoutRoute() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool IsNpcRouteMoving(shen_name name) {
@@ -1805,7 +1805,7 @@ bool IsNpcRouteMoving(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetNpcRouteAvoidanceSide(shen_name name) {
@@ -1825,7 +1825,7 @@ std::int32_t GetNpcRouteAvoidanceSide(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 bool CanNpcEnterScenario(shen_name name) {
     const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
@@ -1877,7 +1877,7 @@ bool CanNpcEnterScenario(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool CheckNpcSpecialMotionTarget(shen_name name, Character *character) {
@@ -1893,7 +1893,7 @@ bool CheckNpcSpecialMotionTarget(shen_name name, Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t QueryNpcRouteLiveState(shen_name name) {
@@ -1924,7 +1924,7 @@ std::int32_t QueryNpcRouteLiveState(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool QueryNpcSceneCheck(shen_name name) {
@@ -1941,7 +1941,7 @@ bool QueryNpcSceneCheck(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t AcquireNpcRuntimeEntryForScript(shen_name name, NpcRouteLiveEntry **result) {
@@ -1961,7 +1961,7 @@ std::int32_t AcquireNpcRuntimeEntryForScript(shen_name name, NpcRouteLiveEntry *
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool BeginNpcSpecialMotion(shen_name name) {
@@ -2020,7 +2020,7 @@ bool BeginNpcSpecialMotion(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t BeginNpcFollowingMotion(shen_name name) {
@@ -2038,7 +2038,7 @@ std::int32_t BeginNpcFollowingMotion(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t SetNpcSpecialRouteQueryPaused(shen_name name, std::int32_t enabled) {
@@ -2070,7 +2070,7 @@ std::int32_t SetNpcSpecialRouteQueryPaused(shen_name name, std::int32_t enabled)
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool IsNpcSpecialTargetWithinRange(Character *character, const NpcRouteLiveEntry *entry) {
@@ -2097,7 +2097,7 @@ bool IsNpcSpecialTargetWithinRange(Character *character, const NpcRouteLiveEntry
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool EndNpcSpecialMotion(shen_name name) {
@@ -2140,7 +2140,7 @@ bool EndNpcSpecialMotion(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t StopNpcFollowingMotion(shen_name name) {
@@ -2157,7 +2157,7 @@ std::int32_t StopNpcFollowingMotion(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool RequestNpcSpecialMotionTarget(shen_name name, const Vector3 *target) {
@@ -2194,7 +2194,7 @@ bool RequestNpcSpecialMotionTarget(shen_name character, const Vector3 *target) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool ResetNpcSpecialMotionTarget(shen_name name) {
@@ -2223,7 +2223,7 @@ bool ResetNpcSpecialMotionTarget(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool RequestNpcSpecialMotionLookTarget(shen_name name, const Vector3 *target) {
@@ -2254,7 +2254,7 @@ bool RequestNpcSpecialMotionLookTarget(shen_name character, const Vector3 *targe
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool ResetNpcSpecialMotionLookTarget(shen_name name) {
@@ -2279,7 +2279,7 @@ bool ResetNpcSpecialMotionLookTarget(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetNpcRunCapability(Character *character) {
@@ -2296,7 +2296,7 @@ std::int32_t GetNpcRunCapability(Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool QueryNpcCameraMotionProfile(shen_name name, std::uint32_t flags) {
@@ -2381,14 +2381,14 @@ std::uint64_t QueryNpcCameraMotionProfile(shen_name character, std::uint8_t mask
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void NpcRegistryTask_Nullsub(void *) {
 }
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Native npc_Callback_Enqueue: always forgets the previous NPC task (the
 // module switch released it) and queues NPCT; areas without NPC routes keep
@@ -2410,7 +2410,7 @@ bool EnqueueNpcRegistryTask(std::uint8_t nextFunctionIndex) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool PublishNpcRegistryTask() {
     if (!npcRegistryTask.pending)
@@ -2429,7 +2429,7 @@ bool PublishNpcRegistryTask() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool npcIsNpcTaskActive() {
     return npcRegistryTask.current != nullptr;
@@ -2437,7 +2437,7 @@ bool npcIsNpcTaskActive() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetScenarioFollowEligibility(shen_name name) {
@@ -2449,7 +2449,7 @@ std::int32_t GetScenarioFollowEligibility(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t IsNpcRouteActive(shen_name name) {
@@ -2459,7 +2459,7 @@ std::uint32_t IsNpcRouteActive(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 NpcRouteLiveEntry *WarmStartNpcRoute(shen_name name) {
@@ -2510,7 +2510,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_CheckWarmStartNpcRoute(shen_name name) {
@@ -2527,7 +2527,7 @@ std::int64_t EV_CheckWarmStartNpcRoute(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Warm-starts the route and selects the HUMANS AFS load path.
 std::int64_t npcWarmStartHumanRoute(shen_name character) {
@@ -2540,7 +2540,7 @@ std::int64_t npcWarmStartHumanRoute(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t PrepareNpcRouteReload(shen_name name) {
@@ -2553,7 +2553,7 @@ std::int32_t PrepareNpcRouteReload(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry *entry) {
     if (!entry->node)
@@ -2668,7 +2668,7 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion) {
@@ -2696,7 +2696,7 @@ std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_npcLockUnlock(shen_name name) {
@@ -2722,7 +2722,7 @@ std::int64_t EV_npcLockUnlock(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t EV_ReleaseNpcLockPreservingMotion(shen_name character) {
     return npcSetLock(character, 1);
@@ -2730,7 +2730,7 @@ std::int64_t EV_ReleaseNpcLockPreservingMotion(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t IsNpcRouteLoadedOrVisible(shen_name name) SHENMUE_NPC_NOEXCEPT {
@@ -2758,7 +2758,7 @@ std::uint64_t IsNpcRouteLoadedOrVisible(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t IsNpcRouteReloadPrepared(shen_name name) {
@@ -2792,7 +2792,7 @@ std::int32_t UnpinNpcRouteStream(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_npcUpdateFlags(shen_name name) {
@@ -2824,7 +2824,7 @@ std::int64_t EV_npcUpdateFlags(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_npcUnknownFunc(shen_name name) {
@@ -2856,7 +2856,7 @@ std::int64_t EV_npcUnknownFunc(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetNpcScriptRouteCompletion(shen_name name) {
@@ -2891,7 +2891,7 @@ std::uint32_t GetNpcScriptRouteCompletion(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_ResetFreeTalkFlags() {
@@ -2933,7 +2933,7 @@ std::int64_t EV_ResetFreeTalkFlags() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t ResetNpcColdStreams() {
@@ -2960,7 +2960,7 @@ std::int64_t ResetNpcColdStreams() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t SetNpcColdResetMode(std::uint32_t mode) {
@@ -2972,7 +2972,7 @@ std::uint64_t SetNpcColdResetMode(std::uint32_t mode) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t PrepareNpcAllFromArray() {
@@ -3045,7 +3045,7 @@ std::int32_t PrepareNpcAllFromArray() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void EV_ReconfigureNpcRoutesForStoryStep() {
@@ -3057,7 +3057,7 @@ void EV_ReconfigureNpcRoutesForStoryStep() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ReleaseLoadedNpcTransitionPackages();
 
@@ -3100,7 +3100,7 @@ std::int32_t npcReleaseUnusedStreams() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_ForceLoadNpc(shen_name name) {
@@ -3131,7 +3131,7 @@ std::int64_t EV_ForceLoadNpc(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ReleaseNpcForRouteReload(shen_name name) {
@@ -3147,7 +3147,7 @@ std::int32_t ReleaseNpcForRouteReload(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_npcStreamOrLoadHuman(shen_name name) {
@@ -3179,7 +3179,7 @@ std::uint64_t EV_npcStreamOrLoadHuman(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ReleaseNpcForRouteReloadAndStoreCount(shen_name name) {
@@ -3194,7 +3194,7 @@ std::int32_t ReleaseNpcForRouteReloadAndStoreCount(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t EV_npcFree(shen_name name) {
@@ -3225,7 +3225,7 @@ std::int64_t EV_npcFree(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void EV_SetAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask, bool visible, bool lowQualityHands) {
     areaNpcLoadPhase = 0;
@@ -3238,7 +3238,7 @@ void EV_SetAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTa
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetAreaNpcLowQualityHands(bool enabled) {
     areaNpcLoadLowQualityHands = enabled;
@@ -3246,7 +3246,7 @@ void SetAreaNpcLowQualityHands(bool enabled) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetAreaNpcCharactersVisible(bool enabled) {
     areaNpcLoadCharactersVisible = enabled;
@@ -3254,7 +3254,7 @@ void SetAreaNpcCharactersVisible(bool enabled) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void AssignAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask) {
     areaNpcLoadPhase = 0;
@@ -3264,7 +3264,7 @@ void AssignAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTa
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace npc_package_detail {
 
@@ -3364,7 +3364,7 @@ FindMotionWork
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ResetConditionalNpcLoads() {
     conditionalNpcLoadsReady = 0;
@@ -3373,7 +3373,7 @@ void ResetConditionalNpcLoads() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t AreConditionalNpcLoadsPending() {
     return conditionalNpcLoadsReady == 0;
@@ -3381,7 +3381,7 @@ std::uint32_t AreConditionalNpcLoadsPending() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HLib::Task *QueueConditionalNpcLoads(const ConditionalNpcLoadEntry *entries) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(ConditionalNpcLoadCheckCallback, 4, 0x0b, sizeof(ConditionalNpcLoadWork), SHEN_NAME(EVNT));
@@ -3398,7 +3398,7 @@ HLib::Task *QueueConditionalNpcLoads(const ConditionalNpcLoadEntry *entries) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void AssignGenericNpcLoadContext(const shen_name *characters, HLib::Task *startupTask) {
     genericNpcLoadPhase = 0;
@@ -3408,7 +3408,7 @@ void AssignGenericNpcLoadContext(const shen_name *characters, HLib::Task *startu
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetGenericNpcLowQualityHands(bool enabled) {
     genericNpcLoadLowQualityHands = enabled;
@@ -3416,7 +3416,7 @@ void SetGenericNpcLowQualityHands(bool enabled) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ResetGenericEventNpcLoadState() {
     genericNpcLoadCharacters = nullptr;
@@ -3428,7 +3428,7 @@ void ResetGenericEventNpcLoadState() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HLib::Task *Queue_EVT_UTL_LoadNPCChara(const shen_name *characters, HLib::Task *startupTask) {
     AssignGenericNpcLoadContext(characters, startupTask);
@@ -3441,7 +3441,7 @@ HLib::Task *Queue_EVT_UTL_LoadNPCChara(const shen_name *characters, HLib::Task *
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ResetCompiledEventNpcLoadState() {
     areaNpcLoadPhase = 0;
@@ -3454,7 +3454,7 @@ void ResetCompiledEventNpcLoadState() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HLib::Task *Queue_EVT_UTL_LoadNPCChara_3(const shen_name *characters, HLib::Task *startupTask) {
     areaNpcLoadCharacters = characters;
@@ -3470,7 +3470,7 @@ HLib::Task *Queue_EVT_UTL_LoadNPCChara_3(const shen_name *characters, HLib::Task
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void EVT_UTL_LoadNPCChara_Callback_1(void *) {
@@ -3507,7 +3507,7 @@ void EVT_UTL_LoadNPCChara_Callback_1(void *) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void EnableAuthoredCharacterFlagsAndDisplay(shen_name character) {
@@ -3521,7 +3521,7 @@ void EnableAuthoredCharacterFlagsAndDisplay(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void EVT_UTL_LoadNPCChara_Callback_2(void *taskData) {
     (void)taskData;
@@ -3564,7 +3564,7 @@ void EVT_UTL_LoadNPCChara_Callback_2(void *taskData) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Before a door entry, sends every streamed NPC within the radius of the point (XZ) back to
 // its abstract route; 0 when one refused.
@@ -3593,7 +3593,7 @@ std::uint32_t npcReleaseStreamsNearDoor(const Vector3 *point, float radius) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t NpcWait() SHENMUE_NPC_NOEXCEPT {
@@ -3628,7 +3628,7 @@ bool NpcWait() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void FreeNpcRegistryTask() {
     FreeNpcRouteLiveEntries();
@@ -3646,7 +3646,7 @@ void FreeNpcRegistryTask() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t npcSetAreaName(shen_name area, const Vector3 *center, float radius, std::int32_t enabled) {
     if (!npcRegistryTask.current)
@@ -3675,7 +3675,7 @@ std::int32_t npcSetAreaName(shen_name area, const Vector3 *center, float radius,
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t CountNpcLiveStreams() SHENMUE_NPC_NOEXCEPT {
@@ -3703,7 +3703,7 @@ std::uint64_t CountNpcLiveStreams() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t IsNpcLoadedOrVisible(shen_name character) {
     if (!npcRegistryTask.current)
@@ -3718,7 +3718,7 @@ std::uint64_t IsNpcLoadedOrVisible(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t IsNpcUsingHumansAfs(shen_name character) {
     if (!npcRegistryTask.current)
@@ -3733,7 +3733,7 @@ std::uint64_t IsNpcUsingHumansAfs(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t EV_ForceLoadNpcFromHumans(shen_name character) {
     if (npcRegistryTask.current) {
@@ -3750,7 +3750,7 @@ std::int64_t EV_ForceLoadNpcFromHumans(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character) {
     if (npcRegistryTask.current) {
@@ -3769,9 +3769,9 @@ std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SaveNpcDateTime() {
     shenGetCurrentDateTime(npcSavedDateTime);
@@ -3781,7 +3781,7 @@ void SaveNpcDateTime() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT {
@@ -3796,7 +3796,7 @@ NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void PlaceNpcOutsideDoor(NpcRouteLiveEntry *entry) {
@@ -3819,7 +3819,7 @@ void PlaceNpcOutsideDoor(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void CoreNPCTask() {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -3957,7 +3957,7 @@ void CoreNPCTask() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t ReleaseNpcScriptRouteSlot(shen_name name) {
@@ -3975,7 +3975,7 @@ std::int32_t ReleaseNpcScriptRouteSlot(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t CreateScriptNpcRouteSlot(shen_name name) {
@@ -3992,7 +3992,7 @@ std::int32_t CreateScriptNpcRouteSlot(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ResetNpcEntryToAreaPoint(NpcRouteLiveEntry *entry) {
@@ -4010,7 +4010,7 @@ void ResetNpcEntryToAreaPoint(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void BeginNpcAreaRoute(NpcRouteLiveEntry *entry, std::int32_t currentTime) {
@@ -4028,7 +4028,7 @@ void BeginNpcAreaRoute(NpcRouteLiveEntry *entry, std::int32_t currentTime) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry *entry) {
@@ -4050,7 +4050,7 @@ std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t MeasureNpcReloadStreamCost(NpcRouteLiveEntry *entry) {
@@ -4076,7 +4076,7 @@ std::int32_t MeasureNpcReloadStreamCost(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t RequestNpcStreamLoad(NpcRouteLiveEntry *entry) {
@@ -4150,7 +4150,7 @@ std::int32_t RequestNpcStreamLoad(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 inline NpcRouteStateContextPrefix *GetNpcRouteStateContext(NpcRouteLiveEntry *entry) {
     return &entry->stateContext;
@@ -4260,7 +4260,7 @@ void BindNpcRouteCharacter(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t BeginNpcRouteStreamOut(NpcRouteLiveEntry *entry, std::int32_t forced) {
@@ -4277,7 +4277,7 @@ std::int32_t BeginNpcRouteStreamOut(NpcRouteLiveEntry *entry, std::int32_t force
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t UpdateNpcStreamFade(NpcRouteLiveEntry *entry) {
@@ -4300,7 +4300,7 @@ std::int32_t UpdateNpcStreamFade(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ReleaseNpcRouteStream(NpcRouteLiveEntry *entry) {
@@ -4329,7 +4329,7 @@ void ReleaseNpcRouteStream(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ComputeNpcTargetRotation(const Vector3 *position, const Vector3 *target, Vector3i *rotation) {
     Vector3 direction;
@@ -4346,7 +4346,7 @@ void ComputeNpcTargetRotation(const Vector3 *position, const Vector3 *target, Ve
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t TickNpcSpecialMotion(NpcRouteLiveEntry *entry) {
     if (!entry->node)
@@ -4568,7 +4568,7 @@ std::int32_t TickNpcSpecialMotion(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void UpdateStreamedNpcMotion(NpcRouteLiveEntry *entry) {
@@ -4588,7 +4588,7 @@ void UpdateStreamedNpcMotion(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ApplyNpcCommandMotion(NpcRouteLiveEntry *entry, std::int32_t opcode) {
@@ -4624,7 +4624,7 @@ void ApplyNpcCommandMotion(NpcRouteLiveEntry *entry, std::int32_t opcode) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 NpcRouteStateContextPrefix *FindNpcRouteStateContext(shen_name name) {
@@ -4636,7 +4636,7 @@ NpcRouteStateContextPrefix *FindNpcRouteStateContext(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t npcGetPosFor(shen_name name, Vector3 *position) {
@@ -4678,7 +4678,7 @@ std::int32_t npcGetPosFor(shen_name character, Vector3 *position) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t MarkNpcRoutePartyControl(shen_name character) {
     if (!npcRegistryTask.current)
@@ -4696,7 +4696,7 @@ std::int64_t MarkNpcRoutePartyControl(shen_name character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t ClearNpcRoutePartyControl(shen_name character) {
     if (!npcRegistryTask.current)
@@ -4714,7 +4714,7 @@ std::int64_t ClearNpcRoutePartyControl(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t SetNpcRouteControlHold(shen_name name, std::int32_t enabled) {
@@ -4749,7 +4749,7 @@ std::uint64_t SetNpcRouteControlHold(shen_name character, std::int32_t enabled) 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t QueueNpcMotionAttachment(NpcRouteLiveEntry *entry, std::uint16_t motion, std::int32_t flags, std::int32_t slot) {
@@ -4768,7 +4768,7 @@ std::int32_t QueueNpcMotionAttachment(NpcRouteLiveEntry *entry, std::uint16_t mo
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void CaptureNpcMotionAttachmentFrame(NpcRouteLiveEntry *entry, NpcMotionAttachment *attachment) {
@@ -4787,7 +4787,7 @@ void CaptureNpcMotionAttachmentFrame(NpcRouteLiveEntry *entry, NpcMotionAttachme
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void RequestNpcMotionAttachmentRegion(NpcRouteLiveEntry *entry, const NpcMotionAttachment *attachment, std::uint32_t region) {
@@ -4810,7 +4810,7 @@ void RequestNpcMotionAttachmentRegion(NpcRouteLiveEntry *entry, const NpcMotionA
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void EvaluateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
@@ -4857,7 +4857,7 @@ void EvaluateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool IsNpcSceneMotionPlaying(shen_name name) {
@@ -4897,7 +4897,7 @@ std::uint64_t IsNpcSceneMotionPlaying(shen_name character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void ClearNpcMotionAttachment(NpcRouteLiveEntry *entry, std::int32_t slot) {
@@ -4908,7 +4908,7 @@ void ClearNpcMotionAttachment(NpcRouteLiveEntry *entry, std::int32_t slot) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::uint32_t SelectNpcRandomMotionAttachment() {
@@ -4919,7 +4919,7 @@ std::uint32_t SelectNpcRandomMotionAttachment() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
     if (entry->controlFlags & 0x20U)
@@ -4977,7 +4977,7 @@ updateAttachmentRegions:
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t BranchNpcIfWeekday(NpcRouteLiveEntry *entry) {
     std::int32_t branched = 0;
@@ -4991,7 +4991,7 @@ std::int32_t BranchNpcIfWeekday(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t BranchNpcIfWeekend(NpcRouteLiveEntry *entry) {
     std::int32_t branched = 0;
@@ -5005,7 +5005,7 @@ std::int32_t BranchNpcIfWeekend(NpcRouteLiveEntry *entry) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ClearNpcScheduleSeeds() {
     for (std::int32_t index = 0; index < 2; ++index)
@@ -5015,7 +5015,7 @@ void ClearNpcScheduleSeeds() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 bool IsNpcScheduleSeedName(shen_name name) {
@@ -5027,9 +5027,9 @@ bool IsNpcScheduleSeedName(shen_name name) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RestoreNpcScheduleSeedPayload(const void *payload) {
     pendingNpcScheduleSeeds = static_cast<const std::byte *>(payload);
@@ -5039,7 +5039,7 @@ void RestoreNpcScheduleSeedPayload(const void *payload) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcWalkingMotion(const Character *character) {
     const std::int32_t rig = charGetMotionRigType(character);
@@ -5048,7 +5048,7 @@ std::uint16_t SelectNpcWalkingMotion(const Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcRunningMotion(const Character *character) {
     const std::int32_t rig = charGetMotionRigType(character);
@@ -5057,7 +5057,7 @@ std::uint16_t SelectNpcRunningMotion(const Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 std::int32_t GetNpcRestingMotion(const Character *character) {
@@ -5101,7 +5101,7 @@ std::int32_t GetNpcRestingMotion(const Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcStairDescendingMotion(Character *character) {
     static const std::uint16_t motions[16] = {
@@ -5112,7 +5112,7 @@ std::uint16_t SelectNpcStairDescendingMotion(Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcStairAlternateMotion(Character *character) {
     static const std::uint16_t motions[16] = {
@@ -5123,7 +5123,7 @@ std::uint16_t SelectNpcStairAlternateMotion(Character *character) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int32_t GetNpcProfileImageType(Character *character, std::int32_t age, std::int32_t sex, std::int32_t *type) {
     if (character) {
@@ -5147,7 +5147,7 @@ std::int32_t GetNpcProfileImageType(Character *character, std::int32_t age, std:
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcLeaningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile);
 
@@ -5159,7 +5159,7 @@ std::uint16_t SelectNpcProfileMotion(Character *character, std::int32_t age, std
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcLeaningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile) {
     std::int32_t type;
@@ -5169,7 +5169,7 @@ std::uint16_t SelectNpcLeaningProfileMotion(Character *character, std::int32_t a
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::uint16_t SelectNpcRecliningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile) {
     static const std::uint16_t motions[6][3][3] = {0xe38b, 0xe38b, 0xe38b, 0xe38a, 0xe38c, 0xe38c, 0xe38a, 0xe38a, 0xe38a, 0xe388, 0xe388, 0xe388, 0xe244,
@@ -5183,10 +5183,142 @@ std::uint16_t SelectNpcRecliningProfileMotion(Character *character, std::int32_t
 
 #endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry *entry, std::int32_t mode) {
+    if (entry->loadHumanResult < 0)
+        entry->loadHumanResult = 8;
+    if (entry->flags & 8U)
+        return 2;
+    if (entry->flags & 0x200U)
+        return 3;
+    if (!(entry->flags & 7U))
+        return 4;
+    if (mode == 1) {
+        const std::int32_t pending = (entry->flags & 1U) != 0;
+        if (pending)
+            ReleaseNpcRouteStream(entry);
+        if (entry->flags & 2U)
+            BeginNpcRouteStreamOut(entry, 0);
+        if (entry->flags & 4U)
+            UpdateNpcStreamFade(entry);
+        return pending;
+    }
+    if (!mode || (mode == 2 && (entry->flags & 1U)))
+        ReleaseNpcRouteStream(entry);
+    return 1;
+}
+
+std::uint32_t npcColdResetMode = 1;
+
+std::uint32_t SetNpcColdResetMode(std::uint32_t mode) {
+    if (!mode && IsNpcRegistryTaskActive()) {
+        ReleaseNpcTransitionHumanPackages();
+        NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+        for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry) {
+            if (entry->stateContext.flags & 1U) {
+                if ((entry->stateContext.flags & 0x300U) || (entry->stateContext.routeFlags & 0x10U))
+                    continue;
+                if (!(entry->flags & 0x4000000U)) {
+                    SetNpcStreamLifecycleState(entry, 1);
+                    continue;
+                }
+            }
+            if (static_cast<std::uint8_t>(entry->scriptRecord[0x0b]) & 0x10U)
+                SetNpcStreamLifecycleState(entry, 1);
+        }
+    }
+    npcColdResetMode = mode;
+    return mode;
+}
+
+std::int32_t ResetAllNpcRouteStates() {
+    if (IsNpcRegistryTaskActive()) {
+        ReleaseNpcTransitionHumanPackages();
+        NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+        for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+            SetNpcStreamLifecycleState(entry, 2);
+    }
+    return 1;
+}
+
+std::int32_t RegisterNpcFlags(shen_name name, std::uint32_t flags, std::int32_t operation) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    switch (operation) {
+    case 0: entry->controlFlags &= ~flags; break;
+    case 1: entry->controlFlags |= flags; break;
+    case 2: return (entry->controlFlags & flags) != 0;
+    }
+    return 1;
+}
+
+void StopNpcFollowingMotionForEvent(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || *reinterpret_cast<const std::uint32_t *>(entry->scriptRecord) == SHEN_NAME4('M', 'O', 'V', 'E'))
+        return;
+    if (entry->flags & 8U) {
+        npcPoolTarget += entry->streamCost;
+        entry->flags &= 0xbffffff7U;
+        entry->controlFlags &= ~2U;
+        if (entry->node)
+            SelectCharacterFacialNode(entry->node, 0);
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t FindNpcAreaPointByName(shen_name name, std::int32_t mode);
+
+std::int32_t npcStartPlayEntityAtPos(shen_name name, shen_name pointName, const Vector3 *position, std::int32_t yaw) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (pointName) {
+        const std::int32_t point = FindNpcAreaPointByName(pointName, 0);
+        if (point < 0)
+            return 0;
+        entry->currentAreaPoint = static_cast<std::int16_t>(point);
+    }
+    entry->rotation.y = yaw;
+    entry->scheduleProgress = 3;
+    entry->liveState = 0;
+    ResetNpcEntryToAreaPoint(entry);
+    FindNpcIntersectionInScene(entry->localPosition, entry->packedMoveFlags);
+    entry->worldPosition = entry->localPosition;
+    entry->worldPosition.x += npcRouteOrigin.x;
+    entry->worldPosition.z += npcRouteOrigin.z;
+    if (entry->stateContext.flags & 1U)
+        StopNpcScriptRoute(&entry->stateContext, shen_name(), yaw);
+    if (!pointName) {
+        if (position)
+            entry->localPosition = *position;
+        else
+            entry->localPosition.x = entry->localPosition.y = entry->localPosition.z = 0.0f;
+        entry->worldPosition = entry->localPosition;
+        entry->worldPosition.x += npcRouteOrigin.x;
+        entry->worldPosition.z += npcRouteOrigin.z;
+    }
+    if (entry->node) {
+        mtwkCopyTransition(entry->motionWork, 0, 0, 1, 0);
+        SetCharacterWorldPosition(entry->node, &entry->localPosition);
+        charaSetWorldRot(entry->node, entry->rotation);
+        mtwkSetRegionFlag(entry->motionWork, 0x47, 0, LowerBody);
+        mtwkSetExtraFlag(entry->motionWork, 14, 0);
+        entry->currentMotionId = SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+            static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        mtwkRequestMotion(entry->motionWork, entry->currentMotionId, LowerBody);
+    }
+    return 1;
+}
+
+#endif
+
 } // namespace s2
 } // namespace shenmue
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_GetNpcNewLoadState() {
     return shenmue::s2::GetNpcNewLoadState();
 }

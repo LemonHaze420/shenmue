@@ -2,7 +2,7 @@
 
 #include "platform/dc/particles.hpp"
 
-#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1 || (SHENMUE_IS_DC && SHENMUE_IS_S2))
 
 #include "platform/dc/ninja.hpp"
 
@@ -118,7 +118,7 @@ void SetFftEffectFalloff(FftEffectHandle handle, const float *table);
 void SetFftEffectPhaseScale(FftEffectHandle handle, float scale);
 std::uint32_t GetTerrainTextureSize(std::uint32_t size);
 std::uint32_t *SetTerrainChannelTexture(
-    std::int8_t index, std::uint32_t format, std::int32_t width, std::int32_t height, std::uint32_t *pixels, std::uint32_t flags);
+    std::int32_t index, std::uint32_t format, std::int32_t width, std::int32_t height, std::uint32_t *pixels, std::uint32_t flags);
 
 } // namespace sdk
 } // namespace dc

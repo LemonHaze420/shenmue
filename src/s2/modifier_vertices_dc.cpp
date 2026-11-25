@@ -40,7 +40,7 @@ void IntersectShadowVolumeEdge(const ShadowVolumeVertex &first, const ShadowVolu
     point.position.y = (first.position.y - second.position.y) * amount + second.position.y;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawDirectionalShadowVolumeVertices(Vector3 *vertices, std::int32_t count, const ShadowDrawParameters *) {
     ShadowVolumeVertex *near = g_shadowVertices;
     ShadowVolumeVertex *far = g_shadowExtrudedVertices;
@@ -92,7 +92,7 @@ void DrawDirectionalShadowVolumeVertices(Vector3 *vertices, std::int32_t count, 
 #endif
 
 void DrawPointLightShadowVolumeVertices(Vector3 *vertices, std::int32_t count, const ShadowDrawParameters *parameters) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     Vector3 *extrusion = &g_shadowVolumeExtrusion;
 #else
     Vector3 *const extrusion = &g_shadowVolumeExtrusion;

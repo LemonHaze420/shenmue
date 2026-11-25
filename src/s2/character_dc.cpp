@@ -22,7 +22,7 @@
 #include "s2/character_components_dc.hpp"
 #include "s2/file_loader_dc.hpp"
 #include "s2/pak_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #include "s2/field_collision_dc.hpp"
 #include "platform/dc/matrix.hpp"
@@ -54,7 +54,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/character_alpha_dc.hpp"
 #include "s2/character_state_flags_dc.hpp"
 #include "s2/reflector_board_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_transparency_dc.hpp"
 #include "s2/hand_dc.hpp"
 #include "s2/pause.hpp"
@@ -105,7 +105,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/input_dc.hpp"
 #include "s2/system_modules_dc.hpp"
 #include "s2/ui_state_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -126,7 +126,7 @@ void UpdateCharacterPositionDelta(Character *character);
 
 std::int32_t IsCharacterValid(const Character *character);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsCharacterInvalid(const Character *character);
 #endif
 
@@ -256,7 +256,7 @@ HLib::Task *characterDrawTask = 0;
 
 std::int32_t characterHumanDrawLimit = 30, characterObjectDrawLimit = 99;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t characterPluralControlOffState = 2;
 #endif
 
@@ -3430,7 +3430,7 @@ void SetupCharacterLightFrame(CharacterDrawTaskParameters *data) {
     characterLightAuthorOverride = 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float GetReservedWeatherOverride0();
 
 void DrawLights(Character *character, CharacterDrawTaskParameters *data) {
@@ -3994,7 +3994,7 @@ void RestoreCharacterLightFrame(CharacterDrawTaskParameters *data) {
     PublishGlobalLighting();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetCharacterLocalYaw(const Character *character) {
     return character ? character->node.rotation.y : 0;
@@ -4010,7 +4010,7 @@ void SetCharacterWorldPosition(Character *character, const Vector3 *position) {
 // @verified - d
 Character *GetCharacterFromNode(CharacterNode *node) {
     Character *character = reinterpret_cast<Character *>(reinterpret_cast<std::uintptr_t>(node) - offsetof(Character, node));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (IsCharacterInvalid(character))
         return SHENMUE_CHARACTER_POSE_NULL;
     return character;
@@ -4034,7 +4034,7 @@ void CharacterHandler_Callback(void *data) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateCharacterPositionDelta(Character *character) {
     float *delta = &character->positionDelta.x;
     if (!character->positionDeltaApplied && (delta[0] != 0.0f || delta[1] != 0.0f || delta[2] != 0.0f)) {
@@ -4170,7 +4170,7 @@ std::int32_t IsCharacterValid(const Character *character) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsCharacterInvalid(const Character *character) {
     if (!character)
         return 1;
@@ -4354,7 +4354,7 @@ void SetCharacterLocalRotation(Character *character, const Vector3i *rotation) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void shenSetRotY(Character *character, std::int32_t yaw) {
     if (character)
@@ -4463,7 +4463,7 @@ std::int32_t GetCharacterWorldYaw(const Character *character) {
 
 // @verified - d
 void SetCharacterWorldYaw(Character *character, std::int32_t yaw) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (character) {
         std::int16_t localYaw = static_cast<std::int16_t>(yaw);
         for (const CharacterNode *node = character->node.parent; node; node = node->parent)
@@ -4498,7 +4498,7 @@ void SetCharacterPositionDelta(Character *character, const Vector3 *position) {
         character->positionDelta = *position;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AssignCharacterChildSpacePosition(Character *character, const Vector3 *delta) {
     if (!character)
@@ -4519,7 +4519,7 @@ void coliPositionAdd(Character *character, const Vector3 *delta) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InverseRotateVectorByCharacterNode(const CharacterNode *node, Vector3 *vector) {
     matrix_stack::GetMatrix(&g_characterNodeSavedTransform);
@@ -4534,7 +4534,7 @@ void InverseRotateVectorByCharacterNode(const CharacterNode *node, Vector3 *vect
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AddCharacterChildSpacePosition(Character *character, const Vector3 *delta) {
     if (!character)
@@ -4553,7 +4553,7 @@ void SetCharacterPositionDeltaApplied(Character *character, std::int32_t applied
         character->positionDeltaApplied = applied;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetCharacterScale(Character *character, const Vector3 *scale) {
     if (character)
@@ -4573,7 +4573,7 @@ void SetCharacterShadowOffset(Character *character, const Vector3 *offset) {
         character->shadowOffset = *offset;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetCharacterShadowOffset(const Character *character, Vector3 *offset) {
     if (character)
@@ -4587,7 +4587,7 @@ void SetCharacterShadowScale(Character *character, const Vector3 *scale) {
         character->shadowScale = *scale;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetCharacterShadowScale(const Character *character, Vector3 *scale) {
     if (character)
@@ -4601,7 +4601,7 @@ void SetCharacterShadowYaw(Character *character, std::int32_t yaw) {
         character->shadowYaw = yaw;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetCharacterShadowYaw(const Character *character) {
     if (character)
@@ -4616,7 +4616,7 @@ void SetCharacterType(Character *character, std::int32_t type) {
         character->type = type;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetCharacterType(const Character *character) {
     if (character)
@@ -4646,7 +4646,7 @@ void scenCreateModel(Character *character, const CharacterTableArgument *argumen
         case 1: {
             const float value = record.arguments[0].value.floating;
             std::int32_t type;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             type = static_cast<std::int32_t>(value);
 #else
             asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(type) : "f"(value) : "fpul");
@@ -4675,7 +4675,7 @@ void scenCreateModel(Character *character, const CharacterTableArgument *argumen
         case 4: {
             const float degrees = (record.arguments[0].value.floating * 8192.0f) / 45.0f;
             std::int32_t angle;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             angle = static_cast<std::int32_t>(degrees);
 #else
             asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(angle) : "f"(degrees) : "fpul");
@@ -4691,7 +4691,7 @@ void scenCreateModel(Character *character, const CharacterTableArgument *argumen
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 float GetCharacterShadowY(const Character *character) {
     if (character)
@@ -4737,7 +4737,7 @@ bool IsCharacterCollisionCallbackEnabled(const Character *character) {
     return false;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool IsCharacterStoredShadowYEnabled(const Character *character) {
     if (character) {
@@ -4998,7 +4998,7 @@ void (*charaAssignDummyCore(Character *character))(Character *) {
     return charaAssignCoreCallback(character, DrawDummyCharacterCore);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void charaCollisionDistanceChecks(void *data) {
     Character *const character = static_cast<Character *>(data);
@@ -5419,7 +5419,7 @@ void SetFacialMouthExpression(Character *character, std::int32_t expression, std
         PrepareFacialMouth(*static_cast<FacialModelData *>(character->facialModel), expression, transitionFrames, scale);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t IsFacialMouthIdle(const FacialModelData *face);
 
 std::int32_t IsCharacterFacialMouthIdle(Character *character) {
@@ -5484,7 +5484,7 @@ void AT_SetEyeCtrl(Character *character, float transitionFrames, float leftWeigh
     SetInnerEyelidWeights(*face, transitionFrames, leftWeight * FACIAL_EYE_INNER_SCALE, rightWeight * FACIAL_EYE_INNER_SCALE);
     face->eyelidFrame = 0;
     std::int32_t duration;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     duration = static_cast<std::int32_t>(transitionFrames);
 #else
     asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(duration) : "f"(transitionFrames) : "fpul");
@@ -5550,7 +5550,7 @@ void DrawImageModelSelection(Character *character, std::uint32_t flags) {
     const CharacterUpdateCallback callback = GetMotionCallback(character);
     callback(root, GetCharacterAlpha(character));
     callback(group, GetCharacterAlpha(character));
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     DrawCharacterModelBranch(frame);
 #else
     DrawCharacterModelBranch(frame, GetCharacterAlpha(character));
@@ -5566,7 +5566,7 @@ void DrawImageModelSelection(Character *character, std::uint32_t flags) {
         dc::sdk::SetMirroredModelDrawMode(1);
         callback(root, 1.0f);
         callback(group, 1.0f);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         DrawCharacterModelBranch(frame);
 #else
         DrawCharacterModelBranch(frame, 1.0f);
@@ -5583,7 +5583,7 @@ std::int32_t SetPluralControlFor(Character *character, std::int16_t state) {
     if (controller) {
         previous = *controller;
         *controller = state;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         reinterpret_cast<std::uint8_t *>(controller)[3] = state ? 1 : characterPluralControlOffState;
 #else
         reinterpret_cast<std::uint8_t *>(controller)[3] = state ? 1 : 2;
@@ -5607,7 +5607,7 @@ void SetCharacterDrawControlEnabled(Character *character, std::int32_t enabled) 
         reinterpret_cast<std::uint8_t *>(controller)[2] = enabled != 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t CheckIsArgEquZero(std::int32_t value) {
     return value == 0;
@@ -5625,6 +5625,31 @@ void ExchangeLegacyModelColour(const Vector4 *colour, Vector4 *previous) {
         *previous = legacyModelColour;
     legacyModelColour = *colour;
 }
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetNewNpcBatchCountOverride(std::int32_t mode, std::int32_t count) {
+    npcPoolSizingModeOrOverride = mode;
+    characterHumanDrawLimit = count;
+    if (!mode || count > 49)
+        characterHumanDrawLimit = 49;
+}
+
+void SetChildObjectFlagByIndex(Character *character, std::uint8_t mode) {
+    if (mode >= 5 || !character->model)
+        return;
+    MT7Node *const right = FindMT7Node(character->model, 5);
+    if (!right)
+        return;
+    MT7Node *const left = FindMT7Node(character->model, 10);
+    if (!left)
+        return;
+    std::uint32_t *const rightFlags = reinterpret_cast<std::uint32_t *>(right) + 0x21;
+    std::uint32_t *const leftFlags = reinterpret_cast<std::uint32_t *>(left) + 0x21;
+    *rightFlags = (*rightFlags & 0xffffU) | (static_cast<std::uint32_t>(mode) << 16);
+    *leftFlags = (*leftFlags & 0xffffU) | (static_cast<std::uint32_t>(mode) << 16);
+}
+
+#endif
 
 } // namespace s2
 } // namespace shenmue

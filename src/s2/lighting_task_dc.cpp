@@ -8,7 +8,7 @@
 #include "s2/hlib.hpp"
 #include <cmath>
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void memcpy4(void *destination, const void *source, std::size_t bytes);
 #endif
 
@@ -46,7 +46,7 @@ void SelectLightForFrame(std::uint32_t index, LightRuntimeEntry *light) {
     if (index > 15)
         return;
     void *const selected = &g_selectedLights[index];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     memcpy4(selected, light, sizeof(LightRuntimeEntry));
 #else
     std::memcpy(selected, light, sizeof(LightRuntimeEntry));

@@ -75,7 +75,7 @@ void BuildWindMappingTable(float *table) {
 std::int32_t MapWindToImpulseIndex(float sampledSpeed, const float *table) {
     const float scaled = sampledSpeed * 30.0f;
     std::int32_t column;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     column = static_cast<std::int32_t>(scaled);
 #else
     asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(column) : "f"(scaled) : "fpul");
@@ -163,7 +163,7 @@ void UpdateWindWithSpeed(WeatherWind *wind) {
         std::int32_t impulse = MapWindToImpulseIndex(sampled, windMappingTable);
         const float hold = SampleWindImpulse() * 1600.0f;
         std::int32_t frames;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         frames = static_cast<std::int32_t>(hold);
 #else
         asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(frames) : "f"(hold) : "fpul");
@@ -948,7 +948,7 @@ std::int32_t SetupUIElement(HLib::Task *task, const char *text, std::int32_t wid
     return RenderWindowTextSurface(task, text, width, colour, shadow, conversionMode, 0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t RasterizeWindowTextLine4bpp(std::byte *destination, std::int32_t width, const char *text, std::int32_t mode, std::int32_t centered) {
     FontRuntimeData *const font = fontRuntimeData;
@@ -996,7 +996,7 @@ std::int32_t RasterizeWindowTextLine4bpp(std::byte *destination, std::int32_t wi
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t CreateVerticalWindowTextSurface(HLib::Task *task, const char *text, std::int32_t height, std::uint16_t colour, std::uint16_t shadow) {
     if (!task)
         task = windowTask;
@@ -1042,7 +1042,7 @@ std::int32_t CreateVerticalWindowTextSurface(HLib::Task *task, const char *text,
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::uint8_t windowGlyphSpread[2][2] = {{2, 1}, {1, 1}};
 std::uint16_t memoRubyPalette[4] = {0, 0, 0xa00b, 0xa00b};
 
@@ -1233,7 +1233,7 @@ void KanaFontLoad(const char *name) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 char *GetKanjiFontName() {
     return fontRuntimeData->kanjiName;
 }
@@ -1247,7 +1247,7 @@ char *GetKanaFontName() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void wndSetFlag(HLib::Task *task, std::int32_t flag) {
     if (!task)
@@ -1257,7 +1257,7 @@ void wndSetFlag(HLib::Task *task, std::int32_t flag) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t wndGetFlag(HLib::Task *task) {
     if (!task)
         task = windowTask;
@@ -1265,12 +1265,12 @@ std::uint32_t wndGetFlag(HLib::Task *task) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void wndNullsub() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RasterizeWindowGlyph4bpp(FontRuntimeData *font, std::uint16_t glyph, std::byte *destination, std::int32_t pixelX) {
     static const std::uint8_t windowGlyph4bppMasks[8] = {1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80};
     static const std::uint8_t windowGlyph4bppSpread[2][2] = {{2, 1}, {1, 1}};

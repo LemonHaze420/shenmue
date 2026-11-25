@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #pragma once
 #include "s2/fight.hpp"
 namespace shenmue {

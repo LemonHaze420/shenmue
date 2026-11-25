@@ -425,7 +425,7 @@ void StageGameDisplayNode(GameDisplayWork *game, std::uint16_t nodeId, const Vec
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 GameDisplayWork *ResetGameDisplayEntries(Character *character) {
     GameDisplayWork *const game = static_cast<GameDisplayWork *>(charFindComp(character, MODEL_COMPONENT_GAME));
@@ -464,7 +464,7 @@ std::uint64_t scenCopyCharaToGame(shen_name id) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void scenGetCharaGameNode(shen_name name, std::int32_t nodeId, const Vector3 *position, float alpha, const Vector3 *scale) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -485,7 +485,7 @@ void scenGetCharaGameNode(shen_name id, std::uint16_t nodeId, const Vector3 *pos
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 GameDisplayWork *SetPosRotForGame(shen_name name, std::uint32_t baseNodeId, const Vector3 *digitStep, std::uint32_t maximumValue, std::int32_t decimalShift) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -520,7 +520,7 @@ GameDisplayWork *SetPosRotForGame(shen_name id, std::uint32_t baseNodeId, const 
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void gameSetObjectFlags(GameDisplayWork *game, std::uint32_t value, const Vector3 *position, float alpha, const Vector3 *scale) {
     std::int32_t place;
@@ -591,7 +591,7 @@ std::uint64_t gameSetObjectFlags(GameDisplayWork *game, std::uint32_t value, con
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateGameNodeFlags(shen_name name, std::uint32_t value, const Vector3 *position, float alpha, const Vector3 *scale) {
     const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -614,7 +614,7 @@ std::uint64_t UpdateGameNodeFlags(shen_name id, std::uint32_t value, const Vecto
 } // namespace shenmue
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" {
 __attribute__((renesas)) shenmue::s2::GameDisplayWork *shenmue_s2_event_scenCopyCharaToGame(std::uint32_t name) {
     return shenmue::s2::scenCopyCharaToGame(shenmue::shen_name(name));

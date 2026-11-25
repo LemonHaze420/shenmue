@@ -3,7 +3,7 @@
 #include "common/math.hpp"
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_dc.hpp"
 #include <cstddef>
 #include <cstdint>

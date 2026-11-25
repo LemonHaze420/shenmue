@@ -13,7 +13,7 @@ std::uint32_t GetQuickIconLoadingReleaseState();
 HelpIconFlags helpIconPersistent, helpIconFrameOverlay;
 HelpDirectionBlink helpDirectionBlinks[4] = {};
 std::uint32_t helpIconDeferredRemoval;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t helpIconItemPromptFrames = 0;
 std::uint32_t iconSelectFlags;
 
@@ -119,7 +119,7 @@ std::uint32_t GetUiFlag(std::uint8_t mode) {
     return 0;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
 #else
 void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
@@ -134,7 +134,7 @@ void AddHelpIconMenuFlags(std::uint16_t flags, std::uint8_t) {
         g_quickIconSavedLoadingFlags = g_loadingFlag;
     }
     if (flags & 0x400U)
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         ExecuteAicaCommand(0xaab, 0, 0);
 #else
         shenExecuteAICACommand(0xaab, 0, 0);

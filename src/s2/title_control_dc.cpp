@@ -34,7 +34,7 @@
 #include "s2/player_model_dc.hpp"
 #include "s2/qron_dc.hpp"
 #include "s2/search_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/date_time.hpp"
 #include "s2/camera_dc.hpp"
 #include "s2/camera_state_query_dc.hpp"
@@ -129,15 +129,15 @@ std::int32_t AllocateTempSprites(std::int32_t index);
 bool BindTempSprite(std::int32_t index, std::int32_t texture, std::int32_t slot, const std::uint16_t *rectangles);
 void InitializeTitlePacket(LegacySpritePacket &packet);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t InitializeNewGameFromSaveSlot();
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlacement);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const TitleDebugModule titleDebugModules[9] = {
     {SHEN_FIELD(name) "             ", SHEN_FIELD(module) SystemModule_Game, SHEN_FIELD(control) ControlTitleDebugSceneSelector,
         SHEN_FIELD(initialize) InitializeTitleDebugGame},
@@ -153,7 +153,7 @@ const TitleDebugModule titleDebugModules[9] = {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const TitleMenuDispatchEntry titleMenuDispatch[6] = {
     {SHEN_FIELD(control) TitleMenuControl, SHEN_FIELD(display) DrawTitleMenu, SHEN_FIELD(uiState) 1, SHEN_FIELD(sound) 0},
     {SHEN_FIELD(control) ControlTitleOptions, SHEN_FIELD(display) DrawTitleOptions, SHEN_FIELD(uiState) 3, SHEN_FIELD(sound) 0},
@@ -164,64 +164,64 @@ const TitleMenuDispatchEntry titleMenuDispatch[6] = {
 };
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const TitleMenuRequest titleMenuRequests[5] = {{SHEN_FIELD(action) 2, SHEN_FIELD(callback) 3}, {SHEN_FIELD(action) 0, SHEN_FIELD(callback) 2},
     {SHEN_FIELD(action) - 1, SHEN_FIELD(callback) 1}, {SHEN_FIELD(action) - 1, SHEN_FIELD(callback) 4}, {SHEN_FIELD(action) - 1, SHEN_FIELD(callback) 5}};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const TitleMenuRequest *titlePendingMenuRequest = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t titleMenuAction = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t titleOptionsSelection = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t titleTimeAttackAlpha = 0, titleTimeAttackAlphaStep = 8;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int8_t titleDebugSaveLoaded;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacySpritePacket titleSpritePacket;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const TitleOptionChoiceStyle *titleOptionChoiceCursor = 0;
 #endif
 
 std::int32_t titleOptionValues[4];
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *titleWarningTask = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int16_t titleWarningLogos[44][2] = {{-1, -1}, {0, 5}, {1, 6}, {1, 7}, {3, 8}, {0, 9}, {0, 9}, {0, 10}, {1, 11}, {3, 12}, {1, 13}, {1, 14}, {1, 14},
     {1, 15}, {3, 16}, {3, -1}, {1, -1}, {0, -1}, {1, -1}, {0, -1}, {1, -1}, {1, -1}, {0, -1}, {3, -1}, {3, -1}, {1, -1}, {3, -1}, {3, -1}, {1, 17}, {1, 18},
     {3, 19}, {0, 20}, {0, 21}, {0, 22}, {0, 23}, {0, 24}, {0, 25}, {0, 26}, {3, 27}, {0, 28}, {0, 3}, {0, 4}, {0, 29}, {0, 30}};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::uint16_t titleWarningDecorationRectangles[56] = {0, 0, 32, 32, 32, 0, 32, 32, 64, 0, 32, 32, 96, 0, 32, 32, 0, 32, 32, 32, 32, 32, 32, 32, 64,
     32, 32, 32, 96, 32, 32, 32, 0, 64, 32, 32, 32, 64, 32, 32, 0, 96, 32, 32, 32, 96, 32, 32, 64, 96, 32, 32, 96, 96, 32, 32};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int32_t titleWarningSelections[2][4] = {{36, 0, 35, 1}, {35, 0, 36, 1}};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int16_t titleWarningLogoY[4] = {240, 240, 400, 323};
 #endif
 
@@ -306,7 +306,7 @@ void TitleControl(void *data) {
     titleSequenceControlCallbacks[titleLoopSequence](&control);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleSaveSelection(void *) {
     DrawTitleBackgroundAndButtons(1);
@@ -314,7 +314,7 @@ void DrawTitleSaveSelection(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeTitleNewGameSelection(void *) {
     titleSaveBackupListener = HPLG_RegisterCallback(TitleSaveHotplugCallback);
@@ -328,7 +328,7 @@ void InitializeTitleNewGameSelection(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeTitleLoadSelection(void *) {
     titleSaveBackupListener = HPLG_RegisterCallback(TitleSaveHotplugCallback);
@@ -341,7 +341,7 @@ void InitializeTitleLoadSelection(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t InitializeTitleDebugGame() {
     if (titleDebugSaveSlot < 0) {
@@ -358,7 +358,7 @@ std::int32_t InitializeTitleDebugGame() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ControlTitleDebugSceneSelector() {
     const std::uint16_t input = g_inputBuffer[0].repeatedPresses;
@@ -496,7 +496,7 @@ void ControlTitleDebugSceneSelector() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ControlTitleDebugTimeAttack() {
     g_actNumber = 3;
@@ -517,14 +517,14 @@ void ControlTitleDebugTimeAttack() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t InitializeTitleDebugModule() {
     return 1;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void BeginTitleModule(SystemModule module, std::int32_t unpause) {
     if (unpause)
@@ -538,7 +538,7 @@ void LoadTitleSoundProgram_Wrapper(std::int32_t sceneIndex) {
     LoadTitleSoundProgram(sceneIndex);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RestoreTitleCallbacks(std::int32_t menu) {
     TitleControlData &control = *static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
@@ -553,7 +553,7 @@ void RestoreTitleCallbacks(std::int32_t menu) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t HasTitleContinueSave() {
     if (GetBackupInfo(0) & 0x40U)
@@ -572,7 +572,7 @@ std::int32_t SetTitleMenuUIState(std::int32_t mode) {
     return previous;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindLastTitleSceneGroup(const TitleSceneGroup *groups) {
     std::int32_t count = 0;
@@ -587,7 +587,7 @@ std::int32_t FindLastTitleSceneGroup(const TitleSceneGroup *groups) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t FindLastTitleArea(const TitleSceneEntry *scenes) {
     std::int32_t count = 0;
@@ -598,7 +598,7 @@ std::int32_t FindLastTitleArea(const TitleSceneEntry *scenes) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SelectTitleSceneGroup(const TitleSceneGroup *groups) {
     const std::uint16_t input = g_inputBuffer[0].repeatedPresses;
@@ -624,7 +624,7 @@ void SelectTitleSceneGroup(const TitleSceneGroup *groups) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SelectTitleArea(const TitleSceneEntry *scenes) {
     const std::uint16_t input = *reinterpret_cast<const volatile std::uint16_t *>(&g_inputBuffer[0].repeatedPresses);
@@ -653,7 +653,7 @@ void SelectTitleArea(const TitleSceneEntry *scenes) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetTitleDebugStartTime(shen_name area) {
     DateTime time;
@@ -678,14 +678,14 @@ void SetTitleDebugStartTime(shen_name area) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetTitleMenuAction() {
     return titleMenuAction;
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SetTitleMenuAction(std::int32_t action) {
     const std::int32_t previous = titleMenuAction;
@@ -694,7 +694,7 @@ std::int32_t SetTitleMenuAction(std::int32_t action) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ControlTitleNewGameConfirmation(void *) {
     if (IsSaveAllowed() || !InitializeNewGameFromSaveSlot())
@@ -708,7 +708,7 @@ void ControlTitleNewGameConfirmation(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t ExecuteTitleMenuCallback(TitleControlData *control, std::int32_t callback) {
     switch (titleMenuDispatch[callback].sound) {
@@ -730,7 +730,7 @@ std::int32_t ExecuteTitleMenuCallback(TitleControlData *control, std::int32_t ca
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ControlTitleMissingContinue(void *data) {
     if (g_inputBuffer[0].pressedPriority & kTitleSkipButtons) {
@@ -740,7 +740,7 @@ void ControlTitleMissingContinue(void *data) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ControlTitleOptions(void *data) {
     std::uint16_t buttons = g_inputBuffer[0].pressedPriority;
@@ -783,7 +783,7 @@ void ControlTitleOptions(void *data) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void TitleMenuControl(void *data) {
     titlePendingMenuRequest = 0;
@@ -843,7 +843,7 @@ void TitleMenuControl(void *data) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleMenuWheel() {
     std::int32_t item, angle;
@@ -892,7 +892,7 @@ void DrawTitleMenuWheel() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleMenu(void *) {
     Vector3 position;
@@ -911,7 +911,7 @@ void DrawTitleMenu(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ApplyTitleMenuOptions(std::int32_t) {
     SetNormalTriggerMapping(titleOptionValues[TitleOptionTrigger] == 0);
@@ -921,12 +921,12 @@ void ApplyTitleMenuOptions(std::int32_t) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void TitleUnusedNullsub() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawScaledTitleSprite(const TitleTextureRectangle *rectangle, const Vector3 &position, std::int32_t texture, float scale) {
     std::int32_t width = titleTextureDimensions[texture][0];
@@ -947,7 +947,7 @@ void DrawScaledTitleSprite(const TitleTextureRectangle *rectangle, const Vector3
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleMenuBackground() {
     InitializeTitlePacket(titleSpritePacket);
@@ -957,7 +957,7 @@ void DrawTitleMenuBackground() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleControllerIcons() {
     for (std::int32_t icon = 0; icon < 3; ++icon) {
@@ -975,7 +975,7 @@ void DrawTitleControllerIcons() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleInfoLine(std::int32_t line, float y) {
     const float bottom = static_cast<float>(17 - line) * 30.0f * 0.001953125f;
@@ -991,7 +991,7 @@ void DrawTitleInfoLine(std::int32_t line, float y) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleInfoBar(std::int32_t line, std::int32_t secondaryLine) {
     float y = 415.0f;
@@ -1008,7 +1008,7 @@ void DrawTitleInfoBar(std::int32_t line, std::int32_t secondaryLine) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleBackgroundAndButtons(std::uint32_t flags) {
     if (flags & 1U)
@@ -1027,7 +1027,7 @@ void ResetTitleMenuState() {
     SetTitleLogoPresent();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleOptionSprite(std::int32_t texture, std::int32_t rectangle, const Vector3 &position) {
     const std::int32_t table = texture - 8;
@@ -1036,7 +1036,7 @@ void DrawTitleOptionSprite(std::int32_t texture, std::int32_t rectangle, const V
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawTitleOptionValue(const std::int16_t *labels, std::int32_t value, float y) {
     Vector3 position;
     position.y = y;
@@ -1056,7 +1056,7 @@ void DrawTitleOptionValue(const std::int16_t *labels, std::int32_t value, float 
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleOptions(void *) {
     Vector3 position;
@@ -1106,7 +1106,7 @@ void DrawTitleOptions(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleMissingContinue(void *data) {
     SetTitleWarningLogo(11, 0);
@@ -1114,14 +1114,14 @@ void DrawTitleMissingContinue(void *data) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void DrawTitleNewGameConfirmation(void *) {
     DrawTitleBackgroundAndButtons(1);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetTitleWarningSelection(std::int32_t selection) {
     if (selection >= 0) {
         titleWarningUsesLogoParameters = 1;
@@ -1132,13 +1132,13 @@ void SetTitleWarningSelection(std::int32_t selection) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void BindTitleWarningDecorationSprites(std::int32_t texture) {
     BindTempSprite(texture, 1, 33, titleWarningDecorationRectangles);
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void LoadTitleWarningLogo(TitleWarningTaskData *data, std::int32_t texture, std::int32_t x, std::int32_t y) {
     if (data->textureIndex != texture) {
@@ -1156,7 +1156,7 @@ static void LoadTitleWarningLogo(TitleWarningTaskData *data, std::int32_t textur
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void DrawTitleWarningDecorations(std::int32_t logo, const std::uint8_t *parameters) {
     switch (logo) {
@@ -1172,7 +1172,7 @@ static void DrawTitleWarningDecorations(std::int32_t logo, const std::uint8_t *p
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawTitleWarningSelections(std::int32_t index) {
     static const std::int32_t *warningSelection;
     warningSelection = titleWarningSelections[index];
@@ -1182,7 +1182,7 @@ static void DrawTitleWarningSelections(std::int32_t index) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DrawTitleWarningLogo(TitleWarningTaskData *data, std::int32_t logo, const std::uint8_t *parameters) {
     std::int16_t *entry = titleWarningLogos[logo];
     if (entry[0] < 0)
@@ -1204,7 +1204,7 @@ void SubmitTitleWarningLogo(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitTitleWarningTaskData(TitleWarningTaskData *data) {
     data->textureIndex = -1;
 }
@@ -1216,7 +1216,7 @@ void SetTitleWarningLogo(std::int32_t logo, const void *parameters) {
         logo = 0;
     titleWarningLogo = logo;
     if (parameters) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         std::int32_t enabled;
         enabled = 1;
         titleWarningUsesLogoParameters = enabled;
@@ -1243,7 +1243,7 @@ void FreeTitleWarningResources() {
     FreeTempSprites(0);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 TitleWarningTaskData *GetTitleWarningTaskData() {
     return static_cast<TitleWarningTaskData *>(HLib::GetTaskParameter(titleWarningTask));
 }

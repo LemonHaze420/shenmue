@@ -82,7 +82,7 @@ void srchPushPopTarget();
 bool ReadSRCH(void *resource);
 void SRCHParser(const std::byte *resource);
 bool srchSetTarget(std::uint32_t index, SearchTarget *targets);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SearchTarget *FindSearchTarget(const SearchTaskData &search, shen_name name);
 std::uint32_t srchSetTargetEnabled(shen_name name, std::int32_t enabled);
 bool srchClearTarget(std::uint32_t index);

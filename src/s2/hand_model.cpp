@@ -12,7 +12,7 @@
 #include "s2/screen_film_dc.hpp"
 #include "s2/ui_state_dc.hpp"
 #include "s2/scenario_control_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/motion_work_dc.hpp"
 #endif
@@ -1724,7 +1724,7 @@ void StageHandPose(HandParams &hand, std::int32_t frame) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GetHandPrimaryNodeRotation(const CharacterHandComponent &hand, Vector3i &rotation) {
     MT7Node *const node = hand.primaryNode;
@@ -1781,7 +1781,7 @@ std::uint32_t GetNumHandModelChunks(const HandMeshHeader *mesh) {
 } // namespace shenmue
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_hndlSetFlags(shenmue::s2::Character *character) {
     return shenmue::s2::hndlSetFlags(character);
 }

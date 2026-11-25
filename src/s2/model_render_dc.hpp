@@ -33,12 +33,12 @@ void ApplyTexAnimUVs(void *mesh);
 void RecursiveApplyTexAnimUVs(MT7Node *node);
 void UpdateModelTextureCoordinates(MT7ModelChunk *model);
 void DrawImageModelSelection(Character *character, std::uint32_t flags);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawCharacterModelBranch(MT7Node *node);
 #else
 void DrawCharacterModelBranch(MT7Node *node, float alpha);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawMT7ProceduralBranch(MT7Node *node, std::int16_t stop, float alpha);
 #endif
 bool IsMT7ClothNode(const MT7Node *node);

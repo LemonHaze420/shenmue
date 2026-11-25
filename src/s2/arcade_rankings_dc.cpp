@@ -145,7 +145,7 @@ void HangOnVblankNullsub() {
 }
 
 void ResetSpaceHarrierRankings() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     for (std::int32_t index = 0; index < 20; ++index) {
         g_harrierRankings[index].score = DecodeArcadeRankingScore(kSpaceHarrierModuleDefaultRankings[index]);
         reinterpret_cast<char *>(&g_harrierRankings[index].initials)[0] = static_cast<char>(kSpaceHarrierModuleDefaultRankings[index][4]);
@@ -163,14 +163,14 @@ void ResetSpaceHarrierRankings() {
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void HarrierVblankNullsub() {
 }
 #endif
 
 void ResetOutRunRankings() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     for (std::int32_t index = 0; index < 20; ++index) {
         g_outRunRankings[index].score = DecodeArcadeRankingScore(kOutRunModuleDefaultRankings[index]);
         reinterpret_cast<char *>(&g_outRunRankings[index].initials)[0] = static_cast<char>(kOutRunModuleDefaultRankings[index][4]);
@@ -189,7 +189,7 @@ void ResetOutRunRankings() {
 }
 
 void ResetAfterBurnerRankings() {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     for (std::int32_t index = 0; index < 20; ++index) {
         g_afterBurnerRankings[index].score = DecodeArcadeRankingScore(s1::kSpaceHarrierDefaultRanking[index]);
         reinterpret_cast<char *>(&g_afterBurnerRankings[index].initials)[0] = static_cast<char>(s1::kSpaceHarrierDefaultRanking[index][4]);

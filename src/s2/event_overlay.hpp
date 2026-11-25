@@ -25,9 +25,9 @@ static_assert(sizeof(EventOverlaySlot) == 0x10);
 extern EventOverlaySlot g_eventOverlaySlots[4];
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 #if SHENMUE_S2_GCC295
-const std::size_t EVENT_FUNCTION_COUNT = 850;
+const std::size_t EVENT_FUNCTION_COUNT = SHENMUE_EV_SCRIPT_FUNC_COUNT;
 #else
-inline constexpr std::size_t EVENT_FUNCTION_COUNT = 850;
+inline constexpr std::size_t EVENT_FUNCTION_COUNT = SHENMUE_EV_SCRIPT_FUNC_COUNT;
 #endif
 extern std::uintptr_t g_eventFunctionTable[EVENT_FUNCTION_COUNT] asm("_shenmue_s2_event_function_table");
 std::int32_t shenGetAreaSlotByName(const char *name);

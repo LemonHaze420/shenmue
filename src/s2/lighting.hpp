@@ -386,7 +386,7 @@ std::uint32_t GetMapLightingPlacementActive(std::int32_t index);
 MapLightingPlacement *GetMapLightingPlacement(std::int32_t index);
 void SetMapLightingPlacementEnabled(std::int32_t value, std::int32_t index);
 std::uint32_t EV_SetMapLightingPlacementEnabled(std::int32_t index, std::int32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index);
 #else
 std::uint32_t SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index);
@@ -400,7 +400,7 @@ void AttachMapLightingPlacement(std::int32_t mapSlot, std::int32_t placement);
 #else
 std::int64_t AttachMapLightingPlacement(std::int32_t mapSlot, std::int32_t placement);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t AssignLightForMapLayer(Vector3 *output, std::int32_t mapSlot);
 #else
 std::int64_t AssignLightForMapLayer(Vector3 *output, std::int32_t mapSlot);

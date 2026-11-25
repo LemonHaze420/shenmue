@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/motion_work_dc.hpp"
 #include "s2/object_xforms.hpp"
@@ -19,7 +19,7 @@
 #include <cmath>
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 #include "s2/player_internal.hpp"
 #endif
 
@@ -27,13 +27,13 @@
 namespace shenmue {
 namespace s2 {
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateFIXO(Character *character);
 
 PartyCompanion *FindPartyCompanionByName(shen_name name);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t plymGetPartyAuthorStatus(shen_name name) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
@@ -74,7 +74,7 @@ std::int32_t plymGetPartyAuthorStatus(shen_name name) {
 #endif
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetPartyCompanionRouteIndex(shen_name name) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
@@ -93,7 +93,7 @@ std::int32_t GetPartyCompanionRouteIndex(shen_name name) {
 #endif
 
 namespace player_detail {
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct RyoBagForm {
     shen_name name;
     MT7Model *model;
@@ -101,7 +101,7 @@ struct RyoBagForm {
 typedef char Layout_ryo_bag_form[(sizeof(RyoBagForm) == 8) ? 1 : -1];
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ctrlAssignCharaHandlerFor(PlayerModelState &state) {
     if (!state.helperCharacter)
@@ -113,7 +113,7 @@ void ctrlAssignCharaHandlerFor(PlayerModelState &state) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void modelFree(Character *character, void *payload) {
     RyoBagForm *const form = static_cast<RyoBagForm *>(payload);
@@ -126,7 +126,7 @@ void modelFree(Character *character, void *payload) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymCreateRyoBagCharacter(PlayerModelState &state, std::int32_t mode) {
@@ -175,7 +175,7 @@ std::int64_t plymCreateRyoBagCharacter(PlayerModelState &state, std::int32_t mod
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void plymSelectRyoBagMode(PlayerModelState &state) {
     if (!(state.flags & 0x20U)) {
@@ -232,7 +232,7 @@ void plymSelectRyoBagMode(PlayerModelState &state) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void plymReleaseRyoBag(PlayerModelState &state, MotionWork *motion) {
     ResetCharaFixo(state.helperCharacter);
@@ -243,7 +243,7 @@ void plymReleaseRyoBag(PlayerModelState &state, MotionWork *motion) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void plymApplyPendingRyoBagMode(PlayerModelState &state) {
     MotionWork *const motion = state.motion;
@@ -298,7 +298,7 @@ void plymApplyPendingRyoBagMode(PlayerModelState &state) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void plymUpdateRyoBagVisibility(PlayerModelState &state) {
     if (!state.helperCharacter)
@@ -331,7 +331,7 @@ void plymUpdateRyoBagVisibility(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // The bag helper leaves the scenario table and is killed.
 void ctrlAssignCharaHandlerFor(PlayerModelState &state) {
     Character *const helper = state.helperCharacter;
@@ -344,7 +344,7 @@ void ctrlAssignCharaHandlerFor(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 void ReleaseRyoBagModel(RyoBagModel *bag) {
     ReleaseModelFormat7(bag->model);
     HLib::FreeTaskData(bag->source);
@@ -352,7 +352,7 @@ void ReleaseRyoBagModel(RyoBagModel *bag) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // Native modelFree: the FORM cleanup drops the bag and shadow readers.
 void modelFree(Character *character, void *payload) {
     RyoBagForm &form = *static_cast<RyoBagForm *>(payload);
@@ -369,7 +369,7 @@ void modelFree(Character *character, void *payload) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 RyoBagModel *LoadRyoBagModel(const char *filename, shen_name token, std::uint32_t mode) {
     std::uint32_t size{};
     void *const source = LoadLegacySceneFile("misc", filename, token, &size);
@@ -389,7 +389,7 @@ RyoBagModel *LoadRyoBagModel(const char *filename, shen_name token, std::uint32_
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // Mode 1 is the hand-carried RCKO bag, mode 2 the shouldered RCKF bag; an existing helper of the other kind is released.
 std::int64_t plymCreateRyoBagCharacter(PlayerModelState &state, std::int32_t mode) {
     const char *const filename = mode == 2 ? "RYBG2F2G.MT7" : "RYBG2H3G.MT7";
@@ -431,7 +431,7 @@ std::int64_t plymCreateRyoBagCharacter(PlayerModelState &state, std::int32_t mod
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // Internal flag 123 carries the bag; 551 selects the shouldered RCKF form.
 // @verified - d
 void plymSelectRyoBagMode(PlayerModelState &state) {
@@ -481,7 +481,7 @@ void plymSelectRyoBagMode(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 void plymUpdateRyoBagVisibility(PlayerModelState &state) {
     if (!state.helperCharacter)
         return;
@@ -498,7 +498,7 @@ void plymUpdateRyoBagVisibility(PlayerModelState &state) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 void plymReleaseRyoBag(PlayerModelState &state, MotionWork *motionWork) {
     if (state.helperCharacter)
         ResetCharaFixo(state.helperCharacter);
@@ -509,7 +509,7 @@ void plymReleaseRyoBag(PlayerModelState &state, MotionWork *motionWork) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 void plymApplyPendingRyoBagMode(PlayerModelState &state) {
     const std::int8_t pending = state.pendingHelperMode;
     MotionWork *const motionWork = state.motionWork;
@@ -542,7 +542,7 @@ void plymApplyPendingRyoBagMode(PlayerModelState &state) {
 }
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM || !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) || !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // @verified - d
 void plymUpdateRyoBag(PlayerModelState &state) {
     plymSelectRyoBagMode(state);
@@ -553,11 +553,11 @@ void plymUpdateRyoBag(PlayerModelState &state) {
 #endif
 
 } // namespace player_detail
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t npcGetPosFor(shen_name name, Vector3 *position);
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdatePlayerPartyCompanions(PlayerModelState *model) {
     PlayerModelState &state = *model;
@@ -653,7 +653,7 @@ void UpdatePlayerPartyCompanions(PlayerModelState *model) {
 #endif
 
 namespace player_detail {
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // Native FindShenmueNodeFromScenarioTask: the character's scenario name through CTRL's scenario task.
 shen_name FindShenmueNodeFromScenarioTask(Character *character) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -661,7 +661,7 @@ shen_name FindShenmueNodeFromScenarioTask(Character *character) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // Native ptycFindDoorCompanion: the party companion (the named one, or REN_/SIN_/JOP_) in its door state 5 on the
 // door PLYM holds as its search region.
 shen_name ptycFindDoorCompanion(shen_name name) {
@@ -680,7 +680,7 @@ shen_name ptycFindDoorCompanion(shen_name name) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 // @verified - p
 void UpdatePlayerPartyCompanions(PlayerModelState &state) {
     bool requested = (g_playerRuntime.flags & 0x400000U) == 0 && (g_playerRuntime.flags & 2U) != 0;
@@ -800,7 +800,7 @@ void UpdatePlayerPartyCompanions(PlayerModelState &state) {
 #endif
 
 } // namespace player_detail
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t plymHasRyoBag(std::int32_t mode) {
 #else
@@ -811,7 +811,7 @@ bool plymHasRyoBag(std::int32_t mode) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND==SHENMUE_KIND_GAMEJAM) && !SHENMUE_IS_DC
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && !SHENMUE_IS_DC
 bool IsPlayerPartyGuideBlocked() {
     const PlayerModelState *state = g_playerRuntime.model;
     return state && (state->padFlags & 0x1000U) == 0 &&

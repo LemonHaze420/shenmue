@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/fight_stage.hpp"
 #include "s2/fight_blur_dc.hpp"
 #include "s2/camera_dc.hpp"
@@ -67,7 +67,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint8_t g_savedFightBlurFlag{};
 
@@ -87,7 +87,7 @@ std::uint8_t blurModelFlag{}, blurModelPreviousFlag{};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 template <class T> T FightValue(const void *owner, std::size_t offset);
@@ -115,7 +115,7 @@ std::intptr_t vfmQueueFightStart(std::uint8_t startSlot, std::uint8_t maximumEne
 void vfm_Callback_FightTaskEntry_Callback(void *parameter);
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Native vfSetupFightUiAndCameraState: camera half of the native UI/camera admission transaction.
 void vfSetupFightCameraState(VFMA_t *game) {
@@ -188,7 +188,7 @@ void vfSetupFightCameraState(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void FreeVFGW(FightActorRuntimePrefix *actor);
 
@@ -256,7 +256,7 @@ void InitializeCameraGoal();
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfUpdateWorldTransformAndFacingAngle(FightActorRuntimePrefix *actor) {
@@ -266,7 +266,7 @@ void vfUpdateWorldTransformAndFacingAngle(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfApplyYawRecursive(FightActorRuntimePrefix *actor) {
@@ -276,7 +276,7 @@ void vfApplyYawRecursive(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -300,7 +300,7 @@ template <class T> T FightValue(const void *owner, std::size_t offset) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -312,7 +312,7 @@ template <class T> void SetFightValue(void *owner, std::size_t offset, T value) 
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -325,7 +325,7 @@ std::int32_t FightTruncate(float value) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -342,7 +342,7 @@ VCDS_t *FindCameraDialogue(VFMA_t *game, std::uint32_t id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -357,7 +357,7 @@ void DisableCameraDialogue(VFMA_t *game, std::uint32_t id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -376,7 +376,7 @@ void TriggerCameraDialogue(VFMA_t *game, VCDS_t *record) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -413,7 +413,7 @@ void RetireCameraDialogueRecords() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -668,7 +668,7 @@ void UpdateFightCameraDialogue(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void vfUpdateWorldTransformAndFacingAngle(FightActorRuntimePrefix *actor);
 void vfApplyYawRecursive(FightActorRuntimePrefix *actor);
 void vfInitSfxSlotState(FightRuntimePrefix *game);
@@ -799,7 +799,7 @@ void PublishFightHud(VFMA_t *game);
 } // namespace
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfInitSfxSlotState(FightRuntimePrefix *game) {
@@ -817,7 +817,7 @@ void vfInitSfxSlotState(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfDecrementSfxSlotTimers(FightRuntimePrefix *game) {
@@ -829,7 +829,7 @@ void vfDecrementSfxSlotTimers(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -850,7 +850,7 @@ void vfFightNullsub() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Attach an allocated native VCDS record to its VFMA owner.
 std::uint32_t vfRegisterCameraDialogue(VCDS_t *record) {
@@ -884,7 +884,7 @@ std::uint32_t vfRegisterCameraDialogue(VCDS_t *record) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Callback-selected authored dialogue admission.
 void vfStartCameraDialogue(VFMA_t *game, std::uint32_t id) {
@@ -918,7 +918,7 @@ void vfStartCameraDialogue(VFMA_t *game, std::uint32_t id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogue(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::int16_t repeatEvery,
@@ -939,7 +939,7 @@ std::uint32_t AllocateBattleDialogue(std::int16_t priority, std::int16_t dialogu
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition2(
@@ -961,7 +961,7 @@ std::uint32_t AllocateBattleDialogueCondition2(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition3(
@@ -983,7 +983,7 @@ std::uint32_t AllocateBattleDialogueCondition3(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition5(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1004,7 +1004,7 @@ std::uint32_t AllocateBattleDialogueCondition5(std::int16_t priority, std::int16
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition6(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1025,7 +1025,7 @@ std::uint32_t AllocateBattleDialogueCondition6(std::int16_t priority, std::int16
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition9(
@@ -1047,7 +1047,7 @@ std::uint32_t AllocateBattleDialogueCondition9(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition12(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1068,7 +1068,7 @@ std::uint32_t AllocateBattleDialogueCondition12(std::int16_t priority, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition16(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1089,7 +1089,7 @@ std::uint32_t AllocateBattleDialogueCondition16(std::int16_t priority, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateMotionBattleDialogue(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter, std::uint16_t animation,
@@ -1112,7 +1112,7 @@ std::uint32_t AllocateMotionBattleDialogue(std::int16_t priority, std::int16_t d
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p: condition7 producer retains its own record writes and registration boundary.
 std::uint32_t AllocateBattleDialogueCondition7(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1133,7 +1133,7 @@ std::uint32_t AllocateBattleDialogueCondition7(std::int16_t priority, std::int16
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p: the retail reaction-mask producer uses condition14, independent of the animation condition8.
 std::uint32_t AllocateReactionBattleDialogue(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1155,7 +1155,7 @@ std::uint32_t AllocateReactionBattleDialogue(std::int16_t priority, std::int16_t
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p: condition15 has a full DWORD period and an unconditional repeatEvery1 write.
 std::uint32_t AllocateBattleDialogueCondition15(
@@ -1177,7 +1177,7 @@ std::uint32_t AllocateBattleDialogueCondition15(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition10(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1198,7 +1198,7 @@ std::uint32_t AllocateBattleDialogueCondition10(std::int16_t priority, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition13(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1219,7 +1219,7 @@ std::uint32_t AllocateBattleDialogueCondition13(std::int16_t priority, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocatePeriodicBattleDialogue(
@@ -1241,7 +1241,7 @@ std::uint32_t AllocatePeriodicBattleDialogue(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition11(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1263,7 +1263,7 @@ std::uint32_t AllocateBattleDialogueCondition11(std::int16_t priority, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t AllocateBattleDialogueCondition17(std::int16_t priority, std::int16_t dialogue, shen_name character, shen_name otherCharacter,
@@ -1284,7 +1284,7 @@ std::uint32_t AllocateBattleDialogueCondition17(std::int16_t priority, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 VCDS_t *SetBattleDialogueFlags(std::uint32_t id, std::uint16_t flags) {
@@ -1301,7 +1301,7 @@ VCDS_t *SetBattleDialogueFlags(std::uint32_t id, std::uint16_t flags) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 VCDS_t *AssignBattleDialogueCallback(std::uint32_t id, std::int64_t (*callback)(void *)) {
@@ -1316,7 +1316,7 @@ VCDS_t *AssignBattleDialogueCallback(std::uint32_t id, std::int64_t (*callback)(
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p: suspend changes only the selected record's state byte; id0 deliberately performs no write.
 VCDS_t *SuspendBattleDialogue(std::uint32_t id) {
@@ -1333,7 +1333,7 @@ VCDS_t *SuspendBattleDialogue(std::uint32_t id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p: resume resets the native word at0x4a, the previous-animation field, not occurrence/completion counts.
 VCDS_t *ResumeBattleDialogue(std::uint32_t id) {
@@ -1352,7 +1352,7 @@ VCDS_t *ResumeBattleDialogue(std::uint32_t id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t QueueBattleDialogue(std::int16_t priority, std::int16_t dialogue) {
@@ -1374,7 +1374,7 @@ std::int64_t QueueBattleDialogue(std::int16_t priority, std::int16_t dialogue) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void BeginFightDialogueRetirement() {
@@ -1385,7 +1385,7 @@ void BeginFightDialogueRetirement() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint32_t GetFightTaskFlags() {
@@ -1395,7 +1395,7 @@ std::uint32_t GetFightTaskFlags() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 VFMA_t *SetActiveFightModeFlag() {
@@ -1410,7 +1410,7 @@ VFMA_t *SetActiveFightModeFlag() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint64_t GetFightCharacterFlag(std::uint8_t mode, Character *character, float value) {
@@ -1442,7 +1442,7 @@ std::uint64_t GetFightCharacterFlag(std::uint8_t mode, Character *character, flo
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void blurInit() {
     blurModelFlag = blurModelPreviousFlag = g_savedFightBlurFlag = 0;
@@ -1451,7 +1451,7 @@ void blurInit() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -1468,7 +1468,7 @@ void *AllocateVFHD(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfFreeVFHDSpace(FightRuntimePrefix *game) {
@@ -1500,7 +1500,7 @@ std::int32_t vfResetInstructionMode(std::uint16_t motion) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #define FIGHT_FIELD(type, offset) (*reinterpret_cast<type *>(reinterpret_cast<std::byte *>(game) + (offset)))
 void vfmQueueFightStart(std::uint8_t startSlot, std::uint8_t maximumEnemies, float knockback, std::uint8_t type, std::int32_t guardEffectSeconds) {
@@ -1851,7 +1851,7 @@ std::intptr_t vfmQueueFightStart(std::uint8_t startSlot, std::uint8_t maximumEne
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfm_Callback_FightTaskEntry_Callback(void *parameter) {
     FightRuntimePrefix *const game = static_cast<FightRuntimePrefix *>(parameter);
@@ -2415,7 +2415,7 @@ FindMotionWork
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void UpdateFightCharaAlphas(FightRuntimePrefix *game) {
@@ -2491,7 +2491,7 @@ void UpdateFightCharaAlphas(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2528,7 +2528,7 @@ void AdvanceFightFrame(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2544,7 +2544,7 @@ void FreeFightCameraDialogue(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfUpdateAuthCameraFrame(FightRuntimePrefix *game) {
@@ -2558,7 +2558,7 @@ void vfUpdateAuthCameraFrame(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2575,7 +2575,7 @@ inline void AddFightStatistic(std::size_t offset, std::uint32_t amount) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void SetOtherFightCharaAlphas(FightActorRuntimePrefix *actor, float alpha) {
@@ -2638,7 +2638,7 @@ void SetOtherFightCharaAlphas(VFActor *actor, float alpha) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void FreeFightContactSlots() {
@@ -2656,7 +2656,7 @@ void FreeFightContactSlots() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void FreeFightStyles() {
@@ -2670,7 +2670,7 @@ void FreeFightStyles() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -2686,7 +2686,7 @@ FightRuntimePrefix *AllocateVFMA() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfSetupFightUiAndCameraState(FightRuntimePrefix *game) {
     const std::uint8_t type = game->type;
@@ -2788,7 +2788,7 @@ void vfSetupFightUiAndCameraState(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfRestorePostFightUIState(FightRuntimePrefix *game) {
@@ -2816,7 +2816,7 @@ void vfRestorePostFightUIState(FightRuntimePrefix *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2899,7 +2899,7 @@ void ReleaseFight(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void UpdateFightTimers(FightRuntimePrefix *game) {
@@ -2962,7 +2962,7 @@ void UpdateFightTimers(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -2986,7 +2986,7 @@ bool SetupContactSlot(VFMA_t *game, FRMG_t *group) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3010,7 +3010,7 @@ void ActivateBlockedFormations(VFMA_t *game, FCMG_t *retired) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3041,7 +3041,7 @@ void UpdateDefeatAndRespawn(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3106,7 +3106,7 @@ void UpdateEnemySlotActivation(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfUpdatePairingsAndDistances(FightRuntimePrefix *game) {
@@ -3291,7 +3291,7 @@ void vfUpdatePairingsAndDistances(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -3306,7 +3306,7 @@ static std::uint8_t fightGaugeOpponentColours[8] = {15, 17, 14, 19, 20, 21, 22, 
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #define FIGHT_GAUGE_FIELD(type, offset) (*reinterpret_cast<type *>(reinterpret_cast<std::byte *>(gauge) + (offset)))
 
@@ -3453,7 +3453,7 @@ void UpdateFightGaugeAnimation(VFActor *actor) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3471,7 +3471,7 @@ std::int32_t PrimaryFightGaugeState(const VFActor *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfSetPairedActor(FightRuntimePrefix *game, std::uint8_t index, std::uint8_t target) {
@@ -3488,7 +3488,7 @@ void vfSetPairedActor(FightRuntimePrefix *game, std::uint8_t index, std::uint8_t
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfSetTargetActor(FightRuntimePrefix *game, std::uint8_t index, std::uint8_t target) {
@@ -3505,7 +3505,7 @@ void vfSetTargetActor(FightRuntimePrefix *game, std::uint8_t index, std::uint8_t
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void UpdateFormationRuntimeFlags(FightRuntimePrefix *game) {
@@ -3574,7 +3574,7 @@ void UpdateFormationRuntimeFlags(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfReleaseFightInput(FightRuntimePrefix *game) {
@@ -3588,7 +3588,7 @@ void vfReleaseFightInput(FightRuntimePrefix *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfDrawFightActorGauge(FightActorRuntimePrefix *actor) {
@@ -3713,7 +3713,7 @@ void vfDrawFightActorGauge(FightActorRuntimePrefix *actor) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void UpdateFightGauge(void *parameter) {
@@ -3767,7 +3767,7 @@ void UpdateFightGauge(void *parameter) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3805,7 +3805,7 @@ void adjustStreetFighterHUD() {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 std::int8_t g_fightReflectorFadeSteps = 10;
 Vector4 g_fightReflectorTarget = {1.0f, 0.2f, 0.2f, 0.33f};
@@ -3921,7 +3921,7 @@ void SetupFightReflectorBoard(void *parameter) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3936,7 +3936,7 @@ void DrawFightHud(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -3950,7 +3950,7 @@ void PublishFightHud(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void vfDrawFightGaugeOrb(FightActorRuntimePrefix *actor, std::uint16_t index, std::uint32_t alpha, std::uint8_t icon) {
@@ -3972,7 +3972,7 @@ void vfDrawFightGaugeOrb(FightActorRuntimePrefix *actor, std::uint16_t index, st
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void vfDrawFightRoundMarkers(FightRuntimePrefix *game, std::uint32_t alpha) {
     std::int32_t enabled[4] = {0, 0, 0, 0};
@@ -4000,7 +4000,7 @@ void vfDrawFightRoundMarkers(FightRuntimePrefix *game, std::uint32_t alpha) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void AccumulateFightCombatStats(FightRuntimePrefix *game) {
     accumulatedFightBlur += game->blurAmount;
@@ -4066,7 +4066,7 @@ void AccumulateFightCombatStats(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 
@@ -4089,7 +4089,7 @@ void vfBeginScriptedFormationMotion(VFMA_t *game) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -4107,7 +4107,7 @@ void vfReleaseUnheldScriptedFormation(VFMA_t *game) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 namespace {
 

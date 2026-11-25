@@ -1,6 +1,6 @@
 #include "s2/file_loader_dc.hpp"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/am2_vector.hpp"
 #endif
 
@@ -111,7 +111,7 @@ void CheckDiscTray() {
         ResetDiscAndExit();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::byte *simmDecompressedData = reinterpret_cast<std::byte *>(0x0dc04000);
 #endif
 
@@ -264,7 +264,7 @@ void NormalizeDiscFilename(const char *filename, char *destination) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 DiscFileLocation *FindDiscFileLocation(const char *directory, const char *filename) {
     char name[16], normalized[16], path[128];
     GDFS_DIRINFO info;
@@ -365,7 +365,7 @@ DiscFileLocation *FindDiscFileLocation(const char *directory, const char *filena
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t OpenFileFromLocation(FileState *file, const DiscFileLocation *location, std::int32_t sectorOffset, std::uint32_t maximumBytes) {
     std::uint32_t bytes;
     if (shenmue_dc_loader_sentinel == 1 && (location->kind & 2U)) {
@@ -528,7 +528,7 @@ void FileStatAndProcessIfExists(FileState *file) {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int IsFileReadIdle(const FileState *file) {
     return file->flags & DiscFileReading ? 0 : 1;
 }
@@ -639,7 +639,7 @@ void LoadDoorTable() {
     InvalidateTableCode();
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 AreaTableEntry *GetAreaTableEntry(shen_name area) {
     AreaTableEntry *entry = g_areaTableEntries;
@@ -686,7 +686,7 @@ void *shenLoadFile(const char *directory, const char *filename, shen_name alloca
     return memory;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void *shenLoadCompressedFile(const char *directory, const char *filename, shen_name allocationName) {
     char normalized[16];
     SHENMUE_LOADER_STRCPY(normalized, filename);
@@ -766,7 +766,7 @@ void *ReadFile(const char *directory, const char *filename, shen_name allocation
     return memory;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 int shenFileExists(const char *directory, const char *filename) {
     char name[256], previousDirectory[256];
     GDFS_DIRINFO info;
@@ -829,7 +829,7 @@ bool shenFileExists(const char *directory, const char *filename) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t fileLoaderUnusedFlag;
 
 void ClearFileLoaderUnusedFlag() {
@@ -840,7 +840,7 @@ void ClearFileLoaderUnusedFlag() {
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" __attribute__((renesas)) shenmue::s2::AreaTableEntry *shenmue_s2_event_FindScenarioCharacterType(std::uint32_t area) {
     return shenmue::s2::GetAreaTableEntry(shenmue::shen_name(area));
 }

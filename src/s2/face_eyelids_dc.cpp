@@ -54,7 +54,7 @@ void PrepareOuterEyelids(FacialModelData &face, float duration, float first, flo
             if (face.upperExpression == 2) {
                 const float phase = ((1.0f - vertex.weight0) * ( 36864.0f) + ( 4096.0f));
                 std::int32_t angle;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 angle = TruncateToInt32(phase);
 #else
                 asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(angle) : "f"(phase) : "fpul");
@@ -72,7 +72,7 @@ void PrepareOuterEyelids(FacialModelData &face, float duration, float first, flo
                 const float fraction = position > 0.5f ? difference + difference : 0.0f;
                 const float phase = fraction * 16384.0f;
                 std::int32_t angle;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 angle = TruncateToInt32(phase);
 #else
                 asm volatile("ftrc %1,fpul\n\tsts fpul,%0" : "=r"(angle) : "f"(phase) : "fpul");

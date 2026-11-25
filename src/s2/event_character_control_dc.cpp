@@ -18,7 +18,7 @@
 #include "s2/player_state_dc.hpp"
 #include "s2/motion_work_dc.hpp"
 #include "s2/motion_ground_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/motion_rig.hpp"
 #include "s2/model_image_component_dc.hpp"
 #include "s2/motion_registry_dc.hpp"
@@ -61,7 +61,7 @@
 #include "s2/map_region_dc.hpp"
 #include "s2/door_state_dc.hpp"
 #include "s2/pak_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/world_render.hpp"
 #endif
 #include "s2/player_model_dc.hpp"
@@ -83,7 +83,7 @@ void SetMirroredModelDrawMode(std::int32_t enabled);
 #include "s2/character_alpha_dc.hpp"
 #include "s2/character_state_flags_dc.hpp"
 #include "s2/reflector_board_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/character_transparency_dc.hpp"
 #include "s2/pause.hpp"
 #endif
@@ -191,7 +191,7 @@ bool EV_SetCharaControllerFlags(shen_name name, std::uint32_t selector, std::int
     return result;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ccmGetGroundHeight(Character *character) {
     CharacterControlModel *const ccm = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
     return ccm ? ccm->groundHeight : 0.0f;
@@ -325,14 +325,14 @@ void Exec_MapEventSceneChange_Callback(void *) {
     if (static_cast<std::int32_t>(g_newAreaId) < 0)
         module = SystemModule_Credits;
     if (g_newScenarioFlags) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         scenSetTaskFlags(static_cast<std::int8_t>(g_newScenarioFlags));
 #else
         scenSetTaskFlags(static_cast<std::uint8_t>(g_newScenarioFlags));
 #endif
     }
     shenQueueChangeModuleAndScene(module, g_actNumber, g_newAreaId, g_newEntryId);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     HLib::DestroyCurrentEventTask();
 #else
     HLib::DestroyCurrentTask();

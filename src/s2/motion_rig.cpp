@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "s2/motion_rig.hpp"
 #include "s2/motion_work_dc.hpp"
@@ -2931,7 +2931,7 @@ float mtwkGetScaleFactorFor(std::uint32_t targetRig, std::uint32_t sourceRig, st
 namespace shenmue {
 namespace s2 {
 
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 void ReadRightLegChannels(MotionBaseRig &base, std::int32_t useOverride) {
     if (useOverride)
@@ -2947,7 +2947,7 @@ void ReadRightLegChannels(MotionBaseRig &base, std::int32_t useOverride) {
 } // namespace
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 namespace motion_detail {
 float F16ToF32(std::int16_t raw);
 } // namespace motion_detail
@@ -3066,7 +3066,7 @@ void UpdatePointersForCurrentFrame(MotionStreamContext *context, const std::uint
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
     Matrix4x4 work;
     if (callback.evaluate) {
@@ -3172,7 +3172,7 @@ void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, Moti
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
     Matrix4x4 work;
@@ -3247,7 +3247,7 @@ void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback, std::int32_t joint) {
     Vector3 position, tangentIn, tangentOut;
     std::int32_t axis;
@@ -3305,7 +3305,7 @@ void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCal
     if (callback.evaluate) {
         for (std::size_t axis = 0; axis < 3; ++axis)
             ReadMotionKeyBlock(axes[axis].channel);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         EvaluateTargetCallback(callback, position);
 #else
         EvaluateTargetCallback(callback, &position);
@@ -3335,7 +3335,7 @@ void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCal
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], MotionCallback &callback) {
     float position[3], tangentIn[3], tangentOut[3];
@@ -3370,7 +3370,7 @@ void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], Mo
     Vector3 position = {}, tangentIn = {}, tangentOut = {};
     Vector3 world = {}, worldIn = {}, worldOut = {};
     if (callback.evaluate) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         EvaluateTargetCallback(callback, position);
 #else
         EvaluateTargetCallback(callback, &position);
@@ -3391,7 +3391,7 @@ void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], Mo
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EvaluateBase(MotionBaseRig &base, std::int32_t sourceRig, float scale, float blend) {
     const float (*dims)[6] = g_motionConstData.dimensions;
     if (std::fabs(blend - base.pelvisRotation[2].channel.scale) < 1.1754944e-38f)
@@ -3507,7 +3507,7 @@ std::int32_t EvaluateBase(MotionBaseRig &base, std::uint8_t sourceRig, float sca
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags) {
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
@@ -3913,7 +3913,7 @@ void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::int32_t sourceRig, float scale, float blend) {
     const float (*const dims)[6] = g_motionConstData.dimensions;
     if (std::fabs(blend - chest.upperRotation.axes[0].channel.scale) < 1.1754944e-38f)
@@ -3977,7 +3977,7 @@ std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::uint8_t sourceRig, f
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EvaluateHead(MotionHeadRig &head, std::int32_t sourceRig, float scale, float blend) {
     const float (*const dims)[6] = g_motionConstData.dimensions;
     if (std::fabs(blend - head.baseRotation.axes[0].channel.scale) < 1.1754944e-38f)
@@ -4050,12 +4050,12 @@ std::int32_t EvaluateHead(MotionHeadRig &head, std::uint8_t sourceRig, float sca
 #endif
 
 // @verified - pd
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EvaluateArm(MotionArmRig &arm, std::uint32_t sourceRig, float scale, float blend) {
 #else
 std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale, float blend) {
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float (*const dimensions)[6] = g_motionConstData.dimensions;
     if (std::fabs(blend - arm.shoulder.axes[0].channel.scale) < 1.1754944e-38f)
         return 0;
@@ -4129,12 +4129,12 @@ std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale,
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags) {
 #else
 void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags) {
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
         g_motionAnimFlags = context->flags;
@@ -4276,12 +4276,12 @@ void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContex
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags) {
 #else
 void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags) {
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
         g_motionAnimFlags = context->flags;
@@ -4508,12 +4508,12 @@ void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *
 #endif
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags) {
 #else
 void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags) {
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
         g_motionAnimFlags = context->flags;
@@ -4698,7 +4698,7 @@ void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *con
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *tangentIn, float *tangentOut) {
     if (g_motionCurrentAnimTime < channel.current.timeSeconds) {

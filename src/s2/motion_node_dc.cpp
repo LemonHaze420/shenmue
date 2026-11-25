@@ -8,7 +8,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t SampleTimedNode(const TimedNodeMotionHeader *data, MT7Node *node, std::int32_t frame, float fraction, std::int32_t index) {
     using motion_detail::F16ToF32;
     const TimedNodeMotionRecord *record = reinterpret_cast<const TimedNodeMotionRecord *>(
@@ -138,7 +138,7 @@ std::int32_t SampleTimedNode(const TimedNodeMotionHeader *data, MT7Node *node, s
                 static_cast<std::int16_t>(static_cast<std::uint16_t>(static_cast<std::uint16_t>(source[1]) - static_cast<std::uint16_t>(*source)));
             const float change = static_cast<float>(delta) * fraction;
             std::int32_t truncated;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             truncated = TruncateToInt32(change);
 #else
             asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(truncated) : "f"(change) : "fpul");
@@ -212,13 +212,13 @@ bool TickTimedNodeMotion(TimedNodeMotion *motion) {
         return false;
     ClampTimedNodeMotionFrame(motion, data);
     std::int32_t frame;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     frame = static_cast<std::int32_t>(motion->frame);
 #else
     asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(frame) : "f"(motion->frame) : "fpul");
 #endif
     SampleTimedNode(data, motion->model, frame, 0.0f, 0);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float frameValue = motion->frame;
     if (motion->flags & TNMF_Reverse)
         motion->frame = frameValue - motion->speed;
@@ -266,7 +266,7 @@ void ApplyNodeMotionFrame(const TimedNodeMotionHeader *data, MT7Node *model, flo
     if (data->version != -1)
         data = reinterpret_cast<const TimedNodeMotionHeader *>(reinterpret_cast<const std::byte *>(data) + 4);
     std::int32_t index;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     index = static_cast<std::int32_t>(frame);
 #else
     asm volatile("ftrc %1,FPUL\n\tsts FPUL,%0" : "=r"(index) : "f"(frame) : "fpul");

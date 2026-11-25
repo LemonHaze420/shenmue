@@ -733,7 +733,7 @@ bool scenHasActiveSubtitles(HLib::Task *task) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void RequestForcedScenarioSubtitles(HLib::Task *task) {
     ScenarioWindowTextState *const text = &static_cast<ScenarioTaskData *>(HLib::GetTaskParameter(task))->windowTextState;

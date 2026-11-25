@@ -3,7 +3,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include <cstring>
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/air_dc.hpp"
 #include "s2/conversation_dc.hpp"
 #include "s2/author_doors_dc.hpp"
@@ -77,7 +77,7 @@
 #include "s2/string_utility.hpp"
 #include "s2/scene_assets_dc.hpp"
 #include "s2/frame_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/npc_data_dc.hpp"
 #include "s2/scenario_flags_dc.hpp"
 #include "s2/player_control_state_dc.hpp"
@@ -104,10 +104,10 @@
 #include "s2/player_stats_dc.hpp"
 #include "s2/game_system_dc.hpp"
 #include "s2/event_matrix_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/camera_conversation_dc.hpp"
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_ground_state_dc.hpp"
 #endif
 #include "s2/calendar_dc.hpp"
@@ -146,7 +146,7 @@
 #include "platform/dc/mt7.hpp"
 #include "s2/flag_data.hpp"
 #include "s2/inventory_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/flag_context_dc.hpp"
 #endif
 #include "s2/fight_blur_dc.hpp"
@@ -154,7 +154,7 @@
 #include "s2/system_modules_dc.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/texture_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/save_screen_state_dc.hpp"
 #include <cstdarg>
 #endif
@@ -165,7 +165,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct AuthTransformPose {
     Vector3 position;
     Vector3i rotation;
@@ -173,7 +173,7 @@ struct AuthTransformPose {
 };
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct AuthPartsTaskData {
     std::int32_t state;
     const AuthDynamicCommand *command;
@@ -184,7 +184,7 @@ struct AuthPartsTaskData {
 };
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct AuthPartsCommand {
     AuthDynamicCommand header;
     std::uint32_t mode;
@@ -193,7 +193,7 @@ struct AuthPartsCommand {
 };
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char AuthPartsTaskDataSizeCheck[sizeof(AuthPartsTaskData) == 0x38 ? 1 : -1];
 #endif
 
@@ -225,7 +225,7 @@ static std::int32_t AuthAnimatedObjectCommand(std::int32_t, const std::int32_t *
 
 static std::int32_t AuthCameraCommand(std::int32_t, const std::int32_t *arguments, AuthActorContext *);
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RemoveWeatherInstructionFlags(std::uint32_t flags);
 #endif
 
@@ -346,7 +346,7 @@ void HideWindowSlot(WindowSlot *window);
 
 void ShowWindowSlot(WindowSlot *window);
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ReleaseWindowSurface(WindowSlot *window);
 
 void scenReleaseSubtitleSurface(HLib::Task *task);
@@ -418,72 +418,72 @@ void InitializeScenarioTextDecoder(std::int32_t mode, const char *text, Scenario
 
 std::int32_t AdvanceScenarioTextDecoder(ScenarioTextDecoder &decoder);
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetHighModelAndFaceFlagsForChara(Character *character, std::int32_t expression, std::int32_t frames, float scale);
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t CheckMediatedDoublePress();
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint32_t g_completedGameCount;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const AuthDynamicCommand *g_authorDynamicCommands[26];
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const AuthDynamicCommand *g_authorDynamicCommandHeads[26];
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::byte *g_authorHandCommands = 0;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const std::byte *g_authorHandIndices = 0;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetSoundListenerUsesCamera(std::int32_t enabled);
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetUpperFacialExpression(Character *character, std::int32_t expression, std::int32_t frames, float scale);
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetLowerFacialExpression(Character *character, std::int32_t expression, std::int32_t frames, float scale);
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetHighModelAndFaceFlagsForChara(Character *character, std::int32_t expression, std::int32_t frames, float scale);
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t g_authorCaptureCharacterStates;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const float *g_authorCameraKeyCursor = 0;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t g_authorCameraKeysRemaining = 0;
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static AuthCommandHandler authCommandHandlers[7] = {
     AuthAnimatedObjectCommand, AuthCameraCommand, AuthTransformCommand, ApplyAuthorCharacterMotion, AuthFaceCommand, AuthDialogueCommand, AuthSoundCommand};
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMapFieldDepthSlotEnabled(std::int32_t enabled, std::int32_t index);
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::int16_t authorPartNodeIds[104] = {-65, -66, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170,
     171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201,
     202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232,
@@ -955,7 +955,7 @@ void scenDestroySubtitles(HLib::Task *task) {
     std::strcpy(reinterpret_cast<char *>(state + 1), "");
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void scenReleaseSubtitleSurface(HLib::Task *task) {
     ScenarioTaskData *const scenario = static_cast<ScenarioTaskData *>(HLib::GetTaskParameter(task));
     WindowSlot *const dialog = scenario->windowDialog;
@@ -966,7 +966,7 @@ void scenReleaseSubtitleSurface(HLib::Task *task) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void InitializeAuthorSplines(AuthSplineSet *splines) {
     for (std::int32_t index = 0; index < 9; ++index)
         if (splines->tracks[index].count)
@@ -976,7 +976,7 @@ static void InitializeAuthorSplines(AuthSplineSet *splines) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t EvaluateAuthorSpline(AuthSplineSet *splines, AuthTransformPose *pose, const Matrix4x4 *placement) {
     float values[9];
     std::int32_t result = 0;
@@ -1091,7 +1091,7 @@ std::int32_t ResetScenarioActionQueue(std::uint32_t index, std::int32_t mode) {
     return 0;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t EV_authSceneCtrl(std::int32_t operation) {
     switch (operation) {
     case -1:
@@ -1193,7 +1193,7 @@ void SetAuthorCameraPlacement(const void *placement) {
     g_authorCameraPlacement = placement;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ProcessScenario(AuthorController *control) {
     g_authorController = control;
@@ -1380,7 +1380,7 @@ void ResetAuthorDialogueState() {
     }
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SetAuthorActorRegionFlag(AuthActorContext *context, MotionWork *work) {
     if (!context->motionType) {
         std::int32_t clip = 0x80;
@@ -1391,14 +1391,14 @@ static void SetAuthorActorRegionFlag(AuthActorContext *context, MotionWork *work
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ClearAuthorMotionCutState(AuthActorContext *context, MotionWork *) {
     if (!context->motionType && (context->clipState & 0x80U))
         context->clipState = 0;
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthAnimatedObjectCommand(std::int32_t, const std::int32_t *, AuthActorContext *) {
     Vector3 eye, target;
     camCtrlGetNextCamPos(&eye);
@@ -1407,7 +1407,7 @@ static std::int32_t AuthAnimatedObjectCommand(std::int32_t, const std::int32_t *
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthCameraCommand(std::int32_t, const std::int32_t *arguments, AuthActorContext *) {
     const std::byte *const table = g_authorController->camera;
     const std::int32_t offset = arguments[1] * 4;
@@ -1426,7 +1426,7 @@ static std::int32_t AuthCameraCommand(std::int32_t, const std::int32_t *argument
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthTransformCommand(std::int32_t phase, const std::int32_t *arguments, AuthActorContext *context) {
     Character *const character = scenFindChara(g_authorController->task, shen_name(arguments[0]));
     AuthSplineSet *const splines = &context->splines;
@@ -1583,14 +1583,14 @@ static std::int32_t AuthTransformCommand(std::int32_t phase, const std::int32_t 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetEntityRotation(std::int32_t motionType, MotionWork *work, const Vector3i *rotation) {
     if (!motionType)
         mtwkSetEntityRotation(work, rotation);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void StartAuthorActorMotion(std::int32_t motionType, Character *character, MotionWork *work, std::int32_t motion) {
     if (!motionType) {
         mtwkRequestMotion(work, motion, LowerBody);
@@ -1601,7 +1601,7 @@ static void StartAuthorActorMotion(std::int32_t motionType, Character *character
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetLayerLoopStartTime(std::int32_t motionType, MotionWork *work, float frame) {
     if (!motionType)
         mtwkSetLayerLoopStartTime(work, frame, LowerBody);
@@ -1610,7 +1610,7 @@ static void AuthSetLayerLoopStartTime(std::int32_t motionType, MotionWork *work,
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SetAuthorMotionFrame(std::int32_t motionType, MotionWork *work, float frame) {
     if (!motionType)
         mtwkSetRegionEvalTime(work, frame, LowerBody);
@@ -1619,7 +1619,7 @@ static void SetAuthorMotionFrame(std::int32_t motionType, MotionWork *work, floa
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetLayerEndFrame(std::int32_t motionType, MotionWork *work, float frame) {
     if (!motionType)
         mtwkSetLayerEndFrame(work, frame, LowerBody);
@@ -1628,28 +1628,28 @@ static void AuthSetLayerEndFrame(std::int32_t motionType, MotionWork *work, floa
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetExtraFlag(std::int32_t motionType, MotionWork *work) {
     if (!motionType)
         mtwkSetExtraFlag(work, 9, 0);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthClearExtraFlag(std::int32_t motionType, MotionWork *work) {
     if (!motionType)
         mtwkSetExtraFlag(work, 9, 2);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetRegionFlag(std::int32_t motionType, MotionWork *work) {
     if (!motionType)
         mtwkSetRegionFlag(work, 0x45, 0, LowerBody);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SetAuthorMotionSpeed(std::int32_t motionType, MotionWork *work, float speed) {
     if (!motionType)
         mtwkSetSpeed(work, speed, LowerBody);
@@ -1658,7 +1658,7 @@ static void SetAuthorMotionSpeed(std::int32_t motionType, MotionWork *work, floa
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthGetRootLocalPosition(std::int32_t motionType, Character *character, MotionWork *work, Vector3 *position) {
     if (!motionType)
         mtwkGetRootPosition(work, position);
@@ -1667,7 +1667,7 @@ static void AuthGetRootLocalPosition(std::int32_t motionType, Character *charact
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthGetRootYaw(std::int32_t motionType, Character *character, MotionWork *work) {
     std::int32_t yaw;
     if (!motionType)
@@ -1678,14 +1678,14 @@ static std::int32_t AuthGetRootYaw(std::int32_t motionType, Character *character
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetCharacterMotionEnabled(std::int32_t motionType, Character *character, std::int32_t enabled) {
     if (!motionType)
         SetCharacterMotionEnabled(character, enabled);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void SampleAuthorMotionRoot(std::int32_t motionType, std::uint16_t motion, Character *character, float frame, Vector3 *position) {
     if (!motionType)
         SampleNativeMotionRoot(motion, charGetMotionRigType(character), frame, position);
@@ -1694,7 +1694,7 @@ static void SampleAuthorMotionRoot(std::int32_t motionType, std::uint16_t motion
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ApplyAuthorMotionPose(std::int32_t motionType, std::uint16_t motion, Character *character, float frame, Vector3 *position, Vector3i *rotation) {
     if (!motionType)
         ApplyCharacterMotionToPose(character, position, rotation, frame, motion);
@@ -1705,14 +1705,14 @@ static void ApplyAuthorMotionPose(std::int32_t motionType, std::uint16_t motion,
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthSetRegionFlagForApply(std::int32_t motionType, MotionWork *work, MotionRegion region) {
     if (!motionType)
         mtwkSetRegionFlag(work, 0x47, 0, region);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ApplyAuthorCharacterMotion(std::int32_t phase, const std::int32_t *arguments, AuthActorContext *context) {
     std::int32_t motionType;
     Vector3 rootPosition;
@@ -1784,7 +1784,7 @@ std::int32_t ApplyAuthorCharacterMotion(std::int32_t phase, const std::int32_t *
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthFaceCommand(std::int32_t, const std::int32_t *arguments, AuthActorContext *) {
     if (arguments[0]) {
         Character *const character = scenFindChara(g_authorController->task, shen_name(arguments[0]));
@@ -1798,7 +1798,7 @@ static std::int32_t AuthFaceCommand(std::int32_t, const std::int32_t *arguments,
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthDialogueCommand(std::int32_t phase, const std::int32_t *arguments, AuthActorContext *activeContext) {
     const std::byte *const strings = g_authorController->strings;
     const std::byte *const lips = g_authorController->lips;
@@ -1870,7 +1870,7 @@ static std::int32_t AuthDialogueCommand(std::int32_t phase, const std::int32_t *
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t AuthorSoundPan(shen_name subject) {
     Character *const character = scenFindChara(g_authorController->task, subject);
     if (!character)
@@ -1889,7 +1889,7 @@ static std::int32_t AuthorSoundPan(shen_name subject) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static std::int32_t AuthSoundCommand(std::int32_t phase, const std::int32_t *arguments, AuthActorContext *) {
     std::int32_t gain, bank, lane, pan;
@@ -1944,7 +1944,7 @@ static std::int32_t AuthSoundCommand(std::int32_t phase, const std::int32_t *arg
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void TickActiveAuthCommands(AuthorController *control) {
     AuthActiveCommand *command = control->activeCommands;
     for (std::int32_t index = 0; index < 70; ++index, ++command) {
@@ -1956,7 +1956,7 @@ static void TickActiveAuthCommands(AuthorController *control) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void DispatchAuthCommand(std::int32_t channel, const std::int32_t *arguments) {
     AuthActiveCommand *command;
     AuthActiveCommand *previous = 0;
@@ -1986,7 +1986,7 @@ static void DispatchAuthCommand(std::int32_t channel, const std::int32_t *argume
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static AuthActorContext *FindOrCreateAuthorActorContext(shen_name subject) {
     std::int32_t index;
@@ -2086,7 +2086,7 @@ void SCMS_Enqueue(AuthorController *control) {
     g_authorCameraPlacement = 0;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void UpdateAuthorMotionCutState(AuthorController *control) {
     std::int32_t crossed = 0;
     if (g_authorCameraKeysRemaining > 1) {
@@ -2141,7 +2141,7 @@ static void UpdateAuthorMotionCutState(AuthorController *control) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlSetFlag80000Wrapper(std::int32_t enabled);
 
 void Author_Update(AuthorController *control) {
@@ -2184,7 +2184,7 @@ void Author_Update(AuthorController *control) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::byte *DispatchAuthorTimestampGroup(const std::byte *cursor) {
     while (*reinterpret_cast<const std::int8_t *>(cursor)) {
         DispatchAuthCommand(*reinterpret_cast<const std::int8_t *>(cursor), reinterpret_cast<const std::int32_t *>(cursor + 4));
@@ -2194,7 +2194,7 @@ static const std::byte *DispatchAuthorTimestampGroup(const std::byte *cursor) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void InitializeAuthorRuntime(const MapInfoChunk *data) {
     AuthorController *const control = g_authorController;
     control->data = reinterpret_cast<const std::byte *>(data);
@@ -2239,7 +2239,7 @@ static void InitializeAuthorRuntime(const MapInfoChunk *data) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const std::byte *FindAuthorChunk(const MapInfoChunk *bundle, std::uint32_t token) {
     const std::byte *cursor = reinterpret_cast<const std::byte *>(bundle) + 8;
     const std::byte *const end = reinterpret_cast<const std::byte *>(bundle) + bundle->nextByteOffset;
@@ -2325,7 +2325,7 @@ void ClearAuthorPackageRecords() {
         ClearAuthorPackageRecord(index);
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static const MapInfoChunk *GetAuthorTableFile(std::int32_t index) {
     return authorTable[index].track;
 }
@@ -2355,7 +2355,7 @@ void LoadAuthorTableSlot(std::int32_t index, const char *filename, const char *d
         authorTable[index].view = next;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void InitializeAuthorDynamicData(const AuthorTableEntry *entry) {
     std::int32_t channel;
@@ -2392,13 +2392,13 @@ void InitializeAuthorDynamicData(const AuthorTableEntry *entry) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void InitializeAuthorDynamicDataForEntry(const AuthorTableEntry *entry) {
     InitializeAuthorDynamicData(entry);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void Author_UpdateDynamic() {
     for (std::int32_t channel = 0; channel < 26; ++channel) {
@@ -2417,7 +2417,7 @@ void Author_UpdateDynamic() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *FindLastAuthorDynamicCommand(std::int32_t channel) {
     const AuthDynamicCommand *command = g_authorDynamicCommands[channel];
@@ -2432,7 +2432,7 @@ const AuthDynamicCommand *FindLastAuthorDynamicCommand(std::int32_t channel) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicStageControl(const AuthDynamicCommand *command) {
     if (command->operation == 0) {
@@ -2450,7 +2450,7 @@ const AuthDynamicCommand *AuthorDynamicStageControl(const AuthDynamicCommand *co
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicLightingControl(const AuthDynamicCommand *command) {
     if (command->operation == 1) {
@@ -2464,7 +2464,7 @@ const AuthDynamicCommand *AuthorDynamicLightingControl(const AuthDynamicCommand 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicCharacterDisplay(const AuthDynamicCommand *command) {
     if (command->operation == 2) {
@@ -2476,7 +2476,7 @@ const AuthDynamicCommand *AuthorDynamicCharacterDisplay(const AuthDynamicCommand
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicReflectorBoard(const AuthDynamicCommand *command) {
     if (command->operation == 3) {
@@ -2497,7 +2497,7 @@ const AuthDynamicCommand *AuthorDynamicReflectorBoard(const AuthDynamicCommand *
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AuthorEyes_Callback(void *data) {
     AuthEyeTaskData *const eyes = reinterpret_cast<AuthEyeTaskData *>(data);
@@ -2560,7 +2560,7 @@ void AuthorEyes_Callback(void *data) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicEyes(const AuthDynamicCommand *command) {
     if (command->operation == 4) {
@@ -2597,7 +2597,7 @@ const AuthDynamicCommand *AuthorDynamicEyes(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicHand(const AuthDynamicCommand *command) {
     if (command->operation == 5) {
@@ -2623,7 +2623,7 @@ const AuthDynamicCommand *AuthorDynamicHand(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicCloth(const AuthDynamicCommand *command) {
     if (command->operation == 6) {
@@ -2656,14 +2656,14 @@ const AuthDynamicCommand *AuthorDynamicCloth(const AuthDynamicCommand *command) 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicOsageControlNullsub(const AuthDynamicCommand *command) {
     return reinterpret_cast<const AuthDynamicCommand *>(reinterpret_cast<const std::byte *>(command) + 16);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicBlur(const AuthDynamicCommand *command) {
     if (command->operation == 8) {
@@ -2682,14 +2682,14 @@ const AuthDynamicCommand *AuthorDynamicBlur(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicWaveNullsub(const AuthDynamicCommand *command) {
     return reinterpret_cast<const AuthDynamicCommand *>(reinterpret_cast<const std::byte *>(command) + 12);
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const AuthDynamicCommand *AuthorDynamicFaceExpression(const AuthDynamicCommand *command) {
     const std::byte *const data = reinterpret_cast<const std::byte *>(command);
     if (command->operation == 10) {
@@ -2706,7 +2706,7 @@ const AuthDynamicCommand *AuthorDynamicFaceExpression(const AuthDynamicCommand *
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicFade(const AuthDynamicCommand *command) {
     if (command->operation == 11) {
@@ -2728,7 +2728,7 @@ const AuthDynamicCommand *AuthorDynamicFade(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicMotionBlendTrack(const AuthDynamicCommand *command) {
     if (command->operation == 12) {
@@ -2769,7 +2769,7 @@ const AuthDynamicCommand *AuthorDynamicMotionBlendTrack(const AuthDynamicCommand
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const AuthDynamicCommand *AuthorDynamicSmoke(const AuthDynamicCommand *command) {
     AuthSmokeState *smoke = &g_authorSmoke;
     if (command->operation == 13) {
@@ -2877,7 +2877,7 @@ const AuthDynamicCommand *AuthorDynamicSmoke(const AuthDynamicCommand *command) 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const AuthDynamicCommand *AuthorDynamicFallingParticles(const AuthDynamicCommand *command) {
     if (command->operation == 14) {
         AuthParticleState *particles = &g_authorParticles;
@@ -2971,7 +2971,7 @@ const AuthDynamicCommand *AuthorDynamicFallingParticles(const AuthDynamicCommand
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void AuthorParts_Callback(void *data) {
     AuthPartsTaskData *const state = static_cast<AuthPartsTaskData *>(data);
     std::int32_t index;
@@ -3048,7 +3048,7 @@ static void AuthorParts_Callback(void *data) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicParticles(const AuthDynamicCommand *command) {
     const std::byte *record = reinterpret_cast<const std::byte *>(command);
@@ -3114,7 +3114,7 @@ const AuthDynamicCommand *AuthorDynamicParticles(const AuthDynamicCommand *comma
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicFog(const AuthDynamicCommand *command) {
     if (command->operation == 16) {
@@ -3150,7 +3150,7 @@ const AuthDynamicCommand *AuthorDynamicFog(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicFieldObject(const AuthDynamicCommand *command) {
     if (command->operation == 17) {
@@ -3179,7 +3179,7 @@ const AuthDynamicCommand *AuthorDynamicFieldObject(const AuthDynamicCommand *com
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicShadow(const AuthDynamicCommand *command) {
     if (command->operation == 18) {
@@ -3206,7 +3206,7 @@ const AuthDynamicCommand *AuthorDynamicShadow(const AuthDynamicCommand *command)
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicFaceClip(const AuthDynamicCommand *command) {
     if (command->operation == 19) {
@@ -3222,7 +3222,7 @@ const AuthDynamicCommand *AuthorDynamicFaceClip(const AuthDynamicCommand *comman
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicFilter(const AuthDynamicCommand *command) {
     if (command->operation == 20) {
@@ -3244,7 +3244,7 @@ const AuthDynamicCommand *AuthorDynamicFilter(const AuthDynamicCommand *command)
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicLens(const AuthDynamicCommand *command) {
     if (command->operation == 21) {
@@ -3255,7 +3255,7 @@ const AuthDynamicCommand *AuthorDynamicLens(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicDoor(const AuthDynamicCommand *command) {
     if (command->operation == 22) {
@@ -3268,7 +3268,7 @@ const AuthDynamicCommand *AuthorDynamicDoor(const AuthDynamicCommand *command) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicLightState(const AuthDynamicCommand *command) {
     if (command->operation == 23) {
@@ -3280,7 +3280,7 @@ const AuthDynamicCommand *AuthorDynamicLightState(const AuthDynamicCommand *comm
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicWrist(const AuthDynamicCommand *command) {
     if (command->operation == 24) {
@@ -3297,7 +3297,7 @@ const AuthDynamicCommand *AuthorDynamicWrist(const AuthDynamicCommand *command) 
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const AuthDynamicCommand *AuthorDynamicPartsLight(const AuthDynamicCommand *command) {
     if (command->operation == 25) {
@@ -3444,7 +3444,7 @@ std::int32_t probeSceneById(std::int32_t id) {
     return -1;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void sctlAuthApplyMotion() {
     std::int32_t frame, index;
     AuthSavedCharacter *state;
@@ -3547,7 +3547,7 @@ std::int32_t PrepareAuthorHands(Character *character, shen_name subject) {
     return result;
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static std::int32_t ExecuteAuthorMusicCommand(const char *name) {
     std::int32_t result = 0;
     if (std::strstr(name, "fade_out")) {
@@ -3568,7 +3568,7 @@ static std::int32_t ExecuteAuthorMusicCommand(const char *name) {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void CaptureAuthorMapMasks() {
     std::uint32_t modelMask = 0, fieldMask = 0;
     for (std::int32_t index = 0; index < 32; ++index) {
@@ -3597,7 +3597,7 @@ void RestoreAuthorMapSlots() {
     }
 }
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void FinalizeAuthorSkip() {
     std::int32_t presetFrame = -1, directFrame = -1;
@@ -3641,12 +3641,12 @@ void FinalizeAuthorSkip() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AuthorControllerNullsub() {
 }
 #endif
 
-#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static void ReleaseAuthorSplines(AuthSplineSet *splines) {
     for (std::int32_t index = 0; index < 9; ++index)
         if (splines->tracks[index].count)

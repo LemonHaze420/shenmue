@@ -19,7 +19,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void mtwkTranslateRigInterpolated(MotionWork *work, float x, float y, float z);
 #endif
 
@@ -129,7 +129,7 @@ void CCM_Callback(Character *character, void *data) {
     control->appliedMovement.z = moveZ;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ccmUpdateRootGroundHeightBlended(CharacterControlModel *control) {
     if (!(control->flags & CCMF_RootOwner))
         return;

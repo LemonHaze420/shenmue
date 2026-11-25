@@ -25,7 +25,7 @@ namespace s2 {
 namespace HLib {
 
 #if SHENMUE_IS_DC
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SHENMUE_HLIB_CONSTANT std::uintptr_t DYNAMIC_HEAP_ADDRESS = 0x0c360000;
 #else
 SHENMUE_HLIB_CONSTANT std::uintptr_t DYNAMIC_HEAP_ADDRESS = 0x8c360000;
@@ -97,7 +97,7 @@ struct Task {
     std::int32_t taskToken;
     std::uint8_t taskIndex;
     std::uint8_t nextTaskIndex;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint16_t freeTaskDataOnDestroy;
 #else
     std::uint8_t freeTaskDataOnDestroy;
@@ -227,7 +227,7 @@ std::intptr_t DestroyCurrentTask();
 #if SHENMUE_IS_DC
 void DestroyCurrentEventTask();
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t PauseTaskRangeExecution(std::int32_t firstTaskIndex, std::int32_t lastTaskIndex);
 #else
 void PauseTaskRangeExecution(std::uint16_t firstTaskIndex, std::uint16_t lastTaskIndex);

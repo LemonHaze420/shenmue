@@ -6,7 +6,7 @@
 #include "platform/dc/sdk.hpp"
 #include "s2/map_visibility_dc.hpp"
 #include "s2/event_matrix_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_load_dc.hpp"
 #include "s2/field_depth_dc.hpp"
 #endif
@@ -120,7 +120,7 @@ float GetMapCellScale() {
     return g_mapCellScale;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetupOwnedMapModel(void *source, std::int32_t index);
 void *shenLoadFile(const char *directory, const char *filename, shen_name allocationName);
 
@@ -334,7 +334,7 @@ void BuildMapClipRecords(MT7Node *node) {
         BuildMapClipRecords(node->sibling);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void BuildMapModelCommandCells(std::int32_t index, std::int32_t count, std::int32_t dangers, std::int32_t wallsCount, std::int32_t cameraWallsCount) {
     MapCellOffset *cell;
     MapModelCommandCell *cells, *run;
@@ -499,7 +499,7 @@ void SetMapFieldDepthEnabled(std::uint32_t enabled, std::int32_t index) {
     field.enabled = !field.dangerSpheres && !field.walls && !field.cameraWalls ? 0 : enabled;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocForCLIP(MT7Node *root, std::int32_t index) {
     mapObjectClipRecordIndex = 0;
     wallCount = cameraWallCount = 0;

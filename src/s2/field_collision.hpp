@@ -198,7 +198,7 @@ float shenFindIntersectionWithScene(const Vector3 &position, float maximumY);
 float TransformClippedPoint(const Vector3 &position, float maximumY);
 // Uncorrected, two-sided segment tests in enabled owner order.
 bool flddFindIntersections(const Vector3 &origin, const Vector3 &destination);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);
 #else
 bool GlobalRayIntersectionTest(const Vector3 &origin, const Vector3 &destination, float radius);

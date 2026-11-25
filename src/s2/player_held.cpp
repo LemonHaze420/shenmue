@@ -1,5 +1,5 @@
 #include "shenmue.h"
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/player_model_dc.hpp"
 #include "s2/player_control_state_dc.hpp"
 #include "s2/calendar_dc.hpp"
@@ -29,7 +29,7 @@ namespace shenmue {
 
 namespace s2 {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetupWZ2_CtrlWazamaki();
 void RequestMemoClose();
 void ResetHelpIconsToItemPrompt();
@@ -51,11 +51,10 @@ void SetHeldStateMode(PlayerModelState &state, HeldStateMode mode) {
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 bool IsHeldTransitionReady(const PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!state.motionState)
         return true;
     return false;
@@ -65,9 +64,8 @@ bool IsHeldTransitionReady(const PlayerModelState &state) {
     return state.rootYawState == 0 && state.lookAroundState == 0;
 #endif
 }
-#endif
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static inline void PrepareHeldTransition() {
     CloseWristwatchImmediate();
     SetupWZ2_CtrlWazamaki();
@@ -126,11 +124,10 @@ void QueueHeldSceneChange(PlayerModelState &state, std::int16_t act, shen_name a
 }
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 // @verified - d
 void plymUpdateDuringSearchRequest(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     bool searchBusy = false;
     if (!(g_playerRuntimePointer->flags & 2U) || state.heldStateMode || IsScenarioBusy() || HasScenarioCharacterControl() || scenCheckActiveRecordBusy())
 #endif
@@ -148,7 +145,7 @@ void plymUpdateDuringSearchRequest(PlayerModelState &state) {
     if (hour < 6)
         hour += 24;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int32_t minute = hour * 60;
     minute += g_currentDateTime.minute;
     if (srchCheckFlags(3) >= 0 || srchCheckFlags(6) != 0)
@@ -169,7 +166,7 @@ void plymUpdateDuringSearchRequest(PlayerModelState &state) {
         return;
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (minute >= state.holdWindowEndMinute) {
         if (!(state.heldStateFlags & 4U))
             state.heldStateMode = 2;
@@ -191,7 +188,7 @@ void plymUpdateDuringSearchRequest(PlayerModelState &state) {
         }
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (!state.heldStateMode && (state.heldStateFlags & 0x4000U) && minute >= state.heldStateTriggerMinute) {
         state.heldStateMode = 6;
         state.heldStateStep = 0;
@@ -224,7 +221,7 @@ void plymUpdateDuringSearchRequest(PlayerModelState &state) {
 // @verified - d
 void plymUpdateHeldStateCallback(PlayerModelState &state) {
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     switch (static_cast<std::int8_t>(state.heldStateStep)) {
     case 0:
         state.flags |= 0x80U;
@@ -252,7 +249,7 @@ void plymUpdateHeldStateCallback(PlayerModelState &state) {
         ++state.heldStateStep;
         state.heldStateTimer = 150;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         break;
     case 2: {
 #endif
@@ -264,7 +261,7 @@ void plymUpdateHeldStateCallback(PlayerModelState &state) {
 #endif
         ++state.heldStateStep;
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         void (*const callback)() = state.heldStateCallback;
         if (callback) {
             state.heldStateCallback = 0;
@@ -287,7 +284,7 @@ void plymUpdateHeldStateCallback(PlayerModelState &state) {
 #endif
         }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         break;
 #endif
 
@@ -305,7 +302,7 @@ void plymUpdateHeldStateCallback(PlayerModelState &state) {
 #endif
     }
 
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     default:
         state.flags &= ~0x80U;
         state.heldStateFlags &= ~0x80;
@@ -320,7 +317,7 @@ void plymUpdateHeldStateCallback(PlayerModelState &state) {
 
 // @verified - d
 void plymUpdateHeldState(PlayerModelState &state) {
-#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
     DateTime record;
     std::int16_t choices[4];
@@ -952,7 +949,6 @@ void plymUpdateHeldState(PlayerModelState &state) {
     }
 #endif
 }
-#endif
 
 } // namespace player_detail
 

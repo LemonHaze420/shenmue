@@ -2,7 +2,7 @@
 #include "s2/legacy_sprite_types.hpp"
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/legacy_hud_text_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/title_sprite_dc.hpp"
 #endif
 
@@ -157,7 +157,7 @@ void InitTIMR() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 LegacyHudText *CreateLegacyHudText() {
     std::int32_t failed = 1;
     LegacyHudText *result = 0;
@@ -375,7 +375,7 @@ std::int64_t ReleaseLegacyHudText(LegacyHudText *text) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int8_t LoadLegacyHudTextGlyph(const void *texture) {
     std::int32_t index = 0;
     LegacyHudGlyphSlot *slots = g_legacyHudGlyphs;

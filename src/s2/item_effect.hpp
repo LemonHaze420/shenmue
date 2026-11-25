@@ -22,7 +22,7 @@ namespace s2 {
 #else
 inline constexpr shen_name TASK_IEET = SHEN_NAME(IEET);
 #endif
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 ITEM_DATA char ITEM_EFFECT_MISSING_NAME[] = "\xa5\xa8\xa5\xe9\xa1\xbc";
 #else
 inline constexpr char ITEM_EFFECT_MISSING_NAME[] = "\xe3\x82\xa8\xe3\x83\xa9\xe3\x83\xbc";

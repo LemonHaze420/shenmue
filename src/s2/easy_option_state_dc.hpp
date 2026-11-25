@@ -11,7 +11,7 @@ namespace shenmue { namespace s2 {
 
 extern std::uint8_t g_easyOptionActive;
 bool IsEasyOptionActive();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern std::uint8_t g_easyOptionMode;
 struct PosePreviewRecord {
     void *source, *model;

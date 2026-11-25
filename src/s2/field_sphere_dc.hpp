@@ -7,7 +7,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t TestFieldLineSphere(const Vector3 *origin, const Vector3 *end, const Vector3 *centre, float radius);
 std::int32_t FindFieldGridCell(const Vector3 *position);
 std::int32_t GatherFieldSegmentGridCells(const Vector3 *start, const Vector3 *end, std::int16_t *cells);

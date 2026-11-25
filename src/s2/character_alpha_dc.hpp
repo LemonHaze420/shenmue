@@ -16,7 +16,7 @@ typedef char Layout_character_alpha_dc_0[(sizeof(CharacterAlphaState) == 4) ? 1 
 void UpdateCharacterAlpha(Character *character, void *payload);
 void AttachCharacterAlphaComponent(Character *character);
 std::int32_t cpamSetFlag(Character *character, std::int32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool shenCheckCharaHasAlphaManager(const Character *character);
 #endif
 

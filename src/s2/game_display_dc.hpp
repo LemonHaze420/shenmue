@@ -38,7 +38,7 @@ void RunGameCallback(Character *character, void *payload);
 void GAME_Callback(void *character);
 void StageGameDisplayNode(GameDisplayWork *game, std::int32_t nodeId, const Vector3 *position, float alpha, const Vector3 *scale);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 GameDisplayWork *scenCopyCharaToGame(shen_name name);
 void scenGetCharaGameNode(shen_name name, std::int32_t nodeId, const Vector3 *position, float alpha, const Vector3 *scale);
 GameDisplayWork *SetPosRotForGame(shen_name name, std::uint32_t baseNodeId, const Vector3 *digitStep, std::uint32_t maximumValue, std::int32_t decimalShift);

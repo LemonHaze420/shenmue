@@ -12,7 +12,7 @@ inline shen_name FieldBasePartName() {
 }
 #define FIELD_BASE_PART FieldBasePartName()
 const std::uint32_t fieldCategoryTerminator = 0xffffff01U;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ToggleFlagOnFieldEntity(shen_name name, std::int32_t enabled);
 std::uint32_t plymDoIntersectionTest(const Vector3 *position);
 std::uint32_t flddQueryCategory6InRadius(const Vector3 *position);

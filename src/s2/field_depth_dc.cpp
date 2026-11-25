@@ -452,7 +452,7 @@ bool camCtrlCheckPosition(const Vector3 &position, float radius) {
     return camCtrlCheckDepthBufferPosition(cameraFieldDepthSamples, position, radius);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool camCtrlIsViewPointDepthVisible(const Vector3 &point, float radius) {
     const float x = point.x;
     const float depth = point.z;

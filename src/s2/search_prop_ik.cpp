@@ -247,35 +247,35 @@ SearchPropIKSelection searchPropIKSelection[3] = {};
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t propAngles[2] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3i propWristAngles = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 propArmTransform = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 propSinglePivot = {.02f, 0, .03f};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 propPairedPivot = {.02f, 0, .03f};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 propLookOffset = {0, .4f, -.1f};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float propIKBlendStep = 0.033333335f;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const shen_name examineButton(SHEN_NAME4('B', 'T', 'E', 'V'));
 #endif
 
@@ -951,7 +951,7 @@ static std::int32_t SearchCommandTurnPlayer(SearchTaskData &search) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t randomSearchFlag;
 
 void srchClearRandomSearchFlag() {
@@ -997,7 +997,7 @@ std::int32_t srchGetPropIKIndex();
 bool srchIsPropIKSettled();
 bool srchIsPropIKMoving();
 bool srchIsPropIKActive();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchGetPropIKLookup(std::uint32_t marker);
 #else
 std::int32_t srchGetPropIKLookup(std::uint16_t marker);
@@ -1138,7 +1138,7 @@ bool srchProcessSearchIK(SearchTaskData &search) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 shen_name srchGetCurrentTargetName() {
     if (searchControl && searchControl->currentTarget)
@@ -1261,7 +1261,7 @@ void srchResetIK() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchGetPropIKLookup(std::uint32_t marker) {
     char text[2];
     if (static_cast<char>(marker) != 'M')
@@ -1345,7 +1345,7 @@ bool srchIsPropIKActive() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 PropVector(float x, float y, float z) {
     Vector3 v = {x, y, z};
     return v;
@@ -1360,7 +1360,7 @@ Vector3 PropVector(float x, float y, float z) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3i PropRotation(std::int32_t x, std::int32_t y, std::int32_t z) {
     Vector3i v = {x, y, z};
     return v;
@@ -1375,7 +1375,7 @@ Vector3i PropRotation(std::int32_t x, std::int32_t y, std::int32_t z) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 ReadPropMatrix() {
     Matrix4x4 m;
     matrix_stack::GetMatrix(&m);
@@ -1391,7 +1391,7 @@ Matrix4x4 ReadPropMatrix() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MT7Node *FindNestedPropMarker(MT7Node *node, std::uint32_t excludedMarker) {
     const std::uint32_t marker = GetModelMarker(node);
     const std::uint8_t type = static_cast<std::uint8_t>(marker);
@@ -1420,7 +1420,7 @@ MT7Node *FindNestedPropMarker(MT7Node *node, std::uint32_t excludedMarker) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *Matrices(SearchPropIKSlot &slot) {
     return reinterpret_cast<Matrix4x4 *>(slot.transformData);
 }
@@ -1444,7 +1444,7 @@ Matrix4x4 *Matrices(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *Targets(SearchPropIKSlot &slot) {
     return reinterpret_cast<Matrix4x4 *>(slot.auxiliaryData);
 }
@@ -1468,7 +1468,7 @@ Matrix4x4 *Targets(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SearchPropIKConfig &Config(SearchPropIKSlot &slot) {
     return *slot.configuration;
 }
@@ -1492,7 +1492,7 @@ SearchPropIKConfig &Config(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 Translation() {
     Vector3 value;
     matrix_stack::GetTranslation(&value);
@@ -1518,7 +1518,7 @@ Vector3 Translation() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 TransformVector(const Vector3 &point) {
     Vector3 result;
     Matrix4x4::Transform(point, result);
@@ -1546,7 +1546,7 @@ Vector3 TransformVector(const Vector3 &point) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void Translate(const Vector3 &point) {
     Matrix4x4::preTranslate(point.x, point.y, point.z);
 }
@@ -1570,7 +1570,7 @@ void Translate(const Vector3 &point) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SwizzleBasis(const Matrix4x4 &matrix) {
     Matrix4x4 current;
     matrix_stack::GetMatrix(&current);
@@ -1603,7 +1603,7 @@ void SwizzleBasis(const Matrix4x4 &matrix) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t Angle(float x, float z) {
     return dc::sdk::ArcTan2Fixed(x, z);
 }
@@ -1627,7 +1627,7 @@ std::int16_t Angle(float x, float z) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Character *Player() {
     return static_cast<Character *>(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo);
 }
@@ -1651,7 +1651,7 @@ Character *Player() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MT7Node *MeshNode(MT7Node *node) {
     while (!node->mesh)
         node = node->child;
@@ -1679,7 +1679,7 @@ MT7Node *MeshNode(MT7Node *node) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetMarkerVisible(MT7Node &node, bool visible) {
     node.kind = visible ? 1 : 0;
 }
@@ -1701,7 +1701,7 @@ void SetMarkerVisible(MT7Node &node, bool visible) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool srchPopPropIK(SearchTaskData &search) {
     SearchPropIKSlot &slot = g_searchPropIKSlots[searchPropIKIndex - 1];
@@ -1745,7 +1745,7 @@ bool srchPopPropIK(SearchTaskData &search) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void srchBindPropIK(SearchTaskData &search) {
     SearchPropIKSlot *const slot = &g_searchPropIKSlots[searchPropIKIndex];
@@ -1800,7 +1800,7 @@ void srchBindPropIK(SearchTaskData &search) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool srchPushPropIK(SearchTaskData &search) {
     SearchPropIKSlot &slot = g_searchPropIKSlots[searchPropIKIndex];
@@ -1846,7 +1846,7 @@ bool srchPushPropIK(SearchTaskData &search) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ApplyStagePose(SearchPropIKSlot &slot, std::uint32_t stage) {
     const SearchPropIKStage *const current = &slot.configuration->stages[stage];
     Vector3 offset = slot.configuration->gripOffset;
@@ -1892,7 +1892,7 @@ void ApplyStagePose(SearchPropIKSlot &slot, std::uint32_t stage) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void srchFinishPropIKItem(std::int32_t animate) {
     SearchPropIKSlot *const slot = &g_searchPropIKSlots[searchPropIKIndex];
     if (animate) {
@@ -2043,7 +2043,7 @@ void srchApplyPropTargetTransform(const MT7Node &node, std::uint32_t *yaw) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdatePropFromArm(SearchPropIKSlot &slot) {
     Vector3 point, base;
     Matrix4x4 inverse;
@@ -2272,7 +2272,7 @@ void UpdatePropFromArm(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *GetCurrentMatrixBasis(Matrix4x4 *destination) {
     if (!destination)
         return 0;
@@ -2439,7 +2439,7 @@ void BuildPropTransforms(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void CaptureArmRelativeTransform(SearchPropIKSlot &slot) {
     matrix_stack::Matrix4x4_Push(0);
@@ -2484,7 +2484,7 @@ void CaptureArmRelativeTransform(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void CapturePropPivot(SearchPropIKSlot &slot) {
     const Vector3 *const pivot = &slot.configuration->stages[0].position;
     Matrix4x4 *const target = &slot.auxiliaryData[2];
@@ -2527,7 +2527,7 @@ void CapturePropPivot(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetStageTangents(SearchPropIKSlot &slot, std::int8_t stage, Vector3 &right, Vector3 &left) {
     matrix_stack::Matrix4x4_Push(0);
     right.x = slot.configuration->stages[stage].axis == 0 ? slot.configuration->stages[stage].targetOffset : 0.0f;
@@ -2568,7 +2568,7 @@ void GetStageTangents(SearchPropIKSlot &slot, std::uint32_t stage, Vector3 &righ
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdatePropChestAndCamera(SearchPropIKSlot &slot) {
     Vector3 position, look, endpoints[2];
     Vector3i rotation;
@@ -2733,7 +2733,7 @@ void UpdatePropChestAndCamera(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RotateHeldProp(SearchTaskData &search, SearchPropIKSlot &slot) {
     std::int16_t effective[2];
     std::int16_t rotation[3];
@@ -3006,7 +3006,7 @@ void RotateHeldProp(SearchTaskData &search, SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void PlaySelectionSound(std::size_t index) {
     const SearchPropIKSelection *selection = 0;
     if (index <= 2)
@@ -3039,7 +3039,7 @@ void PlaySelectionSound(std::size_t index) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void FinishSlotTick(SearchPropIKSlot &slot) {
     if (slot.active & 2U) {
         UpdatePropFromArm(slot);
@@ -3073,7 +3073,7 @@ void FinishSlotTick(SearchPropIKSlot &slot) {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SolveStageGrip(SearchTaskData &search, SearchPropIKSlot &slot, std::uint32_t stage) {
     if (!slot.resource || !slot.owner)
         return;
@@ -3220,7 +3220,7 @@ void srchRestartPropIK() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SetupPropHandCamera(SearchPropIKSlot &slot) {
     Vector3 origin, position, target, base;
     Vector3i rotation;
@@ -3395,7 +3395,7 @@ void SetupPropHandCamera(SearchPropIKSlot &slot) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t srchUpdatePropIK(SearchTaskData &search) {
     SearchPropIKSlot *slot = &g_searchPropIKSlots[searchPropIKIndex];
     Vector3 right, left;

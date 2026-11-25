@@ -125,7 +125,7 @@ void QueueSoundProgramControl();
 bool LoadTitleSoundData();
 void LoadTitleSoundProgram(std::int32_t sceneIndex);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct TitleDebugModule {
     const char *name;
     SystemModule module;

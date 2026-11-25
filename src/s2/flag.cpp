@@ -1,6 +1,6 @@
 #include "shenmue.h"
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/flag_context_dc.hpp"
 #include "s2/camera_dc.hpp"
 #include "s2/field_collision_dc.hpp"
@@ -64,7 +64,7 @@
 namespace shenmue {
 namespace s2 {
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 ShenPlayerData shenPlayerData{};
 
@@ -85,7 +85,7 @@ Vector3 flagWindMaximum, flagWindMinimum;
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 template <std::int32_t Type> void CountWindVertex(FlagWindVertex *destination, Vector3 *vertex, std::int32_t *count);
@@ -109,7 +109,7 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode);
 void FLAG_CheckTask_Callback(void *);
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -223,7 +223,7 @@ std::array<char, 0x18> aberdeenSearchData{};
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 FlagWindObject *GetCurrentFlagObjectForWind() {
     return g_flagWindObject;
@@ -231,7 +231,7 @@ FlagWindObject *GetCurrentFlagObjectForWind() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 FlagWindModel *FindFlagWindModel(const MT7Node *node) {
     FlagWindObject *const object = GetCurrentFlagObjectForWind();
@@ -245,7 +245,7 @@ FlagWindModel *FindFlagWindModel(const MT7Node *node) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -263,7 +263,7 @@ bool SelectWindVertex(std::int32_t type, const Vector3 &vertex) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -279,7 +279,7 @@ template <std::int32_t Type> void CountWindVertex(FlagWindVertex *destination, V
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -295,7 +295,7 @@ template <std::int32_t Type> void BindWindVertex(FlagWindVertex *destination, Ve
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -307,7 +307,7 @@ void WindModuleCallback(FlagWindVertex *context, Vector3 *, std::int32_t *) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -326,7 +326,7 @@ void VisitWindVertex(WindVertexCallback callback, FlagWindVertex *destination, V
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -377,7 +377,7 @@ std::uint64_t VisitWindMeshVertices(void *mesh, WindVertexCallback callback, Fla
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -395,7 +395,7 @@ std::uint32_t CountFlagWindModels(MT7Node *node) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -422,7 +422,7 @@ std::int32_t CollectFlagWindModels(MT7Node *node, FlagWindModel *models, std::in
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -460,7 +460,7 @@ std::uint64_t PopulateFlagWindObject(MT7Node *root, FlagWindObject &object, std:
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -476,7 +476,7 @@ float EvaluateWindWave(std::int16_t angle) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -501,7 +501,7 @@ void ApplyWaveformTransformSinewave(FlagWindVertex *vertices, std::uint32_t coun
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -535,7 +535,7 @@ void ApplyCurvedWindOscillation(FlagWindModel *model, float amplitude) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -558,7 +558,7 @@ void VerticalWaveOffsetZBend(FlagWindModel *model, float amplitude) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -587,7 +587,7 @@ void SineStackYCurve(FlagWindModel *model, float scale) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -618,7 +618,7 @@ void DualAxisZone(FlagWindModel *model, float scale) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -641,7 +641,7 @@ void FreeWindModel(Character *character, void *payload) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -659,7 +659,7 @@ void UpdateWindForChara(Character *character, void *payload) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void UpdateWindForFlag() {
     if (g_flagWindObject)
@@ -668,7 +668,7 @@ void UpdateWindForFlag() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 FlagWindObject *AllocateFlagObject(MT7Node *root) {
     const auto count = CountFlagWindModels(root);
@@ -682,7 +682,7 @@ FlagWindObject *AllocateFlagObject(MT7Node *root) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void AttachFlagWindComponent(Character *character) {
@@ -703,7 +703,7 @@ void AttachFlagWindComponent(Character *character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -742,7 +742,7 @@ void AnimateFlagCallback(Character *character, void *payload) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -758,7 +758,7 @@ void FreeAnimatedFlag(Character *character, void *payload) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // Collect the XB01 wind vertices (x > 0.05, y < -0.05) of a scenario character's first mesh and animate them per placement.
 void AssignAnimatedFlag(shen_name name, FlagAnimationPlacement *placements, std::int32_t count) {
@@ -794,7 +794,7 @@ void AssignAnimatedFlag(shen_name name, FlagAnimationPlacement *placements, std:
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void UpdateWindForModel(FlagWindObject *object) {
@@ -857,7 +857,7 @@ void UpdateWindForModel(FlagWindObject *object) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -869,7 +869,7 @@ std::int32_t *FlagWords() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -885,7 +885,7 @@ std::int32_t *FindFlagDefinition(std::int32_t flag) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -898,7 +898,7 @@ std::int32_t *FlagContextTable() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -919,7 +919,7 @@ FlagContextEntry *FindFlagContext(shen_name name) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -931,7 +931,7 @@ FlagRecord *FlagRecordAt(std::int32_t *words, std::int32_t offset) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -943,7 +943,7 @@ FlagRecord *FlagAdvance(FlagRecord *record, std::uint32_t dwords) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -958,7 +958,7 @@ FlagRecord *FlagBranch(FlagRecord *record, bool condition) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -970,7 +970,7 @@ Character *FlagPlayer() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -982,7 +982,7 @@ Character *FlagChara(shen_name id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -995,7 +995,7 @@ float FlagDistanceSquared(const Vector3 &a, const Vector3 &b) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1007,7 +1007,7 @@ std::int16_t FlagInverseAtan(float x, float z) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1039,7 +1039,7 @@ bool TestCharaPositionWithinRange(shen_name charaA, const Vector3 &first, const 
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1053,7 +1053,7 @@ Vector3 FlagCharaBone(Character *character) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1076,7 +1076,7 @@ bool flagIsPlayerNearPoint(const FlagRecord *record) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1095,7 +1095,7 @@ bool ryoCheckInRangeForFlag(const FlagRecord *record) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1122,7 +1122,7 @@ bool DoAngleCheck(const FlagSector &sector, shen_name chara, const Vector3 &play
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1137,7 +1137,7 @@ bool shenCheckCloseAndFacing(const Vector3 &pointA, std::int16_t yawA, const Vec
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1173,7 +1173,7 @@ bool IsWithinLocationScreenSpace(const Vector3 &point) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1200,7 +1200,7 @@ bool flddCheckCharaIntersection(const Vector3 &point, shen_name chara, std::int1
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1214,7 +1214,7 @@ void flagSetLocationToChara(shen_name chara) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1236,7 +1236,7 @@ bool flagTransformCharaOffset(shen_name chara, const Vector3 &offset, Vector3 &p
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1260,7 +1260,7 @@ bool flagRegisterCandidate(FlagRecord *record) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1282,7 +1282,7 @@ bool flagIsChainedTrigger(FlagRecord *record) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1297,7 +1297,7 @@ void flagCopySystemManageSource(const char *source) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1320,7 +1320,7 @@ std::int32_t shenLoadScene(std::uint32_t slot, std::uintptr_t argument) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1345,7 +1345,7 @@ std::int32_t shenLoadScene2(const char *areaId, std::uintptr_t argument) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1366,7 +1366,7 @@ FlagRecord *shenMoveToFreeQuest() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1388,7 +1388,7 @@ void SetHelpIconTopic(std::int16_t topic) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1449,7 +1449,7 @@ std::int32_t shenUpdateFlagTargets(SearchTarget *targets) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1465,7 +1465,7 @@ void shenEvaluateFlagContexts() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1482,7 +1482,7 @@ std::int32_t stepFindSleepSchedule(std::int32_t flag) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1495,7 +1495,7 @@ void stepSetDefaultStats() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1544,7 +1544,7 @@ void stepSelectSleepSchedule(const std::int32_t *flags) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1561,7 +1561,7 @@ std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1579,7 +1579,7 @@ std::int32_t stepUpdateCurfewFlag(const std::int32_t *flags) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -1611,7 +1611,7 @@ std::int32_t stepExecuteExtendedCommand(std::int32_t operation, std::int32_t *ar
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 static std::uint32_t flagDebugModelCommands[62] = {
     0x00000001U,
@@ -1680,7 +1680,7 @@ static std::uint32_t flagDebugModelCommands[62] = {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, const Vector3 &third, const Vector3 &fourth) {
     Vector3 normal, camera;
@@ -1738,7 +1738,7 @@ std::uint32_t flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, con
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 static void DrawFlagDebugSide(const Vector3 &first, const Vector3 &second) {
@@ -1766,7 +1766,7 @@ static void DrawFlagDebugSide(const Vector3 &first, const Vector3 &second) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void flagDrawDebugCylinder(const Vector3 &location, float radius) {
@@ -1833,7 +1833,7 @@ std::uint32_t flagDrawDebugCylinder(const Vector3 &location, float radius) {
 
 #endif
 
-#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
 void flagDrawDebugBox(float firstX, float firstZ, float secondX, float secondZ, float y) {
@@ -1898,7 +1898,7 @@ std::uint32_t flagDrawDebugBox(float firstX, float firstZ, float secondX, float 
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void nullsub(...) noexcept {
@@ -1906,7 +1906,7 @@ void nullsub(...) noexcept {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void nullsub(void *) noexcept {
@@ -1914,7 +1914,7 @@ void nullsub(void *) noexcept {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool ComputeAngle(const Vector3 &origin, float radius, std::int16_t yaw, std::int32_t halfAngle, const Vector3 &point) {
     const Vector3 delta{point.x - origin.x, point.y - origin.y, point.z - origin.z};
@@ -1928,7 +1928,7 @@ bool ComputeAngle(const Vector3 &origin, float radius, std::int16_t yaw, std::in
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t GetShenmueFlag(std::int32_t flag) {
     std::int8_t result = 0;
@@ -1999,7 +1999,7 @@ std::int32_t GetShenmueFlag(std::int32_t flag) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t EV_GetShenmueFlag(std::int32_t flag) {
     return GetShenmueFlag(flag);
@@ -2007,7 +2007,7 @@ std::int32_t EV_GetShenmueFlag(std::int32_t flag) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t stepUpdateFlagUtil(std::uint8_t mode, std::int32_t flag) {
     std::uint32_t result = 0;
@@ -2070,7 +2070,7 @@ std::uint32_t stepUpdateFlagUtil(std::uint8_t mode, std::int32_t flag) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode) {
     std::int32_t maximumStep = 0;
@@ -2142,7 +2142,7 @@ std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t stepScheduleFlagCallback() {
     for (const FlagCallbackEntry *entry = flagCallbackEntries.data(); entry->flag != 0; ++entry) {
@@ -2161,7 +2161,7 @@ std::int32_t stepScheduleFlagCallback() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void EV_stepSetFlags(std::uint8_t mode, std::int32_t flag) {
     if (flag != 0 && (stepUpdateFlagUtil(mode, flag) & 1U) != 0)
@@ -2175,7 +2175,7 @@ void EV_stepSetFlags(std::uint8_t mode, std::int32_t flag) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t flagInitContext(ShenPlayerData &data, shen_name context) {
     data.loadingPhase = 0;
@@ -2210,7 +2210,7 @@ std::int32_t flagInitContext(ShenPlayerData &data, shen_name context) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t flagRelated(shen_name map) {
     std::size_t count = 0;
@@ -2233,7 +2233,7 @@ std::int32_t flagRelated(shen_name map) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenUpdatePlayerDataFlags(std::int32_t active) {
     const std::int32_t previous = (shenPlayerData.flags & SPF_Active) != 0;
@@ -2246,7 +2246,7 @@ std::int32_t shenUpdatePlayerDataFlags(std::int32_t active) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t shenRestartPlayerDataFlagEvaluation() {
     ShenPlayerData context;
@@ -2258,7 +2258,7 @@ std::int64_t shenRestartPlayerDataFlagEvaluation() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenScheduleFlagCallback(std::int16_t minute) {
     plymSetCallback(shenRestartPlayerDataFlagEvaluation);
@@ -2267,7 +2267,7 @@ std::int32_t shenScheduleFlagCallback(std::int16_t minute) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t npcSetCycleTimeLimitExpiry(shen_name, std::int16_t timeLimit) {
     if (timeLimit == 0) {
@@ -2283,7 +2283,7 @@ std::int32_t npcSetCycleTimeLimitExpiry(shen_name, std::int16_t timeLimit) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 SearchTarget *shenFindFlagTarget(shen_name id) {
     SearchTarget *target = shenPlayerData.targets;
@@ -2298,7 +2298,7 @@ SearchTarget *shenFindFlagTarget(shen_name id) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t ryoIsCurrentScenarioFlagSatisfied() {
     const FlagRecord *const record = shenPlayerData.requiredRecord;
@@ -2311,7 +2311,7 @@ std::int32_t ryoIsCurrentScenarioFlagSatisfied() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenGetMinutesUntilNextFrameMinute() {
     if ((shenPlayerData.flags & SPF_CurfewReached) != 0)
@@ -2329,7 +2329,7 @@ std::int32_t shenGetMinutesUntilNextFrameMinute() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int16_t shenGetSleepScheduleFlag() {
     return shenPlayerData.sleepScheduleFlag;
@@ -2337,7 +2337,7 @@ std::int16_t shenGetSleepScheduleFlag() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t shenIsCurfewSceneChange() {
     return shenPlayerData.flags & SPF_CurfewSceneChange;
@@ -2345,7 +2345,7 @@ std::uint32_t shenIsCurfewSceneChange() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void shenSetFreeQuestInactive() {
     shenPlayerData.freeQuestActive = 0;
@@ -2353,7 +2353,7 @@ void shenSetFreeQuestInactive() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint32_t GetLoadingPhaseFlags() {
     return shenPlayerData.loadingPhase;
@@ -2361,7 +2361,7 @@ std::uint32_t GetLoadingPhaseFlags() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void SetLoadingPhaseFlags(std::uint32_t flags) {
     shenPlayerData.loadingPhase = flags;
@@ -2369,7 +2369,7 @@ void SetLoadingPhaseFlags(std::uint32_t flags) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenSetPlayerDataFields(std::int32_t queryId, std::int8_t queryArgument) {
     if (!shenPlayerData.record)
@@ -2381,7 +2381,7 @@ std::int32_t shenSetPlayerDataFields(std::int32_t queryId, std::int8_t queryArgu
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenEvaluateFlagFor(std::int32_t queryId, std::int8_t queryArgument) {
     if (!shenPlayerData.record)
@@ -2393,7 +2393,7 @@ std::int32_t shenEvaluateFlagFor(std::int32_t queryId, std::int8_t queryArgument
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
     ++shenPlayerData.updateCount;
@@ -2500,7 +2500,7 @@ std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
     using enum CameraState;
@@ -3214,7 +3214,7 @@ FindMotionWork
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void Queue_FLAG_CheckTask() {
     plymSetCallback(shenRestartPlayerDataFlagEvaluation);
@@ -3229,7 +3229,7 @@ void Queue_FLAG_CheckTask() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void FLAG_CheckTask_Callback(void *) {
     using enum CameraState;
@@ -3288,7 +3288,7 @@ void FLAG_CheckTask_Callback(void *) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void CtrlSystemManage_Callback(void *) {
     if (systemManageSource[0] == '\0') {
@@ -3304,7 +3304,7 @@ void CtrlSystemManage_Callback(void *) {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 HLib::Task *initCtrlSystemManage() {
     HLib::Task *const task = HLib::EnqueueTaskWithoutParameter(CtrlSystemManage_Callback, 14, 2, static_cast<std::int32_t>(SHEN_NAME(SYSM)));
@@ -3314,7 +3314,7 @@ HLib::Task *initCtrlSystemManage() {
 
 #endif
 
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 const char *GetAberdeenSearchData() noexcept {
     std::size_t index = 0;
@@ -3323,6 +3323,17 @@ const char *GetAberdeenSearchData() noexcept {
     for (; index < 0x14; ++index)
         aberdeenSearchData[index] = '\0';
     return aberdeenSearchData.data();
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::uint32_t GetLoadingPhaseFlags() {
+    return shenPlayerData.loadingPhase;
+}
+
+void SetLoadingPhaseFlags(std::uint32_t flags) {
+    shenPlayerData.loadingPhase = flags;
 }
 
 #endif

@@ -14,7 +14,7 @@ namespace s2 {
 struct DoorTaskEntry;
 typedef void(__attribute__((renesas)) * DoorAreaCleanupCallback)(std::int32_t sceneId);
 struct DoorRuntimeStatePrefix {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t transitionState;
     shen_name temporaryAuthor, destinationDoor;
     char savedSoundMap[16], savedSoundSequence[16];
@@ -28,7 +28,7 @@ struct DoorRuntimeStatePrefix {
 #endif
 };
 typedef char Layout_door_state_dc_1[(offsetof(DoorRuntimeStatePrefix, temporaryAuthor) == 4) ? 1 : -1];
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 typedef char Layout_door_state_dc_0[(sizeof(DoorRuntimeStatePrefix) == 0x30) ? 1 : -1];
 typedef char Layout_door_state_dc_4[(offsetof(DoorRuntimeStatePrefix, savedSoundMap) == 0x0c) ? 1 : -1];
 typedef char Layout_door_state_dc_5[(offsetof(DoorRuntimeStatePrefix, savedSoundSequence) == 0x1c) ? 1 : -1];
@@ -55,7 +55,7 @@ shen_name drGetCurrentAuthorId();
 shen_name GetCurrentDoorAuthor();
 void SetDoorQueuedAuthor(shen_name author);
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern DoorAreaCleanupCallback g_doorAreaCleanupCallback;
 void SetDoorAreaCleanupCallback(DoorAreaCleanupCallback callback);
 void ExecuteCleanupFuncForAreaWithCachedScene();

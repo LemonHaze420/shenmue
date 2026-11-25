@@ -10,7 +10,7 @@
 #include "s2/character_dc.hpp"
 #include "s2/hlib.hpp"
 #include "platform/dc/ninja.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "platform/dc/matrix.hpp"
 #include "s2/event_matrix_dc.hpp"
 #include "platform/dc/sdk.hpp"
@@ -118,7 +118,7 @@ void SetShadowVolumeProjectionDepth() {
     matrix_stack::LoadMatrix(&projection);
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawShadowVolume(const ShadowVolume *volume, const ShadowDrawParameters *parameters) {
     std::uint32_t *flags = reinterpret_cast<std::uint32_t *>(g_shadowEdgeFlags);
     const std::int32_t edges = volume->edgeCount;
@@ -187,7 +187,7 @@ void DrawShadowVolume(const ShadowVolume *volume, const ShadowDrawParameters *pa
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawShadowVolumeFaces(ShadowVolumeFace *faces, std::int32_t count, ShadowVolumeEdge *edges, const ShadowDrawParameters *parameters) {
     const Vector3 *lights[2];
     lights[1] = g_shadowFaceLightVectors;
@@ -255,7 +255,7 @@ void DrawShadowVolumeFaces(ShadowVolumeFace *faces, std::int32_t count, ShadowVo
 #endif
 
 // @verified - d
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawShadowVolumeClipWall(std::uint32_t nearType, std::uint32_t farType, const std::int16_t *vertices, const std::int16_t *edges) {
     if (nearType == 0) {
         if (farType == 7) {
@@ -435,7 +435,7 @@ std::uint32_t DrawShadowVolumeCap(
     return type;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #define SHADOW_SIDE_SIGN(vertex) (*reinterpret_cast<const std::int32_t *>(&(vertex)->inverseDepth))
 void DrawShadowVolumeSides(ShadowVolumeEdge *edges, std::int32_t count) {
     const char *edgeFlags = reinterpret_cast<const char *>(g_shadowEdgeFlags);

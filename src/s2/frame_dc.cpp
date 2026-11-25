@@ -17,7 +17,7 @@
 #define SHENMUE_FRAME_MODULE(value) SystemModule_##value
 #include "s2/magic_room_dc.hpp"
 #include "s2/system_modules_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/map_control_dc.hpp"
 #include "s2/area_jump_dc.hpp"
 #include "s2/character_model_dc.hpp"
@@ -143,75 +143,75 @@ AudioPartition *g_magicRoomArchive;
 _adx_fs *g_magicRoomFile;
 std::uint8_t g_magicRoomAreaJumpBlocked;
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 const MagicRoomFloorGroup *g_magicRoomFloors = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 g_magicRoomOrigin = {}, g_magicRoomCollisionDimensions = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t g_magicRoomYaw = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t g_magicRoomSeedBase = 0, g_magicRoomSeed = 0;
 #endif
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *roomExecutionTask;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MagicRoomHeader *roomDatabase;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MagicRoomPlacement *roomPlacements, *roomLoadingPlacement = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 MagicRoomEntityLight roomEntityLights[2] = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void *roomLoadingAllocation;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t roomState, roomLoadingIndex = 0, roomGeneratedCount = 0, roomPreviousSeed = -1;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t roomLoadingFrames;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint8_t roomInitialized;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Vector3 roomDrawOrigin = {};
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t roomDrawYaw = 0;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t roomDisabledLightCount;
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int16_t roomDisabledLights[4];
 #endif
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResetUnusedReloadState();
 #else
 std::int64_t ResetUnusedReloadState();
@@ -221,7 +221,7 @@ void ResetColdRuntimeState();
 void mstsInit();
 void ResetTaskWaitFlags();
 void DestroyEffectTextureReferences();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void AllocateAndLoadMOTFiles();
 #else
 std::byte *AllocateAndLoadMOTFiles();
@@ -250,7 +250,7 @@ extern "C" void ConfigureCpuCache(std::uint32_t control) asm("_shenmue_dc_config
 } // namespace
 
 void LoadFonts();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ResetUnusedReloadState();
 #else
 std::int64_t ResetUnusedReloadState();
@@ -277,7 +277,7 @@ void InitializeSystemLibrariesNullsub() {
 void ShutdownSystemLibrariesNullsub() {
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 AudioPartition *MountAudioPartitionDefault(const char *directory, const char *filename, std::int32_t entries);
 
 // @verified - d
@@ -299,7 +299,7 @@ void QueueMagicRoom(const char *directory, const char *archive, const MagicRoomF
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void MagicRoomModelVariant_Callback(void *) {
     if ((g_inputBuffer[1].held & 0x802U) != 0x802U)
@@ -359,7 +359,7 @@ void MagicRoomModelVariant_Callback(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 static void BlockMagicRoomAreaJump() {
     if (!g_magicRoomAreaJumpBlocked && EV_CanDoAreaJump()) {
@@ -369,7 +369,7 @@ static void BlockMagicRoomAreaJump() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SelectMagicRoomForPlayer() {
     if (!g_magicRoomArchive)
@@ -382,7 +382,7 @@ void SelectMagicRoomForPlayer() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SelectMagicRoomAtPosition(const Vector3 *position) {
     if (!g_magicRoomArchive)
@@ -394,7 +394,7 @@ void SelectMagicRoomAtPosition(const Vector3 *position) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LeaveMagicRoom() {
     if (!g_magicRoomArchive)
@@ -414,7 +414,7 @@ void InitMagicRoomPtrs() {
     if (g_actNumber == 1 && g_currentMap == MAGIC_ROOM_DEBUG_AREA) {
         HLib::EnqueueTaskWithoutParameter(MagicRoomModelVariant_Callback, 12, 2, MAGIC_ROOM_TASK);
     } else if (g_actNumber == 1 && g_currentMap == MAGIC_ROOM_PLAYER_AREA) {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         if (g_ryoModelVariant == 77)
             EV_SetPlayerFlag(PlayerFlagWriteMode_Internal, MAGIC_ROOM_MODEL_VARIANT_FLAG, 1);
         else
@@ -433,7 +433,7 @@ void RestoreMagicRoomModelVariant() {
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 const MagicRoomEntityLight *FindRoomLightChunk(const void *data, std::uint32_t tag, std::int32_t count) {
     const std::uint32_t *chunk = static_cast<const std::uint32_t *>(data);
@@ -450,7 +450,7 @@ const MagicRoomEntityLight *FindRoomLightChunk(const void *data, std::uint32_t t
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 bool LoadRoomModels(MagicRoomPlacement *placements, std::int32_t count, std::int32_t release, const Vector3 *origin, std::uint32_t yaw) {
     std::int32_t index;
@@ -543,7 +543,7 @@ bool LoadRoomModels(MagicRoomPlacement *placements, std::int32_t count, std::int
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void DrawRoom(void *) {
     matrix_stack::Matrix4x4_Push(0);
     matrix_stack::TranslateVector(&roomDrawOrigin);
@@ -567,7 +567,7 @@ void DrawRoom(void *) {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AssignLightParametersForMagicRoomEntity(std::uint32_t index, const MagicRoomEntityLight &light) {
     if (light.enabled) {
@@ -589,7 +589,7 @@ void AssignLightParametersForMagicRoomEntity(std::uint32_t index, const MagicRoo
 
 namespace {
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void UpdateRoomAnimations(const Vector3 *origin, std::uint32_t yaw) {
     MagicRoomEntityLight light;
@@ -657,7 +657,7 @@ void UpdateRoomAnimations(const Vector3 *origin, std::uint32_t yaw) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ExecuteRoom(void *) {
     if (!g_worldDrawingEnabled || !roomInitialized)
         return;
@@ -736,7 +736,7 @@ void ExecuteRoom(void *) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InitializeMagicRoomPlacements() {
     InitializeMagicRoomGeneration();
     g_magicRoomSeed = -1;
@@ -745,7 +745,7 @@ void InitializeMagicRoomPlacements() {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void GenerateRoom(std::int32_t seed) {
     FillMagicRoomCategorySeeds();
@@ -753,7 +753,7 @@ void GenerateRoom(std::int32_t seed) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void InstallRoomCollision(MagicRoomPlacement *placements, std::int32_t count, const Vector3 *origin, std::uint32_t yaw, const Vector3 *dimensions) {
     if (roomGeneratedCount) {
         flddClearAllGeneratedVolumes();
@@ -787,7 +787,7 @@ void InstallRoomCollision(MagicRoomPlacement *placements, std::int32_t count, co
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 static bool CheckRoomLightQuad(const Vector2 *q, float x, float z) {
     const Vector2 *a = q, *b = a + 1, *c = b + 1, *d = c + 1;
     float bx = b->x;
@@ -887,7 +887,7 @@ static bool CheckRoomLightQuad(const Vector2 *q, float x, float z) {
 }
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t SelectRoomDescriptor(Vector3 *position, std::uint32_t *yaw, Vector3 *dimensions) {
     const MagicRoomFloorGroup *group = g_magicRoomFloors;
@@ -927,7 +927,7 @@ void ColdArchiveInitializationNullsub() {
 void ColdMapInitializationNullsub() {
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void AssignRoomLightVectors(const Vector3 &origin, std::uint32_t yaw) {
     Vector3 position;
@@ -959,7 +959,7 @@ void AssignRoomLightVectors(const Vector3 &origin, std::uint32_t yaw) {
 
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void EnableRoomLights() {
     for (std::int32_t index = 0; index < roomDisabledLightCount; ++index)
@@ -970,7 +970,7 @@ void EnableRoomLights() {
 
 } // namespace
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void SuspendMagicRoom(std::int32_t suspend) {
     if (suspend)
         roomInitialized = 0;
@@ -1204,7 +1204,7 @@ void RootTaskCallback(void *) {
     g_previousVblankCounter = vblankCounter;
     g_previousFrameTimer = *reinterpret_cast<volatile std::uint32_t *>(kFrameTimerCounterRegister);
     UpdateInputsFromInputDevices();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     dc::sdk::ResetGraphicsWorkspace();
 #else
     dc::sdk::ExecuteAudioMiddleware();
@@ -1241,6 +1241,9 @@ void InitializeFrameTiming() {
     g_loadingFlag = 0;
     g_developerDisplayEnabled = 0;
     g_gameSystemsInitialized = 0;
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    g_renderCallbackState = -1;
+#endif
     SetSoftResetProcessing(1);
     SetBackupProcessing(1);
 }
@@ -1314,6 +1317,9 @@ void InitializeMemoryAndHLib() {
     InitializeInputSlots();
     HLib::InitializeAllocator();
     HLib::InitializeTasks(RootTaskInitialize);
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+    InitializeSystemLanguage();
+#endif
 }
 
 // @verified - d
@@ -1370,10 +1376,28 @@ void ResetMapRenderState() {
 void StartupNullsub() {
 }
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t GetMagicRoomState3() {
+    return roomState == 3;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if defined(SHENMUE_TARGET_S2_DC_EU)
+std::int32_t g_renderCallbackState;
+
+std::int32_t GetRenderCallbackState() {
+    return g_renderCallbackState;
+}
+#endif
+
+#endif
+
 } // namespace s2
 } // namespace shenmue
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern "C" void __attribute__((renesas)) shenmue_s2_event_GetMagicRoomDebugState() {
     shenmue::s2::SelectMagicRoomForPlayer();
 }

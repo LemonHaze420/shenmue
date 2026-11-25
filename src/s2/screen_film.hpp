@@ -149,7 +149,7 @@ static_assert(offsetof(ScreenFilmTaskData, colourPair) == 0x8c);
 
 void filmSetFadeColourTo(HLib::Task *task, std::uint32_t colour);
 void ResetTaskWaitFlags();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::uint32_t GetIsWaitingFlag();
 #else
 std::uint64_t GetIsWaitingFlag();

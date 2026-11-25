@@ -57,7 +57,7 @@ void InitializeStreamingAudio() {
     ADXT_EntryErrFunc(StreamingAudioErrorNullsub, 0);
     g_audioPartitionCount = 0;
     ResetAudioPartitions();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     MountSceneConversationIndex();
 #else
     SceneSoundInitializationNullsub();
@@ -178,7 +178,7 @@ void SetConversationStreamBaseAttenuation(ConversationStream &stream, std::int32
     stream.baseAttenuation = attenuation;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetConversationStreamPitch(ConversationStream &stream, std::int32_t pitch) {
     stream.frameScale = static_cast<std::uint32_t>(pitch);

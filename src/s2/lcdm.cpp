@@ -312,7 +312,7 @@ void LcdmDisplayBattleEnd() {
     LcdmInit(reinterpret_cast<std::uintptr_t>(g_lcdmTaskData->images[18]));
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void LcdmComposeBattleValues(std::int32_t smallValue, std::int32_t largeValue) {
     LCDM_RETURN_IF(!g_lcdmTaskData);
@@ -407,7 +407,7 @@ void lcdmDrawButtonGlyph(std::int32_t x, std::int32_t y, const std::uint8_t *gly
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void lcdmRenderButtonGlyphs(const std::uint8_t *glyphs) {
     if (!g_lcdmTaskData)
         return;

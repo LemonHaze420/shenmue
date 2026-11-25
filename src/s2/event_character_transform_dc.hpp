@@ -35,13 +35,13 @@ std::int32_t EV_AT_SetAngY(shen_name name, std::uint32_t flags, const Vector3i &
 void GetScenarioCharacterEulerAngles(shen_name name, Vector3i *rotation, std::uint32_t flags);
 void AT_SetLocalBaseChara(shen_name name, shen_name base);
 shen_name EV_SCEN_FindChar_Wrapper(shen_name name);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void EV_scenApplyPosOrRotToPartOf(shen_name name, std::uint32_t part, Vector3 *position, Vector3i *rotation, EventCharacterPartTransformMode mode);
 #else
 void EV_scenApplyPosOrRotToPartOf(shen_name name, std::uint16_t part, Vector3 *position, Vector3i *rotation, EventCharacterPartTransformMode mode);
 #endif
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t ExecuteMotionworkUtility(Character *character, std::uint32_t yaw, float angle, std::uint32_t flags, const void *motionData);
 std::int32_t scenMotionworkUtil(shen_name name, std::uint32_t yaw, float angle, std::uint32_t flags, const void *motionData);
 std::int32_t TurnScenarioCharacterTowardPosition(

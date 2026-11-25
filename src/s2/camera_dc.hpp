@@ -16,7 +16,7 @@ using ::shenmue::shen_name;
 
 extern std::uint32_t g_combatCameraFlags;
 std::uint32_t EV_camCtrlToggleCombatCamera(std::uint32_t mask, std::int32_t action);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct Character;
 struct FightActorRuntimePrefix;
 struct FightRuntimePrefix;
@@ -107,7 +107,7 @@ struct CameraRuntime {
     Matrix4x4 finalTransform;
 };
 struct CameraPreset {
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::uint32_t tag;
     Vector3 position;
 #else
@@ -118,14 +118,14 @@ struct CameraPreset {
 #endif
     Vector3s rotation;
     std::int16_t fovAngle;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::byte retained18[0x10];
 #else
     std::byte retained14[0x10];
 #endif
     Matrix4x4 projectionMatrix, viewMatrix;
     Vector3 backwardsDirection;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::byte retainedb4[0x14];
 #else
     std::byte retainedb0[0x18];
@@ -179,7 +179,7 @@ SHENMUE_CAMERA_LAYOUT(offsetof(CameraRuntime, contextMode) == 0x2c2);
 SHENMUE_CAMERA_LAYOUT(offsetof(CameraRuntime, targetCharacter) == 0x2c8);
 SHENMUE_CAMERA_LAYOUT(offsetof(CameraRuntime, finalTransform) == 0x2cc);
 SHENMUE_CAMERA_LAYOUT(sizeof(CameraPreset) == 0xc8);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 SHENMUE_CAMERA_LAYOUT(offsetof(CameraPreset, position) == 0x04);
 SHENMUE_CAMERA_LAYOUT(offsetof(CameraPreset, rotation) == 0x10);
 SHENMUE_CAMERA_LAYOUT(offsetof(CameraPreset, fovAngle) == 0x16);
@@ -201,7 +201,7 @@ extern FieldDepthSavedScale fieldDepthSavedScale;
 void camCtrlInitialize(CameraRuntime &camera);
 std::int32_t camCtrlGetNextRotY();
 std::int32_t camCtrlSetState(std::int32_t state);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t camCtrlComputeOrbitCameraFromTarget(const Vector3 *target, std::int16_t yaw, Vector3 *position, Vector3 *lookAt);
 #endif
 void camCtrlToggleSplineRebuildFlag(std::int32_t count, const void *source);
@@ -216,7 +216,7 @@ std::int32_t camCtrlIsConversationActive();
 std::int16_t camCtrlGetFov();
 std::int32_t camCtrlSetFov(std::int16_t angle);
 std::int32_t camCtrlGetCurrentFov();
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *camCtrlGetViewMatrix(Matrix4x4 *output) SHENMUE_CAMERA_NOEXCEPT;
 SHENMUE_CAMERA_LAYOUT(offsetof(CameraRuntime, viewHeightScale) == 0xac);
 float camCtrlGetViewHeightScale();
@@ -242,7 +242,7 @@ float camCtrlSetMotionScaleFactor(float factor);
 void camCtrlSetRotationXYZ(float x, float y, float duration);
 void camCtrlSetShakeAmplitude(float x, float y, float duration);
 void camCtrlSetFovTransitionTo(std::int32_t enabled);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 Matrix4x4 *camCtrlSetXform(const Matrix4x4 *transform);
 #endif
 std::int32_t camCtrlSetContextMode(std::int32_t mode);

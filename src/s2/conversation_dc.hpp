@@ -112,7 +112,7 @@ void AllocateConversationStreamBuffers();
 void ResetConversationSpeakerAliases();
 bool RegisterConversationSpeakerAlias(shen_name target, shen_name source, std::uint32_t flags);
 void SetConversationStreamVolume(ConversationStream &stream, std::int32_t volume);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 bool cvsGet() SHENMUE_AUDIO_NOEXCEPT;
 void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch);
 bool RemoveConversationSpeakerAlias(shen_name target) SHENMUE_AUDIO_NOEXCEPT;
@@ -122,7 +122,7 @@ std::int32_t GetConversationPaused(const ConversationBuffer *buffer) SHENMUE_AUD
 void PauseOrDestroyAudioAndSubtitles(std::int32_t paused);
 #endif
 ConversationBuffer *FindConversationByPriority(std::uint32_t mask) SHENMUE_AUDIO_NOEXCEPT;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer = SHENMUE_AUDIO_NULL) SHENMUE_AUDIO_NOEXCEPT;
 #else
 bool cvsHasValidConverseData(const ConversationBuffer *buffer = SHENMUE_AUDIO_NULL) SHENMUE_AUDIO_NOEXCEPT;

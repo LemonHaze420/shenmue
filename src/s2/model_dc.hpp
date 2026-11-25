@@ -31,7 +31,7 @@ struct MT7NodeDataHeader {
     std::uint32_t size;
 };
 SHENMUE_MODEL_LAYOUT(sizeof(MT7NodeDataHeader) == 8);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 struct MT7NodeSoundData {
     MT7NodeDataHeader header;
     shen_name marker;

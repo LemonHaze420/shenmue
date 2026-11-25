@@ -7,7 +7,7 @@
 
 namespace shenmue {
 namespace s2 {
-#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 float MotionChannelFloat(std::uint32_t bits) {
     float value;
@@ -20,7 +20,7 @@ float MotionChannelFloat(std::uint32_t bits) {
 #define SHENMUE_MOTION_CHANNEL_ABS __builtin_fabsf
 #define SHENMUE_MOTION_CHANNEL_FMA(x, y, z) ((x) * (y) + (z))
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 float DecodeMotnFloat(std::uint16_t value) {
     volatile float result = 0.0f;
     if (!value)
@@ -102,7 +102,7 @@ float SampleMotionRigChannelAdvance(MotionRigChannel &channel) {
             if (g_motionInterpolationType & MI_Linear) {
                 const float rate = (channel.next.value - channel.current.value) * inverse;
                 float value = channel.current.value;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
                 value = SHENMUE_MOTION_CHANNEL_FMA(rate, time, value);
 #else
                 asm volatile("fmov %1,fr0\n\tfmac fr0,%2,%0" : "+&f"(value) : "f"(rate), "f"(time) : "fr0");
@@ -116,7 +116,7 @@ float SampleMotionRigChannelAdvance(MotionRigChannel &channel) {
             const float lastTangentWeight = cubic - scaledSquared, firstTangentWeight = (lastTangentWeight - scaledSquared) + time;
             volatile float initial = secondWeight * channel.next.value;
             float value = initial;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             value = SHENMUE_MOTION_CHANNEL_FMA(channel.current.value, firstWeight, value);
             value = SHENMUE_MOTION_CHANNEL_FMA(channel.current.tangentOut, firstTangentWeight, value);
             value = SHENMUE_MOTION_CHANNEL_FMA(channel.next.tangentIn, lastTangentWeight, value);
@@ -135,7 +135,7 @@ float SampleMotionRigChannelAdvance(MotionRigChannel &channel) {
         const std::uint16_t rawValue = *channel.frameCursor++;
         const float decoded = DecodeMotnFloat(rawValue);
         float value = channel.bias;
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
         value = SHENMUE_MOTION_CHANNEL_FMA(decoded, channel.scale, value);
 #else
         asm volatile("fmov %1,fr0\n\tfmac fr0,%2,%0" : "+&f"(value) : "f"(decoded), "f"(channel.scale) : "fr0");

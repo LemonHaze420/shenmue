@@ -34,7 +34,7 @@
 #include "s2/system_modules_dc.hpp"
 #include "s2/screen_film.hpp"
 #include "s2/texture_dc.hpp"
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 #include "s2/calendar_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/save_screen_state_dc.hpp"
@@ -288,7 +288,7 @@ void CtrlAreaJump_Callback(void *) {
             scenSetTaskFlags(0);
             AdvanceTimeForDistance(&g_areaJumpPersistentLocation.position);
             shenGetCurrentDateTime(g_areaJumpPersistentLocation.capturedTime);
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
             SetDoorQueuedAuthor(g_areaJumpPersistentAuthorId);
 #else
             SetTemporaryAreaJumpAuthor(g_areaJumpPersistentAuthorId);
@@ -329,7 +329,7 @@ void initCtrlAreaJump() {
     g_areaJumpCurrentPosition.x = g_areaJumpCurrentPosition.y = g_areaJumpCurrentPosition.z = 0.0f;
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetAreaJumpWarp() {
     g_areaJumpWarpEnabled = 0;
 }
@@ -346,7 +346,7 @@ void CancelPendingAreaJump() {
     }
 }
 
-#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 void QueueAreaJumpToLocation(shen_name areaId, std::int32_t entryId, const Vector3 *position, std::int32_t yaw) {
     SavedAreaJumpLocation location;
     location.position = *position;
