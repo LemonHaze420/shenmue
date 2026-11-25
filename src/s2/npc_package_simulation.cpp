@@ -498,8 +498,7 @@ void TickNpcTimedMotion(NpcRouteLiveEntry *entry) {
 
 // @verified - d
 void npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
-    const std::uint32_t end = (static_cast<std::uint32_t>(hour) * 3600U + static_cast<std::uint32_t>(minute) * 60U) * 2U;
-    SimulateNpcScheduleTime(0, static_cast<std::int32_t>(end), 0);
+    SimulateNpcScheduleTime((npcSavedDateTime.hour * 3600 + npcSavedDateTime.minute * 60) * 2, (hour * 3600 + minute * 60) * 2, 0);
     ResetCurrentTimeSimState();
 }
 

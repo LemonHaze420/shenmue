@@ -692,13 +692,15 @@ MT7Node *GetPropRoot() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetPropVector3(const Vector3 *position) {
-    g_propState.position = *position;
+    PropState *state = &g_propState;
+    state->position = *position;
 }
 #endif
 
 // @verified - d
 void GetPropVector4(Vector3 *position) {
-    *position = g_propState.position;
+    const PropState *state = &g_propState;
+    *position = state->position;
 }
 
 namespace {

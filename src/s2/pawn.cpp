@@ -124,11 +124,11 @@ PawnSetReference *GetPawnShopSetReferences(const PawnShopRecord *shop) {
 PawnSetRecord *GetPawnShopSet(const PawnShopRecord *shop, std::int32_t index) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (shop && index >= 0) {
-        const PawnSetReference *const references = GetPawnShopSetReferences(shop);
+        const PawnSetReference *const references = reinterpret_cast<const PawnSetReference *>(shop->setsOffset);
         if (!references)
             return 0;
-        if (index < shop->setCount)
-            return ResolvePawnOffset<PawnSetRecord>(references[index].offset);
+        if (shop->setCount > index)
+            return reinterpret_cast<PawnSetRecord *>(references[index].offset);
     }
     return 0;
 #else
