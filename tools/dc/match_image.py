@@ -76,6 +76,7 @@ class Elf:
         for index in range(1, len(sections)):
             symbols.extend(SYMBOL.pack(0, 0, 0, 3, 0, index))
         local_count = len(sections)
+        normalized = {}
         for offset, name, symbol in self.symbols():
             if symbol[5] not in indices or symbol[3] & 15 != 2:
                 continue
@@ -83,8 +84,12 @@ class Elf:
             value = symbol[1] - section[3]
             if value < 0 or value > section[5] or symbol[2] > section[5] - value:
                 raise ValueError(f"Symbol is outside its ELF section: {name}")
+            key = function_key(name)
+            if key in normalized and normalized[key] != name:
+                raise ValueError(f"Ambiguous function name: {key}")
+            normalized[key] = name
             name_offset = len(strings)
-            strings.extend(name.encode() + b"\0")
+            strings.extend(key.encode() + b"\0")
             symbols.extend(SYMBOL.pack(name_offset, value, symbol[2], 0x12, 0, indices[symbol[5]]))
         string_index = len(sections)
         sections.append((".strtab", 3, 0, 0, bytes(strings), 0, 0, 1, 0))
@@ -195,6 +200,34 @@ def literal_mask(blob, address):
     return mask
 
 
+def function_key(name):
+    replacements = {}
+    pattern = r"_GLOBAL_\.N\.[A-Za-z0-9_.]*?(src_(?:s1|s2|common|platform)_[A-Za-z0-9_]+\.cpp)[A-Za-z0-9_]{6}"
+    for qualifier in re.finditer(r"Q([1-9])", name):
+        position, components = qualifier.end(), []
+        for _ in range(int(qualifier[1])):
+            length = re.match(r"[1-9][0-9]*", name[position:])
+            if not length:
+                break
+            start = position + len(length[0])
+            end = start + int(length[0])
+            if end > len(name):
+                break
+            components.append((position, start, end))
+            position = end
+        else:
+            for position, start, end in components:
+                owner = re.fullmatch(pattern, name[start:end])
+                if owner:
+                    namespace = "_GLOBAL_.N." + owner[1] + "stable"
+                    replacements[position] = (end, str(len(namespace)) + namespace)
+    result, end = [], 0
+    for position, (stop, replacement) in sorted(replacements.items()):
+        result.extend((name[end:position], replacement))
+        end = stop
+    return "".join(result) + name[end:]
+
+
 def compare_functions(reference, candidate, base, symbol_path, elf, lo=0, hi=1 << 32):
     starts, sized = {}, {}
     for _, name, symbol in elf.symbols():
@@ -216,16 +249,24 @@ def compare_functions(reference, candidate, base, symbol_path, elf, lo=0, hi=1 <
             blob = blob[:-2]
         return blob
 
+    aliases = {}
+    for name in ours:
+        aliases.setdefault(function_key(name), []).append(name)
+
     counts = {"exact": 0, "instruction_equivalent": 0, "different": 0, "unpaired": 0}
     for line in symbol_path.read_text().splitlines():
         match = re.fullmatch(r"(\S+) = (0x[0-9a-fA-F]+); // type:func size:(0x[0-9a-fA-F]+)", line.strip())
         if not match or not lo <= int(match[2], 16) < hi:
             continue
         name, address, size = match[1], int(match[2], 16), int(match[3], 16)
-        if name not in ours:
-            counts["unpaired"] += 1
-            continue
-        at, our_size = ours[name]
+        candidate_name = name
+        if candidate_name not in ours:
+            matches = aliases.get(function_key(name), [])
+            if len(matches) != 1:
+                counts["unpaired"] += 1
+                continue
+            candidate_name = matches[0]
+        at, our_size = ours[candidate_name]
         expected = trim(reference[address - base:address - base + size])
         actual = trim(candidate[at - base:at - base + our_size])
         if expected == actual:
@@ -323,7 +364,9 @@ def main():
             {"name": args.config.parent.name + "/1ST_READ", "target_path": "expected.o", "base_path": "current.o"}]}, indent=2) + "\n")
         result = compare(reference, candidate, native["base"])
         result.update(reference_sha256=hashlib.sha256(reference).hexdigest(), candidate_sha256=hashlib.sha256(candidate).hexdigest(),
-                      native_functions=len(names), paired_function_names=len(names.intersection(name for _, name, _ in elf.symbols())),
+                      native_functions=len(names),
+                      paired_function_names=len({function_key(name) for name in names}.intersection(
+                          function_key(name) for _, name, _ in elf.symbols())),
                       objdiff_scope="functions; all image bytes are checked in image.json")
         symbols = args.config.parent / config["symbols"]
         result["functions"] = compare_functions(reference, candidate, native["base"], symbols, elf)
