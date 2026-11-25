@@ -5175,6 +5175,7 @@ std::int16_t VmFacingDelta(FightActorRuntimePrefix *self, std::uint16_t code) {
 
 namespace {
 
+// @verified - d
 bool VmAngleWithin(std::int16_t a, std::int16_t b, std::int16_t distance) {
     if (!(std::fabs(static_cast<float>(static_cast<std::int16_t>(a - b))) > distance))
         return true;
