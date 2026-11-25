@@ -146,6 +146,7 @@ option(SHENMUE_ENHANCEMENT_S2_TAI_CHI "Enable optional Tai Chi practice in Wise 
 option(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS "Build the static Shenmue II map tile seam guardband" ON)
 option(SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX "Scale NPC steering and vehicle movement in 60 Hz mode" ON)
 option(SHENMUE_ENHANCEMENT_S1_SKY_FIX "Correct the Shenmue I sky yaw scale" ON)
+option(SHENMUE_ENHANCEMENT_S1_CLOTH_DRIFT_FIX "Keep Shenmue I cloth attachment vertices from drifting" ON)
 option(SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE "Show the targeted enemy health gauge in Shenmue I fights" ON)
 option(SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE "Keep menu cassette playback active while roaming" ON)
 option(SHENMUE_RT_ARCADE "Run the original arcade cores on Shenmue I cabinet screens in realtime" OFF)
@@ -554,6 +555,10 @@ if((SHENMUE_ENHANCEMENT_S1_NPC_60FPS_FIX OR SHENMUE_ENHANCEMENT_MISC_MODS_FRAMER
 endif()
 if(SHENMUE_ENHANCEMENT_S1_SKY_FIX AND SHENMUE_S1_GAME STREQUAL "S1")
   target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_SKY_FIX=1)
+endif()
+if(SHENMUE_ENHANCEMENT_S1_CLOTH_DRIFT_FIX AND SHENMUE_S1_GAME STREQUAL "S1")
+  set_property(SOURCE src/s1/task/char_cloth.cpp APPEND PROPERTY
+    COMPILE_DEFINITIONS SHENMUE_ENHANCEMENT_S1_CLOTH_DRIFT_FIX=1)
 endif()
 if(SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE AND SHENMUE_S1_GAME STREQUAL "S1")
   target_compile_definitions(shenmue1_game PRIVATE SHENMUE_ENHANCEMENT_S1_ENEMY_HP_GAUGE=1)

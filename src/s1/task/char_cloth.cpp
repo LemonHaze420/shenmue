@@ -1056,6 +1056,13 @@ bool UpdateClothMesh(ClothChain &chain) {
     Matrix4x4 inverse = transform;
     Matrix4x4::InvertInPlace(&inverse);
     TransformClothVertices(chain.current, chain.vertexCount, inverse);
+#if defined(SHENMUE_ENHANCEMENT_S1_CLOTH_DRIFT_FIX) && SHENMUE_ENHANCEMENT_S1_CLOTH_DRIFT_FIX
+    // Keep pinned vertices exact across repeated world/local transforms.
+    for (std::uint8_t column = 0; column < chain.columns; ++column) {
+        const std::int16_t vertex = chain.nodes[column].vertexIndex;
+        chain.current[vertex] = chain.originalVertices[vertex];
+    }
+#endif
     UpdateClothRenderLink(chain);
     SetClothBindingVertices(chain.model, ClothBinding(chain.model), chain.current);
     if (ClothRenderLink *const link = chain.renderLink) {
