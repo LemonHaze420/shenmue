@@ -55,7 +55,7 @@ MapFieldDepthSlot g_mapFieldDepthSlots[32];
 
 // @verified - d
 const MapCellOffset *GetMapCellDirectionOffsets(std::int32_t direction) {
-    return mapCellOffsets + mapCellDirections[direction].firstOffset;
+    return mapCellDirections[direction].offsets;
 }
 
 // @verified - d
@@ -63,20 +63,20 @@ std::int32_t GetMapVisibleCellCount(std::int32_t direction, std::int32_t tier) {
     return static_cast<std::int32_t>(mapCellDirections[direction].counts[tier]);
 }
 
+// @verified - d
 void FreeMapFieldDepthSlot(std::int32_t index) {
-    const volatile MapFieldDepthSlot *slots = g_mapFieldDepthSlots;
-    if (slots[index].dangerSpheres)
+    if (g_mapFieldDepthSlots[index].dangerSpheres)
         HLib::FreeTaskData(g_mapFieldDepthSlots[index].dangerSpheres);
-    if (slots[index].dangerCells)
+    if (g_mapFieldDepthSlots[index].dangerCells)
         HLib::FreeTaskData(g_mapFieldDepthSlots[index].dangerCells);
     g_mapFieldDepthSlots[index].dangerSpheres = 0;
     g_mapFieldDepthSlots[index].dangerCount = 0;
     g_mapFieldDepthSlots[index].enabled = 0;
     g_mapFieldDepthSlots[index].dangerCellCount = 0;
     g_mapFieldDepthSlots[index].dangerCells = 0;
-    if (slots[index].walls)
+    if (g_mapFieldDepthSlots[index].walls)
         HLib::FreeTaskData(g_mapFieldDepthSlots[index].walls);
-    if (slots[index].cameraWalls)
+    if (g_mapFieldDepthSlots[index].cameraWalls)
         HLib::FreeTaskData(g_mapFieldDepthSlots[index].cameraWalls);
     g_mapFieldDepthSlots[index].walls = 0;
     g_mapFieldDepthSlots[index].wallCount = 0;

@@ -6,24 +6,20 @@
 namespace shenmue {
 namespace s2 {
 
-std::uint8_t g_easyOptionActive;
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-std::uint8_t g_easyOptionMode;
-#endif
+EasyOptionState g_easyOptionState;
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void SetNewEasyOptionState(std::int32_t mode) {
-    g_easyOptionActive = 1;
-    g_easyOptionMode = static_cast<std::uint8_t>(mode);
+    g_easyOptionState.active = 1;
+    g_easyOptionState.mode = static_cast<std::uint8_t>(mode);
     icsToggleIconState(7, 1);
 }
 #endif
 
 // @verified - d
 bool IsEasyOptionActive() {
-    if (g_easyOptionActive)
+    if (g_easyOptionState.active)
         return true;
     return false;
 }
@@ -55,8 +51,6 @@ extern "C" void njPolygonCullingMode(int mode);
 
 namespace shenmue {
 namespace s2 {
-static std::int8_t easyOptionSelectedRow;
-static std::uint8_t easyOptionPreviousValue, easyOptionShowsOptions;
 static std::int8_t easyOptionDraft[4];
 struct EasyOptionPadControls {
     PadControlEntry *previous;
@@ -119,7 +113,7 @@ static void ReloadEasyOptionTextures() {
 }
 
 static void RefreshEasyOptionDescriptions() {
-    const std::int8_t row = easyOptionSelectedRow;
+    const std::int8_t row = g_easyOptionState.selectedRow;
     ReleaseEasyOptionDescriptions();
     if (row) {
         const char *const *text = easyOptionDescriptions + 4 + (row - 1) * 2;
@@ -151,7 +145,7 @@ static void RefreshEasyOptionDialogueCaption() {
     easyOptionValueCaption.first = static_cast<std::int8_t>(easyOptionDialogueLabels[easyOptionDraft[0]]);
     easyOptionDescriptionCaption.first = 1;
     easyOptionDescriptionCaption.second = 1;
-    if (!easyOptionSelectedRow && easyOptionDraft[0] != 1)
+    if (!g_easyOptionState.selectedRow && easyOptionDraft[0] != 1)
         easyOptionDescriptionCaption.second = -1;
 }
 
@@ -178,7 +172,7 @@ static std::int32_t IsEasyOptionCaptionSelected(std::int32_t condition, std::int
     else if (condition == 1)
         return 0;
     else if (condition == 2) {
-        if (easyOptionSelectedRow != value)
+        if (g_easyOptionState.selectedRow != value)
             return 0;
         return 1;
     } else {
@@ -319,36 +313,36 @@ static void DrawEasyOptionMenu() {
 static void UpdateEasyOptionSelectionInput() {
     std::uint16_t repeated = ctrlGetPadInputBuffer0(easyOptionPadControls.current)->repeatedPresses;
     const std::uint16_t pressed = ctrlGetPadInputBuffer0(easyOptionPadControls.current)->pressedPriority;
-    const std::int8_t previousRow = easyOptionSelectedRow;
-    const std::uint8_t previousValue = easyOptionPreviousValue;
-    easyOptionPreviousValue = easyOptionDraft[easyOptionSelectedRow];
+    const std::int8_t previousRow = g_easyOptionState.selectedRow;
+    const std::uint8_t previousValue = g_easyOptionState.previousValue;
+    g_easyOptionState.previousValue = easyOptionDraft[g_easyOptionState.selectedRow];
     std::uint8_t mask = 3;
-    if (easyOptionSelectedRow) {
+    if (g_easyOptionState.selectedRow) {
         mask = 1;
-        repeated &= easyOptionPreviousValue ? 0x7fffU : 0xbfffU;
+        repeated &= g_easyOptionState.previousValue ? 0x7fffU : 0xbfffU;
     }
     if (pressed & 0x600U) {
-        g_easyOptionActive = 4;
+        g_easyOptionState.active = 4;
         ApplyEasyOptionConfiguration();
         shenExecuteAICACommand(0x900ab, 0, 0);
     } else {
         if (repeated & 0x3000U) {
             if (repeated & 0x1000U) {
-                if (--easyOptionSelectedRow < 1)
-                    easyOptionSelectedRow = 0;
-            } else if ((repeated & 0x2000U) && ++easyOptionSelectedRow > 3)
-                easyOptionSelectedRow = 3;
-            easyOptionPreviousValue = easyOptionDraft[easyOptionSelectedRow] & (easyOptionSelectedRow ? 1U : 3U);
+                if (--g_easyOptionState.selectedRow < 1)
+                    g_easyOptionState.selectedRow = 0;
+            } else if ((repeated & 0x2000U) && ++g_easyOptionState.selectedRow > 3)
+                g_easyOptionState.selectedRow = 3;
+            g_easyOptionState.previousValue = easyOptionDraft[g_easyOptionState.selectedRow] & (g_easyOptionState.selectedRow ? 1U : 3U);
         } else if (repeated & 0xc000U) {
             if (repeated & 0x4000U)
-                --easyOptionPreviousValue;
+                --g_easyOptionState.previousValue;
             if (repeated & 0x8000U)
-                ++easyOptionPreviousValue;
-            easyOptionPreviousValue &= mask;
+                ++g_easyOptionState.previousValue;
+            g_easyOptionState.previousValue &= mask;
         }
-        easyOptionDraft[easyOptionSelectedRow] = easyOptionPreviousValue;
+        easyOptionDraft[g_easyOptionState.selectedRow] = g_easyOptionState.previousValue;
     }
-    if (((previousRow ^ easyOptionSelectedRow) | (previousValue ^ easyOptionPreviousValue)) != 0) {
+    if (((previousRow ^ g_easyOptionState.selectedRow) | (previousValue ^ g_easyOptionState.previousValue)) != 0) {
         RefreshEasyOptionDialogueCaption();
         RefreshEasyOptionDescriptions();
         shenExecuteAICACommand(0x200ab, 0, 0);
@@ -357,28 +351,28 @@ static void UpdateEasyOptionSelectionInput() {
 
 static void EasyOptionTaskCallback(void *) {
     if (g_loadingFlag & 2U) {
-        if (easyOptionShowsOptions)
+        if (g_easyOptionState.showsOptions)
             DrawEasyOptionMenu();
         return;
     }
-    switch (g_easyOptionActive) {
+    switch (g_easyOptionState.active) {
     case 0:
         break;
     case 1:
         if (easyOptionPadControls.current && !IsPadControlEntryBound(easyOptionPadControls.current))
             easyOptionPadControls.previous = BindPadControlEntry(easyOptionPadControls.current);
-        g_easyOptionActive = 2;
-        easyOptionShowsOptions = 1;
+        g_easyOptionState.active = 2;
+        g_easyOptionState.showsOptions = 1;
         easyOptionPosition.x = -640.0f;
         easyOptionPosition.y = 65.0f;
         ReadEasyOptionConfiguration();
-        easyOptionPreviousValue = easyOptionDraft[easyOptionSelectedRow];
+        g_easyOptionState.previousValue = easyOptionDraft[g_easyOptionState.selectedRow];
         easyOptionPreviousNpcState = GetNpcNewLoadState();
         EV_NPC_NewLoadSw(0);
         EV_ResetFreeTalkFlags();
         RefreshEasyOptionDialogueCaption();
         ReloadEasyOptionTextures();
-        if (!g_easyOptionMode) {
+        if (!g_easyOptionState.mode) {
             easyOptionSavedHelpVisible = static_cast<std::uint16_t>(GetUiFlag(0));
             easyOptionSavedHelpPresent = static_cast<std::uint8_t>(GetUiFlag(1));
             CheckHelpIcon(0x21, 0, CheckHelpIconOp_Set);
@@ -387,7 +381,7 @@ static void EasyOptionTaskCallback(void *) {
         break;
     case 2:
         if (AdvanceIconPosition(&easyOptionPosition, 125.0f))
-            g_easyOptionActive = 3;
+            g_easyOptionState.active = 3;
         break;
     case 3:
         UpdateEasyOptionSelectionInput();
@@ -395,12 +389,12 @@ static void EasyOptionTaskCallback(void *) {
         break;
     case 4:
         if (RetreatIconPosition(&easyOptionPosition, -640.0f)) {
-            g_easyOptionActive = 0;
+            g_easyOptionState.active = 0;
             if (easyOptionPadControls.previous && IsPadControlEntryBound(easyOptionPadControls.current))
                 BindPadControlEntry(easyOptionPadControls.previous);
-            easyOptionShowsOptions = 0;
+            g_easyOptionState.showsOptions = 0;
             ReleaseEasyOptionTextures();
-            if (g_easyOptionMode)
+            if (g_easyOptionState.mode)
                 SetSleepActionIcon(0);
             else {
                 CheckHelpIcon(easyOptionSavedHelpVisible, 0, CheckHelpIconOp_Set);
@@ -411,7 +405,7 @@ static void EasyOptionTaskCallback(void *) {
         }
         break;
     }
-    if (easyOptionShowsOptions)
+    if (g_easyOptionState.showsOptions)
         DrawEasyOptionMenu();
 }
 
@@ -421,10 +415,10 @@ static void InitEasyOptionTaskCallback(void *) {
     easyOptionPadControls.current = AllocatePadControlEntry();
     easyOptionPulse = 32;
     easyOptionPulseStep = 2;
-    easyOptionSelectedRow = 0;
-    g_easyOptionMode = 0;
-    g_easyOptionActive = 0;
-    easyOptionShowsOptions = 0;
+    g_easyOptionState.selectedRow = 0;
+    g_easyOptionState.mode = 0;
+    g_easyOptionState.active = 0;
+    g_easyOptionState.showsOptions = 0;
     for (std::int32_t index = 0; index < 18; ++index)
         easyOptionLabelTextures[index] = -1;
     easyOptionDescriptionTextures[0] = -1;

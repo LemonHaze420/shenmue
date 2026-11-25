@@ -216,8 +216,7 @@ bss	.data._Q27shenmue2s2.startupFadeState
 bss	.bss._Q27shenmue2s2.easyOptionTextSprite
 bss	.bss._Q27shenmue2s2.easyOptionPulseStep
 bss	.bss._Q27shenmue2s2.easyOptionPadControl
-bss	.data._Q27shenmue2s2.g_easyOptionMode
-bss	.data._Q27shenmue2s2.g_easyOptionActive
+bss	.data._Q27shenmue2s2.g_easyOptionState
 bss	.bss._Q27shenmue2s2.easyOptionLabelTextures
 bss	.bss._Q27shenmue2s2.easyOptionPosition
 bss	.bss._Q27shenmue2s2.easyOptionButtonSprite
