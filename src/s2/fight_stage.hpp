@@ -1,5 +1,339 @@
 #pragma once
 
+#include "shenmue.h"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#include "common/math.hpp"
+#include "common/types.hpp"
+#include "s2/character_dc.hpp"
+#include "s2/fight.hpp"
+
+namespace shenmue {
+namespace s2 {
+
+#define TASK_VOBJ SHEN_NAME(VOBJ)
+
+struct VFCollisionShape {
+    Vector3 point;
+    float radius;
+    std::uint8_t bone, retained11;
+    std::uint16_t mask;
+};
+struct VFCLParticipantTmp {
+    std::uint8_t type, index, link, retained03;
+    void *owner;
+    float x, z;
+};
+typedef FightCollisionRuntimePrefix VFCL_t;
+typedef char VFCollisionShapeSizeCheck[sizeof(VFCollisionShape) == 0x14 ? 1 : -1];
+extern VFCollisionShape pushShapes[3];
+typedef char VFCLParticipantSizeCheck[sizeof(VFCLParticipantTmp) == 0x10 ? 1 : -1];
+float vfclGetPushRadius(FightActorRuntimePrefix *actor);
+void vfclTransformContactShapes(FightActorRuntimePrefix *actor);
+void vfInitializeActorCollision(FightRuntimePrefix *game, std::uint8_t index);
+HLib::Task *Queue_vfc_VF_RobCollision(FightRuntimePrefix *game);
+void vfc_VF_RobCollision_Callback(void *parameter);
+
+struct FightStageObjectHitbox {
+    std::int16_t kind, state;
+    Vector3 position;
+    float radius;
+    std::byte retained14[8];
+};
+struct FightStageObjectWorldHitbox {
+    std::byte retained00[4];
+    Vector3 position;
+    float radius;
+    std::byte retained14[8];
+};
+struct ObjectMotionNode {
+    std::uint16_t index, retained02;
+};
+struct ObjectMotionRecord {
+    std::int32_t byteSize;
+};
+struct FightStageObjectDefinition {
+    std::int8_t index;
+    std::uint8_t attachmentBone;
+    std::byte retained02[2];
+    Vector3 attachmentPosition;
+    Vector3i attachmentRotation;
+    std::uint32_t flags;
+    std::int32_t hitboxCount;
+    FightStageObjectHitbox hitboxes[8];
+    std::int8_t hitDamage, guardState;
+    std::int16_t hitParameter;
+    std::int32_t motionTrackCount;
+    const ObjectMotionNode *motionNodes;
+    std::int32_t motionStep, motionFirstFrame, motionLastFrame;
+    const ObjectMotionRecord *motionKeys;
+    std::uint32_t breakSound, hitSound, groundSound, launchSound;
+    float groundOffset, responseCoefficient;
+    std::int32_t rotationSpeed, launchYaw;
+    Vector3 positionOffset;
+};
+struct FightStageObjectRuntime {
+    std::int8_t index;
+    std::uint8_t state;
+    std::byte retained02[2];
+    FightStageObjectDefinition *definition;
+    std::uint32_t motionFlags, reactionFlags;
+    std::uint32_t contactState, contactSlotMask;
+    Vector3 contactPosition;
+    Vector3i rotation;
+    Vector3 reactionRotation;
+    Vector3 velocity;
+    std::byte retained48[12];
+    Vector3i rotationImpulse;
+    Vector3 position;
+    std::int32_t yaw;
+    Character *model, *controlCharacter, *brokenModel;
+    std::uint32_t savedControlFlags;
+    Character *reactingCharacter;
+    FightStageObjectWorldHitbox hitboxes[8];
+};
+struct ObjectMotionTrack;
+struct VOBJ_t {
+    FightStageObjectRuntime object;
+    std::int32_t motionFrame;
+    ObjectMotionTrack *motionTracks;
+    VOBJ_t *next;
+    Vector3 scaleTarget;
+    std::uint16_t scaleTicks[3];
+    std::byte retained182[2];
+};
+typedef char Layout_fight_stage_0[(sizeof(FightStageObjectHitbox) == 0x1c) ? 1 : -1];
+typedef char Layout_fight_stage_1[(sizeof(FightStageObjectDefinition) == 0x14c) ? 1 : -1];
+typedef char Layout_fight_stage_2[(offsetof(FightStageObjectDefinition, flags) == 0x1c) ? 1 : -1];
+typedef char Layout_fight_stage_3[(offsetof(FightStageObjectDefinition, motionNodes) == 0x10c) ? 1 : -1];
+typedef char Layout_fight_stage_4[(offsetof(FightStageObjectDefinition, motionKeys) == 0x11c) ? 1 : -1];
+typedef char Layout_fight_stage_5[(offsetof(FightStageObjectDefinition, positionOffset) == 0x140) ? 1 : -1];
+typedef char Layout_fight_stage_6[(sizeof(FightStageObjectRuntime) == 0x164) ? 1 : -1];
+typedef char Layout_fight_stage_7[(offsetof(FightStageObjectRuntime, definition) == 4) ? 1 : -1];
+typedef char FightStageObjectContactSlotMaskCheck[(offsetof(FightStageObjectRuntime, contactSlotMask) == 0x14) ? 1 : -1];
+typedef char Layout_fight_stage_8[(offsetof(FightStageObjectRuntime, contactPosition) == 0x18) ? 1 : -1];
+typedef char Layout_fight_stage_9[(offsetof(FightStageObjectRuntime, rotationImpulse) == 0x54) ? 1 : -1];
+typedef char Layout_fight_stage_10[(offsetof(FightStageObjectRuntime, model) == 0x70) ? 1 : -1];
+typedef char Layout_fight_stage_11[(offsetof(FightStageObjectRuntime, hitboxes) == 0x84) ? 1 : -1];
+typedef char Layout_fight_stage_12[(sizeof(VOBJ_t) == 0x184) ? 1 : -1];
+typedef char Layout_fight_stage_13[(offsetof(VOBJ_t, motionFrame) == 0x164) ? 1 : -1];
+typedef char Layout_fight_stage_14[(offsetof(VOBJ_t, next) == 0x16c) ? 1 : -1];
+
+struct FightStageObjectDefaults {
+    ObjectMotionNode nodes[50];
+    Vector3 positionOffsets[8];
+    std::uint32_t adjacentWords[3];
+};
+typedef char Layout_fight_stage_15[(offsetof(FightStageObjectDefaults, positionOffsets) == 0xc8) ? 1 : -1];
+static const FightStageObjectDefaults stageObjectDefaults = {
+    {{152, 0}, {153, 0}, {154, 0}, {155, 0}, {156, 0}, {157, 0}, {158, 0}, {159, 0}, {160, 0}, {161, 0}, {162, 0}, {163, 0}, {164, 0}, {165, 0}, {166, 0},
+        {167, 0}, {168, 0}, {169, 0}, {170, 0}, {171, 0}, {172, 0}, {173, 0}, {174, 0}, {175, 0}, {176, 0}, {177, 0}, {178, 0}, {179, 0}, {180, 0}, {181, 0},
+        {182, 0}, {183, 0}, {184, 0}, {185, 0}, {186, 0}, {187, 0}, {188, 0}, {189, 0}, {190, 0}, {191, 0}, {192, 0}, {193, 0}, {194, 0}, {195, 0}, {196, 0},
+        {197, 0}, {198, 0}, {199, 0}, {200, 0}, {201, 0}},
+    {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0.2f, 0}}, {2, 0x0006001eU, 0x1eU}};
+
+struct FightEntry {
+    Character *character;
+    std::uint8_t status;
+    std::byte retained05[3];
+    std::uint32_t hp;
+    std::int32_t initialHp;
+};
+struct FightGaugeWork {
+    float displayedHp, targetHp, gaugeTime, animationTime;
+    std::uint16_t state, x, width, height, sprite, secondSprite, colour, secondColour;
+    std::uint8_t animation;
+    std::byte retained21[3];
+    std::uint32_t phase;
+    std::uint16_t secondaryState, secondaryX, secondaryWidth, secondaryHeight, secondarySprite, secondaryColour, secondaryAnimation;
+    std::uint8_t active, retained37;
+};
+typedef char FightGaugeWorkSizeCheck[sizeof(FightGaugeWork) == 0x38 ? 1 : -1];
+typedef char FightEntrySizeCheck[sizeof(FightEntry) == 0x10 ? 1 : -1];
+extern FightEntry g_activeFightData[16];
+void vfUpdateWorldTransformAndFacingAngle(FightActorRuntimePrefix *actor);
+void vfApplyYawRecursive(FightActorRuntimePrefix *actor);
+void vfDecrementSfxSlotTimers(FightRuntimePrefix *game);
+void UpdateFightTimers(FightRuntimePrefix *game);
+void UpdateFormationRuntimeFlags(FightRuntimePrefix *game);
+void SetOtherFightCharaAlphas(FightActorRuntimePrefix *actor, float alpha);
+void UpdateFightCharaAlphas(FightRuntimePrefix *game);
+void vfUpdateAuthCameraFrame(FightRuntimePrefix *game);
+std::uint32_t ScaleFightTransitionFrames(float scale, std::uint16_t frames);
+void AccumulateFightCombatStats(FightRuntimePrefix *game);
+void vfFreeVFHDSpace(FightRuntimePrefix *game);
+void vfReleaseFightInput(FightRuntimePrefix *game);
+void vfTransitionAllEnemySlotsToInactive(FightRuntimePrefix *game);
+void FreeVFGW(FightActorRuntimePrefix *actor);
+void vfRestorePostFightUIState(FightRuntimePrefix *game);
+void ReleaseFight(FightRuntimePrefix *game);
+void vfUpdatePairingsAndDistances(FightRuntimePrefix *game);
+void vfSetPairedActor(FightRuntimePrefix *game, std::uint8_t index, std::uint8_t target);
+void vfSetTargetActor(FightRuntimePrefix *game, std::uint8_t index, std::uint8_t target);
+void vfResolvePairInteraction(FightActorRuntimePrefix *actor);
+void vfInitializeSlotPhaseConfigurations(FightActorRuntimePrefix *actor);
+static const char *const fightStyleNames[49] = {"RYOU", "DEKU", "ZAKO1", "ZAKO2", "ZAKO3", "ZAKO4", "ZAKO5", "REN", "TOGYU", "KENMN", "YUAN", "SAM", "RALY",
+    "MASTR", "BEAR", "SYUEI", "DNJYU", "PUNK", "FOUT", "SYOUK", "CHOU", "KOU1", "ENOKI", "JEFRY", "WOLF", "SARAH", "LAU", "MSUMO", "MNKEY", "RUGGR", "IHAND",
+    "ODEYE", "RINKN", "KANKI", "SFZ01", "SFZ02", "SFZ03", "SFZ04", "SFZ05", "SFZ06", "SFZ07", "SFZ08", "SFZ09", "SFZ10", "GUY", "LAU2", "DNJ2", "VSMNK",
+    "ZAKO6"};
+std::int32_t GetBtlStatus(Character *character);
+std::int32_t ReadFightCharacterValue(std::uint8_t operation, Character *character);
+void EnsureLoadedFightStyle(std::uint8_t style, std::uint8_t slot);
+std::uint8_t PublishFightFormation(Character *character, void *blocker, std::uint8_t poolMode, std::uint8_t team, std::uint16_t hp, std::uint8_t style,
+    std::uint16_t spawnWord0, std::int32_t spawnWord1, float x, float y, float z);
+
+struct FightInstructionConfiguration {
+    std::uint32_t character, secondCharacter;
+    std::int16_t program, secondProgram;
+    std::byte *result;
+};
+typedef char FightInstructionConfigurationSizeCheck[sizeof(FightInstructionConfiguration) == 0x10 ? 1 : -1];
+typedef char FightInstructionConfigurationResultCheck[offsetof(FightInstructionConfiguration, result) == 0x0c ? 1 : -1];
+extern FightInstructionConfiguration g_fightInstructionConfiguration;
+void vfSetMoveInstructionConfiguration(shen_name character, shen_name secondCharacter, std::int16_t program, std::int16_t secondProgram, std::byte *result);
+
+extern FightStageObjectDefinition *g_fightStageObjectDefinitions[8];
+extern VOBJ_t *g_fightStageObjects[30];
+extern VOBJ_t *g_fightStageObjectRoot;
+extern float g_fightStageObjectMaximumDistance;
+
+void vfInitStageObjects();
+void vfFreeStageObjects();
+void AllocateVOBJ(std::int32_t slot, std::int8_t index);
+void vfStageDefinitionSetMotion(std::int32_t slot, shen_name name, std::int32_t tracks, const ObjectMotionNode *nodes, std::int32_t step,
+    std::int32_t firstFrame, std::int32_t lastFrame, std::uint32_t sound);
+void vfStageDefinitionAppendHitbox(std::int32_t slot, std::uint32_t flags, const FightStageObjectHitbox *record);
+void vfStageDefinitionAddHitbox(std::int32_t slot, std::uint32_t flags, std::int32_t kindAndState, float x, float y, float z, float radius);
+void ToggleVOBJArrayIndex(std::int32_t slot, std::int8_t hitDamage, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound);
+void vfStageDefinitionSetHitResponse(std::int32_t slot, std::uint32_t groundSound, std::uint32_t launchSound, std::uint32_t flags, std::int32_t launchYaw,
+    std::int32_t rotationSpeed, float coefficient, float groundOffset);
+void vfStageDefinitionSetAttachmentData(std::int32_t slot, std::uint8_t bone, const Vector3 *position, const Vector3i *rotation);
+void vfStageDefinitionSetAttachment(
+    std::int32_t slot, std::uint8_t bone, float x, float y, float z, std::int32_t rotationX, std::int32_t rotationY, std::int32_t rotationZ);
+void vfStageDefinitionAddContactMask(std::int32_t slot, std::uint32_t flags);
+void vfAllocateVOBJ(std::int32_t slot, Character *character, std::int32_t definition);
+void vfStageObjectSetBrokenModel(std::int32_t slot, Character *character, std::uint32_t flags);
+void vfStageObjectAssignPosXYZ(std::int32_t slot, float x, float y, float z);
+void vfStageObjectAssignRotXYZ(std::int32_t slot, std::uint32_t x, std::uint32_t y, std::uint32_t z);
+void vfStageObjectAssignMotFlags(std::int32_t slot, std::uint32_t flags);
+void vfInitializeStageObjectHitboxes();
+void vfTransformStageObjectHitboxes(VOBJ_t *object);
+void vfResetStageObjectRotationImpulse(VOBJ_t *object);
+void vfStageObjectReset(std::int32_t slot, Character *character);
+void vfStageObjectAssignVelocityXYZ(std::int32_t slot, float x, float y, float z);
+void vfClAicaReact(std::uint32_t flags, const Vector3 *position);
+void vfStageObjectRestartMotion(std::int32_t index);
+static const std::int32_t fightMotionSelectors[7] = {25, 30, 0, 2, 7, 10, 17};
+void mtwkRemoveCallback(MotionWork *motion);
+void SuspendFight();
+void SetFightFrame(std::int32_t restartActors);
+void vfSelectDefaultReactionAndGuardAnims(FightActorRuntimePrefix *actor);
+void vfUpdateDefaultReactionAnim(FCMG_t *slot, std::uint16_t animation);
+void vfPrepareEnemySlotMotion(FCMG_t *slot);
+void vfRestoreEnemySlotMotion(FCMG_t *slot);
+bool vfEnemySlotResetAndRestartCycle(FightRuntimePrefix *game, FCMG_t *slot);
+std::uint8_t vfRegisterContactSlot(FightRuntimePrefix *game, FCMG_t *slot);
+void vfInitializeFightDialogue(FightRuntimePrefix *game);
+void vfSetFightDialogue(FightRuntimePrefix *game, std::int16_t index);
+const char *vfGetFightDialogueVoice(FightRuntimePrefix *game, std::int16_t index);
+extern std::int32_t dialoguePlayerFocus;
+bool vfHasDialoguePlayerFocus();
+bool vfRequestFightDialogue(FightRuntimePrefix *game, std::int16_t index);
+void vfTryFightDialogue(FightRuntimePrefix *game, std::int16_t index);
+void mtwkRegisterGroundTargetCallbacks(MotionWork *motion, FightActorRuntimePrefix *actor);
+void mtwkRegisterCooldownTargetCallbacks(MotionWork *motion, FCMG_t *slot);
+void vfResetActorActionState(FightActorRuntimePrefix *actor);
+void vfSynchronizeActorPosition(FightActorRuntimePrefix *actor);
+void vfSelectDefaultMotion(FightActorRuntimePrefix *actor, std::int32_t index);
+void vfApplyHitReactionAndStartMotion(FightActorRuntimePrefix *actor);
+void vfInitializeFightActor(FightRuntimePrefix *game, std::uint8_t index);
+void vfUpdateGuardLevel(FightRuntimePrefix *game, std::uint8_t index);
+std::uint8_t vfSelectOpponentSlotByPriority(FightRuntimePrefix *game, std::uint8_t flags);
+bool vfTransitionEnemySlotToCooldown(FightRuntimePrefix *game, FCMG_t *slot);
+bool vfTransitionEnemySlotToInactive(FightRuntimePrefix *game, FCMG_t *slot);
+void vfUpdateEnemySlotCooldowns(FightRuntimePrefix *game);
+void vfUpdateRenderOpacityForAll(FightRuntimePrefix *game);
+void vfUpdateEnemySlotSpawnFade(FightRuntimePrefix *game);
+void vfUpdateEnemySlotFormationAndYaw(FightRuntimePrefix *game);
+void UpdateDefeatAndRespawn(FightRuntimePrefix *game);
+void UpdateEnemySlotActivation(FightRuntimePrefix *game);
+void vfInitializeActorMotionState(FightActorRuntimePrefix *actor);
+void vfRefreshActorGameInfo(FightActorRuntimePrefix *actor);
+void vfUpdateHitFacingAndKnockback(FightActorRuntimePrefix *actor);
+void vfUpdateContactSlotsAndGroundFlags(FightActorRuntimePrefix *actor);
+void vfRefreshContactReactionState(FightActorRuntimePrefix *actor);
+void vfRotateFightVector(std::int16_t yaw, const Vector3 *input, Vector3 *output);
+bool vfIsWithinFightFloor(const Vector3 &position);
+bool vfDidCrossFightFrame(FightActorRuntimePrefix *actor, float frame);
+float FightIntersectionDistance(FightActorRuntimePrefix *actor, std::uint32_t yaw, float length);
+extern std::uint32_t g_vfIntersectionTagSource;
+std::uint32_t vfGetMoveCategoryMaskFor(FightActorRuntimePrefix *actor);
+std::uint32_t vfSelectHitReactionSequence(FightActorRuntimePrefix *actor);
+std::int8_t vfUpdatePredicate_40_41_44_50_51_54(float x, float z, std::int32_t quadrant);
+void vfActorUpdateState(FightActorRuntimePrefix *actor, FightActorRuntimePrefix *other);
+void vfStartFormationAnimation(FightActorRuntimePrefix *actor);
+void vfStartReactionAnimation(FightActorRuntimePrefix *actor);
+void vfResetScriptedFormationMotion(FightActorRuntimePrefix *actor);
+void vfReleaseUnheldScriptedFormation(FightRuntimePrefix *game);
+const std::byte *vfFindQueuedReactionEventEntry(FightActorRuntimePrefix *actor, std::uint8_t event);
+void vfSnapActorToContact(FightActorRuntimePrefix *actor);
+void vfPredictLandingGround(FightActorRuntimePrefix *actor);
+void vfPlayFightSfx(std::uint32_t sound, FightActorRuntimePrefix *actor);
+std::int32_t vfCompareFightGuardLevels(const FightActorRuntimePrefix *first, const FightActorRuntimePrefix *second);
+std::int32_t vfTryGuardReactionSwap(FightActorRuntimePrefix *actor, FightActorRuntimePrefix *source);
+extern std::int32_t g_vfSelectedReactionAnimation;
+extern float g_fightKnockbackMaterialBlend;
+void vfclChooseReactionAnim(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target);
+float vfclCalculateGuardKnockbackFactor(FightActorRuntimePrefix *actor, float);
+void vfHandleImpactSfxAndDefeat(FightActorRuntimePrefix *actor, std::int16_t damage, std::uint8_t mode);
+void vfUpdateGroundImpactReaction(FightActorRuntimePrefix *actor);
+void vfInitSfxSlotState(FightRuntimePrefix *game);
+void vfResetMoveTrainingGains();
+std::int8_t vfGetMoveProficiencyPhase(std::uint8_t move);
+void vfmaUpdateNextReaction(FightActorRuntimePrefix *actor);
+void vfConsumeMoveTrainingGains();
+void vfResetReactionProgram(FightActorRuntimePrefix *actor);
+void vfForceActorDefeat(FightActorRuntimePrefix *actor);
+void vfStartAuthoredDefeatCamera(FightActorRuntimePrefix *actor);
+std::uint8_t vfFightVoiceStyle(std::uint32_t style);
+void vfDispatchCurrentActionState(FightActorRuntimePrefix *actor);
+void vfUpdateDynamicActionState(FightActorRuntimePrefix *actor);
+void vfProcessMotionFrameEvents(FightActorRuntimePrefix *actor);
+void vfUpdateReactAnimationFrames(FightActorRuntimePrefix *actor);
+void vfSetFightFaceExpression(Character *character, std::int32_t expression, std::int32_t frames);
+void vfAttachActorStageObject(FightActorRuntimePrefix *actor);
+void vfReleaseActorStageObject(FightActorRuntimePrefix *actor);
+void vfLaunchActorStageObject(FightActorRuntimePrefix *actor);
+void vfLaunchStageObject(std::int32_t index, std::int32_t angle);
+void vfToggleAttachedStageObjectDisplay(FightActorRuntimePrefix *actor);
+void vfResetStageObjectSlot(VOBJ_t *object);
+void vfTossActorStageObject(FightActorRuntimePrefix *actor);
+std::int32_t IsActorBoneNearStageObject(FightActorRuntimePrefix *actor, VOBJ_t *owner);
+std::int32_t AreStageObjectsNear(VOBJ_t *first, VOBJ_t *second);
+void vfSetAttachedStageObjectEffect(FightActorRuntimePrefix *actor, std::uint8_t effect, float amount, std::uint16_t frames);
+void vfSetAttachedStageObjectFigurePose(FightActorRuntimePrefix *actor, std::uint16_t scale, std::uint16_t direction);
+void EmitFightSmoke(std::uint8_t profile, FightActorRuntimePrefix *actor);
+void PrepareFightFieldNode(CharacterNode *node);
+void vfUpdatePoseWithSfx(FightActorRuntimePrefix *actor);
+void vfUpdateHPRegeneration(FightActorRuntimePrefix *actor);
+void vfmaUpdateCollisionCounter(FightRuntimePrefix *game, std::uint8_t event, std::uint16_t move);
+FightActorRuntimePrefix *AllocateFGTM();
+void *AllocateFENE();
+void AllocateVFGW(FightActorRuntimePrefix *actor);
+void vfmQueueFightStart(std::uint8_t startSlot, std::uint8_t maximumEnemies, float knockback, std::uint8_t type, std::int32_t guardEffectSeconds);
+float vfFieldGetIntersection(FightActorRuntimePrefix *actor, Vector3 &position);
+float vfAccumEnemyGroundOffsetAndMask(const Vector3 *position, std::uint32_t *nearbyActors);
+float flddFindIntersectionBy(const Vector3 &position);
+float flddGetIntersectionFor(Character *character, Vector3 &position);
+
+} // namespace s2
+} // namespace shenmue
+
+#else
+
+#pragma once
+
 #include "s2/fight.hpp"
 #include "s2/fight_flags.hpp"
 #include <array>
@@ -82,8 +416,7 @@ static_assert(offsetof(VFSlotRuntimeState, parameter12a) == 0x12a);
 static_assert(offsetof(VFSlotRuntimeState, phases) == 0x12d);
 static_assert(offsetof(VFSlotRuntimeState, secondaryMotionTimer) == 0x1b0);
 
-
-
+// FGTM allocates 0xb48 bytes.
 struct alignas(4) VFInputHistoryEntry {
     std::uint16_t mask, sectorMask, pressed, released;
 };
@@ -209,6 +542,7 @@ static_assert(offsetof(VFActorContactState, shapeMasks) == 0x8c);
 static_assert(offsetof(VFActorContactState, activeShapeMask) == 0xb4);
 static_assert(offsetof(VFActorContactState, averageGround) == 0xbc);
 static_assert(offsetof(VFActorContactState, groundSamples) == 0xc0);
+
 struct VFActor {
     std::uint8_t groupIndex;
     std::int8_t actionIndex;
@@ -824,8 +1158,8 @@ void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t s
 void vfc_VF_RobCollision_Callback(void *collision);
 HLib::Task *Queue_vfc_VF_RobCollision(VFMA_t *game);
 
-
-
+// Native VFHD allocation is 0x520; its two packed instruction programs and
+// motion/dialogue history are retained in their original byte layout.
 struct VFHD_t {
     VFMA_t *game;
     std::byte instructionStorage[0x478];
@@ -1235,7 +1569,7 @@ struct FightStageObjectHitbox {
     std::int16_t kind, state;
     Vector3 position;
     float radius;
-
+    // Native FTBL234 copies stack residue here; no hitbox consumer reads it.
     std::byte unspecified[8];
 };
 struct FightStageObjectWorldHitbox {
@@ -1352,15 +1686,29 @@ struct FightSmokeProfile {
     std::uint16_t reserved;
 };
 inline constexpr FightSmokeProfile fightSmokeProfiles[10]{
-    {0.01f, 0.02f, 0.2f, 10, 75, 0}, {0.01f, 0.02f, 0.2f, 10, 75, 0}, {0.01f, 0.02f, 0.2f, 10, 75, 0},
-    {0.005f, 0.18f, 0.3f, 25, 40, 0}, {0.02f, 0.08f, 0.2f, 20, 40, 0}, {0.014f, 0.014f, 0.2f, 8, 80, 0},
-    {0.008f, 0.0008f, 0.2f, 3, 15, 0}, {0.008f, 0.0008f, 0.2f, 3, 15, 0},
-    {0.008f, 0.0008f, 0.2f, 3, 15, 0}, {0.008f, 0.0008f, 0.2f, 3, 15, 0},
+    {0.01f, 0.02f, 0.2f, 10, 75, 0},
+    {0.01f, 0.02f, 0.2f, 10, 75, 0},
+    {0.01f, 0.02f, 0.2f, 10, 75, 0},
+    {0.005f, 0.18f, 0.3f, 25, 40, 0},
+    {0.02f, 0.08f, 0.2f, 20, 40, 0},
+    {0.014f, 0.014f, 0.2f, 8, 80, 0},
+    {0.008f, 0.0008f, 0.2f, 3, 15, 0},
+    {0.008f, 0.0008f, 0.2f, 3, 15, 0},
+    {0.008f, 0.0008f, 0.2f, 3, 15, 0},
+    {0.008f, 0.0008f, 0.2f, 3, 15, 0},
 };
 inline constexpr std::uint8_t fightSmokePaletteIndices[13]{7, 7, 7, 7, 7, 7, 8, 7, 8, 9, 8, 9, 1};
 inline constexpr std::uint8_t fightSmokeColours[10][3]{
-    {0, 0, 0}, {208, 208, 208}, {80, 80, 80}, {128, 128, 112}, {96, 96, 96},
-    {113, 107, 94}, {113, 107, 94}, {160, 160, 144}, {128, 128, 112}, {96, 96, 80},
+    {0, 0, 0},
+    {208, 208, 208},
+    {80, 80, 80},
+    {128, 128, 112},
+    {96, 96, 96},
+    {113, 107, 94},
+    {113, 107, 94},
+    {160, 160, 144},
+    {128, 128, 112},
+    {96, 96, 80},
 };
 inline constexpr shen_name FIGHT_DEAD{SHEN_NAME(DEAD)};
 inline constexpr const char *fightStyleNames[51]{
@@ -1500,11 +1848,10 @@ void vfHandleImpactSfxAndDefeat(VFActor *actor, std::int16_t damage, std::uint8_
 void vfInitStageObjects();
 void vfFreeStageObjects();
 FightStageObjectDefinition **AllocateVOBJ(std::int32_t slot, std::int8_t index);
-std::uint32_t ToggleVOBJArrayIndex(
-    std::int32_t slot, std::int8_t hitDamage, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound);
+std::uint32_t ToggleVOBJArrayIndex(std::int32_t slot, std::int8_t hitDamage, std::int8_t guardState, std::int16_t hitParameter, std::uint32_t hitSound);
 const std::byte *vfStageDefinitionSetMotion(std::int32_t slot, std::uint32_t name, std::int32_t tracks, const std::uint32_t *nodes, std::int32_t step,
     std::int32_t firstFrame, std::int32_t lastFrame, std::uint32_t sound);
-
+// Native append's RAX is uninitialized stack residue; every native caller discards it.
 void vfStageDefinitionAddHitbox(std::int32_t slot, std::uint32_t flags, std::uint16_t kindAndState, float x, float y, float z, float radius);
 std::uint64_t vfStageDefinitionSetHitResponse(std::int32_t slot, std::uint32_t groundSound, std::uint32_t launchSound, std::uint32_t flags,
     std::int32_t launchYaw, std::int32_t rotationSpeed, float coefficient, float groundOffset);
@@ -1557,3 +1904,5 @@ float AccessFightActorGroupFloat(std::uint8_t mode, Character *character, float 
 void SetFightActorParameterBytes(shen_name character, const std::uint8_t *values);
 
 } // namespace shenmue::s2
+
+#endif

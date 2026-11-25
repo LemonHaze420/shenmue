@@ -94,10 +94,12 @@ inline constexpr shen_name AREA_0001_FIGURE_FIRST{SHEN_NAME(a077)};
 inline constexpr shen_name AREA_0001_FIGURE_SECOND{SHEN_NAME(a067)};
 inline constexpr shen_name AREA_0001_PRESS_MODEL{SHEN_NAME(aa78)};
 inline constexpr shen_name AREA_0001_LAST_MODEL{SHEN_NAME(a088)};
-inline constexpr std::array<shen_name, 10> AREA_0001_AUTHOR_CHARACTERS{SHEN_NAME(a084), SHEN_NAME(a085), SHEN_NAME(a083), SHEN_NAME(a089), SHEN_NAME(a090),
-    SHEN_NAME(a079), SHEN_NAME(a086), SHEN_NAME(a075), SHEN_NAME(a076), shen_name{0xffffffffU}};
-inline constexpr std::array<shen_name, 10> AREA_0001_CLEANUP_CHARACTERS{SHEN_NAME(a084), SHEN_NAME(a085), SHEN_NAME(a089), SHEN_NAME(a090), SHEN_NAME(a086),
-    SHEN_NAME(aa78), SHEN_NAME(a088), SHEN_NAME(a091), SHEN_NAME(TMTM), shen_name{0xffffffffU}};
+inline constexpr std::array<shen_name, 10> AREA_0001_AUTHOR_CHARACTERS{SHEN_NAME(a084),
+    SHEN_NAME(a085),
+        SHEN_NAME(a083), SHEN_NAME(a089), SHEN_NAME(a090), SHEN_NAME(a079), SHEN_NAME(a086), SHEN_NAME(a075), SHEN_NAME(a076), shen_name{0xffffffffU}};
+inline constexpr std::array<shen_name, 10> AREA_0001_CLEANUP_CHARACTERS{SHEN_NAME(a084),
+    SHEN_NAME(a085),
+        SHEN_NAME(a089), SHEN_NAME(a090), SHEN_NAME(a086), SHEN_NAME(aa78), SHEN_NAME(a088), SHEN_NAME(a091), SHEN_NAME(TMTM), shen_name{0xffffffffU}};
 inline constexpr std::array<shen_name, 6> AREA_0001_CLEAR_CHARACTERS{
     SHEN_NAME(a083), SHEN_NAME(a079), SHEN_NAME(a075), SHEN_NAME(a076), SHEN_NAME(a067), SHEN_NAME(a077)};
 inline constexpr std::array<shen_name, 2> AREA_0001_FOREGROUND_CHARACTERS{SHEN_NAME(a067), SHEN_NAME(a077)};

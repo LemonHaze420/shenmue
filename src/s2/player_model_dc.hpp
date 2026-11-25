@@ -1,0 +1,261 @@
+#pragma once
+
+#include "s2/player_state_dc.hpp"
+#include "s2/character_dc.hpp"
+#include "s2/player_placement_types.hpp"
+#include "platform/dc/input.hpp"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace shenmue {
+namespace s2 {
+
+struct MotionWork;
+struct PlayerMovementState;
+struct PlayerModelState {
+    std::uint32_t flags, padFlags;
+    union {
+        std::uint32_t previousPadFlags;
+        std::byte retainedInputState[4];
+    };
+    std::uint8_t useExternalMovementState;
+    union {
+        std::uint8_t inputActive, retainedInputMode;
+    };
+    std::uint8_t motionInputState, turnaroundState;
+    std::int8_t stickX, stickY;
+    std::int16_t accumulatedStickX, accumulatedStickY;
+    std::uint16_t direction, retained18, risingDirection, fallingDirection, retained1e;
+    float stickMagnitude, accumulatedMagnitude;
+    std::uint16_t horizontalHold, verticalHold;
+    std::int8_t stickHistoryX, previousStickX, previousPreviousStickX;
+    std::int8_t stickHistoryY, previousStickY, previousPreviousStickY, smoothedStickX, smoothedStickY;
+    std::uint32_t buttonHoldFrames[4];
+    std::int16_t isLookAround, inputBaseYaw, turnInput, inputTargetYaw, currentYaw;
+    std::uint16_t retained4e;
+    std::int16_t desiredYaw, committedYaw, yawDelta;
+    std::uint16_t retained56;
+    Vector3 searchLocation;
+    std::uint16_t directionLatchState, directionLatchValue, packedDirection, retained6a;
+    std::uint8_t analogHistory0, analogHistory1, analogHistory2, retained6f;
+    float retained70, movementSpeedRatio;
+    std::byte retained78[0xc];
+    float turnSpeedScale;
+    std::int32_t retained88;
+    float interpolationValue, movementInterpolation;
+    float motionInputEcho, movementBlendOutput, movementBlendLimit;
+    std::uint32_t retaineda0;
+    std::uint8_t lookZoomScale;
+    std::uint8_t lookAroundState, lookInputGraceFrames;
+    std::uint8_t lookInputFlags;
+    std::byte retaineda8[2];
+    std::int16_t lookPitchDelta, lookYawDelta, lookBasePitch, lookBaseYaw;
+    std::uint16_t retainedb2;
+    Vector3 lookAtPosition;
+    std::uint8_t lookTargetMode, lookTargetFlags;
+    std::uint8_t automaticLookFlags, retainedc3;
+    std::int16_t automaticLookPitch, automaticLookYaw, automaticLookElapsedFrames, automaticLookDurationFrames, automaticLookAuthorChangeFrames;
+    std::uint16_t retainedce;
+    shen_name automaticLookPreviousAuthor;
+    std::uint32_t automaticLookIdleTimer;
+    std::uint16_t forcedYaw, retainedda;
+    std::int16_t yaw;
+    std::uint16_t retainedYaw;
+    std::uint32_t currentMovementMode, retainedMovementMode, latchedMovementMode, activeMovementMode, requestedMovementMode;
+    std::uint32_t frameCount;
+    union {
+        std::uint32_t pendingMovementMode;
+        std::uint32_t activeFrameCount;
+    };
+    std::uint32_t retainedfc;
+    std::uint8_t collisionProbeState;
+    std::byte retained101[3];
+    float forwardProbeDistance;
+    std::int32_t field108;
+    float desiredYawProbeDistance;
+    std::byte retained110[8];
+    std::int16_t forwardSurfaceYaw;
+    std::uint16_t retained11a;
+    float nearestCharaProbeDistance;
+    std::byte retained120[6];
+    std::int16_t requestedTurnYaw;
+    std::int32_t retained128;
+    std::uint32_t movementSelectionFlags;
+    std::uint32_t previousMovementSelectionFlags;
+    std::byte retained134[0xc];
+    float leftSideProbeDistance, rightSideProbeDistance;
+    std::int16_t hitNormalYaw, collisionBoundaryYaw, desiredProbeYaw, secondaryCollisionBoundaryYaw, collisionLimitYawA, collisionLimitYawB;
+    std::byte retained154[0xc];
+    std::int16_t resolvedTurnYaw, pendingTurnDelta;
+    std::int16_t inactiveDirection164;
+    std::uint16_t collisionReferenceYaw;
+    std::int16_t collisionLatchYaw;
+    std::byte retained16a[6];
+    std::int16_t collisionTurnDelta, previousCollisionTurnDelta;
+    std::int32_t retained174;
+    float limitingCollisionDistance;
+    std::uint16_t retained17c;
+    std::int16_t inactiveDirection17e;
+    std::byte retained180[4];
+    std::int16_t inactiveDirection184;
+    std::int16_t turnYawDelta, retained188, collisionSideCounter, collisionAvoidanceYaw;
+    std::byte retained18e[6];
+    std::int16_t groundBoundaryTurnYawDelta;
+    std::byte retained196[2];
+    std::uint32_t collisionData;
+    std::uint8_t helperFlags, activeHelperMode;
+    std::int8_t pendingHelperMode;
+    std::byte retainedHelperState;
+    Character *helperCharacter;
+    Character *character;
+    MotionWork *motion;
+    union {
+        std::uint32_t retainedMotionState;
+        const dc::InputSlot *inputSnapshot;
+    };
+    std::int32_t motionState;
+    union {
+        std::uint32_t retainedControllerState, previousRootYawState;
+    };
+    PlayerMovementState *movementState;
+    std::uint32_t retainedSecondaryController;
+    Character *secondaryCharacter;
+    std::byte retainedGroundState[0xcc];
+    float groundBlend[2], verticalAxis[2];
+    std::byte retainedControllerDeltas[0x18];
+    Vector3 firstControllerDelta, secondControllerDelta;
+    std::byte retainedSpecialMode[0x74];
+    shen_name interactionTarget;
+    float primaryInteractionDistanceLimit;
+    union {
+        std::uint32_t retainedInteractionState;
+        float interactionRangeRatio;
+    };
+    float secondaryInteractionDistanceLimit;
+    std::int16_t idleNearTargetFrames;
+    std::uint16_t interactionTargetCounter;
+    shen_name specialModeTargetCharacter;
+    Vector3 specialModeTargetPosition;
+    std::uint16_t specialModeFlags;
+    std::uint8_t specialModeState;
+    std::uint8_t specialModeAuxState;
+    std::uint16_t specialModeCounter;
+    std::uint8_t specialModeTurnSide, retained36f;
+    std::uint32_t specialModeTargetId;
+    std::int32_t specialModeOrbitPhase;
+    float specialModeOrbitMinimum, specialModeOrbitMaximum;
+    std::uint32_t specialModeFrame;
+    std::uint16_t retainedHeldFlags;
+    std::int16_t heldStateFlags;
+    std::int8_t heldStateMode;
+    std::uint8_t heldStateStep, pendingHeldStateMode;
+    std::byte retainedHeldTransition;
+    std::int16_t heldStateTimer;
+    union {
+        std::uint16_t savedHeldStateFlags;
+        std::int16_t heldStateTriggerMinute;
+    };
+    void (*heldStateCallback)();
+    std::int16_t holdWindowStartMinute, holdWindowEndMinute, sceneActId;
+    std::uint16_t retainedSceneState;
+    shen_name sceneAreaId;
+    std::int16_t sceneEntryId, scheduledTransitionMinute, requestedActId;
+    std::uint16_t retainedRequestedSceneState;
+    shen_name requestedAreaId;
+    std::int16_t requestedEntryId;
+    std::byte retainedTimeState[0x16];
+    std::int16_t retryActId;
+    std::uint16_t retainedRetryState;
+    shen_name retryAreaId;
+    std::int16_t retryEntryId;
+    std::int8_t timeAdvanceTargetHour, timeAdvanceTargetMinute, timeAdvanceMinutesPerTick;
+    std::int8_t requestedClockHour, requestedClockMinute;
+    std::int8_t rotationOnlyWaitFrames;
+    std::int16_t turnaroundFrames;
+    std::uint16_t turnaroundPhase;
+    std::byte retainedTimeAdvance[0x12];
+    std::uint8_t retainedPlacementSelector;
+    std::byte retainedSpeedState[0x19];
+    PlayerPlacementNode placementRoot, placementScratch;
+    PlayerPlacementNode *activePlacementNode, *selectedPlacementNode;
+    float movementResult, previousMovementResult, approachStepDistance;
+    float remainingMotionTime;
+    float speedZ;
+    std::uint32_t retainedState4e8, searchRegionKey;
+    std::uint8_t regionInteractionState;
+    std::byte retained4f1[3];
+    std::uint32_t regionInteractionMotionId;
+    shen_name lockOnCharacterName;
+    Vector3 worldPosition;
+    std::uint16_t movementQueryState, retained50a;
+    Vector3 fieldCollisionPoint;
+    Character *collisionCharacter;
+    float collisionDistance;
+    std::uint8_t collisionFlags, collisionType;
+    std::uint16_t retained522;
+    Matrix4x4 worldTransform, inverseWorldTransform;
+    Character *limitingCollisionCharacter, *nearestCollisionCharacter;
+    std::int8_t placementHistoryWriteIndex, placementHistoryCount;
+    std::byte retained5ae[2];
+    Vector3 placementHistory[32], previousPlacementSample;
+    float placementHistoryDistanceAccumulator;
+    float savedDisplayAlpha;
+    std::int32_t placementQueryHandle;
+    std::uint32_t retained748;
+};
+typedef char Layout_player_model_dc_0[(sizeof(PlayerModelState) == 0x74c) ? 1 : -1];
+typedef char Layout_player_model_dc_1[(offsetof(PlayerModelState, searchLocation) == 0x58) ? 1 : -1];
+typedef char Layout_player_model_dc_2[(offsetof(PlayerModelState, interpolationValue) == 0x8c) ? 1 : -1];
+typedef char Layout_player_model_dc_3[(offsetof(PlayerModelState, lookZoomScale) == 0xa4) ? 1 : -1];
+typedef char Layout_player_model_dc_4[(offsetof(PlayerModelState, currentMovementMode) == 0xe0) ? 1 : -1];
+typedef char Layout_player_model_dc_5[(offsetof(PlayerModelState, character) == 0x1a4) ? 1 : -1];
+typedef char Layout_player_model_dc_6[(offsetof(PlayerModelState, motion) == 0x1a8) ? 1 : -1];
+typedef char Layout_player_model_dc_7[(offsetof(PlayerModelState, motionState) == 0x1b0) ? 1 : -1];
+typedef char Layout_player_model_dc_8[(offsetof(PlayerModelState, helperFlags) == 0x19c) ? 1 : -1];
+typedef char Layout_player_model_dc_9[(offsetof(PlayerModelState, frameCount) == 0xf4) ? 1 : -1];
+typedef char Layout_player_model_dc_10[(offsetof(PlayerModelState, movementState) == 0x1b8) ? 1 : -1];
+typedef char Layout_player_model_dc_11[(offsetof(PlayerModelState, secondaryCharacter) == 0x1c0) ? 1 : -1];
+typedef char Layout_player_model_dc_12[(offsetof(PlayerModelState, groundBlend) == 0x290) ? 1 : -1];
+typedef char Layout_player_model_dc_13[(offsetof(PlayerModelState, verticalAxis) == 0x298) ? 1 : -1];
+typedef char Layout_player_model_dc_14[(offsetof(PlayerModelState, firstControllerDelta) == 0x2b8) ? 1 : -1];
+typedef char Layout_player_model_dc_15[(offsetof(PlayerModelState, specialModeFlags) == 0x368) ? 1 : -1];
+typedef char Layout_player_model_dc_16[(offsetof(PlayerModelState, specialModeFrame) == 0x380) ? 1 : -1];
+typedef char Layout_player_model_dc_17[(offsetof(PlayerModelState, heldStateFlags) == 0x386) ? 1 : -1];
+typedef char Layout_player_model_dc_18[(offsetof(PlayerModelState, heldStateMode) == 0x388) ? 1 : -1];
+typedef char Layout_player_model_dc_19[(offsetof(PlayerModelState, heldStateStep) == 0x389) ? 1 : -1];
+typedef char Layout_player_model_dc_20[(offsetof(PlayerModelState, savedHeldStateFlags) == 0x38e) ? 1 : -1];
+typedef char Layout_player_model_dc_21[(offsetof(PlayerModelState, speedZ) == 0x4e4) ? 1 : -1];
+typedef char Layout_player_model_dc_22[(offsetof(PlayerModelState, heldStateCallback) == 0x390) ? 1 : -1];
+typedef char Layout_player_model_dc_23[(offsetof(PlayerModelState, holdWindowStartMinute) == 0x394) ? 1 : -1];
+typedef char Layout_player_model_dc_24[(offsetof(PlayerModelState, timeAdvanceTargetHour) == 0x3ce) ? 1 : -1];
+typedef char Layout_player_model_dc_25[(offsetof(PlayerModelState, retainedPlacementSelector) == 0x3ea) ? 1 : -1];
+typedef char Layout_player_model_dc_26[(offsetof(PlayerModelState, placementQueryHandle) == 0x744) ? 1 : -1];
+typedef char Layout_player_model_dc_27[(offsetof(PlayerModelState, savedDisplayAlpha) == 0x740) ? 1 : -1];
+typedef char Layout_player_model_dc_28[(offsetof(PlayerModelState, primaryInteractionDistanceLimit) == 0x348) ? 1 : -1];
+typedef char Layout_player_model_dc_29[(offsetof(PlayerModelState, secondaryInteractionDistanceLimit) == 0x350) ? 1 : -1];
+typedef char Layout_player_model_dc_30[(offsetof(PlayerModelState, automaticLookFlags) == 0xc2) ? 1 : -1];
+typedef char Layout_player_model_dc_31[(offsetof(PlayerModelState, automaticLookElapsedFrames) == 0xc8) ? 1 : -1];
+typedef char Layout_player_model_dc_32[(offsetof(PlayerModelState, automaticLookPreviousAuthor) == 0xd0) ? 1 : -1];
+typedef char Layout_player_model_dc_33[(offsetof(PlayerModelState, automaticLookIdleTimer) == 0xd4) ? 1 : -1];
+std::uint32_t SetPlayerControlEnabled(std::int32_t mode);
+std::uint32_t SetPlayerGameFlags(std::uint32_t mode, void *parameter);
+std::uint32_t SetPlayerSpecialMode(std::int32_t mode);
+std::uint32_t GetPlayerAreaControlState(std::int32_t unused = 1);
+bool plymIsSearchable();
+void UpdatePlayerPartyCompanions(PlayerModelState *model);
+void ResetPlayerMovementController(PlayerMovementState *state);
+float ctrlGetLookOverlayWeight();
+float ctrlSetLookOverlayWeight(float alpha);
+std::int32_t plymIntersectionTest();
+void GetPlayerTargetWorldPosition(Vector3 *position);
+void camCtrlQueryPitchYaw(Vector3s &angles);
+std::int32_t plymIsLookAllowed(std::uint32_t modes);
+bool plymSampleLookInput(Vector2s &facing, Vector2s &look);
+std::int32_t plymGetLookInputState();
+std::int32_t plymIsSpecialModeCameraRequested();
+std::int16_t plymGetAuthorPlacementYaw(shen_name name);
+
+} // namespace s2
+} // namespace shenmue
+
+#endif

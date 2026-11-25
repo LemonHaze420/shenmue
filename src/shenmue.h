@@ -166,7 +166,26 @@
 #define SHENMUE_IS_PC (SHENMUE_PLATFORM == SHENMUE_PLATFORM_PC)
 #define SHENMUE_IS_XBOX (SHENMUE_PLATFORM == SHENMUE_PLATFORM_XBOX)
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(__GNUC__) && __GNUC__ == 2 && __GNUC_MINOR__ == 95
+#define SHENMUE_S2_GCC295 1
+#else
+#define SHENMUE_S2_GCC295 0
+#endif
+
+#if SHENMUE_S2_GCC295
+#define SHEN_FIELD(name) name:
+#else
 #define SHEN_FIELD(name) .name =
+#endif
+
+#if SHENMUE_IS_DC
+#ifndef SHENMUE_PLATFORM_DREAMCAST
+#define SHENMUE_PLATFORM_DREAMCAST 1
+#endif
+#ifndef _DREAMCAST
+#define _DREAMCAST 1
+#endif
+#endif
 
 
 #ifndef SHENMUE_ENHANCEMENT_S1_CASSETTES_ANYWHERE

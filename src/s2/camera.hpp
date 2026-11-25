@@ -73,7 +73,11 @@ struct VFActor;
 struct VFMA_t;
 void resetIntersectionAndTest();
 void resetCharaPosYandIntersection();
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t camCtrlCheckIsEventCam() noexcept;
+#else
 bool camCtrlCheckIsEventCam() noexcept;
+#endif
 void camCtrlSetSplineShouldRebuildRotTo(bool enabled) noexcept;
 void camCtrlSetSkipInterpTo(std::int32_t enabled) noexcept;
 void camCtrlSetXform(const Matrix4x4 *transform) noexcept;
@@ -567,7 +571,11 @@ std::uint64_t camCtrlSetConversationPosition(const Vector3 *position) noexcept;
 bool camCtrlHasConversationFlaggedView() noexcept;
 std::uint32_t camCtrlIsConversationActive() noexcept;
 std::uint64_t camCtrlUtil(CameraUtilityMode mode, std::intptr_t parameter);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t camCtrlToggleSmoothing(std::int32_t enabled) noexcept;
+#else
 bool camCtrlToggleSmoothing(std::int32_t enabled) noexcept;
+#endif
 CameraRuntime *camCtrlSetMotionScaleFactor(float factor) noexcept;
 CameraRuntime *camCtrlSetYOffset(float offset) noexcept;
 void camCtrlResetMotionscaling() noexcept;

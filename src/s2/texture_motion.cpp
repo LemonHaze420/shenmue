@@ -1,12 +1,21 @@
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/texture_dc.hpp"
+#else
 #include "s2/pak.hpp"
+#endif
 
-namespace shenmue { namespace s2 {
+namespace shenmue {
+namespace s2 {
 
+#if SHENMUE_IS_DC
+std::int32_t textureMotionFlag = 0;
+#else
 namespace {
 std::int32_t textureMotionFlag = 0;
 }
+#endif
 
 // @verified - pd
 void TXMO_Reader(const void *txmo, std::int32_t entryPoint) {
@@ -36,4 +45,5 @@ void texSetMotionFlag(std::int32_t enabled) {
     textureMotionFlag = enabled;
 }
 
-} } // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

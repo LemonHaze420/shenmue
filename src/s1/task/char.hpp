@@ -1,5 +1,12 @@
 #pragma once
 
+#include "shenmue.h"
+#if !(SHENMUE_IS_DC && SHENMUE_IS_DEMO)
+#include "s1/task/char_types.hpp"
+#endif
+
+
+
 #include "s1/hlib.hpp"
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -38,8 +45,8 @@ struct ClothAuthoredSphere;
 struct ClothCollisionSphere;
 struct ClothChain;
 
-
-
+// shenmue1_v107 LKPT component. moveRequestLook marks a look target published by an XMPT move
+// request, released again by SetCharaLookAtPosition_Wrapper.
 struct LookPointWork {
     Vector3 target;
     std::int16_t savedCommand;
@@ -57,9 +64,9 @@ void LKPT_Callback(Character *character, void *payload);
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-
-
-
+// shenmue1_v107::FIGP_t. The first 0x28 bytes retain the optional blur-model
+// loader and script state; the trailing Matrix4x4[45][15] cache is addressed
+// directly by FIGP_Callback.
 struct FightPoseWork {
     char filename[0x10];
     std::uint8_t active;
@@ -88,10 +95,10 @@ static_assert(offsetof(FightPoseWork, originalFigurePoseCallback) == 0xa8e8);
 
 #pragma pack(pop)
 
-
-
-
-
+// shenmue1_v107::CLMD_t (the cloth-model component payload). The native
+// payload is 0x68 bytes; its first eight bytes carry frame/setup state, while
+// the model, four cloth-chain owners, and preset/data pointers retain their
+// unaligned native offsets.
 #pragma pack(push, 1)
 
 #pragma pack(pop)
@@ -289,52 +296,6 @@ static_assert(offsetof(MotionManagerWork, motion) + offsetof(MotionInformationWo
 static_assert(offsetof(MotionManagerWork, transformSourceCharacter) == 0x490);
 
 #pragma pack(push, 4)
-struct CharacterNode {
-    CharacterNode *child;
-    Vector3 position;
-    Vector3i rotation;
-};
-
-struct CharacterIdTransform {
-    CharacterNode node;
-    std::uint32_t layer;
-    const void *collisionData;
-};
-
-static_assert(sizeof(CharacterIdTransform) == 0x2c);
-static_assert(offsetof(CharacterIdTransform, layer) == 0x20);
-static_assert(offsetof(CharacterIdTransform, collisionData) == 0x24);
-
-struct CharacterEntity {
-    std::uint32_t name;
-    CharacterNode node;
-};
-
-struct CharacterComponentNode {
-    CharacterComponentNode *greaterChild;
-    CharacterComponentNode *lessChild;
-    std::uint32_t componentId;
-    std::uint32_t reserved_14;
-    CharacterComponentNode *next;
-    std::uint32_t flags;
-    std::uint32_t reserved_24;
-    void (*updateCallback)(Character *, void *);
-    void (*destroyCallback)(Character *, void *);
-    void (*drawCallback)(Character *, void *);
-};
-
-
-struct CharacterShadowState {
-    std::byte reserved_00[8];
-    std::int32_t lightIndex[2];
-    float fade[2];
-    std::uint32_t flag[2];
-};
-
-union CharacterFlags {
-    std::uint32_t value;
-    std::byte bytes[4];
-};
 
 struct Character {
     CharacterEntity entity;
@@ -374,36 +335,16 @@ struct Character {
     CharacterShadowState shadowState;
 };
 
-struct CharacterBucketNode {
-    CharacterBucketNode *next;
-    Character *character;
-    HLib::Task *task;
-};
-
-struct CharacterIdLookupNode {
-    CharacterIdLookupNode *left;
-    CharacterIdLookupNode *right;
-    std::uint32_t id;
-    std::uint32_t reserved_14;
-    CharacterIdLookupNode *bucketNext;
-    Character *character;
-};
 #pragma pack(pop)
 
-static_assert(sizeof(CharacterNode) == 0x20);
-static_assert(sizeof(CharacterEntity) == 0x24);
-static_assert(sizeof(CharacterComponentNode) == 0x40);
-static_assert(sizeof(CharacterShadowState) == 0x20);
 static_assert(sizeof(Character) == 0x110);
 static_assert(offsetof(Character, model) == 0x48);
 static_assert(offsetof(Character, flags) == 0x6c);
 static_assert(offsetof(Character, componentList) == 0xac);
 static_assert(offsetof(Character, componentTree) == 0xb4);
-static_assert(sizeof(CharacterBucketNode) == 0x18);
-static_assert(sizeof(CharacterIdLookupNode) == 0x28);
 
 #pragma pack(push, 1)
-
+// Native REFB component payload: the reference board a character's lighting and look-at queries read.
 struct ReferenceBoardWork {
     void (*figurePoseCallback)(Character *);
     std::int32_t reserved008;
@@ -432,7 +373,7 @@ enum class CharacterHandlerPriority : std::uint32_t {
     Low = 3,
 };
 
-
+// Native Shenmue::GlobalCEWPTypes: the HLib queue index of a character task, by handler priority.
 constexpr std::array<std::uint16_t, 4> kCharacterHandlerTaskIndices{5, 6, 7, 8};
 
 constexpr std::uint32_t CharacterFlagUnknown = 0x1;
@@ -457,9 +398,9 @@ void NPCLogger(Character *character, std::int32_t index, std::int32_t enabled);
 void RotateAndPostTranslate(Character *character);
 void TransformCharacterHierarchyZYX(const CharacterNode *node);
 extern Character *g_drawingCharacter;
-
-
-
+// Native g_tmp_pIMGM: the image model of the character draw in progress (with g_drawingCharacter, native g_tmp_pMOTN). The figure
+// poses set it from the character's current image; a caller may preset it around charaSetRenderFlags (the Moves screen does), and
+// MOTM_Update then keeps it. The MOTM draw callbacks draw only while it is set.
 extern void *g_drawingImageModel;
 std::uint32_t charGetLightMask(const Character *character);
 float charGetLightRadius(const Character *character);
@@ -469,6 +410,7 @@ float cewpGetSpeedFor(Character *character);
 void CHID_Init(HLib::Task *scenarioTask, std::uint32_t id, Character *character);
 Character *CHID_Find(HLib::Task *scenarioTask, std::uint32_t id);
 void CHAR_DestroyAndFreeComponents(Character *character);
+bool CHAR_ValidateLifecycle();
 void SCEN_UnlinkCharacterIndexNode(HLib::Task *scenarioTask, Character *character);
 void SCEN_PromoteCharacterIndexNode(HLib::Task *scenarioTask, Character *character);
 Vector3 GetPositionForEntity(CharacterNode &node);
@@ -590,12 +532,12 @@ void refbSetColour(Character *character, const Vector3 &colour);
 void refbSetSector(Character *character, std::uint32_t sector);
 void SetRefBoardValues(Character *character, std::int32_t type, std::int32_t field024);
 void refbSetGlobalActive(std::uint32_t value);
-
-
+// Native light-31 direction and colour saved by MOTM_Eval and the UI object light, restored by Shenmue_InitRefBoard and
+// DrawObjectForUI.
 extern Vector3 g_refBoardSavedDirection;
 extern Vector4 g_refBoardSavedColour;
 extern std::int32_t g_bDebugLogVisibility;
-
+// Native Shenmue::currentCHAR: the last character id named for debug output.
 extern char g_currentCharacterName[5];
 void CHAR_LogNPCVisibility(Character *character, bool visible);
 std::int32_t SetCharacterDrawMode(std::uint32_t mode, std::int32_t value);
@@ -604,8 +546,8 @@ void SetCharacterVisibility(Character *character, bool visible);
 void CPAM_Alloc(Character *character);
 void CPAM_SetEnabled(Character *character, bool enabled);
 
-
-
+// PC scenario owner adapters. The scenario dispatcher binds these slots in
+// one place; the state transitions remain with their native task owners.
 void Script_motmGetCharaFlags(ScenarioContext *context, void *rawParams);
 std::int64_t ForEachCewpEntityApplyCallback(std::int64_t parameter, bool (*callback)(Character *));
 void Script_CewpFind(ScenarioContext *context, void *rawParams);
@@ -794,8 +736,8 @@ inline constexpr std::array<CalendarPhaseMonth, 372> kCalendarPhaseMonths{{
     {10, 24, 11, 8},
 }};
 
-
-
+// Native idle-hand command program: blend pose 0, wait 120 frames, blend
+// pose 3, then return to the saved loop point.
 inline constexpr std::int32_t kIdleHandCommands[]{
     11,
     0,
@@ -860,7 +802,7 @@ struct MotionToModelBone {
     std::int32_t reserved0c;
 };
 
-
+// shenmue1_v107::g_ModelBoneIDMapping.
 inline constexpr std::array<MotionToModelBone, 27> kMotionToModelBones{{
     {0, 0, 0, 0},
     {2, 0, 1, 0},

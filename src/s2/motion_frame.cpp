@@ -1,3 +1,2625 @@
+#include "shenmue.h"
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#include "s2/motion_work_dc.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/motion_stream_dc.hpp"
+#include "s2/motion_ground_dc.hpp"
+#include "s2/motion_yaw_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/hand_dc.hpp"
+#include "s2/fight.hpp"
+#include "s2/math.hpp"
+#include <cstring>
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#include "s2/event_vector_dc.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include "common/native_sqrt.hpp"
+#include <cmath>
+
+namespace shenmue {
+namespace s2 {
+
+// @verified - d
+void mtwkApplyRootPos(MotionWork *work) {
+    Matrix4x4::preTranslate(work->cachedRootPosition.x, work->cachedRootPosition.y, work->cachedRootPosition.z);
+    if (work->entityRotationZ)
+        Matrix4x4::RotateAroundZ_Wrapper(work->entityRotationZ);
+    if (work->entityYaw)
+        Matrix4x4::RotateAroundY_Wrapper(work->entityYaw);
+    if (work->entityRotationX)
+        Matrix4x4::RotateAroundX_Wrapper(work->entityRotationX);
+}
+
+namespace {
+
+void TranslateMatrix(Matrix4x4 &matrix, float x, float y, float z) {
+    matrix.rows[3].x = x + matrix.rows[3].x;
+    matrix.rows[3].y = y + matrix.rows[3].y;
+    matrix.rows[3].z = z + matrix.rows[3].z;
+}
+
+void TranslateTarget(Vector3 *output, float x, float y, float z) {
+    output->x = x + output->x;
+    output->y = y + output->y;
+    output->z = z + output->z;
+}
+
+} // namespace
+
+// @verified - d
+void mtwkAdvanceInterpolated(MotionWork *work, float x, float y, float z) {
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.hipsWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftThighWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftShinWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftAnkleWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightThighWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightShinWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightAnkleWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.chest.upperChestWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.head.neckWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.head.headWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.shoulderWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.upperArmWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.forearmWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.handWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.shoulderWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.upperArmWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.forearmWorld, x, y, z);
+    TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.handWorld, x, y, z);
+    if (!reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride) {
+        TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.chest.chestWorld, x, y, z);
+        TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.wristWorld, x, y, z);
+        TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.wristWorld, x, y, z);
+        TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftFootWorld, x, y, z);
+        TranslateMatrix(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightFootWorld, x, y, z);
+    } else {
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftHipWorld, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightHipWorld, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightToe1World, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightToe2World, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightToe3World, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.head.aimSourceWorld, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.head.nodeAWorld, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.head.nodeBWorld, x, y, z);
+        TranslateMatrix(*reinterpret_cast<MotionWorkBindings *>(work)->rig.head.nodeCWorld, x, y, z);
+    }
+}
+
+// @verified - d
+void mtwkCopyInterpolated(MotionWork *work, float x, float y, float z) {
+    IKRig &rig = reinterpret_cast<MotionWorkBindings *>(work)->rig;
+    TranslateTarget(reinterpret_cast<Vector3 *>(rig.chest.target.axes[2].dimensions), x, y, z);
+    TranslateTarget(reinterpret_cast<Vector3 *>(rig.head.target.axes[2].dimensions), x, y, z);
+    TranslateTarget(reinterpret_cast<Vector3 *>(rig.rightArm.target.axes[2].dimensions), x, y, z);
+    TranslateTarget(reinterpret_cast<Vector3 *>(rig.leftArm.target.axes[2].dimensions), x, y, z);
+    TranslateTarget(reinterpret_cast<Vector3 *>(rig.lowerBody.leftFoot.axes[2].dimensions), x, y, z);
+    TranslateTarget(reinterpret_cast<Vector3 *>(rig.lowerBody.rightFoot.axes[2].dimensions), x, y, z);
+    if (rig.useOverride) {
+        TranslateTarget(reinterpret_cast<Vector3 *>(rig.lowerBody.overridePelvisTarget->axes[2].dimensions), x, y, z);
+        TranslateTarget(reinterpret_cast<Vector3 *>(rig.head.aimTargetNode->axes[2].dimensions), x, y, z);
+    }
+}
+
+// @verified - d
+void mtwkUpdateCollisionCluster(MotionWork *work) {
+    Vector3 points[9];
+    float spread = 0.0f;
+    Vector3 center = {0.0f, 0.0f, 0.0f};
+    std::uint8_t count;
+    std::uint8_t index;
+    if (reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride)
+        count = 9;
+    else
+        count = 7;
+    points[0] = *reinterpret_cast<const Vector3 *>(&reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisWorld.rows[3]);
+    points[1] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.chest.target.axes[2].dimensions);
+    mtwkGetBonePosition(work, static_cast<MotionBoneId>(5), &points[2]);
+    points[3] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.target.axes[2].dimensions);
+    points[4] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.target.axes[2].dimensions);
+    points[5] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftFoot.axes[2].dimensions);
+    points[6] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightFoot.axes[2].dimensions);
+    if (reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride) {
+        points[7] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.overridePelvisTarget->axes[2].dimensions);
+        points[8] = *reinterpret_cast<const Vector3 *>(reinterpret_cast<MotionWorkBindings *>(work)->rig.head.aimTargetNode->axes[2].dimensions);
+    }
+    for (index = 0; index < count; ++index) {
+        center.x = center.x + points[index].x;
+        center.z = center.z + points[index].z;
+    }
+    center.x = center.x / static_cast<float>(count);
+    center.z = center.z / static_cast<float>(count);
+    for (index = 0; index < count; ++index) {
+        float distance = points[index].x - center.x;
+        const float z = points[index].z - center.z;
+        distance = distance * distance + z * z;
+        if (distance > spread)
+            spread = distance;
+    }
+    work->clusterRadius = shenmue::NativeSqrt(spread);
+    work->clusterCenter = center;
+}
+
+Matrix4x4 mtwkBuildArmRebaseTransform(MotionWork *work) {
+    Vector3 axis;
+    Vector3 direction;
+    Vector3 anchor;
+    Matrix4x4 inverse;
+    Matrix4x4 matrix;
+    mtwkGetBonePosition(work, static_cast<MotionBoneId>(12), &anchor);
+    dc::sdk::njSetMatrix(&matrix, mtwkGetBoneTransform(work, 12));
+    const Vector3 *segment = work->ikTargetPosition;
+    axis.x = segment[1].x - segment[0].x;
+    axis.y = segment[1].y - segment[0].y;
+    axis.z = segment[1].z - segment[0].z;
+    const float length = Vector3::CalcMagnitude(axis);
+    direction.x = axis.x / length;
+    direction.y = axis.y / length;
+    direction.z = axis.z / length;
+    matrix.rows[0].x = direction.x;
+    matrix.rows[0].y = direction.y;
+    matrix.rows[0].z = direction.z;
+    matrix.rows[1].x = matrix.rows[2].y * matrix.rows[0].z - matrix.rows[2].z * matrix.rows[0].y;
+    matrix.rows[1].y = matrix.rows[2].z * matrix.rows[0].x - matrix.rows[2].x * matrix.rows[0].z;
+    matrix.rows[1].z = matrix.rows[2].x * matrix.rows[0].y - matrix.rows[2].y * matrix.rows[0].x;
+    axis.x = matrix.rows[1].x;
+    axis.y = matrix.rows[1].y;
+    axis.z = matrix.rows[1].z;
+    float magnitude = Vector3::CalcMagnitude(axis);
+    if (magnitude > 0.00000011920929f) {
+        matrix.rows[1].x = matrix.rows[1].x / magnitude;
+        matrix.rows[1].y = matrix.rows[1].y / magnitude;
+        matrix.rows[1].z = matrix.rows[1].z / magnitude;
+    }
+    matrix.rows[2].x = matrix.rows[0].y * matrix.rows[1].z - matrix.rows[0].z * matrix.rows[1].y;
+    matrix.rows[2].y = matrix.rows[0].z * matrix.rows[1].x - matrix.rows[0].x * matrix.rows[1].z;
+    matrix.rows[2].z = matrix.rows[0].x * matrix.rows[1].y - matrix.rows[0].y * matrix.rows[1].x;
+    axis.x = matrix.rows[2].x;
+    axis.y = matrix.rows[2].y;
+    axis.z = matrix.rows[2].z;
+    magnitude = Vector3::CalcMagnitude(axis);
+    if (magnitude > 0.00000011920929f) {
+        matrix.rows[2].x = matrix.rows[2].x / magnitude;
+        matrix.rows[2].y = matrix.rows[2].y / magnitude;
+        matrix.rows[2].z = matrix.rows[2].z / magnitude;
+    }
+    matrix_stack::Matrix4x4_Push();
+    matrix_stack::LoadMatrix(mtwkGetBoneTransform(work, 12));
+#if SHENMUE_S2_GCC295
+    matrix_stack::InvertMatrix(0);
+#else
+    matrix_stack::InvertMatrix(nullptr);
+#endif
+    matrix_stack::GetMatrix(&inverse);
+    matrix_stack::LoadMatrix(&matrix);
+    Matrix4x4::MultiplyWithPrePassMatrix(&inverse);
+    matrix_stack::GetMatrix(&matrix);
+    matrix.rows[3].x = anchor.x;
+    matrix.rows[3].y = anchor.y;
+    matrix.rows[3].z = anchor.z;
+    PopCurrentMatrix(1);
+    return matrix;
+}
+
+namespace {
+inline IKRig &FrameRig(MotionWork *work) {
+    return reinterpret_cast<MotionWorkBindings *>(work)->rig;
+}
+inline const IKRig &FrameRig(const MotionWork *work) {
+    return reinterpret_cast<const MotionWorkBindings *>(work)->rig;
+}
+inline MotionRotationParameters *FrameRotations(MotionWork *work) {
+    return reinterpret_cast<MotionWorkBindings *>(work)->rotations;
+}
+inline std::int32_t FrameAbs(std::int32_t value) {
+    return value < 0 ? -value : value;
+}
+
+enum MotionRegionFlag {
+    MRF_Unknown01 = 0x1U,
+    MRF_Unknown02 = 0x2U,
+    MRF_Loop = 0x4U,
+    MRF_ExcludeEndFrame = 0x8U,
+    MRF_Transition = 0x10U,
+    MRF_LeadFoot = 0x20U,
+    MRF_Mirrored = 0x40U,
+    MRF_Reinitialize = 0x80U,
+    MRF_Independent = 0x100U,
+    MRF_FollowLowerBody = 0x200U,
+    MRF_ReturnToLowerBody = 0x400U,
+    MRF_BlendToLowerBody = 0x800U,
+    MRF_Unknown1000 = 0x1000U,
+};
+
+static const float motionFrameSeconds = 0.033333335f;
+
+} // namespace
+
+MotionRigClock *g_motionRegionClocks[5] = {};
+std::uint8_t g_motionLayerEvaluated[8] = {};
+std::int32_t g_ikEnabled = 0;
+
+void cbEvaluateTargetRotOverride(void *parameters) {
+    MotionRotationParameters &rotation = *static_cast<MotionRotationParameters *>(parameters);
+    float blend = *rotation.blendAlpha;
+    MotionRotationBasis &basis = *rotation.basis;
+    Matrix4x4 transform;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[0]) * 57.29578f * 182.04443f));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[1]) * 57.29578f * 182.04443f));
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[2]) * 57.29578f * 182.04443f));
+    matrix_stack::GetMatrix(&transform);
+    PopCurrentMatrix(1);
+    basis.targetAxis.x = transform.rows[0].x;
+    basis.targetAxis.y = transform.rows[1].x;
+    basis.targetAxis.z = transform.rows[2].x;
+    basis.targetTangent.x = transform.rows[0].y;
+    basis.targetTangent.y = transform.rows[1].y;
+    basis.targetTangent.z = transform.rows[2].y;
+    const float saved = g_motionCurrentAnimTime;
+    g_motionCurrentAnimTime = g_motionMaximumAnimTime * blend;
+    AxisAngleToBasisSlerp(basis);
+    g_motionCurrentAnimTime = saved;
+}
+
+void cbEvaluateTwoJointRotationOverride(void *parameters) {
+    MotionRotationParameters &rotation = *static_cast<MotionRotationParameters *>(parameters);
+    float blend = *rotation.blendAlpha;
+    MotionRotationBasis &basis = *rotation.basis;
+    Matrix4x4 transform;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[0]) * 57.29578f * 182.04443f));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[1]) * 57.29578f * 182.04443f));
+    matrix_stack::GetMatrix(&transform);
+    PopCurrentMatrix(1);
+    basis.targetAxis.x = transform.rows[0].x;
+    basis.targetAxis.y = transform.rows[1].x;
+    basis.targetAxis.z = transform.rows[2].x;
+    basis.targetTangent.x = transform.rows[0].y;
+    basis.targetTangent.y = transform.rows[1].y;
+    basis.targetTangent.z = transform.rows[2].y;
+    const float saved = g_motionCurrentAnimTime;
+    g_motionCurrentAnimTime = g_motionMaximumAnimTime * blend;
+    AxisAngleToBasisSlerp(basis);
+    g_motionCurrentAnimTime = saved;
+}
+
+void cbEvaluateXRotationOverride(void *parameters) {
+    MotionRotationParameters &rotation = *static_cast<MotionRotationParameters *>(parameters);
+    float blend = *rotation.blendAlpha;
+    MotionRotationBasis &basis = *rotation.basis;
+    Matrix4x4 transform;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[0]) * 57.29578f * 182.04443f));
+    matrix_stack::GetMatrix(&transform);
+    PopCurrentMatrix(1);
+    basis.targetAxis.x = transform.rows[0].x;
+    basis.targetAxis.y = transform.rows[1].x;
+    basis.targetAxis.z = transform.rows[2].x;
+    basis.targetTangent.x = transform.rows[0].y;
+    basis.targetTangent.y = transform.rows[1].y;
+    basis.targetTangent.z = transform.rows[2].y;
+    const float saved = g_motionCurrentAnimTime;
+    g_motionCurrentAnimTime = g_motionMaximumAnimTime * blend;
+    AxisAngleToBasisSlerp(basis);
+    g_motionCurrentAnimTime = saved;
+}
+
+void cbEvaluateZYRotationOverride(void *parameters) {
+    MotionRotationParameters &rotation = *static_cast<MotionRotationParameters *>(parameters);
+    float blend = *rotation.blendAlpha;
+    MotionRotationBasis &basis = *rotation.basis;
+    Matrix4x4 transform;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[1]) * 57.29578f * 182.04443f));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation.channels[2]) * 57.29578f * 182.04443f));
+    matrix_stack::GetMatrix(&transform);
+    PopCurrentMatrix(1);
+    basis.targetAxis.x = transform.rows[0].x;
+    basis.targetAxis.y = transform.rows[1].x;
+    basis.targetAxis.z = transform.rows[2].x;
+    basis.targetTangent.x = transform.rows[0].y;
+    basis.targetTangent.y = transform.rows[1].y;
+    basis.targetTangent.z = transform.rows[2].y;
+    const float saved = g_motionCurrentAnimTime;
+    g_motionCurrentAnimTime = g_motionMaximumAnimTime * blend;
+    AxisAngleToBasisSlerp(basis);
+    g_motionCurrentAnimTime = saved;
+}
+
+void ApplyRotY_ThenCopyOrRotZYX(void *parameters) {
+    MotionRotationParameters *rotation = static_cast<MotionRotationParameters *>(parameters);
+    MotionWork *work = g_activeMotionWork;
+    float blend = *rotation->blendAlpha;
+    MotionRotationBasis *basis = rotation->basis;
+    std::uint32_t poseMode;
+    if (g_ikEnabled)
+        poseMode = FrameRig(work).lowerBody.poseMode;
+    else
+        poseMode = g_motionPoseMode;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    if (g_ikEnabled && work->pelvisYawCurrent != 0)
+        Matrix4x4::RotateAroundY_Wrapper(work->pelvisYawHalf);
+    if (std::fabs(blend - 1.0f) > 0.00000011920929f) {
+        cbEvaluateTargetRotOverride(rotation);
+    } else {
+        switch (poseMode) {
+        case MP_FromChannels:
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[0]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[1]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[2]) * 57.29578f * 182.04443f));
+            break;
+        case MP_FromAxisAngle:
+            AxisAngleToBasisSlerp(*basis);
+            break;
+        }
+    }
+}
+
+void ApplyChannelRotZYX_WithIKXBias(void *parameters) {
+    MotionRotationParameters *rotation = static_cast<MotionRotationParameters *>(parameters);
+    MotionWork *work = g_activeMotionWork;
+    float blend = *rotation->blendAlpha;
+    MotionRotationBasis *basis = rotation->basis;
+    std::uint32_t poseMode;
+    if (g_ikEnabled)
+        poseMode = FrameRig(work).chest.poseMode;
+    else
+        poseMode = g_motionPoseMode;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    if (std::fabs(blend - 1.0f) > 0.00000011920929f) {
+        cbEvaluateTargetRotOverride(rotation);
+    } else {
+        switch (poseMode) {
+        case MP_FromChannels:
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[0]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[1]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[2]) * 57.29578f * 182.04443f));
+            break;
+        case MP_FromAxisAngle:
+            AxisAngleToBasisSlerp(*basis);
+            break;
+        }
+    }
+    if (g_ikEnabled && work->pelvisYawCurrent != 0)
+        Matrix4x4::RotateAroundX_Wrapper(work->pelvisYawCurrent - work->pelvisYawHalf);
+}
+
+void cbEvaluateChestOverride(void *parameters) {
+    MotionRotationParameters *rotation = static_cast<MotionRotationParameters *>(parameters);
+    MotionWork *work = g_activeMotionWork;
+    float blend = *rotation->blendAlpha;
+    MotionRotationBasis *basis = rotation->basis;
+    std::uint32_t poseMode;
+    if (g_ikEnabled)
+        poseMode = FrameRig(work).chest.poseMode;
+    else
+        poseMode = g_motionPoseMode;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    const float chestBlend = work->chestBlendScale;
+    if (g_ikEnabled && chestBlend > 0.0f) {
+        Matrix4x4 root;
+        Matrix4x4 pelvis;
+        Vector3 rootAxis;
+        Vector3 pelvisAxis;
+        Vector3 axis;
+        matrix_stack::GetMatrix(&root);
+        PopCurrentMatrix(1);
+        matrix_stack::GetMatrix(&pelvis);
+        rootAxis.x = root.rows[1].x;
+        rootAxis.y = root.rows[1].y;
+        rootAxis.z = root.rows[1].z;
+        pelvisAxis.x = pelvis.rows[1].x;
+        pelvisAxis.y = pelvis.rows[1].y;
+        pelvisAxis.z = pelvis.rows[1].z;
+        const float crossLength = am2Vector3CrossLength(&rootAxis, &pelvisAxis);
+        const float dot = am2Vector3Dot(&rootAxis, &pelvisAxis);
+        am2Vector3Cross(&rootAxis, &pelvisAxis, &axis);
+        std::int32_t angle;
+        if (0.00000011920929f > Vector3::CalcMagnitude(axis))
+            angle = 0;
+        else
+            angle = static_cast<std::int32_t>(static_cast<float>(static_cast<std::int32_t>(dc::sdk::ArcTan2Fixed(crossLength, dot))) * chestBlend);
+        if (angle) {
+            matrix_stack::LoadMatrix(&root);
+            matrix_stack::InvertMatrix(0);
+            Matrix4x4::Transform(axis, axis);
+        }
+        matrix_stack::Matrix4x4_Push(&root);
+        if (angle)
+            Matrix4x4_ApplyAngleRotationToVector(axis, angle);
+    }
+    if (std::fabs(blend - 1.0f) > 0.00000011920929f) {
+        cbEvaluateTargetRotOverride(rotation);
+    } else {
+        switch (poseMode) {
+        case MP_FromChannels:
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[0]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[1]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[2]) * 57.29578f * 182.04443f));
+            break;
+        case MP_FromAxisAngle:
+            AxisAngleToBasisSlerp(*basis);
+            break;
+        }
+    }
+}
+
+void ApplyChannelRotZYX_WithIKBlend(void *parameters) {
+    MotionRotationParameters *rotation = static_cast<MotionRotationParameters *>(parameters);
+    MotionWork *work = g_activeMotionWork;
+    float blend = *rotation->blendAlpha;
+    MotionRotationBasis *rotationBasis = rotation->basis;
+    std::uint32_t poseMode;
+    if (g_ikEnabled)
+        poseMode = FrameRig(work).head.poseMode;
+    else
+        poseMode = g_motionPoseMode;
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    const float lookBlend = work->lookAtBlendTime;
+    if (g_ikEnabled && lookBlend > 0.0f)
+        matrix_stack::PushUnitMatrix();
+    if (std::fabs(blend - 1.0f) > 0.00000011920929f) {
+        cbEvaluateTargetRotOverride(rotation);
+    } else {
+        switch (poseMode) {
+        case MP_FromChannels:
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[0]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[1]) * 57.29578f * 182.04443f));
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>(SampleMotionRigChannelAdvance(*rotation->channels[2]) * 57.29578f * 182.04443f));
+            break;
+        case MP_FromAxisAngle:
+            AxisAngleToBasisSlerp(*rotationBasis);
+            break;
+        }
+    }
+    if (g_ikEnabled && lookBlend > 0.0f) {
+        Matrix4x4 transform;
+        MotionRotationBasis basis;
+        matrix_stack::GetMatrix(&transform);
+        PopCurrentMatrix(1);
+        basis.sourceAxis.x = transform.rows[0].x;
+        basis.sourceAxis.y = transform.rows[1].x;
+        basis.sourceAxis.z = transform.rows[2].x;
+        basis.sourceTangent.x = transform.rows[0].y;
+        basis.sourceTangent.y = transform.rows[1].y;
+        basis.sourceTangent.z = transform.rows[2].y;
+        if (FrameRig(work).useOverride == 0) {
+            basis.targetAxis.x = 0.0f;
+            basis.targetAxis.y = 0.0f;
+            basis.targetAxis.z = 1.0f;
+            basis.targetTangent.x = 0.0f;
+            basis.targetTangent.y = -1.0f;
+            basis.targetTangent.z = 0.0f;
+        } else {
+            basis.targetAxis.x = 0.0f;
+            basis.targetAxis.y = 0.70710677f;
+            basis.targetAxis.z = 0.70710677f;
+            basis.targetTangent.x = 0.0f;
+            basis.targetTangent.y = -0.70710677f;
+            basis.targetTangent.z = 0.70710677f;
+        }
+        const float saved = g_motionCurrentAnimTime;
+        g_motionCurrentAnimTime = g_motionMaximumAnimTime * lookBlend;
+        AxisAngleToBasisSlerp(basis);
+        g_motionCurrentAnimTime = saved;
+    }
+}
+
+void ApplyConstraint(MotionWork &work, Vector3 *position, std::uint32_t controller) {
+    Vector3 bone;
+    Vector3 delta;
+    Vector3 source = {};
+    Vector3 *blendSource = &work.constraintBlendSource[controller];
+    float step = work.constraintStepLimit[controller];
+    std::uint16_t mode = 6U & (work.constraintStateBits >> (3U * controller));
+    matrix_stack::Matrix4x4_Push();
+    matrix_stack::InvertMatrix(0);
+    Matrix4x4::TransformPoint(*blendSource, source);
+    if (mode == 2U) {
+        if (work.sequenceFlags & MSF_LimitConstraintStep) {
+            mtwkGetControllerTargetPosition(&work, controller, bone);
+            Matrix4x4::TransformPoint(bone, bone);
+            delta.x = source.x - bone.x;
+            delta.y = source.y - bone.y;
+            delta.z = source.z - bone.z;
+            float distance = Vector3::CalcMagnitude(delta);
+            if (step > distance) {
+                position->x = source.x;
+                position->y = source.y;
+                position->z = source.z;
+            } else {
+                float fraction = step / distance;
+                position->x = bone.x + fraction * delta.x;
+                position->y = bone.y + fraction * delta.y;
+                position->z = bone.z + fraction * delta.z;
+            }
+        } else {
+            position->x = source.x;
+            position->y = source.y;
+            position->z = source.z;
+        }
+        work.constraintBlendTotalFrames[controller] = 0;
+    } else if (mode == 4U) {
+        if (work.sequenceFlags & MSF_LimitConstraintStep) {
+            if (work.constraintBlendTotalFrames[controller] == 0) {
+                mtwkGetControllerTargetPosition(&work, controller, bone);
+                blendSource->x = bone.x;
+                blendSource->y = bone.y;
+                blendSource->z = bone.z;
+                Matrix4x4::TransformPoint(*blendSource, source);
+                Matrix4x4::TransformPoint(bone, bone);
+                delta.x = position->x - bone.x;
+                delta.y = position->y - bone.y;
+                delta.z = position->z - bone.z;
+                work.constraintBlendRemainingFrames[controller] = work.constraintBlendTotalFrames[controller] =
+                    static_cast<std::uint32_t>(Vector3::CalcMagnitude(delta) / step) + 1U;
+            }
+            if (--work.constraintBlendRemainingFrames[controller] == 0) {
+                work.constraintStateBits &= ~(6U << (3U * controller));
+                work.constraintBlendTotalFrames[controller] = 0;
+            } else {
+                float amount =
+                    static_cast<float>(work.constraintBlendRemainingFrames[controller]) / static_cast<float>(work.constraintBlendTotalFrames[controller]);
+                position->x = (1.0f - amount) * position->x + amount * source.x;
+                position->y = (1.0f - amount) * position->y + amount * source.y;
+                position->z = (1.0f - amount) * position->z + amount * source.z;
+            }
+        } else {
+            work.constraintStateBits &= ~(6U << (3U * controller));
+            work.constraintBlendTotalFrames[controller] = 0;
+        }
+    }
+    PopCurrentMatrix(1);
+}
+
+static std::uint32_t ComputeSignedVectorAngle(const Vector3 *first, const Vector3 *second, Vector3 *axis);
+static std::uint32_t ComputeSignedVectorAngleVariant(const Vector3 *first, const Vector3 *second, Vector3 *axis);
+
+void EvaluateHeadLookAt(MotionWork &work, Vector3 *target, std::uint32_t controller) {
+    Vector3 look;
+    Vector3 local = {0.0f, 0.0f, 0.0f};
+    Matrix4x4 current;
+    Vector3 axis;
+    matrix_stack::GetMatrix(&current);
+    std::uint16_t mode;
+    std::uint16_t limit;
+    std::uint16_t step;
+    Vector3 *source = &work.constraintBlendSource[controller];
+    limit = static_cast<std::uint16_t>(work.constraintStepLimit[controller] * 10430.378f);
+    step = static_cast<std::uint16_t>(work.constraintStepRate[controller] * 10430.378f);
+    mode = (work.constraintStateBits >> (controller * 3)) & 6U;
+    const float ramp = work.pelvisYawRamp;
+    matrix_stack::Matrix4x4_Push();
+    matrix_stack::InvertMatrix(0);
+    Matrix4x4::TransformPoint(*source, local);
+    look.x = FrameRig(&work).head.lookTarget.x;
+    look.y = FrameRig(&work).head.lookTarget.y;
+    look.z = FrameRig(&work).head.lookTarget.z;
+    if (work.motionFlags & 0x40U) {
+        work.extraMotionMask = 0;
+        if (local.x > 0.0f) {
+            if (local.y < work.retainedCollisionValues[0] * local.x) {
+                work.lookAtYawStep = dc::sdk::ArcTan2Fixed(-local.x, local.y);
+                work.lookAtYawStep += dc::sdk::ArcTanFixed(work.retainedCollisionValues[0]);
+                local.y = work.retainedCollisionValues[0] * local.x;
+                work.extraMotionMask |= 2U;
+            } else if (local.y < work.extraMotionPosition.x * local.x) {
+                work.extraMotionMask |= 1U;
+            }
+        } else {
+            if (local.y < -(work.retainedCollisionValues[0] * local.x)) {
+                work.lookAtYawStep = dc::sdk::ArcTan2Fixed(-local.x, local.y);
+                work.lookAtYawStep -= dc::sdk::ArcTanFixed(work.retainedCollisionValues[0]);
+                local.y = -work.retainedCollisionValues[0] * local.x;
+                work.extraMotionMask |= 8U;
+            } else if (local.y < -(work.extraMotionPosition.x * local.x)) {
+                work.extraMotionMask |= 4U;
+            }
+        }
+        float planar;
+        planar = shenmue::NativeSqrt(local.x * local.x + local.y * local.y);
+        if (local.z > 0.0f) {
+            if (local.z * work.retainedCollisionValues[1] > planar) {
+                if (work.retainedCollisionValues[1] > 0.0f)
+                    local.z = planar / work.retainedCollisionValues[1];
+                work.extraMotionMask |= 0x20U;
+            } else if (work.extraMotionPosition.y * local.z > planar) {
+                work.extraMotionMask |= 0x10U;
+            }
+        } else {
+            if (work.retainedCollisionValues[2] * local.z > planar) {
+                if (0.0f > work.retainedCollisionValues[2])
+                    local.z = planar / work.retainedCollisionValues[2];
+                work.extraMotionMask |= 0x80U;
+            } else if (work.extraMotionPosition.z * local.z > planar) {
+                work.extraMotionMask |= 0x40U;
+            }
+        }
+        if (0.2f > planar) {
+            if (planar > 0.00000011920929f) {
+                Vector3 *scaled = &local;
+                const float scale = 0.2f / planar;
+                scaled->x *= scale;
+                scaled->y *= scale;
+            } else {
+                local.x = 0.0f;
+                local.y = 0.2f;
+            }
+            work.extraMotionMask |= 0x200U;
+        } else {
+            work.extraMotionMask &= 0xfcffU;
+        }
+    }
+    if (work.sequenceFlags & MSF_LimitConstraintStep) {
+        std::uint16_t angle;
+        step = limit / 5U + step;
+        if (step > limit)
+            step = limit;
+        if (mode == 2U) {
+            const float targetZ = target->z;
+            float targetPlanar;
+            targetPlanar = shenmue::NativeSqrt(target->x * target->x + target->y * target->y);
+            if (work.motionFlags & 0x40000U)
+                angle = ComputeSignedVectorAngleVariant(&look, &local, &axis);
+            else
+                angle = ComputeSignedVectorAngle(&look, &local, &axis);
+            if (angle < step) {
+                if (0.00000011920929f > ramp)
+                    step = 0;
+                target->x = local.x;
+                target->y = local.y;
+                if (work.motionFlags & 0x40000U)
+                    target->z = shenmue::NativeSqrt(local.x * local.x + local.y * local.y) / targetPlanar * target->z;
+                else
+                    target->z = local.z;
+            } else {
+                matrix_stack::PushUnitMatrix();
+                Matrix4x4_ApplyAngleRotationToVector(axis, step);
+                Matrix4x4::Transform(look, *target);
+                PopCurrentMatrix(1);
+                if (work.motionFlags & 0x40000U)
+                    target->z = targetZ / targetPlanar * shenmue::NativeSqrt(target->x * target->x + target->y * target->y);
+            }
+        } else if (mode == 4U) {
+            angle = ComputeSignedVectorAngle(&look, target, &axis);
+            if (angle < step) {
+                if (0.00000011920929f > ramp)
+                    step = 0;
+                work.constraintStateBits &= ~(6U << (controller * 3));
+            } else {
+                matrix_stack::PushUnitMatrix();
+                Matrix4x4_ApplyAngleRotationToVector(axis, step);
+                Matrix4x4::Transform(look, *target);
+                PopCurrentMatrix(1);
+            }
+        }
+        work.constraintStepRate[controller] = static_cast<std::int32_t>(step) / 10430.378f;
+    } else {
+        work.constraintStepRate[controller] = 0.0f;
+        if (mode == 2U) {
+            target->x = local.x;
+            target->y = local.y;
+            target->z = local.z;
+        } else if (mode == 4U) {
+            work.constraintStateBits &= ~(6U << (controller * 3));
+        }
+    }
+    PopCurrentMatrix(1);
+}
+
+void cbEvaluateTargetPosOverride(void *parameters) {
+    MotionTargetParameters *target = static_cast<MotionTargetParameters *>(parameters);
+    Vector3 *output = target->output;
+    Vector4 *pva = target->pva;
+    MotionWork *work = g_activeMotionWork;
+    std::int32_t controller = *target->controller;
+    float blend = work->layerBlendAlpha[0];
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    float root[3], blended[3], difference[3], rest[3];
+    MotionRigChannel **rootChannels = reinterpret_cast<MotionWorkBindings *>(work)->targets[0].channels;
+    std::int32_t axis = 0;
+    root[axis] = blended[axis] = SampleMotionRigChannelAdvance(*rootChannels[axis]);
+    root[1] = blended[1] = 0.0f;
+    root[2] = blended[2] = SampleMotionRigChannelAdvance(*rootChannels[2]);
+    if (work->motionFlags & 2U) {
+        rest[0] = FrameRig(work).lowerBody.pelvisPva[0].w;
+        blended[0] = (1.0f - blend) * rest[0] + root[0] * blend;
+        rest[2] = FrameRig(work).lowerBody.pelvisPva[2].w;
+        blended[2] = (1.0f - blend) * rest[2] + root[2] * blend;
+    }
+    for (axis = 0; axis < 3; ++axis) {
+        difference[axis] = SampleMotionRigChannelAdvance(*reinterpret_cast<MotionRigChannel **>(target)[axis + 1]) - root[axis];
+        rest[axis] = pva[axis].w;
+        output->data()[axis] = (1.0f - blend) * rest[axis] + blend * difference[axis] + blended[axis];
+    }
+    if (!g_ikEnabled)
+        return;
+    if ((work->constraintStateBits >> (controller * 3)) & 7U)
+        ApplyConstraint(*work, output, controller);
+    if (target->callback) {
+        matrix_stack::Matrix4x4_Push();
+        Matrix4x4::TransformPoint(*output, *output);
+        target->callback(controller, output, work, target->user);
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::TransformPoint(*output, *output);
+        PopCurrentMatrix(1);
+    }
+}
+
+void Motionwork_PelvisOverride(void *parameters) {
+    MotionTargetParameters *target = static_cast<MotionTargetParameters *>(parameters);
+    Vector3 *output = target->output;
+    Vector4 *pva = target->pva;
+    MotionWork *work = g_activeMotionWork;
+    std::int32_t controller = *target->controller;
+    float sampled[3];
+    float rest[3];
+    float blend = work->layerBlendAlpha[0];
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    if (work->motionFlags & 2U) {
+        for (std::int32_t axis = 0; axis < 3; ++axis) {
+            sampled[axis] = SampleMotionRigChannelAdvance(*reinterpret_cast<MotionRigChannel **>(target)[axis + 1]);
+            rest[axis] = pva[axis].w;
+            output->data()[axis] = rest[axis] * (1.0f - blend) + sampled[axis] * blend;
+        }
+    } else {
+        output->x = SampleMotionRigChannelAdvance(*target->channels[0]);
+        sampled[1] = SampleMotionRigChannelAdvance(*target->channels[1]);
+        rest[1] = pva[1].w;
+        output->y = rest[1] * (1.0f - blend) + sampled[1] * blend;
+        output->z = SampleMotionRigChannelAdvance(*target->channels[2]);
+    }
+    if (!g_ikEnabled)
+        return;
+    if ((work->constraintStateBits >> (controller * 3)) & 7U)
+        ApplyConstraint(*work, output, controller);
+    if (target->callback) {
+        matrix_stack::Matrix4x4_Push();
+        Matrix4x4::TransformPoint(*output, *output);
+        target->callback(controller, output, work, target->user);
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::TransformPoint(*output, *output);
+        PopCurrentMatrix(1);
+    }
+}
+
+void cbEvaluateLookAtOverride(void *parameters) {
+    MotionTargetParameters *target = static_cast<MotionTargetParameters *>(parameters);
+    Vector3 *output = target->output;
+    Vector4 *pva = target->pva;
+    MotionWork *work = g_activeMotionWork;
+    std::int32_t controller = *target->controller;
+    float sampled[3];
+    float rest[3];
+    float blend;
+    if (controller > 4)
+        blend = work->layerBlendAlpha[0];
+    else
+        blend = work->layerBlendAlpha[controller];
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    for (std::int32_t axis = 0; axis < 3; ++axis) {
+        sampled[axis] = SampleMotionRigChannelAdvance(*reinterpret_cast<MotionRigChannel **>(target)[axis + 1]);
+        rest[axis] = pva[axis].w;
+        output->data()[axis] = rest[axis] * (1.0f - blend) + sampled[axis] * blend;
+    }
+    if (!g_ikEnabled)
+        return;
+    if ((work->constraintStateBits >> (controller * 3)) & 7U)
+        EvaluateHeadLookAt(*work, output, controller);
+    if (target->callback) {
+        matrix_stack::Matrix4x4_Push();
+        Matrix4x4::TransformPoint(*output, *output);
+        target->callback(controller, output, work, target->user);
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::TransformPoint(*output, *output);
+        PopCurrentMatrix(1);
+    }
+}
+
+void Arm_TargetEffectorOverride(void *parameters) {
+    MotionTargetParameters *target = static_cast<MotionTargetParameters *>(parameters);
+    Vector3 *output = target->output;
+    Vector4 *pva = target->pva;
+    MotionWork *work = g_activeMotionWork;
+    std::int32_t controller = *target->controller;
+    float sampled[3];
+    float rest[3];
+    Vector3 world;
+    float blend;
+    if (controller > 4)
+        blend = work->layerBlendAlpha[0];
+    else
+        blend = work->layerBlendAlpha[controller];
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    for (std::int32_t axis = 0; axis < 3; ++axis) {
+        sampled[axis] = SampleMotionRigChannelAdvance(*reinterpret_cast<MotionRigChannel **>(target)[axis + 1]);
+        rest[axis] = pva[axis].w;
+        output->data()[axis] = rest[axis] * (1.0f - blend) + sampled[axis] * blend;
+    }
+    if (!g_ikEnabled)
+        return;
+    if ((work->constraintStateBits >> (controller * 3)) & 7U) {
+        if (work->sequenceFlags & MSF_LookAt) {
+            if (controller == 3 && (*reinterpret_cast<const std::uint32_t *>(&work->locomotionMotionSet) & 0xa0U)) {
+                Matrix4x4::TransformPoint(*output, world);
+                if (work->locomotionMotionSet & 0x80U) {
+                    work->constraintBlendSource[controller].x = (world.x + work->constraintBlendSource[controller].x) * 0.5f;
+                    work->constraintBlendSource[controller].y = (world.y + work->constraintBlendSource[controller].y) * 0.5f;
+                    work->constraintBlendSource[controller].z = (world.z + work->constraintBlendSource[controller].z) * 0.5f;
+                }
+            }
+            if (controller == 4 && (*reinterpret_cast<const std::uint32_t *>(&work->locomotionMotionSet) & 0x140U)) {
+                Matrix4x4::TransformPoint(*output, world);
+                if (work->locomotionMotionSet & 0x100U) {
+                    work->constraintBlendSource[controller].x = (world.x + work->constraintBlendSource[controller].x) * 0.5f;
+                    work->constraintBlendSource[controller].y = (world.y + work->constraintBlendSource[controller].y) * 0.5f;
+                    work->constraintBlendSource[controller].z = (world.z + work->constraintBlendSource[controller].z) * 0.5f;
+                }
+            }
+        }
+        ApplyConstraint(*work, output, controller);
+    }
+    if (target->callback) {
+        matrix_stack::Matrix4x4_Push();
+        Matrix4x4::TransformPoint(*output, *output);
+        target->callback(controller, output, work, target->user);
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::TransformPoint(*output, *output);
+        PopCurrentMatrix(1);
+    }
+}
+
+void Motionwork_ChestIKEffectorOverride(void *parameters) {
+    MotionTargetParameters *target = static_cast<MotionTargetParameters *>(parameters);
+    Vector3 *output = target->output;
+    Vector4 *pva = target->pva;
+    MotionWork *work = g_activeMotionWork;
+    std::int32_t controller = *target->controller;
+    float sampled[3];
+    float rest[3];
+    Vector3 anchor;
+    Vector3 effector;
+    Vector3 local;
+    float blend;
+    if (controller > 4)
+        blend = work->layerBlendAlpha[0];
+    else
+        blend = work->layerBlendAlpha[controller];
+    if (g_motionInitFlags & motionInitBaking)
+        blend = 1.0f;
+    for (std::int32_t axis = 0; axis < 3; ++axis) {
+        sampled[axis] = SampleMotionRigChannelAdvance(*reinterpret_cast<MotionRigChannel **>(target)[axis + 1]);
+        rest[axis] = pva[axis].w;
+        output->data()[axis] = rest[axis] * (1.0f - blend) + sampled[axis] * blend;
+    }
+    if (!g_ikEnabled)
+        return;
+    if ((work->constraintStateBits >> (controller * 3)) & 7U) {
+        ApplyConstraint(*work, output, controller);
+    } else if (work->sequenceFlags & MSF_LookAt) {
+        Matrix4x4::Transform(*output, effector);
+        const float length = Vector3::CalcMagnitude(effector);
+        if (0.0f > output->x) {
+            anchor.x = output->x;
+            anchor.y = length;
+            anchor.z = 0.0f;
+        } else {
+            anchor.x = 0.0f;
+            anchor.y = length;
+            anchor.z = 0.0f;
+        }
+        Matrix4x4::Transform(anchor, anchor);
+        float scale = work->extraBlendScale;
+        if ((work->locomotionMotionSet & 8U) && work->transitionState != 3U) {
+            Matrix4x4::TransformPoint(*output, local);
+            if (*reinterpret_cast<const std::uint32_t *>(&work->locomotionMotionSet) & 0x2a0000U) {
+                if (work->extraBlendTime > 0.69999999f)
+                    scale = scale * 0.30000001f + scale * 0.69999999f * (1.0f - work->extraBlendTime) / 0.30000001f;
+                work->extraBlendTime = work->extraBlendTime + scale;
+            } else if (!(*reinterpret_cast<const std::uint32_t *>(&work->locomotionMotionSet) & 0x3f0000U)) {
+                if (0.30000001f > work->extraBlendTime)
+                    scale = scale * 0.69999999f * work->extraBlendTime / 0.30000001f + scale * 0.30000001f;
+                work->extraBlendTime = work->extraBlendTime - scale;
+            }
+        } else {
+            if (0.30000001f > work->extraBlendTime)
+                scale = scale * 0.69999999f * work->extraBlendTime / 0.30000001f + scale * 0.30000001f;
+            work->extraBlendTime = work->extraBlendTime - scale;
+        }
+        if (work->extraBlendTime > 1.0f)
+            work->extraBlendTime = 1.0f;
+        else if (0.0f > work->extraBlendTime)
+            work->extraBlendTime = 0.0f;
+        const float time = work->extraBlendTime;
+        effector.x = time * anchor.x + (1.0f - time) * effector.x;
+        effector.y = time * anchor.y + (1.0f - time) * effector.y;
+        effector.z = time * anchor.z + (1.0f - time) * effector.z;
+        matrix_stack::Matrix4x4_Push();
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::Transform(effector, *output);
+        PopCurrentMatrix(1);
+    }
+    if (target->callback) {
+        matrix_stack::Matrix4x4_Push();
+        Matrix4x4::TransformPoint(*output, *output);
+        target->callback(controller, output, work, target->user);
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::TransformPoint(*output, *output);
+        PopCurrentMatrix(1);
+    }
+}
+
+void mtwkCopyRigFlags(
+    MotionWork *work, MotionRigClock **lowerBody, MotionRigClock **chest, MotionRigClock **head, MotionRigClock **rightArm, MotionRigClock **leftArm) {
+    if (lowerBody)
+        *lowerBody = &FrameRig(work).lowerBody.clock;
+    if (chest)
+        *chest = &FrameRig(work).chest.clock;
+    if (head)
+        *head = &FrameRig(work).head.clock;
+    if (rightArm)
+        *rightArm = &FrameRig(work).rightArm.clock;
+    if (leftArm)
+        *leftArm = &FrameRig(work).leftArm.clock;
+}
+
+float ClampMotionTimePair(MotionTimePair *pair, float split, float ticks, float maximum);
+
+float mtwkTimePairClampAndPropagate(MotionWork *work, float split, float ticks, float maximum, MotionRegion region) {
+    const float current = ClampMotionTimePair(&g_motionRegionClocks[region]->current, split, ticks, maximum);
+    switch (region) {
+    case 0:
+        if (split >= 0.0f)
+            FrameRig(work).lowerBody.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).lowerBody.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 1:
+        if (split >= 0.0f)
+            FrameRig(work).chest.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).chest.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 2:
+        if (split >= 0.0f)
+            FrameRig(work).head.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).head.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 3:
+        if (split >= 0.0f)
+            FrameRig(work).rightArm.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).rightArm.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 4:
+        if (split >= 0.0f)
+            FrameRig(work).leftArm.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).leftArm.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    }
+    return current;
+}
+
+void mtwkAssignStaticDataForBodyRegion(MotionWork *work, float split, float ticks, float maximum, MotionRegion region) {
+    if (split > 0.0f)
+        g_motionRegionClocks[region]->current.splitTimeFrames = 0.0f;
+    if (ticks > 0.0f)
+        g_motionRegionClocks[region]->current.ticksTime = 0.0f;
+    if (maximum > 0.0f) {
+        g_motionRegionClocks[region]->current.maxTime = static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(work->currentMotionId[region]) - 1));
+        if (work->regionFlags[region] & MRF_ExcludeEndFrame)
+            g_motionRegionClocks[region]->current.maxTime -= 0.001f;
+    }
+    switch (region) {
+    case 0:
+        if (split >= 0.0f)
+            FrameRig(work).lowerBody.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).lowerBody.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 1:
+        if (split >= 0.0f)
+            FrameRig(work).chest.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).chest.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 2:
+        if (split >= 0.0f)
+            FrameRig(work).head.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).head.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 3:
+        if (split >= 0.0f)
+            FrameRig(work).rightArm.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).rightArm.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    case 4:
+        if (split >= 0.0f)
+            FrameRig(work).leftArm.clock.authored.splitTimeFrames = g_motionRegionClocks[region]->current.splitTimeFrames;
+        if (maximum >= 0.0f)
+            FrameRig(work).leftArm.clock.authored.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+        break;
+    }
+}
+
+std::uint32_t TimestepUpdate(MotionRigClock *clock, std::uint32_t allowOverflow, std::uint32_t allowReset) {
+    if (clock->current.ticksTime + clock->playbackSpeed > clock->current.maxTime) {
+        if (allowOverflow) {
+            clock->current.ticksTime += clock->playbackSpeed;
+            clock->current.ticksTime = clock->current.splitTimeFrames +
+                (0.0f > clock->current.ticksTime - ::ceilf(clock->current.maxTime) ? 0.0f : clock->current.ticksTime - ::ceilf(clock->current.maxTime));
+            return 3;
+        }
+        if (allowReset) {
+            clock->current.ticksTime = clock->current.splitTimeFrames;
+            return 2;
+        }
+        clock->current.ticksTime = clock->current.maxTime;
+        return 1;
+    }
+    clock->current.ticksTime += clock->playbackSpeed;
+    return 0;
+}
+
+std::uint32_t AnimClock_ForceJump(MotionRigClock *clock) {
+    clock->current.ticksTime += 1.0f;
+    if (!(clock->current.ticksTime < clock->current.maxTime))
+        return 4;
+    return 0;
+}
+
+bool Rig_SetupMotionGraph(IKRig &rig, const MotionStreamContext *context, float time, std::uint32_t flags, std::uint32_t region,
+    MotionTargetParameters *targets, MotionRotationParameters *rotations) {
+    std::uint32_t graph = (static_cast<std::int32_t>(flags) >> 8) & 0xff;
+    if (!targets || !rotations)
+        graph = 0;
+    if (graph)
+        flags = (flags & 0xffff00ffU) | motionInitCallbacks;
+    flags |= motionInitChannels;
+    switch (region) {
+    case 0:
+        ReadMotionBase(rig, rig.lowerBody, context, -1.0f, time, flags);
+        if (!graph)
+            break;
+        rig.lowerBody.leftFoot.pva[0].w -= rig.lowerBody.pelvisPva[0].w;
+        rig.lowerBody.leftFoot.pva[2].w -= rig.lowerBody.pelvisPva[2].w;
+        rig.lowerBody.rightFoot.pva[0].w -= rig.lowerBody.pelvisPva[0].w;
+        rig.lowerBody.rightFoot.pva[2].w -= rig.lowerBody.pelvisPva[2].w;
+        if (rig.useOverride) {
+            rig.lowerBody.overridePelvisTarget->pva[0].w -= rig.lowerBody.pelvisPva[0].w;
+            rig.lowerBody.overridePelvisTarget->pva[2].w -= rig.lowerBody.pelvisPva[2].w;
+        }
+        rig.lowerBody.pelvisPositionCallback.evaluate = Motionwork_PelvisOverride;
+        rig.lowerBody.pelvisPositionCallback.parameters = &targets[0];
+        rig.lowerBody.pelvisRotationCallback.evaluate = ApplyRotY_ThenCopyOrRotZYX;
+        rig.lowerBody.pelvisRotationCallback.parameters = &rotations[0];
+        if (!rig.useOverride) {
+            rig.lowerBody.hips.callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.lowerBody.hips.callback.parameters = &rotations[1];
+        } else {
+            rig.lowerBody.overrideHips->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.lowerBody.overrideHips->callback.parameters = &rotations[1];
+            rig.lowerBody.overridePelvisTarget->callback.evaluate = cbEvaluateTargetPosOverride;
+            rig.lowerBody.overridePelvisTarget->callback.parameters = &targets[1];
+            rig.lowerBody.leftHipNode->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.lowerBody.leftHipNode->callback.parameters = &rotations[2];
+        }
+        rig.lowerBody.leftThigh.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.lowerBody.leftThigh.callback.parameters = &rotations[3];
+        rig.lowerBody.leftFoot.callback.evaluate = cbEvaluateTargetPosOverride;
+        rig.lowerBody.leftFoot.callback.parameters = &targets[2];
+        rig.lowerBody.leftAnkleCallback.evaluate = cbEvaluateTargetRotOverride;
+        rig.lowerBody.leftAnkleCallback.parameters = &rotations[4];
+        if (rig.useOverride) {
+            rig.lowerBody.rightHipNode->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.lowerBody.rightHipNode->callback.parameters = &rotations[5];
+        }
+        rig.lowerBody.rightThigh.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.lowerBody.rightThigh.callback.parameters = &rotations[6];
+        rig.lowerBody.rightFoot.callback.evaluate = cbEvaluateTargetPosOverride;
+        rig.lowerBody.rightFoot.callback.parameters = &targets[3];
+        rig.lowerBody.rightAnkleCallback.evaluate = cbEvaluateTargetRotOverride;
+        rig.lowerBody.rightAnkleCallback.parameters = &rotations[7];
+        if (rig.useOverride) {
+            rig.lowerBody.rightToe1Node->callback.evaluate = cbEvaluateTwoJointRotationOverride;
+            rig.lowerBody.rightToe1Node->callback.parameters = &rotations[8];
+            rig.lowerBody.rightToe2Node->callback.evaluate = cbEvaluateTwoJointRotationOverride;
+            rig.lowerBody.rightToe2Node->callback.parameters = &rotations[9];
+            rig.lowerBody.rightToe3Node->callback.evaluate = cbEvaluateTwoJointRotationOverride;
+            rig.lowerBody.rightToe3Node->callback.parameters = &rotations[10];
+        }
+        break;
+    case 1:
+        ReadMotionChest(rig, rig.chest, context, time, flags);
+        if (!graph)
+            break;
+        rig.chest.rotation.callback.evaluate = cbEvaluateChestOverride;
+        rig.chest.rotation.callback.parameters = &rotations[11];
+        if (!rig.useOverride) {
+            rig.chest.target.callback.evaluate = Motionwork_ChestIKEffectorOverride;
+            rig.chest.target.callback.parameters = &targets[4];
+            rig.chest.upperRotation.callback.evaluate = ApplyChannelRotZYX_WithIKXBias;
+            rig.chest.upperRotation.callback.parameters = &rotations[12];
+        } else {
+            rig.chest.target.pva[0].w = rig.chest.target.pva[0].w - rig.lowerBody.pelvisPva[0].w;
+            rig.chest.target.pva[2].w = rig.chest.target.pva[2].w - rig.lowerBody.pelvisPva[2].w;
+            rig.chest.target.callback.evaluate = cbEvaluateTargetPosOverride;
+            rig.chest.target.callback.parameters = &targets[4];
+        }
+        break;
+    case 2:
+        ReadMotionHead(rig, rig.head, context, time, flags);
+        if (!graph)
+            break;
+        rig.head.baseRotation.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.head.baseRotation.callback.parameters = &rotations[13];
+        if (rig.useOverride) {
+            rig.head.aimTargetNode->pva[0].w = rig.head.aimTargetNode->pva[0].w - rig.lowerBody.pelvisPva[0].w;
+            rig.head.aimTargetNode->pva[2].w = rig.head.aimTargetNode->pva[2].w - rig.lowerBody.pelvisPva[2].w;
+            rig.head.aimSourceNode->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.head.aimSourceNode->callback.parameters = &rotations[14];
+            rig.head.aimTargetNode->callback.evaluate = cbEvaluateTargetPosOverride;
+            rig.head.aimTargetNode->callback.parameters = &targets[5];
+        }
+        rig.head.midRotation.callback.evaluate = ApplyChannelRotZYX_WithIKBlend;
+        rig.head.midRotation.callback.parameters = &rotations[15];
+        rig.head.target.callback.evaluate = cbEvaluateLookAtOverride;
+        rig.head.target.callback.parameters = &targets[6];
+        if (rig.useOverride) {
+            rig.head.nodeA->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.head.nodeA->callback.parameters = &rotations[16];
+            rig.head.nodeB->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.head.nodeB->callback.parameters = &rotations[17];
+            rig.head.nodeC->callback.evaluate = cbEvaluateTargetRotOverride;
+            rig.head.nodeC->callback.parameters = &rotations[18];
+        }
+        break;
+    case 3:
+        ReadMotionArm(rig, rig.rightArm, context, time, flags);
+        if (!graph)
+            break;
+        rig.rightArm.shoulder.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.rightArm.shoulder.callback.parameters = &rotations[19];
+        rig.rightArm.elbow.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.rightArm.elbow.callback.parameters = &rotations[20];
+        if (!rig.useOverride) {
+            rig.rightArm.target.callback.evaluate = Arm_TargetEffectorOverride;
+            rig.rightArm.target.callback.parameters = &targets[7];
+            rig.rightArm.forearmCallback.evaluate = cbEvaluateXRotationOverride;
+            rig.rightArm.forearmCallback.parameters = &rotations[21];
+            rig.rightArm.wristCallback.evaluate = cbEvaluateZYRotationOverride;
+            rig.rightArm.wristCallback.parameters = &rotations[22];
+        } else {
+            rig.rightArm.target.pva[0].w = rig.rightArm.target.pva[0].w - rig.lowerBody.pelvisPva[0].w;
+            rig.rightArm.target.pva[2].w = rig.rightArm.target.pva[2].w - rig.lowerBody.pelvisPva[2].w;
+            rig.rightArm.target.callback.evaluate = cbEvaluateTargetPosOverride;
+            rig.rightArm.target.callback.parameters = &targets[7];
+            rig.rightArm.wristCallback.evaluate = cbEvaluateTargetRotOverride;
+            rig.rightArm.wristCallback.parameters = &rotations[22];
+        }
+        break;
+    case 4:
+        ReadMotionArm(rig, rig.leftArm, context, time, flags | motionInitLeftArm);
+        if (!graph)
+            break;
+        rig.leftArm.shoulder.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.leftArm.shoulder.callback.parameters = &rotations[23];
+        rig.leftArm.elbow.callback.evaluate = cbEvaluateTargetRotOverride;
+        rig.leftArm.elbow.callback.parameters = &rotations[24];
+        if (!rig.useOverride) {
+            rig.leftArm.target.callback.evaluate = Arm_TargetEffectorOverride;
+            rig.leftArm.target.callback.parameters = &targets[8];
+            rig.leftArm.forearmCallback.evaluate = cbEvaluateXRotationOverride;
+            rig.leftArm.forearmCallback.parameters = &rotations[25];
+            rig.leftArm.wristCallback.evaluate = cbEvaluateZYRotationOverride;
+            rig.leftArm.wristCallback.parameters = &rotations[26];
+        } else {
+            rig.leftArm.target.pva[0].w = rig.leftArm.target.pva[0].w - rig.lowerBody.pelvisPva[0].w;
+            rig.leftArm.target.pva[2].w = rig.leftArm.target.pva[2].w - rig.lowerBody.pelvisPva[2].w;
+            // The override rig's left target reuses the right arm's parameter record.
+            rig.leftArm.target.callback.evaluate = cbEvaluateTargetPosOverride;
+            rig.leftArm.target.callback.parameters = &targets[7];
+            rig.leftArm.wristCallback.evaluate = cbEvaluateTargetRotOverride;
+            rig.leftArm.wristCallback.parameters = &rotations[26];
+        }
+        break;
+    default:
+        break;
+    }
+    return true;
+}
+
+// @verified - d
+static std::uint32_t ComputeSignedVectorAngle(const Vector3 *first, const Vector3 *second, Vector3 *axis) {
+    const float firstLength = Vector3::CalcMagnitude(*first);
+    const float secondLength = Vector3::CalcMagnitude(*second);
+    const float dot = am2Vector3Dot(first, second);
+    am2Vector3Cross(first, second, axis);
+    const float crossLength = Vector3::CalcMagnitude(*axis);
+    if (0.00000011920929f > crossLength)
+        return 0;
+    return dc::sdk::ArcTan2Fixed(crossLength / (firstLength * secondLength), dot / (firstLength * secondLength));
+}
+
+// @verified - d
+static std::uint32_t ComputeSignedVectorAngleVariant(const Vector3 *first, const Vector3 *second, Vector3 *axis) {
+    Vector3 from = *first;
+    Vector3 to = *second;
+    from.z = to.z = 0.0f;
+    const float fromLength = Vector3::CalcMagnitude(from);
+    const float toLength = Vector3::CalcMagnitude(to);
+    const float dot = am2Vector3Dot(&from, &to);
+    am2Vector3Cross(&from, &to, axis);
+    const float crossLength = Vector3::CalcMagnitude(*axis);
+    if (0.00000011920929f > crossLength)
+        return 0;
+    return dc::sdk::ArcTan2Fixed(crossLength / (fromLength * toLength), dot / (fromLength * toLength));
+}
+
+void mtwkRigRunOverrideBlendPass(MotionWork *work) {
+    std::int32_t region;
+    for (region = 0; region < 5; ++region) {
+        if ((work->regionFlags[region] & MRF_Transition) && work->currentRootMode != 0 && work->currentRootMode != 2) {
+            work->overrideBlendTime = -1.0f;
+            return;
+        }
+    }
+    for (region = 0; region < 5; ++region) {
+        if (work->regionFlags[region] & MRF_Independent)
+            continue;
+        const std::int32_t sourceRig = static_cast<std::int8_t>(MOTN_GetDataForAnimId(work->currentMotionId[region])->flags);
+        const float scale = mtwkGetScaleFactorFor(FrameRig(work).boneId, sourceRig, region > 3 ? 3 : region);
+        if (work->regionFlags[region] & MRF_Mirrored)
+            g_motionInitFlags = motionInitMirror;
+        else
+            g_motionInitFlags = 0;
+        char evaluated = 0;
+        switch (region) {
+        case 0:
+            evaluated = EvaluateBase(FrameRig(work).lowerBody, sourceRig, scale, work->overrideBlendTime);
+            break;
+        case 1:
+            evaluated = EvaluateChestBlend(FrameRig(work).chest, sourceRig, scale, work->overrideBlendTime);
+            break;
+        case 2:
+            evaluated = EvaluateHead(FrameRig(work).head, sourceRig, scale, work->overrideBlendTime);
+            break;
+        case 3:
+            evaluated = EvaluateArm(FrameRig(work).rightArm, sourceRig, scale, work->overrideBlendTime);
+            break;
+        case 4:
+            evaluated = EvaluateArm(FrameRig(work).leftArm, sourceRig, scale, work->overrideBlendTime);
+            break;
+        }
+        if (evaluated)
+            mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+    }
+    TranslatePelvisFromChannels(FrameRig(work).lowerBody, MI_Hermite);
+    work->overrideBlendTime = -1.0f;
+}
+
+bool mtwkClearOverrideCallbacksForBodyRegion(MotionWork *work, MotionRegion region) {
+    IKRig &rig = FrameRig(work);
+    switch (region) {
+    case 0:
+        rig.lowerBody.pelvisPositionCallback.evaluate = 0;
+        rig.lowerBody.pelvisPositionCallback.parameters = 0;
+        rig.lowerBody.pelvisRotationCallback.evaluate = 0;
+        rig.lowerBody.pelvisRotationCallback.parameters = 0;
+        rig.lowerBody.hips.callback.evaluate = 0;
+        rig.lowerBody.hips.callback.parameters = 0;
+        rig.lowerBody.leftThigh.callback.evaluate = 0;
+        rig.lowerBody.leftThigh.callback.parameters = 0;
+        rig.lowerBody.leftFoot.callback.evaluate = 0;
+        rig.lowerBody.leftFoot.callback.parameters = 0;
+        rig.lowerBody.leftAnkleCallback.evaluate = 0;
+        rig.lowerBody.leftAnkleCallback.parameters = 0;
+        rig.lowerBody.rightThigh.callback.evaluate = 0;
+        rig.lowerBody.rightThigh.callback.parameters = 0;
+        rig.lowerBody.rightFoot.callback.evaluate = 0;
+        rig.lowerBody.rightFoot.callback.parameters = 0;
+        rig.lowerBody.rightAnkleCallback.evaluate = 0;
+        rig.lowerBody.rightAnkleCallback.parameters = 0;
+        if (rig.useOverride) {
+            rig.lowerBody.overrideHips->callback.evaluate = 0;
+            rig.lowerBody.overrideHips->callback.parameters = 0;
+            rig.lowerBody.overridePelvisTarget->callback.evaluate = 0;
+            rig.lowerBody.overridePelvisTarget->callback.parameters = 0;
+            rig.lowerBody.leftHipNode->callback.evaluate = 0;
+            rig.lowerBody.leftHipNode->callback.parameters = 0;
+            rig.lowerBody.rightHipNode->callback.evaluate = 0;
+            rig.lowerBody.rightHipNode->callback.parameters = 0;
+            rig.lowerBody.rightToe1Node->callback.evaluate = 0;
+            rig.lowerBody.rightToe1Node->callback.parameters = 0;
+            rig.lowerBody.rightToe2Node->callback.evaluate = 0;
+            rig.lowerBody.rightToe2Node->callback.parameters = 0;
+            rig.lowerBody.rightToe3Node->callback.evaluate = 0;
+            rig.lowerBody.rightToe3Node->callback.parameters = 0;
+        }
+        break;
+    case 1:
+        rig.chest.rotation.callback.evaluate = 0;
+        rig.chest.rotation.callback.parameters = 0;
+        rig.chest.target.callback.evaluate = 0;
+        rig.chest.target.callback.parameters = 0;
+        rig.chest.upperRotation.callback.evaluate = 0;
+        rig.chest.upperRotation.callback.parameters = 0;
+        break;
+    case 2:
+        rig.head.baseRotation.callback.evaluate = 0;
+        rig.head.baseRotation.callback.parameters = 0;
+        rig.head.midRotation.callback.evaluate = 0;
+        rig.head.midRotation.callback.parameters = 0;
+        rig.head.target.callback.evaluate = 0;
+        rig.head.target.callback.parameters = 0;
+        if (rig.useOverride) {
+            rig.head.aimSourceNode->callback.evaluate = 0;
+            rig.head.aimSourceNode->callback.parameters = 0;
+            rig.head.aimTargetNode->callback.evaluate = 0;
+            rig.head.aimTargetNode->callback.parameters = 0;
+            rig.head.nodeA->callback.evaluate = 0;
+            rig.head.nodeA->callback.parameters = 0;
+            rig.head.nodeB->callback.evaluate = 0;
+            rig.head.nodeB->callback.parameters = 0;
+            rig.head.nodeC->callback.evaluate = 0;
+            rig.head.nodeC->callback.parameters = 0;
+        }
+        break;
+    case 3:
+        rig.rightArm.shoulder.callback.evaluate = 0;
+        rig.rightArm.shoulder.callback.parameters = 0;
+        rig.rightArm.elbow.callback.evaluate = 0;
+        rig.rightArm.elbow.callback.parameters = 0;
+        rig.rightArm.target.callback.evaluate = 0;
+        rig.rightArm.target.callback.parameters = 0;
+        rig.rightArm.forearmCallback.evaluate = 0;
+        rig.rightArm.forearmCallback.parameters = 0;
+        rig.rightArm.wristCallback.evaluate = 0;
+        rig.rightArm.wristCallback.parameters = 0;
+        break;
+    case 4:
+        rig.leftArm.shoulder.callback.evaluate = 0;
+        rig.leftArm.shoulder.callback.parameters = 0;
+        rig.leftArm.elbow.callback.evaluate = 0;
+        rig.leftArm.elbow.callback.parameters = 0;
+        rig.leftArm.target.callback.evaluate = 0;
+        rig.leftArm.target.callback.parameters = 0;
+        rig.leftArm.forearmCallback.evaluate = 0;
+        rig.leftArm.forearmCallback.parameters = 0;
+        rig.leftArm.wristCallback.evaluate = 0;
+        rig.leftArm.wristCallback.parameters = 0;
+        break;
+    }
+    return true;
+}
+
+#define SHENMUE_BIND_FRAME_CALLBACK(callback, function, data)                                                                                                  \
+    do {                                                                                                                                                       \
+        (callback).evaluate = function;                                                                                                                        \
+        (callback).parameters = data;                                                                                                                          \
+    } while (0)
+
+void mtwkInstallActiveOverrideCallbacks(MotionWork *work) {
+    MotionWorkBindings *const bindings = reinterpret_cast<MotionWorkBindings *>(work);
+    if (bindings->targets[0].callback)
+        SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.lowerBody.pelvisPositionCallback, Motionwork_PelvisOverride, &bindings->targets[0]);
+    if (bindings->targets[6].callback)
+        SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.head.target.callback, cbEvaluateLookAtOverride, &bindings->targets[6]);
+    if (bindings->targets[2].callback)
+        SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.lowerBody.leftFoot.callback, cbEvaluateTargetPosOverride, &bindings->targets[2]);
+    if (bindings->targets[3].callback)
+        SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.lowerBody.rightFoot.callback, cbEvaluateTargetPosOverride, &bindings->targets[3]);
+    if (!bindings->rig.useOverride) {
+        if (bindings->targets[4].callback)
+            SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.chest.target.callback, Motionwork_ChestIKEffectorOverride, &bindings->targets[4]);
+        if (bindings->targets[7].callback)
+            SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.rightArm.target.callback, Arm_TargetEffectorOverride, &bindings->targets[7]);
+        if (bindings->targets[8].callback)
+            SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.leftArm.target.callback, Arm_TargetEffectorOverride, &bindings->targets[8]);
+    } else {
+        if (bindings->targets[4].callback)
+            SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.chest.target.callback, cbEvaluateTargetPosOverride, &bindings->targets[4]);
+        if (bindings->targets[1].callback) {
+            bindings->rig.lowerBody.overridePelvisTarget->callback.evaluate = cbEvaluateTargetPosOverride;
+            bindings->rig.lowerBody.overridePelvisTarget->callback.parameters = &bindings->targets[1];
+        }
+        if (bindings->targets[5].callback) {
+            bindings->rig.head.aimTargetNode->callback.evaluate = cbEvaluateTargetPosOverride;
+            bindings->rig.head.aimTargetNode->callback.parameters = &bindings->targets[5];
+        }
+        if (bindings->targets[7].callback)
+            SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.rightArm.target.callback, cbEvaluateTargetPosOverride, &bindings->targets[7]);
+        if (bindings->targets[8].callback)
+            SHENMUE_BIND_FRAME_CALLBACK(bindings->rig.leftArm.target.callback, cbEvaluateTargetPosOverride, &bindings->targets[8]);
+    }
+}
+
+#undef SHENMUE_BIND_FRAME_CALLBACK
+
+void mtwkInstallConstraintTargetCallback(MotionWork *work, std::uint32_t controller) {
+    switch (controller) {
+    case 0:
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisPositionCallback.evaluate = Motionwork_PelvisOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisPositionCallback.parameters =
+            &reinterpret_cast<MotionWorkBindings *>(work)->targets[0];
+        break;
+    case 1:
+        if (!reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride)
+            reinterpret_cast<MotionWorkBindings *>(work)->rig.chest.target.callback.evaluate = Motionwork_ChestIKEffectorOverride;
+        else
+            reinterpret_cast<MotionWorkBindings *>(work)->rig.chest.target.callback.evaluate = cbEvaluateTargetPosOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.chest.target.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->targets[4];
+        break;
+    case 2:
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.head.target.callback.evaluate = cbEvaluateLookAtOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.head.target.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->targets[6];
+        break;
+    case 3:
+        if (!reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride)
+            reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.target.callback.evaluate = Arm_TargetEffectorOverride;
+        else
+            reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.target.callback.evaluate = cbEvaluateTargetPosOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm.target.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->targets[7];
+        break;
+    case 4:
+        if (!reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride)
+            reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.target.callback.evaluate = Arm_TargetEffectorOverride;
+        else
+            reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.target.callback.evaluate = cbEvaluateTargetPosOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm.target.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->targets[8];
+        break;
+    case 5:
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftFoot.callback.evaluate = cbEvaluateTargetPosOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.leftFoot.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->targets[2];
+        break;
+    case 6:
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightFoot.callback.evaluate = cbEvaluateTargetPosOverride;
+        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rightFoot.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->targets[3];
+        break;
+    default:
+        if (reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride) {
+            switch (controller) {
+            case 7:
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.overridePelvisTarget->callback.evaluate = cbEvaluateTargetPosOverride;
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.overridePelvisTarget->callback.parameters =
+                    &reinterpret_cast<MotionWorkBindings *>(work)->targets[1];
+                break;
+            case 8:
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.head.aimTargetNode->callback.evaluate = cbEvaluateTargetPosOverride;
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.head.aimTargetNode->callback.parameters =
+                    &reinterpret_cast<MotionWorkBindings *>(work)->targets[5];
+                break;
+            }
+        }
+        break;
+    }
+}
+
+void mtwkClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t controller) {
+    switch (controller) {
+    case 0:
+        if (!(work->regionFlags[0] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).lowerBody.pelvisPositionCallback.evaluate = 0;
+            FrameRig(work).lowerBody.pelvisPositionCallback.parameters = 0;
+        }
+        break;
+    case 1:
+        if (!(work->regionFlags[1] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).chest.target.callback.evaluate = 0;
+            FrameRig(work).chest.target.callback.parameters = 0;
+        }
+        break;
+    case 2:
+        if (!(work->regionFlags[2] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).head.target.callback.evaluate = 0;
+            FrameRig(work).head.target.callback.parameters = 0;
+        }
+        break;
+    case 3:
+        if (!(work->regionFlags[3] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).rightArm.target.callback.evaluate = 0;
+            FrameRig(work).rightArm.target.callback.parameters = 0;
+        }
+        break;
+    case 4:
+        if (!(work->regionFlags[4] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).leftArm.target.callback.evaluate = 0;
+            FrameRig(work).leftArm.target.callback.parameters = 0;
+        }
+        break;
+    case 5:
+        if (!(work->regionFlags[0] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).lowerBody.leftFoot.callback.evaluate = 0;
+            FrameRig(work).lowerBody.leftFoot.callback.parameters = 0;
+        }
+        break;
+    case 6:
+        if (!(work->regionFlags[0] & MRF_Transition) || work->currentRootMode != 2) {
+            FrameRig(work).lowerBody.rightFoot.callback.evaluate = 0;
+            FrameRig(work).lowerBody.rightFoot.callback.parameters = 0;
+        }
+        break;
+    default:
+        if (!FrameRig(work).useOverride)
+            break;
+        switch (controller) {
+        case 7:
+            if (!(work->regionFlags[0] & MRF_Transition) || work->currentRootMode != 2) {
+                FrameRig(work).lowerBody.overridePelvisTarget->callback.evaluate = 0;
+                FrameRig(work).lowerBody.overridePelvisTarget->callback.parameters = 0;
+            }
+            break;
+        case 8:
+            if (!(work->regionFlags[2] & MRF_Transition) || work->currentRootMode != 2) {
+                FrameRig(work).head.aimTargetNode->callback.evaluate = 0;
+                FrameRig(work).head.aimTargetNode->callback.parameters = 0;
+            }
+            break;
+        }
+        break;
+    }
+}
+
+// @verified - d
+void mtwkUpdatePelvisYaw(MotionWork *work) {
+    MotionWork &state = *work;
+    std::int16_t step = static_cast<std::int16_t>(state.pelvisYawStep);
+    const std::int16_t clamp = state.pelvisYawClamp;
+    const std::int16_t targetYaw = state.pelvisYawTarget;
+    const std::int16_t threshold = static_cast<std::int16_t>(static_cast<std::int32_t>(static_cast<float>(clamp) * 0.30000001f));
+    const std::int16_t delta = static_cast<std::int16_t>(targetYaw - state.pelvisYawCurrent);
+    const std::int16_t distance = static_cast<std::int16_t>(static_cast<std::int32_t>(std::fabs(static_cast<float>(delta))));
+    if (distance < threshold)
+        step = static_cast<std::int16_t>(static_cast<std::int32_t>(static_cast<float>(step) * (static_cast<float>(delta) / static_cast<float>(threshold))));
+    else
+        step = delta < 0 ? static_cast<std::int16_t>(-step) : step;
+    if (static_cast<float>(distance) < std::fabs(static_cast<float>(step)))
+        step = delta;
+    const float magnitude = std::fabs(static_cast<float>(step));
+    if (0.00000011920929f > static_cast<float>(magnitude)) {
+        state.pelvisYawRamp = 0.0f;
+    } else {
+        const float ramp = state.pelvisYawRamp + 0.2f;
+        state.pelvisYawRamp = ramp;
+        if (ramp > 1.0f)
+            state.pelvisYawRamp = 1.0f;
+    }
+    std::int16_t &current = state.pelvisYawCurrent;
+    current = static_cast<std::int16_t>(static_cast<std::int32_t>(static_cast<float>(step) * state.pelvisYawRamp)) + current;
+    state.pelvisYawVelocity = step;
+    if (state.pelvisYawCurrent > clamp)
+        state.pelvisYawCurrent = clamp;
+    else if (static_cast<std::int32_t>(state.pelvisYawCurrent) < -static_cast<std::int32_t>(clamp))
+        state.pelvisYawCurrent = static_cast<std::int16_t>(-clamp);
+    state.pelvisYawHalf = static_cast<std::int16_t>(state.pelvisYawCurrent / 2);
+    if (state.pelvisYawHalf > 3640)
+        state.pelvisYawHalf = 3640;
+    else if (state.pelvisYawHalf < -3640)
+        state.pelvisYawHalf = -3640;
+}
+
+std::int32_t mtwkUpdateOverrideCallbacks(MotionWork *work) {
+    std::int32_t controllers = 7, controller;
+    if (FrameRig(work).useOverride)
+        controllers = 9;
+    for (controller = 0; controller < controllers; ++controller) {
+        Vector3 *const target = const_cast<Vector3 *>(work->activeConstraintTarget[controller]);
+        if (target) {
+            Matrix4x4::TransformPoint(*target, *target);
+            work->latchedConstraintTarget[controller] = work->activeConstraintTarget[controller];
+            work->activeConstraintTarget[controller] = 0;
+        }
+    }
+    for (controller = 0; controller < controllers; ++controller) {
+        if (work->latchedConstraintTarget[controller]) {
+            work->constraintStateBits &= ~(7U << controller * 3);
+            work->constraintStateBits |= 1U << controller * 3;
+            work->constraintStateBits |= 2U << controller * 3;
+            mtwkInstallConstraintTargetCallback(work, controller);
+        } else if ((work->constraintStateBits >> controller * 3) & 7U) {
+            if ((work->constraintStateBits >> controller * 3) & 6U) {
+                work->constraintStateBits &= ~(6U << controller * 3);
+                work->constraintStateBits |= 4U << controller * 3;
+                mtwkInstallConstraintTargetCallback(work, controller);
+            } else {
+                work->constraintStateBits &= ~(7U << controller * 3);
+                mtwkClearConstraintTargetCallbackIfInactive(work, controller);
+            }
+        }
+    }
+    if (!FrameRig(work).useOverride) {
+        if (work->pelvisYawCurrent == 0 && work->pelvisYawHalf == 0 && work->pelvisYawTarget == 0) {
+            if (!(work->regionFlags[0] & MRF_Transition) || work->currentRootMode != 2)
+                FrameRig(work).lowerBody.pelvisRotationCallback.evaluate = 0;
+            if (!(work->regionFlags[1] & MRF_Transition) || work->currentRootMode != 2)
+                FrameRig(work).chest.upperRotation.callback.evaluate = 0;
+            work->lookAtYaw = 0;
+        } else {
+            FrameRig(work).lowerBody.pelvisRotationCallback.evaluate = ApplyRotY_ThenCopyOrRotZYX;
+            FrameRig(work).lowerBody.pelvisRotationCallback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->rotations[0];
+            FrameRig(work).chest.upperRotation.callback.evaluate = ApplyChannelRotZYX_WithIKXBias;
+            FrameRig(work).chest.upperRotation.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->rotations[12];
+            mtwkUpdatePelvisYaw(work);
+        }
+    }
+    if (work->sequenceFlags & MSF_LookAt) {
+        mtwkInstallConstraintTargetCallback(work, 2);
+        if (!FrameRig(work).useOverride)
+            mtwkInstallConstraintTargetCallback(work, 1);
+        FrameRig(work).head.midRotation.callback.evaluate = ApplyChannelRotZYX_WithIKBlend;
+        FrameRig(work).head.midRotation.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->rotations[15];
+        const float blend = work->lookAtBlendTime + 0.1f;
+        work->lookAtBlendTime = blend;
+        if (blend > 1.0f)
+            work->lookAtBlendTime = 1.0f;
+    } else {
+        mtwkClearConstraintTargetCallbackIfInactive(work, 1);
+        const float blend = work->lookAtBlendTime - 0.1f;
+        work->lookAtBlendTime = blend;
+        if (0.0f > blend)
+            work->lookAtBlendTime = 0.0f;
+        if ((!(work->regionFlags[2] & MRF_Transition) || work->currentRootMode != 2) && 0.00000011920929f > work->lookAtBlendTime)
+            FrameRig(work).head.midRotation.callback.evaluate = 0;
+    }
+    if ((work->sequenceFlags & MSF_TargetFacing) &&
+        (*reinterpret_cast<const std::uint32_t *>(work->regionFlags) & ((MRF_Independent | MRF_BlendToLowerBody) << 16)) == MRF_Independent << 16) {
+        FrameRig(work).chest.rotation.callback.evaluate = cbEvaluateChestOverride;
+        FrameRig(work).chest.rotation.callback.parameters = &reinterpret_cast<MotionWorkBindings *>(work)->rotations[11];
+        const float blend = work->chestBlendScale + work->chestRotationOverrideBlendTime;
+        work->chestBlendScale = blend;
+        if (blend > 1.0f)
+            work->chestBlendScale = 1.0f;
+    } else {
+        const float blend = work->chestBlendScale - work->chestRotationOverrideBlendTime;
+        work->chestBlendScale = blend;
+        if (0.0f > blend)
+            work->chestBlendScale = 0.0f;
+        if ((!(work->regionFlags[1] & MRF_Transition) || work->currentRootMode != 2) && 0.00000011920929f > work->chestBlendScale)
+            FrameRig(work).chest.rotation.callback.evaluate = 0;
+    }
+    mtwkInstallActiveOverrideCallbacks(work);
+    return 1;
+}
+
+std::int32_t MOTN_IsEndlessMotion(std::uint16_t animation);
+
+void mtwkApplyRootTranslation(MotionWork *work) {
+    std::int32_t region, retired, mode;
+    Vector3 travel;
+    g_ikEnabled = 0;
+    work->pendingFootstepCue = 0;
+    work->accumulatedTranslation.x = 0.0f;
+    work->accumulatedTranslation.y = 0.0f;
+    work->accumulatedTranslation.z = 0.0f;
+    work->previousRootMode = work->currentRootMode;
+    if (work->requestedRootMode == 2 && !IsFightActive() && !g_mtwkCurrentIsRyo)
+        work->requestedRootMode = 1;
+    if (work->motionFlags & 0x20000U) {
+        Vector4 *root = &FrameRig(work).lowerBody.rootPrepassTransform.rows[3];
+        root->x = work->cachedRootPosition.x;
+        root->y = work->cachedRootPosition.y;
+        root->z = work->cachedRootPosition.z;
+    }
+    for (region = 0; region < 5; ++region) {
+        work->regionFlags[region] &= ~MRF_Unknown01;
+        work->regionFlags[region] &= ~MRF_Unknown02;
+        g_motionLayerEvaluated[region] = 0;
+        if (work->queuedMotionId[region] && MOTN_IsEndlessMotion(work->queuedMotionId[region]))
+            work->queuedMotionId[region] = 0;
+        if (!work->currentMotionId[region])
+            work->regionFlags[region] |= MRF_Reinitialize;
+        retired = 0;
+        if (region == 0 || (work->regionFlags[region] & MRF_Independent)) {
+            if (!IsMotionAnimationValid(work->currentMotionId[region])) {
+                if (region == 0)
+                    retired = 1;
+                work->regionFlags[region] |= MRF_Reinitialize;
+                if (!work->queuedMotionId[region])
+                    work->queuedMotionId[region] = 0xf001U;
+            }
+        }
+        if (region == 0) {
+            if (!work->currentMotionId[region] && !work->queuedMotionId[region])
+                work->queuedMotionId[region] = 0xf085U;
+        } else {
+            if (work->regionFlags[region] & MRF_Independent) {
+                if ((work->regionFlags[region] & MRF_FollowLowerBody) ||
+                    ((work->regionFlags[region] & MRF_ReturnToLowerBody) && !(work->regionFlags[region] & MRF_BlendToLowerBody))) {
+                    if (!work->queuedMotionId[region] && !retired) {
+                        work->queuedMotionId[region] = work->currentMotionId[0];
+                        if (mtwkSetRegionFlag(work, 0x46, 1, static_cast<MotionRegion>(0)))
+                            work->regionFlags[region] |= MRF_LeadFoot;
+                        if (work->regionFlags[region] & MRF_ReturnToLowerBody) {
+                            if (!work->defaultRegionStepFrames[region])
+                                work->regionStepFrames[region] = 8;
+                            else
+                                work->regionStepFrames[region] = work->defaultRegionStepFrames[region];
+                            work->regionFlags[region] |= MRF_BlendToLowerBody;
+                        } else {
+                            work->regionStepFrames[region] = 0;
+                            work->regionFlags[region] = (work->regionFlags[region] & 0xfeffU) | MRF_Reinitialize;
+                        }
+                        work->layerLoopStartTime[region] = g_motionRegionClocks[0]->current.splitTimeFrames;
+                        work->pendingLayerStartFrame[region] = g_motionRegionClocks[0]->current.ticksTime;
+                        if (work->regionStepFrames[region])
+                            work->pendingLayerStartFrame[region] = static_cast<float>(work->regionStepFrames[region]) * g_motionRegionClocks[0]->playbackSpeed +
+                                work->pendingLayerStartFrame[region];
+                        work->layerEndFrame[region] = g_motionRegionClocks[0]->current.maxTime;
+                        if (work->pendingLayerStartFrame[region] > work->layerEndFrame[region]) {
+                            if (work->regionFlags[region] & MRF_Loop) {
+                                while (work->pendingLayerStartFrame[region] > work->layerEndFrame[region])
+                                    work->pendingLayerStartFrame[region] = work->pendingLayerStartFrame[region] - work->layerEndFrame[region];
+                            } else {
+                                work->pendingLayerStartFrame[region] = work->layerEndFrame[region];
+                            }
+                        }
+                        mtwkSetSpeed(work, g_motionRegionClocks[0]->playbackSpeed, static_cast<MotionRegion>(region));
+                    } else if (!work->queuedMotionId[region] && retired) {
+                        work->regionFlags[region] &= 0xfeffU;
+                    }
+                }
+            } else {
+                work->regionFlags[region] &= 0xfdffU;
+                work->regionFlags[region] &= 0xfbffU;
+            }
+            if (!(work->regionFlags[region] & MRF_Independent) || (work->regionFlags[region] & MRF_BlendToLowerBody)) {
+                if (!work->queuedMotionId[region] || (work->regionFlags[region] & MRF_BlendToLowerBody) || (work->regionFlags[region] & MRF_FollowLowerBody)) {
+                    if (work->queuedMotionId[0]) {
+                        work->queuedMotionId[region] = work->queuedMotionId[0];
+                        work->layerLoopStartTime[region] = work->layerLoopStartTime[0];
+                        work->pendingLayerStartFrame[region] = work->pendingLayerStartFrame[0];
+                        work->layerEndFrame[region] = work->layerEndFrame[0];
+                        if (work->regionFlags[0] & MRF_LeadFoot)
+                            work->regionFlags[region] |= MRF_LeadFoot;
+                        else
+                            work->regionFlags[region] &= 0xffdfU;
+                        if (work->regionFlags[0] & MRF_Reinitialize)
+                            work->regionFlags[region] |= MRF_Reinitialize;
+                        else
+                            work->defaultRegionStepFrames[region] = work->defaultRegionStepFrames[0];
+                        work->regionFlags[region] |= MRF_FollowLowerBody;
+                        work->regionFlags[region] &= 0xf7ffU;
+                    }
+                }
+                g_motionRegionClocks[region]->playbackSpeed = g_motionRegionClocks[0]->playbackSpeed;
+            }
+        }
+        if (!work->queuedMotionId[region])
+            continue;
+        if ((work->regionFlags[region] & MRF_BlendToLowerBody) && (work->regionFlags[region] & MRF_Independent)) {
+            mode = 1;
+        } else {
+            mode = work->requestedRootMode;
+            work->regionFlags[region] &= 0xf7ffU;
+        }
+        if (mode == 0 || (work->regionFlags[region] & MRF_Reinitialize)) {
+            work->regionStepFrames[region] = 0;
+        } else if (mode == 4) {
+            MotionRigClock *clock = g_motionRegionClocks[region];
+            float frames = clock->current.maxTime - clock->current.ticksTime;
+            if (clock->playbackSpeed >= 0.00000011920929f)
+                frames = frames / clock->playbackSpeed;
+            work->regionStepFrames[region] = static_cast<std::int32_t>(::ceilf(frames));
+        } else {
+            if (!work->defaultRegionStepFrames[region])
+                work->regionStepFrames[region] = 8;
+            else
+                work->regionStepFrames[region] = work->defaultRegionStepFrames[region];
+        }
+        work->currentRootMode = work->requestedRootMode;
+        if (region == 0) {
+            if (mode == 4) {
+                const float time = g_motionRegionClocks[region]->current.maxTime;
+                if (!(work->regionFlags[region] & MRF_Transition) || work->currentRootMode == 2) {
+                    SampleNativeMotionRoot(work->currentMotionId[region], FrameRig(work).boneId, time, &travel);
+                } else {
+                    travel.x = FrameRig(work).lowerBody.pelvisPosition[0].channel.next.value;
+                    travel.z = FrameRig(work).lowerBody.pelvisPosition[2].channel.next.value;
+                }
+                travel.x = travel.x + FrameRig(work).lowerBody.pelvisTransform.rows[3].x;
+                travel.z = travel.z + FrameRig(work).lowerBody.pelvisTransform.rows[3].z;
+                if (work->motionFlags & 1U)
+                    Matrix4x4::preTranslate(travel.x, 0.0f, travel.z);
+            } else if (mode == 5) {
+                float time = static_cast<float>(work->regionStepFrames[region]) * g_motionRegionClocks[region]->playbackSpeed +
+                    g_motionRegionClocks[region]->current.ticksTime;
+                if (time > g_motionRegionClocks[region]->current.maxTime)
+                    time = g_motionRegionClocks[region]->current.maxTime;
+                if (!(work->regionFlags[region] & MRF_Transition) || work->currentRootMode == 2) {
+                    SampleNativeMotionRoot(work->currentMotionId[region], FrameRig(work).boneId, time, &travel);
+                } else if (time > g_motionRegionClocks[region]->current.maxTime) {
+                    travel.x = FrameRig(work).lowerBody.pelvisPosition[0].channel.next.value;
+                    travel.z = FrameRig(work).lowerBody.pelvisPosition[2].channel.next.value;
+                } else {
+                    g_motionCurrentAnimTime = motionFrameSeconds * time;
+                    travel.x = SampleMotionRigChannelAdvance(FrameRig(work).lowerBody.pelvisPosition[0].channel);
+                    travel.z = SampleMotionRigChannelAdvance(FrameRig(work).lowerBody.pelvisPosition[2].channel);
+                }
+                travel.x = travel.x + FrameRig(work).lowerBody.pelvisTransform.rows[3].x;
+                travel.z = travel.z + FrameRig(work).lowerBody.pelvisTransform.rows[3].z;
+                if (work->motionFlags & 1U)
+                    Matrix4x4::preTranslate(travel.x, 0.0f, travel.z);
+            }
+        }
+    }
+}
+
+bool MOTN_HasHoldCommand(std::uint16_t animation);
+
+// @verified - d
+void mtwkProcessLayers(MotionWork *work) {
+    std::uint32_t flags;
+    std::int32_t rootMode, wasTracked, processed;
+    processed = 0;
+    for (std::int32_t region = 0; region < 5; ++region) {
+        if (work->queuedMotionId[region]) {
+            processed = 1;
+            wasTracked = 0;
+            rootMode = 0;
+            const std::uint16_t *header = reinterpret_cast<const std::uint16_t *>(MOTN_GetDataForAnimId(work->queuedMotionId[region]));
+            if (!header) {
+                if (work->useMatrixOverrides == 0)
+                    work->queuedMotionId[region] = 0xf001U;
+                else
+                    work->queuedMotionId[region] = 0xf0ebU;
+                header = reinterpret_cast<const std::uint16_t *>(MOTN_GetDataForAnimId(work->queuedMotionId[region]));
+            }
+            if (work->useMatrixOverrides != static_cast<std::uint32_t>(static_cast<char>(header[1]) == 16)) {
+                if (work->useMatrixOverrides == 0)
+                    work->queuedMotionId[region] = 0xf001U;
+                else
+                    work->queuedMotionId[region] = 0xf0ebU;
+                header = reinterpret_cast<const std::uint16_t *>(MOTN_GetDataForAnimId(work->queuedMotionId[region]));
+            }
+            work->previousRegionTrack[region] = work->regionTrack[region];
+            if (work->regionFlags[region] & MRF_Transition)
+                work->previousLayerSampleFrame[region] = work->layerSampleFrame[region];
+            else
+                work->previousLayerSampleFrame[region] = g_motionRegionClocks[region]->current.ticksTime;
+            MotionStreamContext context;
+            if (region == 3)
+                UpdatePointersForCurrentFrame(&context, header, reinterpret_cast<void **>(const_cast<std::uint16_t **>(&work->armHandTracks[0])),
+                    reinterpret_cast<void **>(const_cast<std::uint16_t **>(&work->regionTrack[3])));
+            else if (region == 4)
+                UpdatePointersForCurrentFrame(&context, header, reinterpret_cast<void **>(const_cast<std::uint16_t **>(&work->armHandTracks[1])),
+                    reinterpret_cast<void **>(const_cast<std::uint16_t **>(&work->regionTrack[4])));
+            else
+                UpdatePointersForCurrentFrame(&context, header, 0, reinterpret_cast<void **>(const_cast<std::uint16_t **>(&work->regionTrack[region])));
+            flags = motionInitStream | motionInitChannels;
+            if ((work->regionFlags[region] & MRF_LeadFoot) != MOTN_GetLeadFootFlag(work->queuedMotionId[region])) {
+                flags = motionInitStream | motionInitMirror | motionInitChannels;
+                work->regionFlags[region] |= MRF_Mirrored;
+            } else {
+                work->regionFlags[region] &= ~MRF_Mirrored;
+            }
+            work->layerSampleFrame[region] = -1.0f;
+            if (work->regionStepFrames[region]) {
+                flags |= ((work->regionStepFrames[region] + 1) & 0xff) << 8;
+                work->blendTotalFrames[region] = work->regionStepFrames[region] & 0xff;
+            } else {
+                work->blendTotalFrames[region] = 0;
+            }
+            work->blendRemainingFrames[region] = work->blendTotalFrames[region];
+            if (flags & motionInitGraphFrames) {
+                if (work->regionFlags[region] & MRF_Transition)
+                    wasTracked = 1;
+                work->regionFlags[region] |= MRF_Transition;
+            } else {
+                work->regionFlags[region] &= ~MRF_Transition;
+            }
+            float loopStart = -1.0f;
+            float localTime = 0.0f;
+            if (!(work->regionFlags[region] & MRF_Reinitialize)) {
+                if (work->regionFlags[region] & MRF_BlendToLowerBody)
+                    rootMode = 1;
+                else
+                    rootMode = work->currentRootMode;
+                float stepFrames = static_cast<float>(work->regionStepFrames[region]);
+                if (rootMode == 5) {
+                    MotionRigClock *const clock = g_motionRegionClocks[region];
+                    if (clock->playbackSpeed * stepFrames + clock->current.ticksTime > clock->current.maxTime) {
+                        stepFrames = stepFrames -
+                            ::ceilf(
+                                (clock->current.maxTime - clock->current.ticksTime) / (0.00000011920929f > clock->playbackSpeed ? 1.0f : clock->playbackSpeed));
+                    } else {
+                        stepFrames = 0.0f;
+                    }
+                }
+                const float lastFrame = static_cast<float>(static_cast<std::int16_t>(context.frameCount) - 1);
+                if (rootMode == 3 || rootMode == 5) {
+                    if (0.0f > work->pendingLayerStartFrame[region]) {
+                        work->layerSampleFrame[region] = g_motionRegionClocks[region]->playbackSpeed * stepFrames;
+                    } else {
+                        if (work->pendingLayerStartFrame[region] > lastFrame)
+                            work->pendingLayerStartFrame[region] = work->pendingLayerStartFrame[region] - lastFrame;
+                        if (!(work->motionFlags & 0x4000U))
+                            loopStart = work->pendingLayerStartFrame[region];
+                        work->layerSampleFrame[region] = g_motionRegionClocks[region]->playbackSpeed * stepFrames + work->pendingLayerStartFrame[region];
+                    }
+                    if (work->layerSampleFrame[region] > lastFrame) {
+                        if (MOTN_HasHoldCommand(work->queuedMotionId[region])) {
+                            Vector3 travel = {0.0f, 0.0f, 0.0f};
+                            Vector3 sampled;
+                            if (region == 0) {
+                                while (work->layerSampleFrame[region] > lastFrame - 0.0001f) {
+                                    work->layerSampleFrame[region] = work->layerSampleFrame[region] - lastFrame;
+                                    SampleNativeMotionRoot(work->queuedMotionId[region], work->rigBoneId, lastFrame, &sampled);
+                                    travel.x = travel.x + sampled.x;
+                                    travel.z = travel.z + sampled.z;
+                                    if (!(0.0f > loopStart)) {
+                                        SampleNativeMotionRoot(work->queuedMotionId[region], work->rigBoneId, loopStart, &sampled);
+                                        travel.x = travel.x - sampled.x;
+                                        travel.z = travel.z - sampled.z;
+                                    }
+                                    SampleNativeMotionRoot(work->queuedMotionId[region], work->rigBoneId, 0.0f, &sampled);
+                                    travel.x = travel.x - sampled.x;
+                                    travel.z = travel.z - sampled.z;
+                                    loopStart = -1.0f;
+                                }
+                                localTime = work->layerSampleFrame[region];
+                                SampleNativeMotionRoot(work->queuedMotionId[region], work->rigBoneId, localTime, &sampled);
+                                travel.x = travel.x + sampled.x;
+                                travel.z = travel.z + sampled.z;
+                                if (work->motionFlags & 1U)
+                                    Matrix4x4::preTranslate(travel.x, travel.y, travel.z);
+                            } else {
+                                while (work->layerSampleFrame[region] > lastFrame) {
+                                    work->layerSampleFrame[region] = work->layerSampleFrame[region] - lastFrame;
+                                    loopStart = -1.0f;
+                                }
+                                localTime = work->layerSampleFrame[region];
+                            }
+                        } else {
+                            localTime = lastFrame;
+                        }
+                    } else {
+                        localTime = work->layerSampleFrame[region];
+                    }
+                } else if (!(0.0f > work->pendingLayerStartFrame[region])) {
+                    if (work->pendingLayerStartFrame[region] > lastFrame)
+                        localTime = lastFrame;
+                    else
+                        localTime = work->pendingLayerStartFrame[region];
+                    work->layerSampleFrame[region] = work->pendingLayerStartFrame[region];
+                }
+                work->pendingLayerStartFrame[region] = -1.0f;
+            }
+            if (region == 0) {
+                if (work->regionFlags[region] & MRF_Transition) {
+                    float timer, limit;
+                    if (!wasTracked) {
+                        timer = g_motionRegionClocks[region]->current.ticksTime;
+                        limit = static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(work->currentMotionId[region]) - 1));
+                    } else {
+                        timer = work->transitionTimer;
+                        limit = work->transitionTimerLimit;
+                    }
+                    float reset = 0.0f > loopStart ? 0.0f : loopStart;
+                    work->baseTimeScale = g_motionRegionClocks[region]->playbackSpeed;
+                    switch (rootMode) {
+                    case 3:
+                        work->transitionTimerReset = work->transitionTimer = reset;
+                        work->transitionTimerLimit = g_motionRegionClocks[region]->playbackSpeed * static_cast<float>(work->blendTotalFrames[region]) + reset;
+                        break;
+                    case 4:
+                        work->transitionTimerReset = work->transitionTimer = timer;
+                        work->transitionTimerLimit = limit;
+                        break;
+                    case 5:
+                        work->transitionTimerReset = reset;
+                        work->transitionTimer = timer;
+                        work->transitionTimerLimit = limit;
+                        break;
+                    }
+                }
+                if (rootMode == 3)
+                    work->motionFlags |= 0x4000U;
+                if (0.0f > work->layerSampleFrame[region]) {
+                    if (work->motionFlags & 0x2000U)
+                        flags |= motionInitTranslation;
+                } else if (!(work->motionFlags & 0x4000U)) {
+                    flags |= motionInitTranslation;
+                }
+            }
+            if (work->overrideBlendTime > 0.0f)
+                SetOverrideBlendTime(work->overrideBlendTime);
+            if (rootMode == 2) {
+                Rig_SetupMotionGraph(reinterpret_cast<MotionWorkBindings *>(work)->rig, &context, localTime, flags, region,
+                    reinterpret_cast<MotionWorkBindings *>(work)->targets, reinterpret_cast<MotionWorkBindings *>(work)->rotations);
+            } else {
+                if (region == 0 && (work->motionFlags & 0x8000U)) {
+                    flags |= motionInitSplitWindow;
+                    if (work->motionFlags & motionInitBaking)
+                        flags |= motionInitSwapLeadFoot;
+                }
+                mtwkRigEvaluateControllers(work, &context, loopStart, localTime, flags, static_cast<MotionRegion>(region));
+            }
+            work->previousMotionId[region] = work->currentMotionId[region];
+            work->currentMotionId[region] = work->queuedMotionId[region];
+            work->queuedMotionId[region] = 0;
+            if (region != 0) {
+                if (!(work->regionFlags[region] & MRF_FollowLowerBody) || (work->regionFlags[region] & MRF_Independent))
+                    work->regionFlags[region] |= MRF_Independent;
+            } else {
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].x = 0.0f;
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].y = 0.0f;
+                reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].z = 0.0f;
+                if (!(work->regionFlags[region] & MRF_Transition)) {
+                    if (0.0f > work->layerSampleFrame[region]) {
+                        if (work->motionFlags & 0x2000U)
+                            TranslatePelvisFromChannels(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody, MI_Hermite);
+                    } else if (!(work->motionFlags & 0x4000U)) {
+                        float start = work->layerSampleFrame[region];
+                        Vector3 end, begin;
+                        float scale;
+                        TranslatePelvisFromChannels(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody, MI_Hermite);
+                        SampleNativeMotionRoot(work->currentMotionId[region], work->rigBoneId, start, &end);
+                        if (g_motionRegionClocks[region]->playbackSpeed > start) {
+                            SampleNativeMotionRoot(work->currentMotionId[region], work->rigBoneId, 0.0f, &begin);
+                            scale = 0.00000011920929f > start ? 1.0f : g_motionRegionClocks[region]->playbackSpeed / start;
+                        } else {
+                            start = start - g_motionRegionClocks[region]->playbackSpeed;
+                            SampleNativeMotionRoot(work->currentMotionId[region], work->rigBoneId, start, &begin);
+                            scale = 1.0f;
+                        }
+                        end.x = end.x - begin.x;
+                        end.z = end.z - begin.z;
+                        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].x =
+                            end.x * scale + reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].x;
+                        reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].z =
+                            end.z * scale + reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform.rows[3].z;
+                    }
+                } else {
+                    if (work->currentRootMode == 2) {
+                        if (0.0f > work->layerSampleFrame[region]) {
+                            if (work->motionFlags & 0x2000U)
+                                TranslatePelvisFromChannels(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody, MI_Hermite);
+                        } else if (!(work->motionFlags & 0x4000U)) {
+                            TranslatePelvisFromChannels(reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody, MI_Hermite);
+                        }
+                    }
+                }
+                work->motionFlags &= ~0x2000U;
+                if (!(0.0f > work->gaitSplitFraction))
+                    SetGaitSplitFraction(work->gaitSplitFraction);
+            }
+            work->regionFlags[region] |= MRF_Unknown01;
+            if (work->currentRootMode == 2 || !(work->regionFlags[region] & MRF_Transition))
+                g_motionLayerEvaluated[region] = 1;
+        }
+        std::uint16_t clear = work->regionFlags[region];
+        clear &= ~MRF_FollowLowerBody;
+        clear &= ~MRF_ReturnToLowerBody;
+        clear &= ~MRF_LeadFoot;
+        clear &= ~MRF_Reinitialize;
+        work->regionFlags[region] = clear;
+    }
+    if (processed)
+        work->overrideBlendTime = -1.0f;
+}
+
+void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
+    int reread = 0;
+    Matrix4x4 channels;
+    Vector3 end;
+    if (work->overrideBlendTime > 0.0f)
+        mtwkRigRunOverrideBlendPass(work);
+    int result;
+    if (!g_motionLayerEvaluated[0]) {
+        if ((work->regionFlags[0] & MRF_Transition) && work->currentRootMode != 0 && work->currentRootMode != 2) {
+            result = AnimClock_ForceJump(g_motionRegionClocks[0]);
+        } else if ((work->regionFlags[0] & MRF_Transition) && work->currentRootMode == 0) {
+            result = 4;
+            g_motionRegionClocks[0]->current.ticksTime = g_motionRegionClocks[0]->current.maxTime;
+        } else {
+            std::uint32_t allowOverflow = work->regionFlags[0] & MRF_Loop;
+            std::uint32_t allowReset = work->regionFlags[0] & MRF_ExcludeEndFrame;
+            if (work->motionFlags & 0x200U)
+                allowOverflow = allowReset = 0;
+            result = TimestepUpdate(g_motionRegionClocks[0], allowOverflow, allowReset);
+        }
+    } else {
+        result = 0;
+    }
+    if (result) {
+        if ((work->regionFlags[0] & MRF_Transition) && work->currentRootMode != 0 && work->currentRootMode != 2) {
+            work->regionFlags[0] &= 0xffefU;
+            work->transitionTimer = -1.0f;
+        } else if ((work->regionFlags[0] & MRF_Transition) && work->currentRootMode == 2) {
+            work->regionFlags[0] &= 0xffefU;
+            work->transitionTimer = -1.0f;
+        }
+    }
+    if (result == 4) {
+        BuildChannelTransformAtTime(FrameRig(work).lowerBody, &channels, g_motionRegionClocks[0]->current.maxTime, MI_HermiteAuto);
+        end.x = channels.rows[3].x + FrameRig(work).lowerBody.pelvisTransform.rows[3].x;
+        end.z = channels.rows[3].z + FrameRig(work).lowerBody.pelvisTransform.rows[3].z;
+        g_motionRegionClocks[0]->current.ticksTime = 0.0f;
+        mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, LowerBody);
+        reread = 1;
+        BuildChannelTransformAtTime(FrameRig(work).lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].x = -(channels.rows[3].x - end.x);
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].z = -(channels.rows[3].z - end.z);
+        work->regionFlags[0] |= MRF_Unknown01;
+    } else if (result == 3) {
+        BuildChannelTransformAtTime(FrameRig(work).lowerBody, &channels, ::ceilf(g_motionRegionClocks[0]->current.maxTime), MI_HermiteAuto);
+        end.x = channels.rows[3].x + FrameRig(work).lowerBody.pelvisTransform.rows[3].x;
+        end.z = channels.rows[3].z + FrameRig(work).lowerBody.pelvisTransform.rows[3].z;
+        mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, LowerBody);
+        reread = 1;
+        BuildChannelTransformAtTime(FrameRig(work).lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].x = -(channels.rows[3].x - end.x);
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].z = -(channels.rows[3].z - end.z);
+    } else if (result == 2) {
+        mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, LowerBody);
+        reread = 1;
+        BuildChannelTransformAtTime(FrameRig(work).lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].x = -channels.rows[3].x;
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].z = -channels.rows[3].z;
+    }
+    if (work->blendRemainingFrames[0] && work->currentRootMode == 2) {
+        work->blendRemainingFrames[0]--;
+        work->layerBlendAlpha[0] = 1.0f - static_cast<float>(work->blendRemainingFrames[0]) / static_cast<float>(work->blendTotalFrames[0]);
+        if (!work->blendRemainingFrames[0]) {
+            mtwkClearOverrideCallbacksForBodyRegion(work, LowerBody);
+            work->blendTotalFrames[0] = 0;
+            work->regionFlags[0] &= 0xffefU;
+        }
+    } else {
+        work->layerBlendAlpha[0] = 1.0f;
+        if (work->previousRootMode == 2 && work->currentRootMode != 2)
+            mtwkClearOverrideCallbacksForBodyRegion(work, LowerBody);
+    }
+    for (int region = 1; region < 5; ++region) {
+        if ((work->regionFlags[region] & MRF_Independent) && !g_motionLayerEvaluated[region]) {
+            if ((work->regionFlags[region] & MRF_Transition) && work->currentRootMode != 0 && work->currentRootMode != 2) {
+                result = AnimClock_ForceJump(g_motionRegionClocks[region]);
+            } else if ((work->regionFlags[region] & MRF_Transition) && work->currentRootMode == 0) {
+                result = 4;
+                g_motionRegionClocks[region]->current.ticksTime = g_motionRegionClocks[region]->current.maxTime;
+            } else {
+                std::uint32_t allowOverflow = work->regionFlags[region] & MRF_Loop;
+                std::uint32_t allowReset = work->regionFlags[region] & MRF_ExcludeEndFrame;
+                if (work->motionFlags & 0x200U)
+                    allowOverflow = allowReset = 0;
+                result = TimestepUpdate(g_motionRegionClocks[region], allowOverflow, allowReset);
+            }
+            if (result) {
+                if ((work->regionFlags[region] & MRF_Transition) && work->currentRootMode != 0 && work->currentRootMode != 2) {
+                    work->regionFlags[region] &= 0xffefU;
+                    if (result == 4) {
+                        work->regionFlags[region] |= MRF_Unknown01;
+                        if (work->regionFlags[region] & MRF_BlendToLowerBody) {
+                            work->regionFlags[region] &= 0xf7ffU;
+                            work->regionFlags[region] &= 0xfeffU;
+                        }
+                    }
+                } else if ((work->regionFlags[region] & MRF_Transition) && work->currentRootMode == 0) {
+                    work->regionFlags[region] &= 0xffefU;
+                    work->regionFlags[region] |= MRF_Unknown01;
+                    if (work->regionFlags[region] & MRF_BlendToLowerBody) {
+                        work->regionFlags[region] &= 0xf7ffU;
+                        work->regionFlags[region] &= 0xfeffU;
+                    }
+                }
+            }
+            if (result > 1) {
+                g_motionRegionClocks[region]->current.ticksTime = 0.0f;
+                mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+            }
+        } else {
+            g_motionRegionClocks[region]->current.ticksTime = g_motionRegionClocks[0]->current.ticksTime;
+            if (reread) {
+                mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+                if (work->regionFlags[0] & MRF_Unknown01)
+                    work->regionFlags[region] |= MRF_Unknown01;
+            }
+            if (!(work->regionFlags[0] & MRF_Transition))
+                work->regionFlags[region] &= 0xffefU;
+        }
+        if (work->blendRemainingFrames[region] && work->currentRootMode == 2) {
+            work->blendRemainingFrames[region]--;
+            work->layerBlendAlpha[region] = 1.0f - static_cast<float>(work->blendRemainingFrames[region]) / static_cast<float>(work->blendTotalFrames[region]);
+            if (!work->blendRemainingFrames[region]) {
+                mtwkClearOverrideCallbacksForBodyRegion(work, static_cast<MotionRegion>(region));
+                work->blendTotalFrames[region] = 0;
+                work->regionFlags[region] &= 0xffefU;
+            }
+            if (work->regionFlags[region] & MRF_Independent)
+                work->layerBlendAlpha[region] = 1.0f;
+        } else {
+            work->layerBlendAlpha[region] = 1.0f;
+            if (work->previousRootMode == 2 && work->currentRootMode != 2)
+                mtwkClearOverrideCallbacksForBodyRegion(work, static_cast<MotionRegion>(region));
+        }
+    }
+    if (work->transitionTimer >= 0.0f) {
+        work->transitionTimer += work->baseTimeScale;
+        if (work->transitionTimer > work->transitionTimerLimit) {
+            work->transitionTimer = work->transitionTimerReset;
+            work->previousMotionId[0] = work->currentMotionId[0];
+        }
+    }
+}
+
+void mtwkApplySequenceCommands(MotionWork *work) {
+    for (std::int32_t region = 0; region < 5; ++region) {
+        if ((work->regionFlags[region] & MRF_Unknown01) && (!(work->regionFlags[region] & MRF_Transition) || work->currentRootMode == 2)) {
+            if (MOTN_GetLoopFrame(work->currentMotionId[region]) == 0xffffU)
+                work->regionFlags[region] |= 4U;
+            else if (work->regionFlags[region] & 0x1000U)
+                work->regionFlags[region] |= 4U;
+            else
+                work->regionFlags[region] &= 0xfffbU;
+            if (MOTN_HasHoldCommand(work->currentMotionId[region])) {
+                float holdTime;
+                work->regionFlags[region] |= 8U;
+                mtwkCopyRegionTimes(work, 0, 0, &holdTime, static_cast<MotionRegion>(region));
+                mtwkTimePairClampAndPropagate(work, -1.0f, -1.0f, holdTime - 0.001f, static_cast<MotionRegion>(region));
+            } else
+                work->regionFlags[region] &= 0xfff7U;
+        }
+        if ((work->regionFlags[region] & MRF_Transition) && work->currentRootMode != 2)
+            continue;
+        if (work->layerLoopStartTime[region] < 0.0f && work->pendingLayerStartFrame[region] < 0.0f && work->layerSampleFrame[region] < 0.0f &&
+            work->layerEndFrame[region] < 0.0f)
+            continue;
+        const float previousTicks = g_motionRegionClocks[region]->current.ticksTime;
+        if (work->layerSampleFrame[region] >= 0.0f)
+            work->pendingLayerStartFrame[region] = work->layerSampleFrame[region];
+        mtwkAssignStaticDataForBodyRegion(
+            work, work->layerLoopStartTime[region], work->pendingLayerStartFrame[region], work->layerEndFrame[region], static_cast<MotionRegion>(region));
+        const float current = mtwkTimePairClampAndPropagate(
+            work, work->layerLoopStartTime[region], work->pendingLayerStartFrame[region], work->layerEndFrame[region], static_cast<MotionRegion>(region));
+        if (previousTicks > current && (work->regionFlags[region] & MRF_Unknown01) == 0) {
+            mtwkRigEvaluateControllers(work, 0, 0.0f, 0.0f, motionInitChannels, static_cast<MotionRegion>(region));
+            mtwkTimePairClampAndPropagate(work, -1.0f, current, -1.0f, static_cast<MotionRegion>(region));
+        }
+        if (region == 0) {
+            if (work->pendingLayerStartFrame[region] > 0.0f) {
+                g_motionLayerEvaluated[region] = 1;
+                if (work->motionFlags & 0x4000U) {
+                    FrameRig(work).lowerBody.pelvisTransform.rows[3].x = 0.0f;
+                    FrameRig(work).lowerBody.pelvisTransform.rows[3].y = 0.0f;
+                    FrameRig(work).lowerBody.pelvisTransform.rows[3].z = 0.0f;
+                } else if (work->regionFlags[region] & MRF_Unknown01) {
+                    IKRig &rig = FrameRig(work);
+                    Vector3 offset;
+                    Matrix4x4 channels;
+                    offset.x = rig.lowerBody.pelvisTransform.rows[3].x;
+                    offset.z = rig.lowerBody.pelvisTransform.rows[3].z;
+                    BuildChannelTransformAtTime(rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
+                    offset.x += channels.rows[3].x;
+                    offset.z += channels.rows[3].z;
+                    TranslatePelvisFromChannels(rig.lowerBody, MI_Hermite);
+                    rig.lowerBody.pelvisTransform.rows[3].x += offset.x;
+                    rig.lowerBody.pelvisTransform.rows[3].z += offset.z;
+                } else {
+                    float earlier = 0.0f;
+                    const float alpha = work->layerBlendAlpha[0];
+                    if (current - FrameRig(work).lowerBody.clock.playbackSpeed > 0.0f)
+                        earlier = current - FrameRig(work).lowerBody.clock.playbackSpeed;
+                    mtwkTimePairClampAndPropagate(work, -1.0f, earlier, -1.0f, static_cast<MotionRegion>(region));
+                    if (work->regionFlags[0] & MRF_Transition)
+                        work->layerBlendAlpha[0] = 1.0f - static_cast<float>(work->blendRemainingFrames[0] + 1) / static_cast<float>(work->blendTotalFrames[0]);
+                    TranslatePelvisFromChannels(FrameRig(work).lowerBody, MI_Hermite);
+                    mtwkTimePairClampAndPropagate(work, -1.0f, current, -1.0f, static_cast<MotionRegion>(region));
+                    work->layerBlendAlpha[0] = alpha;
+                }
+            }
+            for (std::int32_t dependent = 1; dependent < 5; ++dependent)
+                if (!(work->regionFlags[dependent] & MRF_Independent))
+                    g_motionRegionClocks[dependent]->current.ticksTime = current;
+        }
+        work->layerLoopStartTime[region] = -1.0f;
+        work->pendingLayerStartFrame[region] = -1.0f;
+        work->layerEndFrame[region] = -1.0f;
+        work->layerSampleFrame[region] = -1.0f;
+    }
+    work->motionFlags &= ~0x4000U;
+    if (work->motionFlags & 0x200U) {
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].x = 0.0f;
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].y = 0.0f;
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].z = 0.0f;
+    }
+    if (work->regionFlags[0] & MRF_Unknown01)
+        work->activeRootYawOffset = work->requestedRootYawOffset;
+    if (work->activeRootYawOffset && !(work->regionFlags[0] & MRF_Transition)) {
+        const MotionTimePair &pair = g_motionRegionClocks[0]->current;
+        float span = (pair.maxTime - pair.splitTimeFrames) * 0.5f;
+        const float elapsed = pair.ticksTime - pair.splitTimeFrames;
+        std::int32_t angle;
+        if (span > elapsed)
+            angle = static_cast<std::int32_t>((static_cast<float>(static_cast<std::int16_t>(work->activeRootYawOffset) / 2) * elapsed) / span);
+        else {
+            const float yaw = static_cast<float>(static_cast<std::int16_t>(work->activeRootYawOffset));
+            span += span;
+            angle = static_cast<std::int16_t>(static_cast<std::int32_t>(yaw - ((span - elapsed) * yaw) / span));
+        }
+        Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int16_t>(angle));
+    }
+}
+
+void mtwkResolveAnimId(MotionWork *work, std::uint16_t motion, std::uint16_t remap, float begin, float end) {
+    const std::int32_t walkFrames = static_cast<std::int32_t>(GetMotionFrameCount(0xf005U));
+    const std::int32_t frames = static_cast<std::int32_t>(GetMotionFrameCount(motion));
+    const float ratio = static_cast<float>(walkFrames - 1) / static_cast<float>(frames - 1);
+    begin *= ratio;
+    end *= ratio;
+    const std::byte *const command = MOTN_FindFrameEvent(4, 0xf005U, begin, end, 1);
+    if (command) {
+        work->materialFlags = static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int8_t>(command[3])));
+        work->pendingFootstepCue = *reinterpret_cast<const std::uint32_t *>(command + 4);
+        if (remap) {
+            if (work->pendingFootstepCue == 0x800001U)
+                work->pendingFootstepCue = 0x800004U;
+            else if (work->pendingFootstepCue == 0x800000U)
+                work->pendingFootstepCue = 0x800003U;
+        }
+    } else
+        work->pendingFootstepCue = 0;
+}
+
+void mtwkUpdateBoneForTime(MotionWork *work, std::uint16_t motion, float begin, float end) {
+    const std::byte *const command = MOTN_FindFrameEvent(4, motion, begin, end, 1);
+    if (command) {
+        work->materialFlags = static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int8_t>(command[3])));
+        work->pendingFootstepCue = reinterpret_cast<const std::uint32_t *>(command)[1];
+    } else
+        work->pendingFootstepCue = 0;
+}
+
+void mtwkSelectRandomFootstepCue(MotionWork *work, std::uint16_t motion, float begin, float end) {
+    const std::byte *const command = MOTN_FindFrameEvent(49, motion, begin, end, 1);
+    if (command) {
+        work->materialFlags = static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int8_t>(command[3])));
+        work->pendingFootstepCue = reinterpret_cast<const std::uint32_t *>(command)[1 + static_cast<std::int32_t>(dc::sdk::RandomFloat() * 3.0f)];
+    } else
+        work->pendingFootstepCue = 0;
+}
+
+const std::byte *MOTN_FindHandPoseEvent(std::uint16_t animationId, float begin, float end, std::int32_t occurrence) {
+    const std::byte *const event = MOTN_FindFrameEvent(18, animationId, begin, end, occurrence);
+    if (event)
+        return event;
+    return 0;
+}
+
+std::uint32_t MOTN_GetFrameEvent52Parameter(std::uint16_t animationId, float begin, float end) {
+    const std::byte *const event = MOTN_FindFrameEvent(52, animationId, begin, end, 1);
+    if (event)
+        return *reinterpret_cast<const std::uint32_t *>(event + 4);
+    return 0;
+}
+
+std::int32_t mtwkApplyInterpolatedTransforms(MotionWork *work) {
+    if (work->regionFlags[0] & 1U) {
+        work->layerPreviousTicks[0] = g_motionRegionClocks[0]->current.ticksTime - g_motionRegionClocks[0]->playbackSpeed;
+        if (0.0f > work->layerPreviousTicks[0])
+            work->layerPreviousTicks[0] = 0.0f;
+    }
+    float begin = work->layerPreviousTicks[0];
+    std::int32_t index;
+    for (index = 0; index < 5; ++index) {
+        if (!(work->regionFlags[index] & MRF_Transition) || !work->currentRootMode || work->currentRootMode == 2) {
+            MotionRigClock *const clock = g_motionRegionClocks[index];
+            if (clock->current.ticksTime + clock->playbackSpeed > clock->current.maxTime)
+                work->regionFlags[index] |= MRF_Unknown02;
+            work->regionFlags[index] &= ~MRF_Unknown1000;
+        }
+        work->layerPreviousTicks[index] = g_motionRegionClocks[index]->current.ticksTime;
+    }
+    if (work->activeRootYawOffset && (work->regionFlags[0] & MRF_Unknown02) && (*reinterpret_cast<const std::uint32_t *>(work->regionFlags) & 0x0cU))
+        work->activeRootYawOffset = 0;
+    work->entityYaw = static_cast<std::int32_t>(mtwkApplyTransforms(&FrameRig(work).lowerBody.pelvisWorld));
+    work->previousRootPosition.x = work->cachedRootPosition.x;
+    work->previousRootPosition.z = work->cachedRootPosition.z;
+    if ((work->motionFlags & 9U) == 1U) {
+        work->cachedRootPosition.x = FrameRig(work).lowerBody.pelvisWorld.rows[3].x;
+        work->cachedRootPosition.z = FrameRig(work).lowerBody.pelvisWorld.rows[3].z;
+    }
+    FrameRig(work).lowerBody.rootPrepassTransform.rows[3].x = work->cachedRootPosition.x;
+    FrameRig(work).lowerBody.rootPrepassTransform.rows[3].z = work->cachedRootPosition.z;
+    if (g_motionUseEnvironment && work->retainedMotionParameter && !((work->regionFlags[0] & MRF_Transition) && work->currentRootMode == 1)) {
+        float end;
+        std::uint16_t motion;
+        if ((work->regionFlags[0] & MRF_Transition) && work->currentRootMode != 2) {
+            begin = work->transitionTimer - work->baseTimeScale;
+            end = work->transitionTimer;
+            if (work->currentRootMode != 3)
+                motion = work->previousMotionId[0];
+            else
+                motion = work->currentMotionId[0];
+        } else {
+            end = g_motionRegionClocks[0]->current.ticksTime;
+            motion = work->currentMotionId[0];
+        }
+        switch (motion) {
+        case 0xf006:
+        case 0xf035 ... 0xf03a:
+            if (begin > end) {
+                mtwkResolveAnimId(work, motion, 1, begin, static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(motion))) - 1.0f);
+                if (!work->pendingFootstepCue)
+                    mtwkResolveAnimId(work, motion, 1, 0.0f, end);
+            } else {
+                mtwkResolveAnimId(work, motion, 1, begin, end);
+            }
+            break;
+        case 0xf03b ... 0xf03d:
+            if (begin > end) {
+                mtwkResolveAnimId(work, motion, 0, begin, static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(motion))) - 1.0f);
+                if (!work->pendingFootstepCue)
+                    mtwkResolveAnimId(work, motion, 0, 0.0f, end);
+            } else {
+                mtwkResolveAnimId(work, motion, 0, begin, end);
+            }
+            break;
+        default:
+            if (begin > end) {
+                mtwkUpdateBoneForTime(work, motion, begin, g_motionRegionClocks[0]->current.maxTime);
+                if (!work->pendingFootstepCue)
+                    mtwkSelectRandomFootstepCue(work, motion, begin, g_motionRegionClocks[0]->current.maxTime);
+                if (!work->pendingFootstepCue) {
+                    mtwkUpdateBoneForTime(work, motion, g_motionRegionClocks[0]->current.splitTimeFrames, end);
+                    if (!work->pendingFootstepCue)
+                        mtwkSelectRandomFootstepCue(work, motion, g_motionRegionClocks[0]->current.splitTimeFrames, end);
+                }
+            } else {
+                mtwkUpdateBoneForTime(work, motion, begin, end);
+                if (!work->pendingFootstepCue)
+                    mtwkSelectRandomFootstepCue(work, motion, begin, end);
+            }
+            break;
+        }
+    }
+    if (work->regionFlags[0] & MRF_Unknown01)
+        work->environmentFlags &= 0x0fU;
+    if (work->environmentFlags & 0x0fU)
+        work->environmentFlags = static_cast<std::uint8_t>((work->environmentFlags & 0x0fU) << 4);
+    work->environmentFlags &= 0xf0U;
+    work->parentBoneSelector = 9;
+    for (index = 0; index < 9; ++index)
+        work->latchedConstraintTarget[index] = 0;
+    if (!(work->regionFlags[0] & MRF_Transition))
+        work->requestedRootYawOffset = 0;
+    work->gaitSplitFraction = -1.0f;
+    work->motionFlags &= ~0x20000U;
+    mtwkUpdateCollisionCluster(work);
+    return 1;
+}
+
+std::int32_t mtwkEvaluateMotionFrame(MotionWork *work) {
+    if (!work)
+        return 0;
+    std::uint32_t interpolationMode = MI_Hermite;
+    matrix_stack::PushUnitMatrix();
+    mtwkApplyRootPos(work);
+    mtwkGetRegionClocks(work, reinterpret_cast<MotionRegionClock **>(&g_motionRegionClocks[0]),
+        reinterpret_cast<MotionRegionClock **>(&g_motionRegionClocks[1]), reinterpret_cast<MotionRegionClock **>(&g_motionRegionClocks[2]),
+        reinterpret_cast<MotionRegionClock **>(&g_motionRegionClocks[3]), reinterpret_cast<MotionRegionClock **>(&g_motionRegionClocks[4]));
+    mtwkApplyRootTranslation(work);
+    mtwkProcessLayers(work);
+    mtwkAdvanceAnimFrameAndLayers(work);
+    mtwkApplySequenceCommands(work);
+    mtwkUpdateOverrideCallbacks(work);
+    mtwkAssignCallbacks(work);
+    if (work->sequenceFlags & 0x1000000U)
+        interpolationMode = MI_Hermite | MI_Linear;
+    Vector3 bonePosition;
+    Vector3 solved;
+    if ((work->motionFlags & 9U) != 1U) {
+        interpolationMode |= MI_Hermite;
+        TranslatePelvisFromChannels(FrameRig(work).lowerBody, MI_Hermite);
+        if (work->motionFlags & 8U) {
+            Matrix4x4 matrix;
+            BuildChannelTransformAtTime(FrameRig(work).lowerBody, &matrix, g_motionRegionClocks[0]->current.ticksTime, MI_HermiteAuto);
+            FrameRig(work).lowerBody.pelvisTransform.rows[3].y = -matrix.rows[3].y;
+        } else {
+            FrameRig(work).lowerBody.pelvisTransform.rows[3].y = 0.0f;
+        }
+    }
+    if ((work->parentBoneSelector & 0x1fU) < 9U && !(work->motionFlags & 8U))
+        mtwkGetControllerTargetPosition(work, work->parentBoneSelector & 0x1fU, bonePosition);
+    g_ikEnabled = 1;
+    IK_BuildAndSolve(FrameRig(work), interpolationMode);
+    g_ikEnabled = 0;
+    if ((work->parentBoneSelector & 0x1fU) < 9U && !(work->motionFlags & 8U)) {
+        mtwkGetControllerTargetPosition(work, work->parentBoneSelector & 0x1fU, solved);
+        bonePosition.x -= solved.x;
+        bonePosition.y -= solved.y;
+        bonePosition.z -= solved.z;
+        matrix_stack::Matrix4x4_Push();
+        matrix_stack::InvertMatrix(0);
+        Matrix4x4::Transform(bonePosition, bonePosition);
+        if (work->parentBoneSelector & 0x80U)
+            bonePosition.y = 0.0f;
+        if (work->parentBoneSelector & 0x40U)
+            bonePosition.x = 0.0f;
+        if (work->parentBoneSelector & 0x20U)
+            bonePosition.z = 0.0f;
+        PopCurrentMatrix(1);
+        Matrix4x4::Transform(bonePosition, bonePosition);
+        if ((work->motionFlags & 1U) == 0) {
+            bonePosition.x = 0.0f;
+            bonePosition.z = 0.0f;
+        }
+        mtwkAdvanceInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
+        mtwkCopyInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
+        FrameRig(work).lowerBody.pelvisTransform.rows[3].y = bonePosition.y;
+    }
+    mtwkApplyInterpolatedTransforms(work);
+    PopCurrentMatrix(1);
+    if (work->ikTargetPosition) {
+        mtwkGetBonePosition(work, 12, &bonePosition);
+        Matrix4x4 matrix = mtwkBuildArmRebaseTransform(work);
+        work->transformStart = &matrix;
+    }
+    if (work->transformStart)
+        mtwkRebaseSolvedMatrices(work);
+    if (work->ikTargetPosition) {
+        const Vector3 *target = work->ikTargetPosition;
+        bonePosition.x = target->x - bonePosition.x;
+        bonePosition.y = target->y - bonePosition.y;
+        bonePosition.z = target->z - bonePosition.z;
+        mtwkAdvanceInterpolated(work, bonePosition.x, bonePosition.y, bonePosition.z);
+        work->ikTargetPosition = 0;
+        work->transformStart = 0;
+    }
+    if (!(work->sequenceFlags & MSF_SearchHand)) {
+        if (!camCtrlIsInsideDepthScaledRect(work->cachedRootPosition, work->depthScale))
+            return 0;
+    }
+    return 1;
+}
+
+std::int32_t GetMotionBankRange(std::int32_t index, void **data, std::uint16_t *firstAnimation, std::uint16_t *endAnimation) {
+    const MotionRegistryEntry *bank = g_motionData;
+    for (std::int32_t i = 0; bank; bank = bank->next, ++i) {
+        if (i == index) {
+            *data = bank->data;
+            *firstAnimation = bank->firstAnimation;
+            *endAnimation = bank->endAnimation;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+std::int32_t MOTN_IsEndlessMotion(std::uint16_t animation);
+
+std::int32_t MOTN_IsEndlessAnimationId(std::uint16_t animation) {
+    return MOTN_IsEndlessMotion(animation);
+}
+
+} // namespace s2
+} // namespace shenmue
+
+#else
+
 #include "s2/motion_work.hpp"
 
 #include "s2/camera.hpp"
@@ -102,7 +2724,7 @@ void cbEvaluateTargetRotOverride(void *parameters) {
     SlerpToCapturedTarget(basis, blend);
 }
 
-
+// The override rig's two-channel toe joints.
 // @verified - p
 void cbEvaluateTwoJointRotationOverride(void *parameters) {
     MotionRotationParameters &rotation = *static_cast<MotionRotationParameters *>(parameters);
@@ -1209,8 +3831,8 @@ void mtwkClearConstraintTargetCallbackIfInactive(MotionWork *work, std::uint32_t
     }
 }
 
-
-
+// Steps the pelvis yaw toward its target, ramping the step in over five
+// frames and publishing the clamped half angle the chest counter-rotates by.
 // @verified - p
 void mtwkUpdatePelvisYaw(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
@@ -1330,7 +3952,7 @@ std::int32_t mtwkUpdateOverrideCallbacks(MotionWork *work) {
     return 1;
 }
 
-
+// A lead-foot (opcode 19) motion reports the 0x20 region flag.
 // @verified - p
 std::uint32_t HasLeadFootCommand(std::uint16_t motion) {
     return FindLoadedMotionSecondaryEntry(motion, 19).empty() ? 0U : 0x20U;
@@ -1930,8 +4552,8 @@ void mtwkAdvanceAnimFrameAndLayers(MotionWork *work) {
     }
 }
 
-
-
+// Native Sequence: applies the motion's loop (opcode 1) and hold (opcode 24) commands,
+// any requested frame range, and the authored root yaw offset ramp.
 // @verified - p
 void mtwkApplySequenceCommands(MotionWork *work) {
     MotionRuntimeState &state = work->runtime;
@@ -1966,7 +4588,8 @@ void mtwkApplySequenceCommands(MotionWork *work) {
         const float previousTicks = g_motionRegionClocks[region]->current.ticksTime;
         if (state.layerSampleFrame[region] >= 0.0f)
             state.pendingLayerStartFrame[region] = state.layerSampleFrame[region];
-        mtwkAssignStaticDataForBodyRegion(work, loopStart, state.pendingLayerStartFrame[region], state.layerEndFrame[region], static_cast<MotionRegion>(region));
+        mtwkAssignStaticDataForBodyRegion(
+            work, loopStart, state.pendingLayerStartFrame[region], state.layerEndFrame[region], static_cast<MotionRegion>(region));
         const float current = mtwkTimePairClampAndPropagate(
             work, state.layerLoopStartTime[region], state.pendingLayerStartFrame[region], state.layerEndFrame[region], static_cast<MotionRegion>(region));
         if (previousTicks > current && !(flags & 1U)) {
@@ -1985,8 +4608,7 @@ void mtwkApplySequenceCommands(MotionWork *work) {
                     const float x = pelvis.x;
                     const float z = pelvis.z;
                     Matrix4x4 channels;
-                    BuildChannelTransformAtTime(
-                        work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
+                    BuildChannelTransformAtTime(work->rig.lowerBody, &channels, g_motionRegionClocks[0]->current.splitTimeFrames, MI_HermiteAuto);
                     const float translatedX = x + channels.rows[3].x;
                     const float translatedZ = z + channels.rows[3].z;
                     TranslatePelvisFromChannels(work->rig.lowerBody, MI_Hermite);
@@ -2153,7 +4775,7 @@ void mtwkUpdateBoneForTime(MotionWork *work, std::uint16_t motion, float begin, 
     std::memcpy(&state.pendingFootstepCue, command.data() + 4, sizeof(state.pendingFootstepCue));
 }
 
-
+// Opcode 49 carries three cues; the shared stream picks one.
 // @verified - p
 void mtwkSelectRandomFootstepCue(MotionWork *work, std::uint16_t motion, float begin, float end) {
     const std::span<const std::byte> command = FindLoadedMotionTimedCommand(motion, 49, begin, end, 1);
@@ -2167,7 +4789,7 @@ void mtwkSelectRandomFootstepCue(MotionWork *work, std::uint16_t motion, float b
     std::memcpy(&state.pendingFootstepCue, command.data() + 4 + 4 * static_cast<std::ptrdiff_t>(index), sizeof(state.pendingFootstepCue));
 }
 
-
+// The mean ground position of the solved targets and their spread.
 // @verified - p
 void mtwkUpdateCollisionCluster(MotionWork *work) {
     IKRig &rig = work->rig;
@@ -2423,3 +5045,5 @@ std::int32_t mtwkEvaluateMotionFrame(MotionWork *work) {
 }
 
 } // namespace shenmue::s2
+
+#endif

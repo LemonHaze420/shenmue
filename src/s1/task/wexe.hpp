@@ -137,10 +137,12 @@ struct WeatherCameraState {
     Vector3 eye;
     Vector3 target;
     Vector3 direction;
+#if !SHENMUE_IS_DC
     std::uint32_t pad48;
     std::uint32_t pad4C;
+#endif
 };
-static_assert(sizeof(WeatherCameraState) == 0x50);
+static_assert(sizeof(WeatherCameraState) == (SHENMUE_IS_DC ? 0x48 : 0x50));
 static_assert(offsetof(WeatherCameraState, eye) == 0x24);
 static_assert(offsetof(WeatherCameraState, direction) == 0x3c);
 
@@ -180,7 +182,11 @@ void WEXE_SetInterpolatedWeatherOverride(std::int32_t weatherType, std::int32_t 
 void WEXE_WeatherTaskUtil(std::uint32_t mode, std::uint32_t operand, std::uint32_t value);
 bool WEXE_WeatherDataUtil(std::uint32_t mode, std::uint32_t year, std::uint32_t month, std::uint32_t day, std::uint32_t hour, std::uint32_t minute,
     std::int32_t intValue, std::uint32_t &result);
+#if SHENMUE_IS_DC
+void TaskUtil_InitStaticSize(std::intptr_t taskData);
+#else
 void TaskUtil_InitStaticSize(std::int64_t taskData);
+#endif
 
 extern float g_fogR;
 extern float g_fogG;
@@ -211,7 +217,11 @@ float WEXE_GetRainIntensity();
 float WEXE_GetSnowIntensity();
 float WEXE_GetWindIntensity();
 std::int32_t Weather_GetCurrentWeatherEffectMode();
+#if SHENMUE_IS_DC
+void Fog_DoFogEffectsTask(std::intptr_t taskData);
+#else
 void Fog_DoFogEffectsTask(std::int64_t taskData);
+#endif
 void Script_ProcessFogFromTable(ScenarioContext *context, void *rawParams);
 void AllocateWEDT();
 void Weather_ReadChunks(void *fileData);

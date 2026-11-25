@@ -3,6 +3,7 @@
 #include "s2/motion_work.hpp"
 #include "s2/character.hpp"
 #include "s2/mt7.hpp"
+#include "s2/hand_motion.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -52,8 +53,8 @@ inline constexpr std::int32_t handDefaultJointAngles[19][3] = {
     {0, 546, 1820}, {0, 0, 58802}, {0, 0, 54253}, {0, 0, 59894}, {0, 546, 1456}, {0, 0, 56436}, {0, 0, 56072},
     {0, 0, 59167}, {0, 546, 908}, {0, 0, 52979}, {0, 0, 56801}, {0, 0, 59349}, {0, 546, 1091}
 };
-
-
+// Callers pass this writable BSS block's address, not a
+// pointer stored in its first QWORD. Pose parsing may sanitize its 19 triples.
 inline std::int32_t neutralHandPoseCommand[19][3]{};
 inline std::int32_t openHandPoseCommand[19][3]{
     {1999, 65354, 62444},
@@ -118,33 +119,7 @@ inline std::int32_t greetingHandPoseCommand[19][3]{
     {0, 63354, 182},
     {64080, 182, 0},
 };
-inline constexpr Vector3i motionAuxiliaryHandPoses[9][2][4]{
-    {{{0, 0, 0}, {0, 0, 3640}, {0, 910, 0}, {0, 64626, 0}}, {{0, 0, 0}, {0, 0, 3640}, {0, 910, 0}, {0, 64626, 0}}},
-    {{{0, 0, 0}, {0, 0, 3185}, {1601, 800, 1601}, {1601, 64736, 1601}}, {{0, 0, 0}, {0, 0, 3185}, {63935, 800, 63935}, {63935, 64736, 63935}}},
-    {{{0, 0, 0}, {0, 0, 2730}, {3185, 691, 3185}, {3185, 64845, 3185}}, {{0, 0, 0}, {0, 0, 2730}, {62351, 691, 62351}, {62351, 64845, 62351}}},
-    {{{0, 0, 0}, {0, 0, 2275}, {4787, 564, 4787}, {4787, 64972, 4787}}, {{0, 0, 0}, {0, 0, 2275}, {60749, 564, 60749}, {60749, 64972, 60749}}},
-    {{{0, 0, 0}, {0, 0, 1820}, {6371, 455, 6371}, {6371, 65081, 6371}}, {{0, 0, 0}, {0, 0, 1820}, {59165, 455, 59165}, {59165, 65081, 59165}}},
-    {{{0, 0, 0}, {0, 0, 1365}, {7973, 345, 7973}, {7973, 65191, 7973}}, {{0, 0, 0}, {0, 0, 1365}, {57563, 345, 57563}, {57563, 65191, 57563}}},
-    {{{0, 0, 0}, {0, 0, 910}, {9557, 236, 9557}, {9557, 65300, 9557}}, {{0, 0, 0}, {0, 0, 910}, {55979, 236, 55979}, {55979, 65300, 55979}}},
-    {{{0, 0, 0}, {0, 0, 455}, {11159, 127, 11159}, {11159, 65409, 11159}}, {{0, 0, 0}, {0, 0, 455}, {54377, 127, 54377}, {54377, 65409, 54377}}},
-    {{{0, 0, 0}, {0, 0, 0}, {12743, 0, 12743}, {12743, 0, 12743}}, {{0, 0, 0}, {0, 0, 0}, {52793, 0, 52793}, {52793, 0, 52793}}}
-};
-inline constexpr Vector3i motionArmHandPoses[12][2][4]{
-    {{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}, {{0, 0, 0}, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}}},
-    {{{0, 0, 0}, {0, 0, 0}, {1820, 0, 1820}, {3640, 0, 3640}}, {{0, 0, 0}, {0, 0, 0}, {63716, 0, 63716}, {61896, 0, 61896}}},
-    {{{0, 0, 0}, {0, 9102, 60075}, {5461, 0, 14563}, {7281, 0, 12743}}, {{0, 0, 0}, {0, 56434, 60075}, {60075, 0, 50973}, {58255, 0, 52793}}},
-    {{{0, 0, 0}, {0, 5461, 61896}, {2730, 0, 14563}, {9102, 0, 10922}}, {{0, 0, 0}, {0, 60075, 61896}, {62806, 0, 50973}, {56434, 0, 54614}}},
-    {{{0, 0, 0}, {0, 0, 63716}, {1820, 0, 9102}, {7281, 63716, 9102}}, {{0, 0, 0}, {0, 0, 63716}, {63716, 0, 56434}, {58255, 63716, 56434}}},
-    {{{0, 0, 0}, {54614, 12743, 52793}, {3640, 0, 12743}, {5461, 0, 9102}},
-     {{0, 0, 0}, {10922, 52793, 52793}, {61896, 0, 52793}, {60075, 0, 56434}}},
-    {{{0, 0, 0}, {10922, 0, 5461}, {63716, 910, 64626}, {63716, 64626, 64626}}, {{0, 0, 0}, {54614, 0, 5461}, {1820, 910, 910}, {1820, 64626, 910}}},
-    {{{0, 0, 0}, {0, 3640, 61896}, {0, 0, 0}, {12743, 0, 16384}}, {{0, 0, 0}, {0, 61896, 61896}, {0, 0, 0}, {52793, 0, 49152}}},
-    {{{0, 0, 0}, {0, 0, 63716}, {12743, 0, 14563}, {16384, 0, 16384}}, {{0, 0, 0}, {0, 0, 63716}, {52793, 0, 50973}, {49152, 0, 49152}}},
-    {{{0, 0, 0}, {0, 0, 9102}, {16384, 0, 16384}, {16384, 0, 16384}}, {{0, 0, 0}, {0, 0, 9102}, {49152, 0, 49152}, {49152, 0, 49152}}},
-    {{{0, 0, 0}, {54614, 12743, 52793}, {1820, 0, 9102}, {1820, 0, 10922}},
-     {{0, 0, 0}, {10922, 52793, 52793}, {63716, 0, 56434}, {63716, 0, 54614}}},
-    {{{0, 0, 0}, {49152, 3640, 60075}, {3640, 63716, 14563}, {0, 0, 7281}}, {{0, 0, 0}, {16384, 61896, 60075}, {61896, 63716, 50973}, {0, 0, 58255}}}
-};
+
 
 struct HandPoseJoint {
     std::int32_t parent;
@@ -212,12 +187,12 @@ struct HandParams {
     const std::uint32_t *meshBackup;
     std::uint32_t *meshCopy;
     std::uint8_t selector;
-    std::uint8_t poseMode;
-    std::int16_t poseTicks;
+    std::uint8_t poseMode;  // +0x081
+    std::int16_t poseTicks; // +0x082
     Vector3 jointPositions[72];
-    std::int16_t targetJointAngles[72][3];
-    std::int16_t currentJointAngles[72][3];
-    std::int16_t wristAngles[3];
+    std::int16_t targetJointAngles[72][3];  // +0x3e4
+    std::int16_t currentJointAngles[72][3]; // +0x594
+    std::int16_t wristAngles[3];            // +0x744
     std::byte reserved74a[6];
     void *extendedPoseWork;
     void *secondaryPoseWork;
@@ -225,9 +200,9 @@ struct HandParams {
     float boundsWork[16];
     float poseFrame;
     float poseStep;
-    float modelAlpha;
-    std::int8_t regionState;
-    std::int8_t previousRegionState;
+    float modelAlpha;                // +0x7b0
+    std::int8_t regionState;         // +0x7b4
+    std::int8_t previousRegionState; // +0x7b5
     std::int16_t currentPoseFrame;
     std::int16_t previousPoseFrame;
     std::int16_t firstPoseFrame;
@@ -308,7 +283,7 @@ inline std::int32_t handPoseReplacementCommand[19][3] = {
     {0, 1456, 54796}, {0, 0, 43692}, {0, 727, 50974}, {0, 0, 0}, {0, 2912, 54797}, {0, 182, 44421}, {0, 1456, 50245},
     {0, 0, 0}, {2912, 910, 51336}, {726, 726, 47517}, {0, 2003, 50974}, {65518, 65427, 0}
 };
-
+// Shared authored command, sanitized in place by the native hand parser.
 inline std::int32_t commonAuthoredHandPose[60]{
     1999,65354,59167,1638,543,64810,546,63262,4821,0,64810,56252,0,64081,58800,
     0,727,363,0,0,64628,0,0,57709,0,0,57344,0,65172,65354,0,0,65354,0,729,60074,
@@ -334,7 +309,7 @@ enum HandIKFlags : std::uint8_t {
 };
 
 #pragma pack(push, 4)
-
+// Two 0x1e0-byte records, each containing its Hermite channels.
 
 struct HandIKConfig {
     std::uint8_t flags;
@@ -352,20 +327,20 @@ struct HandIKConfig {
     std::uint16_t reserved0e;
     std::byte *beginPoseCommand; // +0x010, borrowed writable command streams
     std::byte *endPoseCommand;
-    float pathLength;
+    float pathLength; // +0x020
     float pathBias;
     float jointAngles[8];      // +0x028, radians
-    Vector3 localTargetOffset;
-    Vector3 currentTarget;
+    Vector3 localTargetOffset; // +0x048
+    Vector3 currentTarget;     // +0x054
     Vector3 currentAxisX;
     Vector3 currentAxisZ;
-    Vector3 destination;
+    Vector3 destination; // +0x078
     Vector3 destinationAxisX;
     Vector3 destinationAxisZ;
     std::uint32_t reserved09c;
-    MotionRigAxis path[3];
-    Vector3 rotationOrigin;
-    Matrix4x4 rotationTransform;
+    MotionRigAxis path[3];       // +0x0a0, native HermiteAxis
+    Vector3 rotationOrigin;      // +0x190
+    Matrix4x4 rotationTransform; // +0x19c
     std::uint32_t reserved1dc;
 };
 #pragma pack(pop)
@@ -401,8 +376,8 @@ void SetSearchHandChestTransform(const Vector3 *position, const Vector3i *rotati
 void mtwkResetBlends();
 void ResetSearchHandState();
 
-
-
+// Native g_customMotionOverride_0: the selected arms and MotionCommonCallback, installed for the
+// searching character by AssignMotionCallbacks and consumed by IK_BuildAndSolve.
 extern MotionOverride g_searchHandMotionOverride;
 void MotionCommonCallback(std::int64_t mode, std::int32_t interpolationMode);
 void mtwkAssignCallbacks(MotionWork *work);
@@ -427,7 +402,7 @@ std::uint64_t GetHandPoseAnimationResult(const HandParams &hand);
 void SetHandPoseStep(HandParams &hand, float step);
 // Borrowed pointer: a change invalidates all sixteen cached bounds, without allocating or freeing work.
 void SetHandSecondaryPoseWork(HandParams &hand, void *work);
-
+// Native caller supplies an endpoint index in [0, 20); this does not apply an ambient/world transform.
 void GetHandEndpointPosition(const HandParams &hand, std::int32_t endpoint, Vector3 &position);
 void GetHandPrimaryNodeRotation(const HandParams &hand, Vector3i &rotation);
 MT7Node *SetHandPrimaryNodeRotation(HandParams &hand, const Vector3i &rotation);

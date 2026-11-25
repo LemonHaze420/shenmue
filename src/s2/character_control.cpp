@@ -1,3 +1,21 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/character_control_dc.hpp"
+
+#include "s2/character_components_dc.hpp"
+#include "s2/character_control_constructor_dc.hpp"
+#include "s2/character_collision_task_dc.hpp"
+#include "s2/field_event_dc.hpp"
+#include <cmath>
+#include <cfloat>
+#include <cstring>
+#include "s2/character_state_flags_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/cloth_dc.hpp"
+#include "s2/event_vector_dc.hpp"
+#include "platform/dc/am2_vector.hpp"
+#else
 #include "s2/model_component.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -54,9 +72,32 @@
 #include <vector>
 #include "s2/area_names.hpp"
 #include "s2/model_component_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 using namespace model_component_detail;
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+std::size_t GatherCharacterControls(std::span<CharacterControlModel *> output);
+bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end);
+bool ResolveCharacterCylinderOverlap(Vector3 &result, const Vector3 &position, float radius);
+bool CheckCharacterSphereIntersection(const Vector3 &point, float radius);
+Character *GetPointFound();
+CharacterControlModel *FindCharacterControlModel(const Character *character);
+void toggleCCMflagsByAmt(Character *character, std::uint32_t flags);
+void ccmUpdateEntityFlag(Character *character);
+float GetCharacterCollisionRadius(const Character *character);
+float GetCharacterCollisionCapsuleMargin(const Character *character);
+CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace model_component_detail {
 
@@ -132,9 +173,9 @@ void ccmUpdateRootGroundHeight(CharacterControlModel &control) {
         control.groundHeight = std::fmin(blendX, blendZ) + control.adjustedGroundHeight;
 }
 
-
-
-
+// Native cCharaHandleMotion: ground and step detection, gravity, ground snap, the radius probe, the root's destination
+// ground probe and its segment collision. The resolved offset is written back to the character's child position and its
+// horizontal part moves the motion rig.
 void UpdateCharacterControlModel(Character *character, void *payload) {
     auto *const control = static_cast<CharacterControlModel *>(payload);
     if (!flddIsValid())
@@ -272,9 +313,9 @@ void CleanupCharacterControlModel(Character *, void *payload) {
     control->owner = nullptr;
 }
 
-
-
-
+// Native CharCollisionSort, CCT_'s pass over every live CEWP character: retire last frame's pair share and transient bits,
+// measure the frame displacement, publish the collision capsule, latch the player's search and look state, and apply the
+// queued collision push.
 void CharCollisionSort(Character *character, void *) {
     CharacterControlModel *const control = LiveCharacterControl(character);
     if (!control)
@@ -329,10 +370,10 @@ void CharCollisionSort(Character *character, void *) {
     control->collisionAdjustment = {};
 }
 
-
-
-
-
+// Native CCM gather: every active control loses its per-frame 0x10000400 bits. One that updates height and sweeps voxels
+// without the exclusion bit, from a live CCM_ block, is claimed by its character and listed. The CEWP walk already admits
+// only valid entities, so native's search-blocked-or-valid-CEWP admission always passes. The walk stops at the first
+// control past the list's capacity.
 void GatherCharacterControl(Character *character, void *context) {
     CharacterControlGatherContext &gather = *static_cast<CharacterControlGatherContext *>(context);
     if (gather.full || (character->flags & CF_Active) == 0)
@@ -354,13 +395,13 @@ void GatherCharacterControl(Character *character, void *context) {
     gather.controls[gather.count++] = control;
 }
 
-
+// The native pair solver's world probe: the capsule centre moved by its share, raised 0.4 to the collision ray height.
 Vector3 PairProbePoint(const CharacterControlModel &control, const Vector3 &share) {
     return {control.collisionCenter.x + share.x, control.collisionCenter.y + share.y + 0.40000001f, control.collisionCenter.z + share.z};
 }
 
-
-
+// Native mtwk read for the pair solver: the root's x/z travel this frame that the motion has not yet applied, with y cleared;
+// without root motion only x/z are cleared.
 void GetMotionResidualRootDelta(const MotionWork *work, Vector3 &delta) {
     if ((work->runtime.motnFlags & 1U) != 0) {
         delta.x = work->runtime.rootPosition.x - work->runtime.previousRootPosition.x - work->runtime.rootDelta.x;
@@ -372,11 +413,11 @@ void GetMotionResidualRootDelta(const MotionWork *work, Vector3 &delta) {
     }
 }
 
-
-
-
-
-
+// Native CCT_ pair solver: two gathered capsules within 2.5 vertically that overlap in XZ are pushed apart, each by its share
+// of the overlap (weighted by frame displacement, zero for a stair or immovable side), accumulated in its pair adjustment.
+// When a fine-collision member (the player) is involved and neither side is immovable or in look mode, both shares are
+// probed against the world grid and the collision ray: a blocked ray freezes the pushes, a walled player hands its share
+// back through its root travel, and a member still walled after the push is re-solved or clamped to the grid hit.
 void ResolveCharacterControlPair(CharacterControlModel &first, CharacterControlModel &second) {
     const Vector3 firstCenter{
         first.collisionCenter.x + first.pairAdjustment.x, first.collisionCenter.y + first.pairAdjustment.y, first.collisionCenter.z + first.pairAdjustment.z};
@@ -566,8 +607,8 @@ void ApplyCharacterControlPairAdjustment(CharacterControlModel &control) {
     control.owner->position.z += adjustment.z;
 }
 
-
-
+// Native ccCharaColiTask_Callback: sort every live character, gather the colliding controls, solve each pair once in gather
+// order and move the members; a lone control has nothing to solve.
 void CharacterControlModelPairTask_Callback(void *) {
     ForEachLiveCharacterInMapOrder(CharCollisionSort, nullptr);
     std::array<CharacterControlModel *, kMaximumCharacterCollisionCount> controls{};
@@ -590,34 +631,352 @@ void ClearLiveCharacterControlForTeardown(Character *character, void *) {
 
 } // namespace model_component_detail
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+Character *ctrlGetRootNode();
+
+struct CharacterQueryPointState {
+    std::uint8_t found;
+    CharacterControlModel *control;
+    Character *owner;
+};
+
+CharacterQueryPointState g_characterQueryPoint;
+
+static Character *characterControlOwners[51];
+
+static void ClearCharacterQueryPointFound();
+static void SetCharacterQueryPointFound(CharacterControlModel *control);
+
+void *g_characterCollisionTaskData = 0;
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t GatherCharacterControls(CharacterControlModel **controls);
+void ccCharaColiTask_Callback(void *);
+void ResetCharacterControlModel(CharacterControlModel *control);
+std::int32_t AllocateCCM(Character *character);
+std::int32_t Queue_ccCharaColiTask(std::int32_t nextFunctionIndex);
+bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end);
+bool CheckCharacterSphereIntersection(const Vector3 &point, float radius);
+std::int32_t CheckPointInCylinder(const Vector3 *start, const Vector3 *end);
+std::int32_t TestPointInOrientedCylinder(const Vector3 *start, const Vector3 *end, const Vector3 *base, float radius, const Vector3 *top, Vector3 *output);
+std::int32_t FindNearestCharacterCylinderPoint(const Vector3 *start, const Vector3 *end, Vector3 *point);
+static void ClearCharacterQueryPointFound();
+static void SetCharacterQueryPointFound(CharacterControlModel *control);
+std::uint32_t AssignCharacterControlFlags(Character *character, std::uint32_t flags);
+std::uint32_t ccmClearFlags(Character *character, std::uint32_t flags);
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+std::uint32_t toggleCCMflagsByAmt(Character *character, std::uint32_t flags);
+#else
+void toggleCCMflagsByAmt(Character *character, std::uint32_t flags);
+#endif
+void *mtSetupModelFigurePose(Character *character);
+void ApplyCharacterTableCollisionFlags(Character *character, const CharacterTableRecord *record);
+Vector3 *ccmGetAppliedMovement(Character *character, Vector3 *movement);
+std::uint32_t ccmGetFlags(Character *character);
+std::uint32_t ccmReplaceFlags(Character *character, std::uint32_t flags);
+void ccmGetGroundAngles(Character *character, std::int16_t *angles);
+std::int32_t SetCharacterCollisionEnabled(Character *character, std::int32_t enabled);
+float GetCharacterCollisionRadius(const Character *character);
+float GetCharacterCollisionCapsuleMargin(const Character *character);
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+float SetCharacterCollisionCapsuleMargin(Character *character, float margin);
+#else
+CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin);
+#endif
+Vector3 *ccmGetFrameDisplacement(Character *character, Vector3 *displacement);
+std::int32_t ccmHasFrameDisplacement(Character *character);
+void ccmUpdateEntityFlag(Character *character);
+Character **GatherCharacterControlOwners();
+Character **GetCharacterControlOwners();
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+std::int32_t ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius);
+#else
+bool ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius);
+#endif
+Character *GetPointFound();
+#else
+namespace model_component_detail {
+
+void ccmUpdateRootGroundHeight(CharacterControlModel &control);
+void UpdateCharacterControlModel(Character *character, void *payload);
+ModelComponentHeader *HeaderForPayload(void *payload);
+CharacterControlModel *LiveCharacterControl(Character *character);
+void ClearCharacterControlPublication(CharacterControlModel &control);
+void CleanupCharacterControlModel(Character *, void *payload);
+void CharCollisionSort(Character *character, void *);
+void GatherCharacterControl(Character *character, void *context);
+Vector3 PairProbePoint(const CharacterControlModel &control, const Vector3 &share);
+void GetMotionResidualRootDelta(const MotionWork *work, Vector3 &delta);
+void ResolveCharacterControlPair(CharacterControlModel &first, CharacterControlModel &second);
+void ApplyCharacterControlPairAdjustment(CharacterControlModel &control);
+void CharacterControlModelPairTask_Callback(void *);
+void ClearLiveCharacterControlForTeardown(Character *character, void *);
+
+} // namespace model_component_detail
+
+std::size_t GatherCharacterControls(std::span<CharacterControlModel *> output);
+bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end);
+bool CheckCharacterSphereIntersection(const Vector3 &point, float radius);
+void toggleCCMflagsByAmt(Character *character, std::uint32_t flags);
+void ccmSetFlagsFor(Character *character, std::uint32_t flags);
+float GetCharacterCollisionRadius(const Character *character);
+float GetCharacterCollisionCapsuleMargin(const Character *character);
+CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin);
+bool AttachCharacterControlModel(Character *character);
+bool QueueCharacterControlModelPairTask(std::uint8_t nextFunctionIndex);
+void DestroyCharacterControlModelPairTask();
+void ccmUpdateEntityFlag(Character *character);
+bool ResolveCharacterCylinderOverlap(Vector3 &result, const Vector3 &position, float radius);
+Character *GetPointFound();
+Character *CheckPointInCylinder_Wrapper(const Vector3 &start, const Vector3 &end);
+CharacterControlModel *FindCharacterControlModel(const Character *character);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ResetCharacterControlModel(CharacterControlModel *control) {
+    control->flags = kCharacterControlInitialFlags;
+    *reinterpret_cast<float *>(&control->field04) = 0.0f;
+    control->verticalVelocity = 0.0f;
+    *reinterpret_cast<float *>(&control->field0c) = 0.0f;
+    control->pairAdjustment.x = 0.0f;
+    control->pairAdjustment.y = 0.0f;
+    control->pairAdjustment.z = 0.0f;
+    control->appliedMovement.x = 0.0f;
+    control->appliedMovement.y = 0.0f;
+    control->appliedMovement.z = 0.0f;
+    control->collisionAdjustment.x = 0.0f;
+    control->collisionAdjustment.y = 0.0f;
+    control->collisionAdjustment.z = 0.0f;
+    control->owner = 0;
+    control->groundHeight = 0.0f;
+    control->previousGroundHeight = 0.0f;
+    control->groundPitch = 0;
+    control->groundYaw = 0;
+    control->maximumStepHeight = kCharacterControlDefaultDimension;
+    control->collisionRadius = kCharacterControlDefaultDimension;
+    control->collisionHeight = kCharacterControlDefaultDimension;
+    control->frameDisplacement.x = 0.0f;
+    control->frameDisplacement.y = 0.0f;
+    control->frameDisplacement.z = 0.0f;
+    control->collisionCenter.x = 0.0f;
+    control->collisionCenter.y = 0.0f;
+    control->collisionCenter.z = 0.0f;
+    control->collisionCenterRadius = 0.0f;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t AllocateCCM(Character *character) {
+    CharacterControlModel *const control =
+        static_cast<CharacterControlModel *>(AllocateModelComponent(character, CHARACTER_CONTROL, sizeof(CharacterControlModel), CCM_Callback));
+    if (!control)
+        return -1;
+    ResetCharacterControlModel(control);
+    control->owner = character;
+    control->flags |= 0xdfU;
+    GetCharacterWorldPosition(character, &control->previousWorldPosition);
+    if (character == ctrlGetRootNode())
+        control->flags |= kCharacterControlPlayerFlags;
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+void mtwkTranslateRigInterpolated(MotionWork *work, float x, float y, float z);
+
+// @verified - d
+void ccCharaColiTask_Callback(void *) {
+    ForEachLiveCharacterInMapOrder(0, CharCollisionSort, 0);
+    Vector3 position;
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount];
+    if (GatherCharacterControls(controls) <= 1)
+        return;
+    CharacterControlModel **entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        CharacterControlModel *other;
+        for (CharacterControlModel **second = entry + 1; (other = *second); ++second)
+            ResolveCharacterControlPair(control, other);
+    }
+    entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        if ((std::fabs(control->pairAdjustment.x) < kCharacterControlEpsilon && std::fabs(control->pairAdjustment.y) < kCharacterControlEpsilon &&
+                std::fabs(control->pairAdjustment.z) < kCharacterControlEpsilon) ||
+            !(control->flags & CCMF_VoxelSweep))
+            continue;
+        am2Vector3AddInPlace(&control->previousWorldPosition, &control->pairAdjustment);
+        GetCharacterPositionDelta(control->owner, &position);
+        position.x += control->pairAdjustment.x;
+        position.y += control->pairAdjustment.y;
+        position.z += control->pairAdjustment.z;
+        SetCharacterPositionDelta(control->owner, &position);
+        mtwkTranslateRigInterpolated(charFindMotionwork(control->owner), control->pairAdjustment.x, control->pairAdjustment.y, control->pairAdjustment.z);
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t Queue_ccCharaColiTask(std::int32_t nextFunctionIndex) {
+    g_characterCollisionTaskData = 0;
+    HLib::Task *const task = HLib::EnqueueTaskWithParameter(ccCharaColiTask_Callback, nextFunctionIndex, 4, 4, TASK_CCT);
+    if (!task)
+        return -1;
+    g_characterCollisionTaskData = HLib::GetTaskParameter(task);
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+void ApplyCharacterTableCollisionFlags(Character *character, const CharacterTableRecord *record) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!record->source)
+        return;
+    control->flags &= ~13U;
+    if (record->count != 1)
+        return;
+    const CharacterTableArgument *argument = record->arguments;
+    if (argument->type != CharacterTableArgumentType_Records)
+        return;
+    const std::uint32_t *cursor = argument->source + 1;
+    const std::uint32_t *const end = cursor + argument->value.bits;
+    while (cursor < end) {
+        CharacterTableRecord child;
+        cursor = ParseCharacterTableRecord(&child, characterCollisionTokens, cursor);
+        switch (child.tokenIndex) {
+        case 0:
+            break;
+        case 1:
+            argument = child.arguments;
+            for (std::int32_t index = 0; index < child.count; ++index, ++argument) {
+                if (!CompareCharacterTableTokens(argument->value.string, "MAP"))
+                    control->flags |= CCMF_EvaluateMotion;
+                else if (!CompareCharacterTableTokens(argument->value.string, "CHAR"))
+                    control->flags |= CCMF_VoxelSweep;
+                else if (!CompareCharacterTableTokens(argument->value.string, "FLOAT"))
+                    control->flags &= ~CCMF_ApplyGravity;
+                else if (!CompareCharacterTableTokens(argument->value.string, "GRAVITY"))
+                    control->flags |= CCMF_ApplyGravity;
+                else if (!CompareCharacterTableTokens(argument->value.string, "NONE")) {
+                    control->flags &= ~13U;
+                    break;
+                }
+            }
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        }
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t GatherCharacterControls(CharacterControlModel **controls) {
+    std::int32_t count = 0;
+    MapCharacterIterator iterator;
+    BeginMapCharacterIteration(&iterator, 0);
+    Character *character;
+    while ((character = iterator.character) != 0) {
+        CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+        if (control) {
+            const std::uint32_t flags = control->flags;
+            control->flags &= ~0x10000400U;
+            if (!(flags & 0x400U) && (flags & CCMF_UpdateHeight) && (flags & CCMF_VoxelSweep) && IsModelComponentEnabled(character, CHARACTER_CONTROL) &&
+                HasCharacterMotionWork(character) && IsCharacterValid(character) && IsOfThisVisibilityType(character, CVM_All) &&
+                !(0.1f > GetCharacterAlpha(character))) {
+                if (count >= static_cast<std::int32_t>(kMaximumCharacterCollisionCount))
+                    break;
+                control->owner = character;
+                controls[count++] = control;
+            }
+        }
+        NextMapCharacter(&iterator);
+    }
+    controls[count] = 0;
+    return count;
+}
+
+#else
+
 std::size_t GatherCharacterControls(std::span<CharacterControlModel *> output) {
     CharacterControlGatherContext gather{output.first(std::min(output.size(), kMaximumCharacterCollisionCount))};
     ForEachLiveCharacterInMapOrder(GatherCharacterControl, &gather);
     return gather.count;
 }
 
-// @verified - p
-bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end) {
-    g_characterQueryPointFound = 0;
-    g_characterQueryPointOwner = nullptr;
-    std::array<CharacterControlModel *, kMaximumCharacterCollisionCount> candidates{};
-    const std::size_t count = GatherCharacterControls(candidates);
-    for (std::size_t index = 0; index < count; ++index) {
-        CharacterControlModel &control = *candidates[index];
-        Vector3 centre = GetCharacterWorldPosition(control.owner);
-        centre.y += -1.25f;
-        const bool hit = PartySegmentHitsCylinder(start, end, centre, control.collisionRadius);
-        centre.y += 1.25f;
-        if (!hit)
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+std::int32_t ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius) {
+    std::int32_t corrected = 0;
+#else
+bool ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, float radius) {
+    bool corrected = false;
+#endif
+    *result = *position;
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount + 1];
+    if (!GatherCharacterControls(controls))
+        return false;
+    CharacterControlModel **entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        Vector3 centre;
+        GetCharacterWorldPosition(control->owner, &centre);
+        Vector3 offset;
+        am2Vector3Subtract(&offset, result, &centre);
+        offset.y = 0.0f;
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+        const float distanceSquared = (0.0f + offset.x * offset.x) + offset.z * offset.z;
+#else
+        const float distanceSquared = offset.x * offset.x + offset.y * offset.y + offset.z * offset.z;
+#endif
+        const float combinedRadius = control->collisionRadius + radius;
+        const float penetration = combinedRadius * combinedRadius - distanceSquared;
+        if (!(penetration > 0.0f))
             continue;
-        control.flags |= 0x10000000U;
-        g_characterQueryPointFound = 1;
-        g_characterQueryPointControl = &control;
-        g_characterQueryPointOwner = control.owner;
-        return true;
+        if (!(std::fabs(distanceSquared) < 0.00000011920929f)) {
+            am2Vector3NormalizeInPlace(&offset);
+        } else {
+            offset.x = 1.0f;
+            offset.y = 0.0f;
+            offset.z = 0.0f;
+        }
+        am2Vector3Scale(&offset, &offset, penetration + 0.050000001f);
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+        am2Vector3Add(result, result, &offset);
+#else
+        am2Vector3AddInPlace(result, &offset);
+#endif
+        control->flags |= 0x10000000U;
+        corrected = true;
     }
-    return false;
+    return corrected;
 }
+
+#else
 
 // @verified - p
 bool ResolveCharacterCylinderOverlap(Vector3 &result, const Vector3 &position, float radius) {
@@ -648,6 +1007,35 @@ bool ResolveCharacterCylinderOverlap(Vector3 &result, const Vector3 &position, f
     return corrected;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool CheckCharacterSphereIntersection(const Vector3 &point, float radius) {
+    ClearCharacterQueryPointFound();
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount];
+    if (!GatherCharacterControls(controls))
+        return false;
+    CharacterControlModel **entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        Vector3 center;
+        GetCharacterWorldPosition(control->owner, &center);
+        Vector3 delta;
+        am2Vector3Subtract(&delta, &point, &center);
+        const float distanceSquared = delta.x * delta.x + delta.y * delta.y + delta.z * delta.z;
+        const float combinedRadius = control->collisionRadius + radius;
+        if (!(combinedRadius * combinedRadius - distanceSquared > 0.0f))
+            continue;
+        control->flags |= 0x10000000U;
+        SetCharacterQueryPointFound(control);
+        return true;
+    }
+    return false;
+}
+
+#else
+
 // @verified - p
 bool CheckCharacterSphereIntersection(const Vector3 &point, float radius) {
     g_characterQueryPointFound = 0;
@@ -671,10 +1059,511 @@ bool CheckCharacterSphereIntersection(const Vector3 &point, float radius) {
     return false;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end) {
+    ClearCharacterQueryPointFound();
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount];
+    if (!GatherCharacterControls(controls))
+        return false;
+    CharacterControlModel **entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        Vector3 center;
+        GetCharacterWorldPosition(control->owner, &center);
+        center.y -= 1.25f;
+        const bool hit = CheckSegmentCylinder(&start, &end, &center, control->collisionRadius, 3.25f);
+        center.y += 1.25f;
+        if (hit) {
+            control->flags |= 0x10000000U;
+            SetCharacterQueryPointFound(control);
+            return true;
+        }
+    }
+    return false;
+}
+
+#else
+
+// @verified - p
+bool CheckCharacterCylinderIntersection(const Vector3 &start, const Vector3 &end) {
+    g_characterQueryPointFound = 0;
+    g_characterQueryPointOwner = nullptr;
+    std::array<CharacterControlModel *, kMaximumCharacterCollisionCount> candidates{};
+    const std::size_t count = GatherCharacterControls(candidates);
+    for (std::size_t index = 0; index < count; ++index) {
+        CharacterControlModel &control = *candidates[index];
+        Vector3 centre = GetCharacterWorldPosition(control.owner);
+        centre.y += -1.25f;
+        const bool hit = PartySegmentHitsCylinder(start, end, centre, control.collisionRadius);
+        centre.y += 1.25f;
+        if (!hit)
+            continue;
+        control.flags |= 0x10000000U;
+        g_characterQueryPointFound = 1;
+        g_characterQueryPointControl = &control;
+        g_characterQueryPointOwner = control.owner;
+        return true;
+    }
+    return false;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t CheckPointInCylinder(const Vector3 *start, const Vector3 *end) {
+    ClearCharacterQueryPointFound();
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount];
+    if (!GatherCharacterControls(controls))
+        return 0;
+    float nearest = FLT_MAX;
+    CharacterControlModel **entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        Vector3 center;
+        GetCharacterWorldPosition(control->owner, &center);
+        center.y -= 1.25f;
+        const bool hit = CheckSegmentCylinder(start, end, &center, control->collisionRadius * 0.75f, 3.25f);
+        center.y += 1.25f;
+        if (hit) {
+            float distance = (center.x - start->x) * (center.x - start->x) + (center.z - start->z) * (center.z - start->z);
+            if (distance < nearest) {
+                nearest = distance;
+                control->flags |= 0x10000000U;
+                SetCharacterQueryPointFound(control);
+            }
+        }
+    }
+    return nearest != FLT_MAX;
+}
+
+std::int32_t FindNearestCharacterCylinderPoint(const Vector3 *start, const Vector3 *end, Vector3 *point) {
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount];
+    Vector3 base;
+    Vector3 hit;
+    ClearCharacterQueryPointFound();
+    if (!GatherCharacterControls(controls))
+        return 0;
+    float nearest = FLT_MAX;
+    CharacterControlModel **entry = controls;
+    for (CharacterControlModel *control = *entry; control; control = *++entry) {
+        GetCharacterWorldPosition(control->owner, &base);
+        Vector3 top = base;
+        top.y += 2.0f;
+        if (TestPointInOrientedCylinder(start, end, &base, 0.75f * control->collisionRadius, &top, &hit)) {
+            float distance = (hit.x - start->x) * (hit.x - start->x) + (hit.z - start->z) * (hit.z - start->z);
+            if (distance < nearest) {
+                nearest = distance;
+                point->x = hit.x;
+                point->y = hit.y;
+                point->z = hit.z;
+                control->flags |= 0x10000000U;
+                SetCharacterQueryPointFound(control);
+            }
+        }
+    }
+    return nearest != FLT_MAX;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+static void ClearCharacterQueryPointFound() {
+    g_characterQueryPoint.found = 0;
+    g_characterQueryPoint.owner = 0;
+}
+
+// @verified - d
+static void SetCharacterQueryPointFound(CharacterControlModel *control) {
+    g_characterQueryPoint.found = 1;
+    g_characterQueryPoint.control = control;
+    g_characterQueryPoint.owner = control->owner;
+}
+
+// @verified - d
+std::uint32_t AssignCharacterControlFlags(Character *character, std::uint32_t flags) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return 0;
+    const std::uint32_t previous = control->flags;
+    if (flags & 0x100000U) {
+        flags = (flags & ~0x100000U) | 0x400000dfU;
+        if (character == ctrlGetRootNode())
+            flags |= 0x04400200U;
+    }
+    control->flags = flags;
+    return previous;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+// @verified - d
+std::uint32_t ccmGetFlags(Character *character) {
+    const CharacterControlModel *const control = reinterpret_cast<const CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return 0;
+    return control->flags;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+// @verified - d
+std::uint32_t ccmReplaceFlags(Character *character, std::uint32_t flags) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return 0;
+    const std::uint32_t previous = control->flags;
+    if (flags & 0x100000U) {
+        flags = (flags & ~0x100000U) | 0x400000dfU;
+        if (character == ctrlGetRootNode())
+            flags |= 0x04400200U;
+    }
+    control->flags = flags;
+    return previous;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+// @verified - d
+std::uint32_t ccmClearFlags(Character *character, std::uint32_t flags) {
+    std::uint32_t previous = 0;
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (control) {
+        previous = control->flags;
+        control->flags = ~flags & previous;
+    }
+    return previous;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+std::uint32_t toggleCCMflagsByAmt(Character *character, std::uint32_t flags) {
+    __typeof__(static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL))) const control =
+        static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return 0;
+    const std::uint32_t previous = control->flags;
+    if (flags & 0x100000U) {
+        flags = (flags & ~0x100000U) | 0x400000dfU;
+        if (character == ctrlGetRootNode())
+            flags |= 0x04400200U;
+    }
+    control->flags |= flags;
+    return previous;
+}
+#endif
+
+#else
+
+// Native toggleCCMflagsByAmt: sets control flags; 0x100000 requests the full ground and collision set, plus the root
+// extras for CTRL's root character.
+// @verified - p
+void toggleCCMflagsByAmt(Character *character, std::uint32_t flags) {
+    CharacterControlModel *const control = FindCharacterControlModel(character);
+    if (!control)
+        return;
+    if (flags & 0x100000U) {
+        flags = (flags & ~0x401000dfU) | 0x400000dfU;
+        if (character == ctrlGetRootNode())
+            flags |= 0x04400200U;
+    }
+    control->flags |= flags;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// Native ccmSetFlagsFor: clears control flags.
+// @verified - p
+void ccmSetFlagsFor(Character *character, std::uint32_t flags) {
+    if (CharacterControlModel *const control = FindCharacterControlModel(character))
+        control->flags &= ~flags;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+// @verified - d
+Vector3 *ccmGetAppliedMovement(Character *character, Vector3 *movement) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return 0;
+    if (movement) {
+        movement->x = control->appliedMovement.x;
+        movement->y = control->appliedMovement.y;
+        movement->z = control->appliedMovement.z;
+    }
+    return &control->appliedMovement;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ccmGetGroundAngles(Character *character, std::int16_t *angles) {
+    if (!angles)
+        return;
+    angles[0] = 0;
+    angles[1] = 0;
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return;
+    angles[0] = control->groundPitch;
+    angles[1] = control->groundYaw;
+}
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+std::int32_t SetCharacterCollisionEnabled(Character *character, std::int32_t enabled) {
+    return SetFlagForToken(character, CHARACTER_CONTROL, enabled);
+}
+
+std::int32_t HasCharacterControlModel(Character *character) {
+    if (charFindComp(character, CHARACTER_CONTROL))
+        return 1;
+    return 0;
+}
+
+std::int32_t SetCharacterCollisionDimensions(Character *character, float radius, float height) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control)
+        return -1;
+    if (0.0f > radius)
+        radius = kCharacterControlDefaultDimension;
+    if (0.0f > height)
+        height = kCharacterControlDefaultDimension;
+    control->collisionRadius = radius;
+    control->collisionHeight = height;
+    return 0;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+float GetCharacterCollisionRadius(const Character *character) {
+    const CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    return control ? control->collisionRadius : 0.0f;
+}
+
+#else
+
+float GetCharacterCollisionRadius(const Character *character) {
+    const CharacterControlModel *const control = FindCharacterControlModel(character);
+    return control ? control->collisionRadius : 0.0f;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+float GetCharacterCollisionCapsuleMargin(const Character *character) {
+    const CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    return control ? control->collisionCenterRadius : 0.0f;
+}
+
+#else
+
+float GetCharacterCollisionCapsuleMargin(const Character *character) {
+    const CharacterControlModel *const control = FindCharacterControlModel(character);
+    return control ? control->collisionCenterRadius : 0.0f;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+float SetCharacterCollisionCapsuleMargin(Character *character, float margin) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, SHEN_NAME(CCM_)));
+    float previous = 0.0f;
+    if (control) {
+        previous = control->collisionCenterRadius;
+        control->collisionCenterRadius = margin;
+        control->flags |= 0x2000000U;
+    }
+    return previous;
+}
+#else
+// @verified - d
+CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, SHEN_NAME(CCM_)));
+    if (control) {
+        control->flags |= 0x2000000U;
+        control->collisionCenterRadius = margin;
+    }
+    return control;
+}
+#endif
+
+#else
+
+CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin) {
+    CharacterControlModel *const control = FindCharacterControlModel(character);
+    if (control) {
+        control->flags |= CCMF_PreserveCollisionRadius;
+        control->collisionCenterRadius = margin;
+    }
+    return control;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool AttachCharacterControlModel(Character *character) {
+    if (!character)
+        return false;
+
+    auto *const control = static_cast<CharacterControlModel *>(
+        AllocateModelComponent(character, kCharacterControlToken, sizeof(CharacterControlModel), UpdateCharacterControlModel));
+    if (!control)
+        return false;
+
+    control->flags = kCharacterControlInitialFlags;
+    control->owner = character;
+    control->maximumStepHeight = 0.40000001f;
+    control->collisionRadius = 0.40000001f;
+    control->collisionHeight = 0.40000001f;
+    control->previousWorldPosition = GetCharacterWorldPosition(character);
+    if (character == ctrlGetRootNode())
+        control->flags |= kCharacterControlRootFlags;
+    return true;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool QueueCharacterControlModelPairTask(std::uint8_t nextFunctionIndex) {
+    characterControlPairTask =
+        HLib::EnqueueTaskWithParameter(CharacterControlModelPairTask_Callback, nextFunctionIndex, 4, sizeof(std::uint32_t), SHEN_NAME(CCT_));
+    return characterControlPairTask != nullptr;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void DestroyCharacterControlModelPairTask() {
+    HLib::Task *const task = characterControlPairTask;
+    characterControlPairTask = nullptr;
+    if (task)
+        HLib::DestroyTask(task);
+    ForEachLiveCharacterInMapOrder(ClearLiveCharacterControlForTeardown, nullptr);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+Vector3 *ccmGetFrameDisplacement(Character *character, Vector3 *displacement) {
+    CharacterControlModel *const control = static_cast<CharacterControlModel *>(charFindComp(character, CHARACTER_CONTROL));
+    if (!control) {
+        if (displacement)
+            displacement->x = displacement->y = displacement->z = 0.0f;
+        return 0;
+    }
+    if (displacement) {
+        displacement->x = control->frameDisplacement.x;
+        displacement->y = control->frameDisplacement.y;
+        displacement->z = control->frameDisplacement.z;
+    }
+    return &control->frameDisplacement;
+}
+
+// @verified - d
+std::int32_t ccmHasFrameDisplacement(Character *character) {
+    Vector3 displacement;
+    if (!ccmGetFrameDisplacement(character, &displacement))
+        return 0;
+    if (0.0001f > am2Vector3LengthSquared(&displacement))
+        return 0;
+    return 1;
+}
+
+// @verified - d
+void ccmUpdateEntityFlag(Character *character) {
+    toggleCCMflagsByAmt(character, 0x400U);
+}
+
+// @verified - d
+Character **GatherCharacterControlOwners() {
+    CharacterControlModel *controls[129];
+    if (!GatherCharacterControls(controls))
+        return 0;
+    Character **owner = characterControlOwners;
+    for (CharacterControlModel **entry = controls; *entry; ++entry)
+        *owner++ = (*entry)->owner;
+    *owner = 0;
+    return characterControlOwners;
+}
+
+// @verified - d
+Character **GetCharacterControlOwners() {
+    return GatherCharacterControlOwners();
+}
+
+#else
+
+// Native ccmUpdateEntityFlag: marks the owner so the cylinder probe skips it.
+// @verified - p
+void ccmUpdateEntityFlag(Character *character) {
+    if (CharacterControlModel *const control = FindCharacterControlModel(character))
+        control->flags |= 0x400U;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+Character *GetPointFound() {
+    return g_characterQueryPoint.found ? g_characterQueryPoint.control->owner : 0;
+}
+
+void CharacterControlUnusedNullsub() {
+}
+
+#else
+
 // @verified - p
 Character *GetPointFound() {
     return g_characterQueryPointFound ? g_characterQueryPointControl->owner : nullptr;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 Character *CheckPointInCylinder_Wrapper(const Vector3 &start, const Vector3 &end) {
@@ -702,90 +1591,24 @@ Character *CheckPointInCylinder_Wrapper(const Vector3 &start, const Vector3 &end
     return result;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 CharacterControlModel *FindCharacterControlModel(const Character *character) {
     return static_cast<CharacterControlModel *>(FindModelComponent(character, kCharacterControlToken));
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-// @verified - p
-void toggleCCMflagsByAmt(Character *character, std::uint32_t flags) {
-    CharacterControlModel *const control = FindCharacterControlModel(character);
-    if (!control)
-        return;
-    if (flags & 0x100000U) {
-        flags = (flags & ~0x401000dfU) | 0x400000dfU;
-        if (character == ctrlGetRootNode())
-            flags |= 0x04400200U;
-    }
-    control->flags |= flags;
+// @verified - d
+void *mtSetupModelFigurePose(Character *character) {
+    return AllocateModelComponent(character, MODEL_FIGURE_POSE, figurePoseDataSize, 0);
 }
 
+#endif
 
-// @verified - p
-void ccmSetFlagsFor(Character *character, std::uint32_t flags) {
-    if (CharacterControlModel *const control = FindCharacterControlModel(character))
-        control->flags &= ~flags;
-}
-
-
-// @verified - p
-void ccmUpdateEntityFlag(Character *character) {
-    if (CharacterControlModel *const control = FindCharacterControlModel(character))
-        control->flags |= 0x400U;
-}
-
-float GetCharacterCollisionRadius(const Character *character) {
-    const CharacterControlModel *const control = FindCharacterControlModel(character);
-    return control ? control->collisionRadius : 0.0f;
-}
-
-float GetCharacterCollisionCapsuleMargin(const Character *character) {
-    const CharacterControlModel *const control = FindCharacterControlModel(character);
-    return control ? control->collisionCenterRadius : 0.0f;
-}
-
-CharacterControlModel *SetCharacterCollisionCapsuleMargin(Character *character, float margin) {
-    CharacterControlModel *const control = FindCharacterControlModel(character);
-    if (control) {
-        control->flags |= CCMF_PreserveCollisionRadius;
-        control->collisionCenterRadius = margin;
-    }
-    return control;
-}
-
-bool AttachCharacterControlModel(Character *character) {
-    if (!character)
-        return false;
-
-    auto *const control = static_cast<CharacterControlModel *>(
-        AllocateModelComponent(character, kCharacterControlToken, sizeof(CharacterControlModel), UpdateCharacterControlModel));
-    if (!control)
-        return false;
-
-    control->flags = kCharacterControlInitialFlags;
-    control->owner = character;
-    control->maximumStepHeight = 0.40000001f;
-    control->collisionRadius = 0.40000001f;
-    control->collisionHeight = 0.40000001f;
-    control->previousWorldPosition = GetCharacterWorldPosition(character);
-    if (character == ctrlGetRootNode())
-        control->flags |= kCharacterControlRootFlags;
-    return true;
-}
-
-bool QueueCharacterControlModelPairTask(std::uint8_t nextFunctionIndex) {
-    characterControlPairTask =
-        HLib::EnqueueTaskWithParameter(CharacterControlModelPairTask_Callback, nextFunctionIndex, 4, sizeof(std::uint32_t), SHEN_NAME(CCT_));
-    return characterControlPairTask != nullptr;
-}
-
-void DestroyCharacterControlModelPairTask() {
-    HLib::Task *const task = characterControlPairTask;
-    characterControlPairTask = nullptr;
-    if (task)
-        HLib::DestroyTask(task);
-    ForEachLiveCharacterInMapOrder(ClearLiveCharacterControlForTeardown, nullptr);
-}
-
-} // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

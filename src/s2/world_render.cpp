@@ -1,11 +1,26 @@
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/object_draw_dc.hpp"
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/object_draw_task.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/world_render.hpp"
-#if defined(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS) && SHENMUE_ENHANCEMENT_S2_MAP_SEAMS
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/map_models_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(SHENMUE_ENHANCEMENT_S2_MAP_SEAMS) && SHENMUE_ENHANCEMENT_S2_MAP_SEAMS
 #include "s2/enhancements/map_seams.hpp"
 #endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/renderer_initialization.hpp"
 #include "s2/surface_wave.hpp"
 
@@ -39,7 +54,29 @@
 #include "s2/motion_work.hpp"
 #include "s2/hand.hpp"
 #include "s2/darts.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/math.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/camera_dc.hpp"
+#include "s2/lighting_dc.hpp"
+#include "s2/model_render_dc.hpp"
+#include "s2/shadow_render_dc.hpp"
+#include "s2/field_collision_dc.hpp"
+#include "s2/field_event_dc.hpp"
+#include "s2/event_vector_dc.hpp"
+#include "s2/character_transparency_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/model_transform_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#include "platform/dc/particle_effects.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/character.hpp"
 #include "s2/event_runtime.hpp"
 #include "s2/npc.hpp"
@@ -64,8 +101,13 @@
 #include <utility>
 #include <vector>
 #include "s2/area_names.hpp"
+#endif
 
-namespace shenmue::s2 {
+
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t g_airClearColour{};
 std::int32_t g_previousSkyWeatherMode{}, g_currentSkyWeatherMode{};
 std::int32_t g_airDrawDomeEnabled = 1;
@@ -73,22 +115,35 @@ std::int32_t g_airDrawCloudsEnabled = 1;
 std::int32_t g_airDrawPlanetsEnabled = 1;
 Vector3 g_scriptedModelScale{1.0f, 1.0f, 1.0f};
 std::int32_t g_modelDeformationSuppressed{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InitModelVector() {
     g_modelDeformationSuppressed = 0;
 }
-Matrix4x4 g_scriptedIncomingTransform{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+Matrix4x4 g_scriptedIncomingTransform{};
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native MT7 transform-visitor override: a node with a transform override is placed from the incoming draw transform.
 void mtRestoreIncomingTransform() {
     Matrix4x4::SetActiveTransform(&g_scriptedIncomingTransform);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 g_shadowRange{};
 std::uint32_t g_characterShadowDisabled{};
 alignas(32) std::array<std::byte, characterShadowStorageSize> g_characterShadowStorage{};
 void *g_characterShadowRuntime{};
-namespace {
+#endif
 
+namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t globalShadowLightingEnabled = 1;
 std::int32_t globalShadowFadeRequested = 0;
 float globalShadowFade = 1.0f;
@@ -118,9 +173,11 @@ float dummyRefboardIntensity{};
 float dummyRefboardFalloff{};
 MT7Model *shadowSprite{};
 std::uint32_t previousMotionShadowLoadingFlag{};
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Push only at native sibling/entity/callback boundaries. A failed push
+// restores its own transform without ever popping an ancestor.
 class ScriptedMatrixFrame {
   public:
     explicit ScriptedMatrixFrame(bool enabled = true) : active(enabled) {
@@ -145,22 +202,31 @@ class ScriptedMatrixFrame {
     bool pushed{};
     bool active{};
 };
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 TransformPoint(const Vector3 &value, const Matrix4x4 &matrix) {
     return {value.x * matrix.rows[0].x + value.y * matrix.rows[1].x + value.z * matrix.rows[2].x + matrix.rows[3].x,
         value.x * matrix.rows[0].y + value.y * matrix.rows[1].y + value.z * matrix.rows[2].y + matrix.rows[3].y,
         value.x * matrix.rows[0].z + value.y * matrix.rows[1].z + value.z * matrix.rows[2].z + matrix.rows[3].z};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 TransformVector(const Vector3 &value, const Matrix4x4 &matrix) {
     return {value.x * matrix.rows[0].x + value.y * matrix.rows[1].x + value.z * matrix.rows[2].x,
         value.x * matrix.rows[0].y + value.y * matrix.rows[1].y + value.z * matrix.rows[2].y,
         value.x * matrix.rows[0].z + value.y * matrix.rows[1].z + value.z * matrix.rows[2].z};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const MT7Node *FindMdcSourceNode(const MT7Model &model, const MT7Node &node);
-bool TransformMdcLinkedVertices(std::span<const MT7MdcVertexLink> links, std::size_t destinationIndex, const std::byte *source,
-    std::int32_t sourceSize, std::byte *destination, std::int32_t destinationSize, const Matrix4x4 &relative) {
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+bool TransformMdcLinkedVertices(std::span<const MT7MdcVertexLink> links, std::size_t destinationIndex, const std::byte *source, std::int32_t sourceSize,
+    std::byte *destination, std::int32_t destinationSize, const Matrix4x4 &relative) {
     bool wrote = false;
     for (const MT7MdcVertexLink &link : links) {
         if (link.nodeIndex != destinationIndex)
@@ -184,9 +250,10 @@ bool TransformMdcLinkedVertices(std::span<const MT7MdcVertexLink> links, std::si
     }
     return wrote;
 }
+#endif
 
-bool TransformMdcWeightedVertices(
-    const MT7Node &destinationNode, std::byte *destination, std::int32_t destinationSize, const Matrix4x4 &relative) {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+bool TransformMdcWeightedVertices(const MT7Node &destinationNode, std::byte *destination, std::int32_t destinationSize, const Matrix4x4 &relative) {
     bool wrote = false;
     if (g_motionDeformationEnabled && !destinationNode.mdcWeightedVertices.empty()) {
         const std::uint32_t nodeId = static_cast<std::uint32_t>(destinationNode.id) & 0xffffU;
@@ -215,10 +282,14 @@ bool TransformMdcWeightedVertices(
     }
     return wrote;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyMdcNodeVertexLinks(const MT7Model &model, std::size_t destinationIndex, const MT7Node &sourceNode, const Matrix4x4 &sourceTransform,
     const Matrix4x4 &destinationTransform, std::span<const MT7MdcVertexLink> links, bool upload);
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWbtrDeformation(const MT7Model &model, std::size_t selectedNode = std::numeric_limits<std::size_t>::max()) {
     const std::array<const Matrix4x4 *, 7> &controllers = g_motionDeformationControllers;
     for (const MT7WbtrDeformer &deformer : model.wbtrDeformers) {
@@ -306,7 +377,7 @@ void ApplyWbtrDeformation(const MT7Model &model, std::size_t selectedNode = std:
                 }
             }
         }
-        // WBTR also welds the parent mesh when weighted deformation is disabled.
+        // WBTR admission also owns the final parent-mesh weld, including when weighted deformation is disabled.
         if (const Matrix4x4 *const current = GetMT7NodeTransformOverride(node); current && (node.mdcVertexLinkFlags & 0xffffU)) {
             if (const MT7Node *const source = FindMdcSourceNode(model, node))
                 if (const Matrix4x4 *const sourceTransform = GetMT7NodeTransformOverride(*source))
@@ -314,17 +385,23 @@ void ApplyWbtrDeformation(const MT7Model &model, std::size_t selectedNode = std:
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const MT7Node *FindMdcSourceNode(const MT7Model &, const MT7Node &node) {
     const MT7Node *const parent = node.runtimeParent;
     return parent && parent->xb01Offset ? parent : nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool HasWbtrDeformer(const MT7Model &model, std::size_t nodeIndex) {
     return std::any_of(
         model.wbtrDeformers.begin(), model.wbtrDeformers.end(), [nodeIndex](const MT7WbtrDeformer &deformer) { return deformer.nodeIndex == nodeIndex; });
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyMdcNodeVertexLinks(const MT7Model &model, std::size_t destinationIndex, const MT7Node &sourceNode, const Matrix4x4 &sourceTransform,
     const Matrix4x4 &destinationTransform, std::span<const MT7MdcVertexLink> links, bool upload = true) {
     const MT7Node &destinationNode = model.nodes[destinationIndex];
@@ -340,8 +417,8 @@ void ApplyMdcNodeVertexLinks(const MT7Model &model, std::size_t destinationIndex
     auto *const destination = static_cast<std::byte *>(d3t::GetWriteMappedBufferPointer(d3t::DX11::g_ppD3DDeviceContext, destinationBinding->handle, 1, 0));
     if (!source || !destination)
         return;
-    // Subtract positions before inverse rotation to avoid cancelling large transformed positions.
-
+    // TransformCharacterRelativePoint subtracts positions before applying inverse rotation.
+    // Keep that ordering rather than cancelling large transformed positions.
     Matrix4x4 destinationBasis = destinationTransform;
     destinationBasis.rows[3] = {0.0f, 0.0f, 0.0f, destinationTransform.rows[3].w};
     Matrix4x4 sourceRelative = sourceTransform;
@@ -358,10 +435,12 @@ void ApplyMdcNodeVertexLinks(const MT7Model &model, std::size_t destinationIndex
     if (wrote && upload && destinationNode.meshType != SHEN_NAME(MDC7))
         d3t::DX11_CopySceneNodeToGPU(d3t::DX11::g_ppD3DDeviceContext, destinationBinding->handle);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
-std::uint32_t DrawMdcChildHierarchy(const MT7Model &model, const MT7Node *firstNode, LegacyModelShaderPath shaderPath, float alpha,
-    const bool *suppressSearchMesh) {
+std::uint32_t DrawMdcChildHierarchy(
+    const MT7Model &model, const MT7Node *firstNode, LegacyModelShaderPath shaderPath, float alpha, const bool *suppressSearchMesh) {
     std::uint32_t draws = 0;
     for (const MT7Node *current = firstNode; current; current = current->runtimeSibling) {
         const MT7Node &node = *current;
@@ -377,8 +456,8 @@ std::uint32_t DrawMdcChildHierarchy(const MT7Model &model, const MT7Node *firstN
                 const std::int32_t sourceSize = d3t::GetSizeForModelBuffer(sourceBinding->handle);
                 const std::int32_t destinationSize = d3t::GetSizeForModelBuffer(destinationBinding->handle);
                 const std::byte *const source = static_cast<const std::byte *>(d3t::GetBufferCpuData(sourceBinding->handle, nullptr));
-                std::byte *const destination = static_cast<std::byte *>(
-                    d3t::GetWriteMappedBufferPointer(d3t::DX11::g_ppD3DDeviceContext, destinationBinding->handle, 1, 0));
+                std::byte *const destination =
+                    static_cast<std::byte *>(d3t::GetWriteMappedBufferPointer(d3t::DX11::g_ppD3DDeviceContext, destinationBinding->handle, 1, 0));
                 if (source && destination && sourceSize >= 24 && destinationSize >= 24) {
                     Matrix4x4_PushActiveTransform();
                     if (node.rotation.x)
@@ -422,7 +501,9 @@ std::uint32_t DrawMdcChildHierarchy(const MT7Model &model, const MT7Node *firstN
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawHierarchy(const MT7Model &model, const MT7Node *firstNode, const Matrix4x4 &entityTransform, LegacyModelShaderPath shaderPath, float alpha,
     float nodeYOffset, const LegacyNodeCommandOverride *commandOverride = nullptr, const Matrix4x4 **overrideCursor = nullptr,
     const Matrix4x4 *parentOverride = nullptr, const MT7Node *selectedNode = nullptr, const Matrix4x4 *controllerTransformBase = nullptr,
@@ -478,8 +559,8 @@ std::uint32_t DrawHierarchy(const MT7Model &model, const MT7Node *firstNode, con
                 }
                 ++*overrideCursor;
             }
-
-
+            // Pass the pre-consumption cursor even when this node has no
+            // mesh, matching the native recursive parent-matrix argument.
             draws += DrawHierarchy(model, node.runtimeChild, entityTransform, shaderPath, nodeAlpha, 0.0f, commandOverride, overrideCursor, nodeOverride,
                 nullptr, controllerTransformBase);
             continue;
@@ -579,7 +660,9 @@ std::uint32_t DrawHierarchy(const MT7Model &model, const MT7Node *firstNode, con
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool FindScriptedNodeIndex(const MT7Model &model, const MT7Node *node, std::size_t &index) {
     const std::uintptr_t pointer = reinterpret_cast<std::uintptr_t>(node);
     const std::uintptr_t begin = reinterpret_cast<std::uintptr_t>(model.nodes.data());
@@ -588,7 +671,9 @@ bool FindScriptedNodeIndex(const MT7Model &model, const MT7Node *node, std::size
     index = (pointer - begin) / sizeof(MT7Node);
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const MT7Model *FindScriptedNodeOwner(const MT7Model &model, const MT7Node &node, std::size_t &index) {
     if (FindScriptedNodeIndex(model, &node, index))
         return &model;
@@ -624,12 +709,20 @@ const MT7Model *FindScriptedNodeOwner(const MT7Model &model, const MT7Node &node
             return &reader;
     return nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ScriptedNodeHasDeformer(const MT7Node &node) {
-    return node.meshType == SHEN_NAME(MDP7) || node.meshType == SHEN_NAME(MDPX) || node.meshType == SHEN_NAME(MDC7) || node.meshType == SHEN_NAME(MDCX) ||
-        node.meshType == SHEN_NAME(MDH7) || node.meshType == SHEN_NAME(MDHX);
+    return node.meshType ==
+        SHEN_NAME(MDP7) ||
+            node.meshType ==
+                SHEN_NAME(MDPX) ||
+                    node.meshType ==
+                        SHEN_NAME(MDC7) || node.meshType == SHEN_NAME(MDCX) || node.meshType == SHEN_NAME(MDH7) || node.meshType == SHEN_NAME(MDHX);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // BuildTransformTreeRecursive_ScriptedObjects: model-local MDP copies are
 // completed before any hash or material read. Siblings inherit the parent,
 // not the preceding sibling's terminal child transform.
@@ -659,7 +752,9 @@ void BuildScriptedModelTransformTree(const MT7Model &model, const MT7Node *first
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawScriptedModelTransformTree(const MT7Model &model, const MT7Node *firstNode, const Matrix4x4 &incomingTransform, float scale, const float *alpha,
     bool prepare = true, float alphaScale = 1.0f) {
     for (const MT7Node *current = firstNode; current; current = current->runtimeSibling) {
@@ -718,26 +813,29 @@ void DrawScriptedModelTransformTree(const MT7Model &model, const MT7Node *firstN
         }
     }
 }
+#endif
 
 } // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
-
-
-// @verified - p
-
 
 // @verified - p
 
+// @verified - p
 
 // @verified - p
 void SetGlobalShadowLightingEnabled(std::int32_t enabled) {
     globalShadowLightingEnabled = enabled;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsGlobalShadowLightingEnabled() {
     return globalShadowLightingEnabled != 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetGlobalShadowTiming() {
     globalShadowLightingEnabled = 1;
     globalShadowFadeRequested = 0;
@@ -746,15 +844,21 @@ void ResetGlobalShadowTiming() {
     globalShadowRyoAlpha = 1.0f;
     globalShadowOpacity = 0.4f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetGlobalShadowFadeRequested(std::int32_t requested) {
     globalShadowFadeRequested = requested;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetGlobalShadowOpacity() {
     return globalShadowOpacity;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateGlobalShadowTiming() {
     // UpdateGlobalShadowTiming; RootTask owns its frame position.
     float weather = GetWeatherPressure();
@@ -793,7 +897,9 @@ void UpdateGlobalShadowTiming() {
     globalShadowFade = std::clamp(globalShadowFade + (globalShadowFadeRequested ? -0.1f : 0.1f), 0.0f, 1.0f);
     globalShadowOpacity = opacity * globalShadowFade;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MaybeDoGlobalShadowLighting() {
     if (GetMainMapModelBytes().empty() || !IsGlobalShadowLightingEnabled() || IsMainIconOverlayActive() || IsWazamakiInactive() != 0 ||
         GetGlobalShadowOpacity() < 0.01f)
@@ -803,9 +909,11 @@ void MaybeDoGlobalShadowLighting() {
     if (static_cast<std::uint8_t>(date.hour - 8) <= 10U && static_cast<std::uint32_t>(GetCurrentActiveLight() - 2) > 1U)
         DrawQueuedMainMapProjectedShadows();
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Explicit opacity bypasses ICON, WAZA and timer
+// checks; the ROOT zero-argument stencil resolve uses g_timer.
 void ResolveGlobalShadowLighting(float opacity) {
     if (!IsGlobalShadowLightingEnabled())
         return;
@@ -815,7 +923,9 @@ void ResolveGlobalShadowLighting(float opacity) {
     const auto packedAlpha = static_cast<std::uint8_t>(static_cast<std::int32_t>(alpha * 255.0f));
     PerformCommonShaderPass(static_cast<std::uint32_t>(packedAlpha) << 24U);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawMT7Model(const MT7Model &model, const Matrix4x4 *entityTransform, LegacyModelShaderPath shaderPath, float alpha,
     const LegacyNodeCommandOverride *commandOverride, const Matrix4x4 *matrixFrames, const Matrix4x4 *controllerTransformBase) {
     const bool searchOverride = !matrixFrames && controllerTransformBase && g_motionDrawOverrideFlags;
@@ -846,12 +956,17 @@ std::uint32_t DrawMT7Model(const MT7Model &model, const Matrix4x4 *entityTransfo
     return DrawHierarchy(model, model.nodes.empty() ? nullptr : &model.nodes.front(), rootTransform, shaderPath, alpha, 0.0f, commandOverride, nullptr, nullptr,
         nullptr, controllerTransformBase, searchOverride ? &suppressSearchMesh : nullptr);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawMT7NodeHierarchy(const MT7Model &model, const MT7Node &node, LegacyModelShaderPath shaderPath, float alpha) {
     const Matrix4x4 rootTransform = workTransformMatrix;
     return DrawHierarchy(model, &node, rootTransform, shaderPath, alpha, 0.0f, nullptr, nullptr, nullptr, &node);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native mtRecursiveSetFlag: each node passes the alpha hash gate before its transform and Lambert alpha draw.
 std::uint32_t mtRecursiveSetFlag(const MT7Model &model, const MT7Node *node, float alpha) {
     std::uint32_t draws = 0;
     while (!d3t::HashModelWithAlpha(node, alpha, GetLegacyPerspectiveProjection())) {
@@ -876,13 +991,17 @@ std::uint32_t mtRecursiveSetFlag(const MT7Model &model, const MT7Node *node, flo
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Character *SetScriptedModelEntity(Character *entity) {
     Character *const previous = scriptedModelEntity;
     scriptedModelEntity = entity;
     return previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void charaApplyScale(const MT7Model *model, const MT7Node *node, float) {
     if (model && node) {
         ScriptedMatrixFrame outer;
@@ -896,7 +1015,9 @@ void charaApplyScale(const MT7Model *model, const MT7Node *node, float) {
     }
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void applyPosRotScl(const MT7Model *model, const MT7Node *node) {
     if (model && node) {
@@ -906,7 +1027,9 @@ void applyPosRotScl(const MT7Model *model, const MT7Node *node) {
     }
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void imgmDrawModelNode(const MT7Model *model, const MT7Node *node, float) {
     float scale = g_scriptedModelScale.x;
@@ -927,7 +1050,9 @@ void imgmDrawModelNode(const MT7Model *model, const MT7Node *node, float) {
     Matrix4x4::Pop(1);
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ConstructMatricesForObjectRecursive(MT7Model &model, MT7Node *node) {
     if (!node) {
         g_scriptedModelScale.x = 1.0f;
@@ -948,7 +1073,9 @@ void ConstructMatricesForObjectRecursive(MT7Model &model, MT7Node *node) {
     node->runtimeSibling = runtimeSibling;
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void PrepareProceduralObjects(MT7Model &model, MT7Node *node, float alpha) {
     if (node) {
@@ -968,7 +1095,9 @@ void PrepareProceduralObjects(MT7Model &model, MT7Node *node, float alpha) {
     }
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void mtUpdateTransparencyCallback(const MT7Model *model, const MT7Node *node, float alpha) {
     ScriptedMatrixFrame frame;
     Matrix4x4::GetTransformMatrix(&g_scriptedIncomingTransform);
@@ -981,7 +1110,9 @@ void mtUpdateTransparencyCallback(const MT7Model *model, const MT7Node *node, fl
     }
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetupRefboard() {
     dummyRefboardIntensity = 1.0f;
@@ -991,8 +1122,10 @@ void SetupRefboard() {
     dummyRefboardFalloff = 0.25f;
     dummyRefboardKind = 3;
 }
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyDummyModelNodeTransform(const MT7Node &node) {
     Matrix4x4::preTranslate(node.position.x, node.position.y, node.position.z);
     if (node.rotation.z)
@@ -1002,7 +1135,9 @@ void ApplyDummyModelNodeTransform(const MT7Node &node) {
     if (node.rotation.x)
         Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(node.rotation.x));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawDummyModelMesh(const MT7Model &model, const MT7Node &node) {
     const MT7Node &mesh = node.borrowedMesh ? *node.borrowedMesh : node;
     if (!mesh.xb01Offset)
@@ -1021,8 +1156,10 @@ void DrawDummyModelMesh(const MT7Model &model, const MT7Node &node) {
     ExecuteLegacyDrawCommandStream(model.source, mesh.xb01Offset, mesh.drawResources, LegacyModelShaderPath::Lambert, 1.0f);
     SetLegacyModelScale(1.0f);
 }
-} // namespace
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t DrawDummyCharacterModel(const MT7Model &model) {
     const std::int32_t active = GetCurrentActiveLight();
     if (active != 2)
@@ -1064,7 +1201,9 @@ std::uint64_t DrawDummyCharacterModel(const MT7Model &model) {
     Matrix4x4::Pop(1);
     return ReturnZero();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawPIN(shen_name name, std::int32_t, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const pin = GetScenarioCharacterNode(control->scenarioTask, SCENARIO_PIN_CHARACTER);
@@ -1088,7 +1227,9 @@ void DrawPIN(shen_name name, std::int32_t, const Vector3 *position, const Vector
     charaApplyScale(model, model ? model->nodes.data() : nullptr);
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ApplyTranslationRotationScaleXYZToCharaByID(shen_name name, float, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -1113,7 +1254,10 @@ void ApplyTranslationRotationScaleXYZToCharaByID(shen_name name, float, const Ve
     charaApplyScale(model, model ? model->nodes.data() : nullptr);
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Selects a frame sibling below the named model's two child levels.
 void ApplyTranslationRotationScaleXYZToCharaSibling(
     shen_name name, std::int32_t siblingOrdinal, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -1157,7 +1301,9 @@ void ApplyTranslationRotationScaleXYZToCharaSibling(
     g_scriptedModelScale.x = 1.0f;
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void charaPrepareNodesForDraw(const MT7Model *model, const MT7Node *node, float alpha) {
     if (model && node) {
         ScriptedMatrixFrame outer;
@@ -1171,6 +1317,9 @@ void charaPrepareNodesForDraw(const MT7Model *model, const MT7Node *node, float 
     }
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawMT7ProceduralBranch(MT7Model &model, MT7Node *node, std::uint16_t cutoffId, float alpha) {
     if (node) {
         ScriptedMatrixFrame outer;
@@ -1207,12 +1356,17 @@ void DrawMT7ProceduralBranch(MT7Model &model, MT7Node *node, std::uint16_t cutof
     }
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool shadowRelativePositioning = true;
 std::int32_t characterShadowStencilReference = -1;
+// Native GetIsWithinDistanceOfPlayer stores whether the camera distance is negative; shadows then take the transparency callback.
 std::int32_t shadowWithinCameraDistance = 1;
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetCharacterShadowDistanceFade(const Vector3 &position, const Character &character) {
     Vector3 camera{};
     camCtrlGetNextCamPos(&camera);
@@ -1223,7 +1377,9 @@ float GetCharacterShadowDistanceFade(const Vector3 &position, const Character &c
     const float fade = range - distance;
     return (fade < 0.0f ? 0.0f : std::fmin(1.0f, fade)) * character.alpha;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // ComputeTransformedVector: positioning mode affects directional X/Z only.
 float ComputeShadowLightSource(const Vector3 &position, Vector3 &source, float strength, std::uint32_t lightIndex) {
     const LightRuntimeEntry *light = GetLightRuntimeEntry(lightIndex);
@@ -1256,7 +1412,9 @@ float ComputeShadowLightSource(const Vector3 &position, Vector3 &source, float s
         return 0.0f;
     return coefficient < 0.0f ? 0.0f : std::fmin(1.0f, coefficient);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void PrepareCharacterShadowLighting() {
     SetCurrentActiveLight(1);
     UpdateGlobalLighting({});
@@ -1264,7 +1422,9 @@ void PrepareCharacterShadowLighting() {
         SetLegacySelectedLightEnabled(slot, false);
     UpdateLegacyLightTransforms();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // ComputeDirectionAlignedTransform_0 includes direction pre-translation.
 void ApplyDirectionAlignedShadowProjection(Vector3 direction, float groundY, float numerator, float denominator) {
     const float maximumY = -std::sqrt((direction.z * direction.z + direction.x * direction.x) * numerator / denominator);
@@ -1278,7 +1438,9 @@ void ApplyDirectionAlignedShadowProjection(Vector3 direction, float groundY, flo
     Matrix4x4::MultiplyWithPrePassMatrix(&projection);
     Matrix4x4::preTranslate(direction.x, direction.y, direction.z);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyShadowPlacement(const Vector3 &position, const Vector3i &rotation, const Vector3 &scale) {
     Matrix4x4::preTranslate(position.x, position.y, position.z);
     if (rotation.z)
@@ -1293,7 +1455,9 @@ void ApplyShadowPlacement(const Vector3 &position, const Vector3i &rotation, con
     g_scriptedModelScale.x = (scaled ? std::fmax(scale.z, std::fmax(scale.y, scale.x)) : 1.0f) * 3.0f;
     SetLegacyModelScale(g_scriptedModelScale.x);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawBaseShadowModel(const MT7Model &model, float alpha) {
     if (model.nodes.empty())
         return;
@@ -1303,8 +1467,10 @@ void DrawBaseShadowModel(const MT7Model &model, float alpha) {
     DrawScriptedModelTransformTree(model, model.nodes.data(), incoming, g_scriptedModelScale.x, &alpha, false);
     g_scriptedModelScale.x = 1.0f;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Publishes borrowed +0x38 pointers by signature, without copying meshes.
 void PublishSharedShadowNodeTransforms(const MT7Model &source, MT7Model &shadow) {
     for (MT7Node &node : shadow.nodes) {
         SetMT7NodeTransformOverride(node, nullptr);
@@ -1315,8 +1481,10 @@ void PublishSharedShadowNodeTransforms(const MT7Model &source, MT7Model &shadow)
             SetMT7NodeTransformOverride(node, GetMT7NodeTransformOverride(*match));
     }
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Nongrounded light fallback submits shared SHDS, not charaCore.
 void DrawProjectedSharedCharacterShadow(Character &character, const Vector3 &position, float groundY, std::uint32_t lightIndex, float opacity) {
     const MT7Model *model = static_cast<const MT7Model *>(character.model);
     MT7Model *shared = const_cast<MT7Model *>(GetSHDS());
@@ -1338,7 +1506,9 @@ void DrawProjectedSharedCharacterShadow(Character &character, const Vector3 &pos
             DrawBaseShadowModel(*shared, alpha);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawMotionCharacterShadow(Character &character, const Vector3 &position, float groundY, const MT7Model &model, MT7Model *shadow, float strength) {
     if (g_characterShadowDisabled || !shadow || strength == 0.0f || !IsCharacterDrawControlEnabled(&character) || !(position.y - groundY <= 2.2f))
         return;
@@ -1387,7 +1557,9 @@ void DrawMotionCharacterShadow(Character &character, const Vector3 &position, fl
             DrawBaseShadowModel(*shadow, alpha);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawCharacterShadowSprite(Character &character, const Vector3 &position, float groundY) {
     if (g_characterShadowDisabled || !shadowSprite || shadowSprite->nodes.empty() || !shadowSprite->nodes[0].xb01Offset ||
         !IsCharacterDrawControlEnabled(&character) || !(position.y - groundY <= 2.2f))
@@ -1438,9 +1610,11 @@ void DrawCharacterShadowSprite(Character &character, const Vector3 &position, fl
     }
     ResumeLegacyCharacterShadowFrame(suspended);
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// DoShadowStencilEmulation restores the original frame before
+// child/sibling traversal (native Pop_SafeMatrixCopy(0)).
 void DrawCharacterStencilHierarchy(const MT7Model &model, const MT7Model &shadow, std::int32_t index, const Matrix4x4 &base) {
     while (index >= 0) {
         const MT7Node &node = shadow.nodes[static_cast<std::size_t>(index)];
@@ -1461,20 +1635,29 @@ void DrawCharacterStencilHierarchy(const MT7Model &model, const MT7Model &shadow
         index = node.nextSibling;
     }
 }
+#endif
 
-}
-
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetShadowPositioningMode(bool relative) {
     shadowRelativePositioning = relative;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetCharacterUngroundedShadowMode(std::int32_t mode) {
     characterUngroundedShadowMode = mode;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetCharacterShadowStencilReference() {
     characterShadowStencilReference = -1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ProjectCharacterShadow(
     Character *character, const Vector3 &position, const Vector3i &rotation, const Vector3 &scale, float groundY, const MT7Model *root, float strength) {
     if (g_characterShadowDisabled || !root || !character || !character->prepareForDraw || strength == 0.0f || !IsCharacterDrawControlEnabled(character) ||
@@ -1500,7 +1683,9 @@ void ProjectCharacterShadow(
         SetLegacyStencilReference(static_cast<std::uint32_t>(alpha * 255.0f));
     character->prepareForDraw(root, root->nodes.data(), alpha);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ProjectFixedCharacterShadow(
     Character *character, const Vector3 &position, const Vector3i &rotation, const Vector3 &scale, float groundY, std::size_t meshIndex, float strength) {
     if (g_characterShadowDisabled || !character || strength == 0.0f || !IsCharacterDrawControlEnabled(character) || !(position.y - groundY <= 2.2f))
@@ -1525,7 +1710,9 @@ void ProjectFixedCharacterShadow(
         DrawFixedShadowMesh(meshIndex, alpha >= 1.0f ? 1.0f : alpha);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawShenmueEntity(void *parameter) {
     Character *const character = static_cast<Character *>(parameter);
     if (!character)
@@ -1599,7 +1786,9 @@ void DrawShenmueEntity(void *parameter) {
     }
     previousMotionShadowLoadingFlag = g_loadingFlag;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawObject_AssignShadow(Character *character, const Vector3 &position, float groundY) {
     const MT7Model *model = character ? static_cast<const MT7Model *>(character->model) : nullptr;
     if (g_characterShadowDisabled || !character || !model || !IsCharacterDrawControlEnabled(character))
@@ -1751,15 +1940,18 @@ void DrawObject_AssignShadow(Character *character, const Vector3 &position, floa
         ResumeLegacyCharacterShadowFrame(suspended);
     }
 }
+#endif
 
 namespace {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 temporaryCommandStreamOffset{};
 Matrix4x4 objectCommandPlacementTransform{};
 // DrawObject latches these once per frame; a PAUS replay of its callbacks reuses the last values.
 std::uint32_t g_currentFieldPointCount{};
 std::int32_t g_currentDrawTier{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 class ObjectPassMatrixState {
   public:
     ObjectPassMatrixState()
@@ -1786,7 +1978,9 @@ class ObjectPassMatrixState {
     Matrix4x4 *incomingCellAddress;
     Matrix4x4 *depthCellAddress{};
 };
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsObjectCommandVisible(const MapModelClipRecord &record, bool screenSpace) {
     if (screenSpace)
         return camCtrlIsScreenSpaceVisible(record.centre, record.radius);
@@ -1804,7 +1998,9 @@ bool IsObjectCommandVisible(const MapModelClipRecord &record, bool screenSpace) 
         return false;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t ProcessObjectCommandRun(const MT7Model &model, std::span<MapModelClipRecord *const> records, const Matrix4x4 &baseTransform,
     LegacyModelShaderPath shaderPath, bool gridCull, bool screenSpace, const float *alpha) {
     std::uint32_t draws = 0;
@@ -1831,7 +2027,7 @@ std::uint32_t ProcessObjectCommandRun(const MT7Model &model, std::span<MapModelC
         const bool visible = IsObjectCommandVisible(*record, screenSpace);
         bool culled = !visible;
         if (alpha && !screenSpace) {
-
+            // Native alpha command stream uses AND, unlike the opaque offset stream's OR.
             culled = !visible && record->commandType != 4 && !camCtrlIsModelDepthVisible(record->centre, node, record->radius);
         } else if (gridCull && !screenSpace && record->commandType != 4 && !camCtrlIsModelDepthVisible(record->centre, node, record->radius)) {
             culled = true;
@@ -1863,9 +2059,8 @@ std::uint32_t ProcessObjectCommandRun(const MT7Model &model, std::span<MapModelC
                     const LegacyDrawResources &resources = meshNode.drawResources;
 #endif
                     if (alpha)
-                        draws += shaderPath == LegacyModelShaderPath::Lambert ?
-                            SetModelFlagDataWithAlpha(model.source, node.xb01Offset, resources, *alpha) :
-                            ReadModelDataWithAlpha(model.source, node.xb01Offset, resources, *alpha);
+                        draws += shaderPath == LegacyModelShaderPath::Lambert ? SetModelFlagDataWithAlpha(model.source, node.xb01Offset, resources, *alpha) :
+                                                                                ReadModelDataWithAlpha(model.source, node.xb01Offset, resources, *alpha);
                     else
                         draws += shaderPath == LegacyModelShaderPath::Lambert ?
                             ModelFlagDispatch_SetModelFlagDataOpaque(model.source, node.xb01Offset, resources) :
@@ -1878,11 +2073,15 @@ std::uint32_t ProcessObjectCommandRun(const MT7Model &model, std::span<MapModelC
     Matrix4x4::SetActiveTransform(&baseTransform);
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t mapObjectClipRecordIndex{};
 const MapModelClipRecord *mapObjectClipRecords{};
 const MapModelClipRecord *activeMapObjectClipRecord{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t HashOrDrawMapObjectHierarchy(const MapModelRuntimeSlot &slot, const MT7Node *node, LegacyModelShaderPath shaderPath, bool gridCull) {
     std::uint32_t draws = 0;
     while (node) {
@@ -1934,7 +2133,9 @@ std::uint32_t HashOrDrawMapObjectHierarchy(const MapModelRuntimeSlot &slot, cons
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t HashOrDrawPlacedMapObjectHierarchy(const MapModelRuntimeSlot &slot, LegacyModelShaderPath shaderPath) {
     if (!slot.reader || slot.reader->nodes.empty())
         return 0;
@@ -1947,7 +2148,9 @@ std::uint32_t HashOrDrawPlacedMapObjectHierarchy(const MapModelRuntimeSlot &slot
     Matrix4x4::GetTransformMatrix(&objectCommandPlacementTransform);
     return HashOrDrawMapObjectHierarchy(slot, &slot.reader->nodes.front(), shaderPath, g_currentFieldPointCount && slot.gridCullingEnabled);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 MapCellOffset PrepareObjectCommandPlacement(const Vector3 &position, std::uint32_t yaw, const Vector3 &cameraPosition) {
     if (position.x == 0.0f && position.y == 0.0f && position.z == 0.0f && yaw == 0) {
         GetFieldDepthModelTransform() = GetFieldDepthTransform();
@@ -1975,16 +2178,22 @@ MapCellOffset PrepareObjectCommandPlacement(const Vector3 &position, std::uint32
     Matrix4x4::MultiplyWithPrePassMatrix(&placement);
     return cell;
 }
+#endif
 
 } // namespace
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetTempCommandStreamOffset(const Vector3 *offset) {
     temporaryCommandStreamOffset = *offset;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const Vector3 &GetTempCommandStreamOffset() {
     return temporaryCommandStreamOffset;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t ProcessObjectRenderCommandStream(const MapModelRuntimeSlot &slot, std::span<const MapCellOffset> visibleCells, MapCellOffset cameraCell,
     LegacyModelShaderPath shaderPath, std::int32_t mode) {
     const Matrix4x4 baseTransform = workTransformMatrix;
@@ -2013,7 +2222,9 @@ std::uint32_t ProcessObjectRenderCommandStream(const MapModelRuntimeSlot &slot, 
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t ProcessAlphaObjectRenderCommandStream(
     const MapModelRuntimeSlot &slot, std::span<const MapCellOffset> visibleCells, MapCellOffset cameraCell, LegacyModelShaderPath shaderPath, float alpha) {
     const Matrix4x4 baseTransform = workTransformMatrix;
@@ -2037,17 +2248,23 @@ std::uint32_t ProcessAlphaObjectRenderCommandStream(
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 g_d3tLightDirection{};
+#endif
 
 namespace {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The sky-dome source keys and their SkyProbe placements.
 std::array<std::uint32_t, 9> skyDomeSources{};
 std::array<std::uint32_t, 9> skyDomeProbePlacements{};
 constexpr std::array<const char *, 9> kSkyDomeModels{"HD_skyDome.fbx", "HD_skyHorizon0.fbx", "HD_skyHorizon1.fbx", "HD_skyHorizon2.fbx", "HD_skyLayer0.fbx",
     "HD_skyLayer1.fbx", "HD_Corona.fbx", "HD_Stars0.fbx", "HD_Moon.fbx"};
-}
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void LoadSkyDomeModels(const char *directory) {
     char path[272];
@@ -2058,14 +2275,18 @@ void LoadSkyDomeModels(const char *directory) {
         d3t::RegisterObjectPlacement(&skyDomeSources[index], &skyDomeProbePlacements[index], 4);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseSkyDomeModels(const std::uint32_t *handles) {
     for (std::size_t index = 0; index < kSkyDomeModels.size(); ++index) {
         if (const std::uint32_t model = d3t::GetObjectSourceRenderHandle(&handles[index]))
             d3t::ReleaseModelHandle(model);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetupRenderBufferHandles() {
     ReleaseSkyDomeModels(skyDomeSources.data());
@@ -2075,7 +2296,9 @@ void SetupRenderBufferHandles() {
     g_skyModelCache = 0;
     g_skyProbeModelCache = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SkyDomeProbe(const char *mapDirectory) {
     char air[272];
@@ -2087,7 +2310,9 @@ void SkyDomeProbe(const char *mapDirectory) {
     g_skyProbeModelCache = d3t::AllocateModelCache("SkyProbe");
     g_d3tLightDirection = {0.0f, -1.0f, 0.0f};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawObjectWorldPass() {
     if (!d3t::BindSceneFrameRenderTarget())
         return 0;
@@ -2172,7 +2397,7 @@ std::uint32_t DrawObjectWorldPass() {
         }
         SetLegacyVertexColourType(previousVertexColourType);
     }
-
+    // Native OBJ_Callback_1 ends with the current map's water draw.
     const std::uint32_t map = g_currentMap.name;
     if (map == SHEN_NAME(0504)) {
         draws += DrawSurfaceWaveModel();
@@ -2189,7 +2414,9 @@ std::uint32_t DrawObjectWorldPass() {
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawMapLightingPlacementWorldPass() {
     if (!d3t::BindSceneFrameRenderTarget())
         return 0;
@@ -2231,18 +2458,27 @@ std::uint32_t DrawMapLightingPlacementWorldPass() {
     }
     return draws;
 }
+#endif
 
 namespace {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #pragma pack(push, 1)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 struct ObjectDrawTaskParameters {
     std::uint64_t reserved00;
     std::int16_t submittedOpaque;
     std::int16_t submittedTransparent;
     std::uint32_t reserved0c;
 };
-#pragma pack(pop)
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+#pragma pack(pop)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 static_assert(sizeof(ObjectDrawTaskParameters) == 0x10);
 static_assert(offsetof(ObjectDrawTaskParameters, submittedOpaque) == 0x08);
 static_assert(offsetof(ObjectDrawTaskParameters, submittedTransparent) == 0x0a);
@@ -2266,11 +2502,11 @@ enum class AirModelSlot : std::size_t {
 
 constexpr std::array<std::uint32_t, static_cast<std::size_t>(AirModelSlot::Count)> airModelTags{
     SHEN_NAME(DOM0),
-    SHEN_NAME(DOM1),
-    SHEN_NAME(AIR0),
-    SHEN_NAME(AIR1),
-    SHEN_NAME(MOON),
-};
+        SHEN_NAME(DOM1),
+            SHEN_NAME(AIR0),
+                SHEN_NAME(AIR1),
+                    SHEN_NAME(MOON),
+                };
 constexpr std::uint32_t xb01Signature = SHEN_NAME(XB01);
 constexpr std::uint32_t txt7Signature = SHEN_NAME(TXT7);
 constexpr std::uint32_t texnSignature = SHEN_NAME(TEXN);
@@ -2280,29 +2516,24 @@ constexpr std::uint32_t ddsSignature = make_shen_name('D', 'D', 'S', ' ');
 constexpr std::uint32_t defaultDaytimeSkyColour = 0xffacecffU;
 constexpr float skyDepth = 0.0000001f;
 constexpr float cloudScrollRate = 0.00050000002f;
-constexpr std::array<std::int32_t, 7> cloudTextureIndices{
-    0, 5, 4, 3, 1, 2, 2};
-constexpr std::array<float, 7> cloudBlendMaxValues{
-    1.0f, 1.0f, 1.0f, 1.0f, 0.4f, 1.0f, 1.0f};
-constexpr std::array<float, 9> cloudGradientWeights{
-    0.0f, 1.0f, 1.5f, 2.0f, 5.0f, 7.0f, 7.0f, 10.0f, 10.0f};
+constexpr std::array<std::int32_t, 7> cloudTextureIndices{0, 5, 4, 3, 1, 2, 2};
+constexpr std::array<float, 7> cloudBlendMaxValues{1.0f, 1.0f, 1.0f, 1.0f, 0.4f, 1.0f, 1.0f};
+constexpr std::array<float, 9> cloudGradientWeights{0.0f, 1.0f, 1.5f, 2.0f, 5.0f, 7.0f, 7.0f, 10.0f, 10.0f};
 constexpr std::array<float, 5> domeGradientWeights{0.0f, 1.0f, 2.0f, 3.0f, 10.0f};
 
+// Native AllocateCDCX tables: each cloud-layer and day-dome vertex's gradient level, the rank of its height with the highest
+// first. Retail ships them precomputed; AllocateDome recomputes both from the loaded meshes.
+std::array<std::uint8_t, 96> airCloudVertexLevels{8, 8, 8, 7, 8, 6, 8, 4, 8, 4, 8, 4, 8, 5, 8, 7, 8, 8, 8, 5, 4, 3, 2, 3, 4, 5, 8, 8, 4, 3, 2, 1, 2, 3, 4, 8, 8,
+    4, 2, 1, 0, 1, 2, 4, 8, 8, 4, 3, 2, 1, 2, 3, 4, 8, 8, 5, 4, 3, 2, 3, 4, 5, 8, 8, 7, 5, 4, 4, 4, 5, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8};
+std::array<std::uint8_t, 72> airDomeVertexLevels{1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 3, 2, 3, 4, 4, 4, 4, 4, 3, 3, 2, 2, 2, 3, 4,
+    1, 2, 2, 1, 2, 2, 1, 2, 1, 2, 3, 2, 3, 3, 4, 4, 4, 1, 2, 2, 1, 2, 4, 4, 3, 3, 2, 2, 3, 4, 2, 1};
 
-
-std::array<std::uint8_t, 96> airCloudVertexLevels{
-    8, 8, 8, 7, 8, 6, 8, 4, 8, 4, 8, 4, 8, 5, 8, 7, 8, 8, 8, 5, 4, 3, 2, 3, 4, 5, 8, 8, 4, 3, 2, 1, 2, 3, 4, 8, 8, 4, 2, 1, 0,
-    1, 2, 4, 8, 8, 4, 3, 2, 1, 2, 3, 4, 8, 8, 5, 4, 3, 2, 3, 4, 5, 8, 8, 7, 5, 4, 4, 4, 5, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8};
-std::array<std::uint8_t, 72> airDomeVertexLevels{
-    1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 3, 2, 3, 4, 4, 4, 4, 4, 3, 3, 2, 2, 2, 3, 4, 1, 2, 2, 1,
-    2, 2, 1, 2, 1, 2, 3, 2, 3, 3, 4, 4, 4, 1, 2, 2, 1, 2, 4, 4, 3, 3, 2, 2, 3, 4, 2, 1};
-
-
-
+// Native g_pPlanets owns a 0x50-byte record; DispPlanets loads these actual-base fields.
+// Selector arithmetic uses the same 0x50 stride, but only selector 0 is confirmed.
 constexpr std::size_t planetLayerParameterStrideFloats = 20;
 
 struct AirPlanetLayerState {
-
+    // Native PlanetLayer color/rate/offset state swaps as one layer.
     std::uint32_t colour0{0xffffffffU};
     std::uint32_t colour1{0xffffffffU};
     std::array<std::uint32_t, 9> levelColours{~0U, ~0U, ~0U, ~0U, ~0U, ~0U, ~0U, ~0U, ~0U};
@@ -2318,7 +2549,7 @@ struct AirPresentation {
     std::array<Vector2, 2> cloudUvOffsets{};
     AirPlanetDrawRecord planetDrawRecord{};
     std::array<AirPlanetLayerState, 2> planetLayers{};
-
+    // Native g_sky_cloud_colour_pair: the day dome's gradient level colours, and each dome's draw blend.
     std::array<std::uint32_t, 5> skyLevelColours{~0U, ~0U, ~0U, ~0U, ~0U};
     std::array<float, 2> domeBlends{1.0f, 0.0f};
     bool geometryReady{};
@@ -2336,10 +2567,12 @@ struct AirWeatherPresentation {
 AirPresentation airPresentation;
 AirWeatherPresentation airWeatherPresentation;
 std::int32_t airSkyEnabled{};
-
+// Native g_fCurrentTimeOfDay: hhmmss-style time, 10000 per hour.
 float airTimeOfDay{};
 float airModelScale{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 template <typename Value> bool ReadAirValue(std::span<const std::byte> bytes, std::size_t offset, Value &value) {
     if (offset > bytes.size() || sizeof(value) > bytes.size() - offset) {
         return false;
@@ -2347,7 +2580,9 @@ template <typename Value> bool ReadAirValue(std::span<const std::byte> bytes, st
     std::memcpy(&value, bytes.data() + offset, sizeof(value));
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<std::byte> FindAirModelChunk(std::span<std::byte> bytes, std::uint32_t wantedTag) {
     std::size_t offset = 0;
     const std::span<const std::byte> source{bytes.data(), bytes.size()};
@@ -2363,8 +2598,10 @@ std::span<std::byte> FindAirModelChunk(std::span<std::byte> bytes, std::uint32_t
     }
     return {};
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The mesh a sky model's gradient and scroll address: native AssignAirLayerMesh keeps the last XB01 node it walks.
 const MT7Node *FindAirGradientMesh(const MT7Model &model) {
     const MT7Node *mesh = nullptr;
     for (const MT7Node &node : model.nodes) {
@@ -2373,7 +2610,9 @@ const MT7Node *FindAirGradientMesh(const MT7Model &model) {
     }
     return mesh;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 int FloatCompare(const void *left, const void *right) {
     const float first = *static_cast<const float *>(left);
     const float second = *static_cast<const float *>(right);
@@ -2381,8 +2620,10 @@ int FloatCompare(const void *left, const void *right) {
         return 1;
     return (first <= second) - 1;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native AllocateCDCX: ranks the mesh's distinct vertex heights (5-unit bands, highest first) and stores each vertex's rank.
 void AllocateCDCX(const MT7Model &model, std::span<std::uint8_t> levels, std::uint32_t capacity) {
     const MT7Node *const mesh = FindAirGradientMesh(model);
     if (!mesh)
@@ -2412,8 +2653,10 @@ void AllocateCDCX(const MT7Model &model, std::span<std::uint8_t> levels, std::ui
     }
     HLib::FreeTaskData(heights);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native ComputeCloudScaling: the gradient level colours from colour0 towards colour1, weight w of 10 per level.
 void ComputeCloudScaling(std::uint32_t colour0, std::uint32_t colour1, std::span<const float> weights, std::uint32_t *colours) {
     const float alpha = static_cast<float>(colour0 >> 24U);
     const float red = static_cast<float>((colour0 >> 16U) & 0xffU);
@@ -2431,8 +2674,10 @@ void ComputeCloudScaling(std::uint32_t colour0, std::uint32_t colour1, std::span
         *colours++ = rgb | static_cast<std::uint32_t>(static_cast<std::int32_t>(blueStep * weight + blue));
     }
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native CopyBufferToDirectX_Wrapper_0: every day-dome vertex takes its level's colour, then the mesh re-uploads.
 void UploadAirDomeColours() {
     if (!airPresentation.geometryReady)
         return;
@@ -2452,7 +2697,9 @@ void UploadAirDomeColours() {
     }
     d3t::DX11_CopySceneNodeToGPU(d3t::DX11::g_ppD3DDeviceContext, binding->handle);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateTimeOfDay() {
     DateTime dateTime{};
     shenGetCurrentDateTime(dateTime);
@@ -2460,7 +2707,9 @@ void UpdateTimeOfDay() {
     const float minutes = (static_cast<float>(dateTime.minute) / 60.0f) * 10000.0f;
     airTimeOfDay = ((static_cast<float>(dateTime.second) / 60.0f) * 100.0f) * 1.666666f + (minutes + hours);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // The night dome fades in from 18:00 to 19:00 and out from 05:00 to 06:00.
 void UpdateNightTime() {
     float &blend = airPresentation.domeBlends[1];
@@ -2471,7 +2720,9 @@ void UpdateNightTime() {
     else
         blend = airTimeOfDay >= 190000.0f || airTimeOfDay < 50000.0f ? 1.0f : 0.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float AdvanceAirUvOffset(float &offset, float delta) {
     const float previous = offset;
     offset += delta;
@@ -2483,7 +2734,9 @@ float AdvanceAirUvOffset(float &offset, float delta) {
     }
     return offset - previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AdvanceAirLayerUv(std::size_t layerIndex) {
     Vector2 &offset = airPresentation.cloudUvOffsets[layerIndex];
     const Vector2 &rate = airPresentation.planetLayers[layerIndex].rate;
@@ -2536,14 +2789,18 @@ void AdvanceAirLayerUv(std::size_t layerIndex) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AdvanceAirUv() {
     if (!airPresentation.geometryReady)
         return;
     AdvanceAirLayerUv(0);
     AdvanceAirLayerUv(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t UploadAirPvrTexture(std::span<const std::byte> bytes, std::size_t offset) {
     std::uint32_t signature{};
     if (!ReadAirValue(bytes, offset, signature))
@@ -2566,7 +2823,9 @@ std::uint32_t UploadAirPvrTexture(std::span<const std::byte> bytes, std::size_t 
     }
     return d3t::CreateImageTextureFromMemory(bytes.data() + payload, bytes.size() - payload, true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetAirModelTexture(MT7Model &model, std::size_t textureIndex, std::uint32_t handle) {
     if (textureIndex >= model.textures.size())
         return;
@@ -2579,7 +2838,9 @@ void SetAirModelTexture(MT7Model &model, std::size_t textureIndex, std::uint32_t
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool UploadEmbeddedAirTextures(std::span<const std::byte> modelBytes, MT7Model &model) {
     MT7Header header{};
     if (!ReadAirValue(modelBytes, 0, header) || header.size > modelBytes.size() || modelBytes.size() - header.size < 16) {
@@ -2604,7 +2865,9 @@ bool UploadEmbeddedAirTextures(std::span<const std::byte> modelBytes, MT7Model &
     }
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseAirGeometry() {
     std::array<std::uint32_t, static_cast<std::size_t>(AirModelSlot::Count)> released{};
     std::size_t releasedCount = 0;
@@ -2635,7 +2898,10 @@ void ReleaseAirGeometry() {
     airWeatherPresentation.previousSecondsSince1980 = 0;
     airWeatherPresentation.secondsSince1980 = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native AllocateDome: the day dome's XB01 packets select primitive layout 3 wherever a command selects layout 2.
 void SelectDomePrimitiveLayout(const MT7Model &model) {
     const MT7Node *const mesh = FindAirGradientMesh(model);
     if (!mesh)
@@ -2663,7 +2929,10 @@ void SelectDomePrimitiveLayout(const MT7Model &model) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Each sky model is copied out of the DOOE file into its own DOME block, in native order (clouds, domes, moon).
 bool ReadAirModel(std::span<std::byte> doom, AirModelSlot slot) {
     const std::size_t index = static_cast<std::size_t>(slot);
     const std::span<std::byte> chunk = FindAirModelChunk(doom, airModelTags[index]);
@@ -2680,7 +2949,9 @@ bool ReadAirModel(std::span<std::byte> doom, AirModelSlot slot) {
     const std::span<const std::byte> source{static_cast<const std::byte *>(data), chunk.size()};
     return ReadModelFormat7(source, label.data(), model) && UploadEmbeddedAirTextures(source, model);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool LoadAirGeometry() {
     ReleaseAirGeometry();
     std::uint32_t size = 0;
@@ -2705,14 +2976,18 @@ bool LoadAirGeometry() {
     airPresentation.geometryReady = true;
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsAirTextureUsedElsewhere(const MT7Model *excluded, std::uint32_t handle) {
     return std::any_of(airPresentation.models.begin(), airPresentation.models.end(), [excluded, handle](const MT7Model &model) {
         return &model != excluded &&
             std::any_of(model.textures.begin(), model.textures.end(), [handle](const MT7TextureEntry &texture) { return texture.textureIndex == handle; });
     });
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReadSpriteForSkyboxObjects(std::int32_t textureIndex, std::int32_t layer, float blendMax, const std::byte *sprite) {
     airPresentation.cloudBlendMax[static_cast<std::size_t>(layer)] = blendMax;
     airWeatherPresentation.clouds.textureIndices[static_cast<std::size_t>(layer)] = textureIndex;
@@ -2728,7 +3003,9 @@ void ReadSpriteForSkyboxObjects(std::int32_t textureIndex, std::int32_t layer, f
     if (previous && previous != handle && !IsAirTextureUsedElsewhere(&cloud, previous))
         d3t::InitTexture2DResource(previous);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ReadSkyboxTexture(std::int32_t textureIndex, std::int32_t layer, float blendMax) {
     if (airWeatherPresentation.clouds.textureIndices[static_cast<std::size_t>(layer)] == textureIndex)
@@ -2738,6 +3015,9 @@ void ReadSkyboxTexture(std::int32_t textureIndex, std::int32_t layer, float blen
     (void)LoadLegacyFiles("sprite", filename, g_armMotionMemory, 0x8800);
     ReadSpriteForSkyboxObjects(textureIndex, layer, blendMax, g_armMotionMemory);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t ReadCloudSpriteTexture(std::int32_t textureIndex, std::int32_t layer, float blendMax) {
     AirCloudTextureState &clouds = airWeatherPresentation.clouds;
@@ -2757,7 +3037,9 @@ std::int32_t ReadCloudSpriteTexture(std::int32_t textureIndex, std::int32_t laye
     nullsub();
     return 1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t SetupCloudTexture(std::int32_t textureIndex, std::int32_t frames, std::int32_t mode, float blendMax) {
     AirCloudTextureState &clouds = airWeatherPresentation.clouds;
@@ -2782,6 +3064,9 @@ std::int32_t SetupCloudTexture(std::int32_t textureIndex, std::int32_t frames, s
     nullsub();
     return 1;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ResetCloudScaling() {
     AirCloudTextureState &clouds = airWeatherPresentation.clouds;
@@ -2793,6 +3078,9 @@ void ResetCloudScaling() {
     std::swap(clouds.blendSteps[0], clouds.blendSteps[1]);
     std::swap(clouds.textureIndices[0], clouds.textureIndices[1]);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ResetCloudScaling_0() {
     AirCloudTextureState &clouds = airWeatherPresentation.clouds;
@@ -2813,7 +3101,9 @@ void ResetCloudScaling_0() {
         clouds.loadingTextureIndex = -1;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AdvanceCloudTransition() {
     AirCloudTextureState &clouds = airWeatherPresentation.clouds;
@@ -2834,7 +3124,9 @@ void AdvanceCloudTransition() {
     if (clouds.frames < 0)
         ResetCloudScaling_0();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t RecursiveSetTranslationForPlanets(const MT7Model &model, const MT7Node *node, float alpha, bool translate, bool clouds) {
     const bool sibling = node->runtimeSibling != nullptr;
@@ -2863,7 +3155,9 @@ std::uint32_t RecursiveSetTranslationForPlanets(const MT7Model &model, const MT7
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawAirModel(AirModelSlot slot, float alpha, bool translate, bool clouds) {
     if (!airPresentation.geometryReady)
         return 0;
@@ -2876,7 +3170,9 @@ std::uint32_t DrawAirModel(AirModelSlot slot, float alpha, bool translate, bool 
     SetLegacyRenderQueueEnabled(queueEnabled);
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DispDome() {
     if (!g_airDrawDomeEnabled)
         return 0;
@@ -2895,7 +3191,9 @@ std::uint32_t DispDome() {
     nullsub();
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DispPlanets() {
     if (!g_airDrawPlanetsEnabled)
         return 0;
@@ -2919,7 +3217,9 @@ std::uint32_t DispPlanets() {
     nullsub();
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DispAir() {
     if (!g_airDrawCloudsEnabled)
         return 0;
@@ -2945,26 +3245,37 @@ std::uint32_t DispAir() {
     nullsub();
     return draws;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native Air_Draw and the OBJ_Callback draws: the halves CtrlAir/DrawObject submit through
+// ExecuteCallbackNow so PAUS can replay them while queues 3-13 are halted.
 void Air_Draw(void *) {
     DrawAirWorldPass();
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native DrawObject's task-referenced player draw nullsub.
 void ObjectPlayerDrawNullCallback(void *) {
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawOrdinaryMapCallback(void *) {
     DrawObjectWorldPass();
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawMapPlacementCallback(void *) {
     DrawMapLightingPlacementWorldPass();
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native OBJ_Callback's object test: the frustum sphere in the object's frame (radius 5 for an MDP7 marker 0x74, else 3,
+// widened to the XB01 bound), then the field-depth occupancy of the given point under the object at radius 2.
 bool IsPropObjectVisible(const MT7Model &model, const MT7Node &object, const Vector3 &point) {
     Matrix4x4_Push();
     float radius = IsMDPXorMDP7(&object) == 0x74U ? 5.0f : 3.0f;
@@ -2983,8 +3294,10 @@ bool IsPropObjectVisible(const MT7Model &model, const MT7Node &object, const Vec
     Matrix4x4::Pop(1);
     return radius > 0.0f && camCtrlIsModelDepthVisible(point, object, 2.0f);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native Recursive_ApplyTransRotScale(object, 1) with the sibling link cut: the object's subtree under its own transform.
 std::uint32_t DrawPropObjectHierarchy(
     const MT7Model &model, const MT7Node *node, const Matrix4x4 &objectBase, LegacyModelShaderPath shaderPath, std::uint32_t drawMeshes) {
     std::uint32_t draws = 0;
@@ -3026,7 +3339,9 @@ std::uint32_t DrawPropObjectHierarchy(
     }
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawPropObject(const MT7Model &model, MT7Node &object, const Matrix4x4 &objectBase, LegacyModelShaderPath shaderPath) {
     MT7Node *const sibling = object.runtimeSibling;
     object.runtimeSibling = nullptr;
@@ -3036,7 +3351,9 @@ std::uint32_t DrawPropObject(const MT7Model &model, MT7Node &object, const Matri
     object.runtimeSibling = sibling;
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const MT7Model *FindPropObjectReader(const MT7Node &object) {
     for (const PropReaderSlot &slot : GetPropReaderSlots()) {
         if (slot.reader && !slot.reader->nodes.empty() && &object >= slot.reader->nodes.data() &&
@@ -3045,11 +3362,13 @@ const MT7Model *FindPropObjectReader(const MT7Node &object) {
     }
     return nullptr;
 }
+#endif
 
-
-
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native OBJ_Callback, the prop pass. Each prop reader is cut out of the shared prop graph; once one of its objects passes
+// the visibility test, its D3T model is hashed and updated and takes the prop offset as its cache transform, and when the
+// legacy draw is not consumed every visible object draws its meshes. While the character mirror is active, the whole prop
+// graph draws again through the mirror matrix in the mirrored draw mode.
 void DrawPropObjectCallback(void *) {
     const std::int32_t previousVertexColourType = GetLegacyVertexColourType();
     GetFieldDepthModelTransform() = GetFieldDepthTransform();
@@ -3114,7 +3433,9 @@ void DrawPropObjectCallback(void *) {
     }
     SetLegacyVertexColourType(previousVertexColourType);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void CtrlAir_Callback(void *taskData) {
     auto *const parameters = static_cast<AirDrawTaskParameters *>(taskData);
@@ -3138,7 +3459,9 @@ void CtrlAir_Callback(void *taskData) {
         HLib::ExecuteCallbackNow(Air_Draw, nullptr);
     d3t::SetSceneClearColour(airSkyEnabled ? airWeatherPresentation.cloudColour : g_airClearColour);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void OBJ_Object_Callback(void *taskData) {
 
     auto *const parameters = static_cast<ObjectDrawTaskParameters *>(taskData);
@@ -3159,10 +3482,10 @@ void OBJ_Object_Callback(void *taskData) {
     UpdateWindForFlag();
     HLib::ExecuteCallbackNow(DrawPropObjectCallback, nullptr);
 }
+#endif
 
 } // namespace
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawAirWorldPass() {
     if (!airSkyEnabled || !airPresentation.geometryReady || !d3t::BindSceneFrameRenderTarget()) {
         return 0;
@@ -3189,39 +3512,54 @@ std::uint32_t DrawAirWorldPass() {
     nullsub();
     return draws;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetClearColourForClouds(std::uint32_t colour) {
     g_airClearColour = colour;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCloudAndSkyColour(std::uint32_t skyColour, std::uint32_t cloudColour) {
     airWeatherPresentation.skyColour = skyColour | 0xff000000U;
     airWeatherPresentation.cloudColour = cloudColour | 0xff000000U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t GetWeatherCloudOrSkyColour(std::int32_t channel) {
     return channel ? airWeatherPresentation.cloudColour : airWeatherPresentation.skyColour;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetIsSkySetup(std::int32_t value) {
     airSkyEnabled = value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float *SetPlanetLayerParameter(float value, std::int32_t layer) {
     float *const base = &airPresentation.planetDrawRecord.intensity;
     const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(layer) * static_cast<std::ptrdiff_t>(planetLayerParameterStrideFloats);
     std::memcpy(base + offset, &value, sizeof(value));
     return base;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetPlanetLayerParameter(std::int32_t layer) {
     const float *const base = &airPresentation.planetDrawRecord.intensity;
     const std::ptrdiff_t offset = static_cast<std::ptrdiff_t>(layer) * static_cast<std::ptrdiff_t>(planetLayerParameterStrideFloats);
     return base[offset];
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetPlanetRotByIndex(const Vector3i &rotation, std::int32_t index) {
     std::byte *const record = reinterpret_cast<std::byte *>(&airPresentation.planetDrawRecord) + static_cast<std::ptrdiff_t>(index) * 0x50;
@@ -3229,7 +3567,9 @@ void SetPlanetRotByIndex(const Vector3i &rotation, std::int32_t index) {
     std::memcpy(record + offsetof(AirPlanetDrawRecord, intermediateRotation) + 4, &rotation.y, sizeof(rotation.y));
     std::memcpy(record + offsetof(AirPlanetDrawRecord, intermediateRotation) + 8, &rotation.z, sizeof(rotation.z));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateCelestialRotation(const Vector3i &angles, const Vector3 &input, Vector3 &output) {
     const std::uint16_t xAngle = static_cast<std::uint16_t>(angles.x), yAngle = static_cast<std::uint16_t>(angles.y);
@@ -3241,7 +3581,9 @@ void UpdateCelestialRotation(const Vector3i &angles, const Vector3 &input, Vecto
     output.y = rotatedZ * sineX + y * cosineX;
     output.z = rotatedZ * cosineX - y * sineX;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateCelestialCoordinates() {
     AirPlanetDrawRecord &planet = airPresentation.planetDrawRecord;
@@ -3252,7 +3594,9 @@ void UpdateCelestialCoordinates() {
     planet.rotation.y = planet.intermediateRotation.y + 16384 + planet.timeRotation.z - planet.timeRotation.x;
     planet.rotation.z = planet.intermediateRotation.z;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void shenUpdatePlanetByLayer(float value, std::int32_t channel, std::int32_t layer) {
     Vector2 &rate = airPresentation.planetLayers[static_cast<std::size_t>(layer)].rate;
     if (channel)
@@ -3260,21 +3604,27 @@ void shenUpdatePlanetByLayer(float value, std::int32_t channel, std::int32_t lay
     else
         rate.x = value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EV_SetPlanetLayerColours_Impl(std::uint32_t firstColour, std::uint32_t secondColour, std::int32_t layer) {
     AirPlanetLayerState &destination = airPresentation.planetLayers[static_cast<std::size_t>(layer)];
     destination.colour0 = firstColour | 0xff000000U;
     destination.colour1 = secondColour | 0xff000000U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t GetPlanetLayerColour(std::int32_t channel, std::int32_t layer) {
     const AirPlanetLayerState &source = airPresentation.planetLayers[static_cast<std::size_t>(layer)];
     return static_cast<std::uint64_t>(channel ? source.colour1 : source.colour0);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t SetPlanetLayerOffset(const Vector3 &offset, std::int32_t layer) {
     AirPlanetLayerState &destination = airPresentation.planetLayers[static_cast<std::size_t>(layer)];
-
+    // Preserve native X/Y-write-before-Z-read ordering for aliased input.
     std::uint64_t xy{};
     std::memcpy(&xy, &offset, sizeof(xy));
     std::memcpy(&destination.offset, &xy, sizeof(xy));
@@ -3285,34 +3635,46 @@ std::uint64_t SetPlanetLayerOffset(const Vector3 &offset, std::int32_t layer) {
     std::memcpy(destinationBytes + sizeof(xy), &z, sizeof(z));
     return static_cast<std::uint64_t>(z);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t ResetPlanetLayerOffset(std::int32_t layer) {
     AirPlanetLayerState &destination = airPresentation.planetLayers[static_cast<std::size_t>(layer)];
     destination.offset = {0.0f, -115.0f, 0.0f};
     return std::uint64_t{0};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t GetHasInitCloudTextures() {
     return airWeatherPresentation.clouds.active;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t GetCurrentAirLayerIndex() {
     return airWeatherPresentation.clouds.loadingTextureIndex;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 bool GetIsCurrentCloudTextureValid() {
     return airWeatherPresentation.clouds.sprite != nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSkyWeatherModes(std::int32_t previous, std::int32_t current) {
     g_previousSkyWeatherMode = previous;
     g_currentSkyWeatherMode = current;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateWeatherClouds(WeatherAir *air, std::int32_t frames) {
     if (air->field44 == 0) {
@@ -3366,7 +3728,9 @@ void UpdateWeatherClouds(WeatherAir *air, std::int32_t frames) {
         air->mode = mode;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateClouds(WeatherAir *air) {
     air->field44 = air->rain >= 0.1f || air->snow >= 0.1f;
@@ -3397,7 +3761,9 @@ void UpdateClouds(WeatherAir *air) {
     SetSkyWeatherModes(air->mode, mode);
     air->mode = mode;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeAirPresentation(const void *mapInfo) {
     g_airClearColour = 0;
     // CreateSkybox/InitPlanets reset the AIR owner before interpreting SCRL.
@@ -3417,13 +3783,17 @@ void InitializeAirPresentation(const void *mapInfo) {
 
     d3t::SetSceneClearColour(airSkyEnabled ? airWeatherPresentation.cloudColour : g_airClearColour);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetAirPresentation() {
     ReleaseAirGeometry();
     airSkyEnabled = 0;
     d3t::SetSceneClearColour(g_airClearColour);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 HLib::Task *QueueAirDrawTask(std::uint8_t nextFunctionIndex) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(CtrlAir_Callback, nextFunctionIndex, 6, sizeof(AirDrawTaskParameters), TASK_AIRD);
@@ -3432,8 +3802,10 @@ HLib::Task *QueueAirDrawTask(std::uint8_t nextFunctionIndex) {
     }
     return task;
 }
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 struct WaveBin {
     float amplitude{};
     float phaseA{};
@@ -3466,7 +3838,9 @@ struct WaveRuntime {
 WaveRuntime wave;
 float textureAnimationU{};
 float textureAnimationV{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float WaveLog(float value) {
     float result = 0.0f;
     if (value <= 0.0f)
@@ -3491,9 +3865,11 @@ float WaveLog(float value) {
             return result;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float WavePower(float value, float exponent) {
-
+    // Native fast_powf_approx -> fast_logf_approx/fast_expf_approx.
     const float logarithm = WaveLog(value) * exponent;
     const int power = static_cast<int>(logarithm / 0.69314718f + (logarithm < 0.0f ? -0.5f : 0.5f));
     const float remainder = logarithm - static_cast<float>(power) * 0.69314718f;
@@ -3503,26 +3879,41 @@ float WavePower(float value, float exponent) {
         fraction = square / (static_cast<float>(denominator) + fraction);
     return std::ldexp(((fraction + 2.0f) + remainder) / ((fraction + 2.0f) - remainder), power);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float ReadWaveKernel(const void *kernel, std::size_t index) {
     float value{};
     std::memcpy(&value, static_cast<const std::byte *>(kernel) + index * 4, 4);
     return value;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WriteWaveKernel(void *kernel, std::size_t index, float value) {
     std::memcpy(static_cast<std::byte *>(kernel) + index * 4, &value, 4);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WaveComplex WaveAdd(WaveComplex first, WaveComplex second) {
     return {first.real + second.real, first.imaginary + second.imaginary};
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WaveComplex WaveSubtract(WaveComplex first, WaveComplex second) {
     return {first.real - second.real, first.imaginary - second.imaginary};
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WaveComplex WaveRotate(WaveComplex value, WaveComplex twiddle) {
     return {value.real * twiddle.real + twiddle.imaginary * value.imaginary, -twiddle.imaginary * value.real + twiddle.real * value.imaginary};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void TransformWaveLine(std::array<WaveComplex, 16> &line) {
     // TransformWaveLine performs four-bit reversal, radix-four and radix-two passes,
     // then the final scaled pair pass with factor 1/16.
@@ -3557,7 +3948,9 @@ void TransformWaveLine(std::array<WaveComplex, 16> &line) {
         line[index + 8] = {difference.real * 0.0625f, difference.imaginary * 0.0625f};
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWaveSpectrum() {
     const std::uint8_t stabilize = g_stabilizeFps;
     const float frameTime = g_stabilizedFrameTime;
@@ -3629,12 +4022,16 @@ void UpdateWaveSpectrum() {
         wave.imaginary[272 + column] = wave.imaginary[column];
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t PackWaveColour(float red, float green, float blue) {
     return 0xff000000U | (static_cast<std::uint32_t>(static_cast<std::int32_t>(red)) << 16U) |
         (static_cast<std::uint32_t>(static_cast<std::int32_t>(green)) << 8U) | static_cast<std::uint32_t>(static_cast<std::int32_t>(blue));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWaveNormals() {
     const float ambient = wave.ambient * wave.lightAmbient;
     const float cell = wave.cellSize;
@@ -3674,7 +4071,9 @@ void UpdateWaveNormals() {
     for (std::size_t column = 0; column <= 16; ++column)
         wave.vertices[272 + column] = wave.vertices[column];
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyAnimatedStripTree(MT7Model &model, std::size_t &cursor, std::int32_t parent, bool waveform) {
     bool succeeded = true;
     while (cursor < model.nodes.size() && model.nodes[cursor].parent == parent) {
@@ -3714,7 +4113,9 @@ bool ApplyAnimatedStripTree(MT7Model &model, std::size_t &cursor, std::int32_t p
     }
     return succeeded;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyWaveReflectionTree(MT7Model &model, MT7Node *node, std::uint32_t diffuse, std::uint32_t specular) {
     bool succeeded = true;
     for (; node; node = node->runtimeSibling) {
@@ -3739,15 +4140,19 @@ bool ApplyWaveReflectionTree(MT7Model &model, MT7Node *node, std::uint32_t diffu
     }
     return succeeded;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t PackWaveReflectionColour(const Vector3 &colour, float scale) {
     const std::uint32_t red = static_cast<std::uint32_t>(static_cast<std::int32_t>((colour.x * 255.0f) * scale));
     const std::uint32_t green = static_cast<std::uint32_t>(static_cast<std::int32_t>((colour.y * 255.0f) * scale));
     const std::uint32_t blue = static_cast<std::uint32_t>(static_cast<std::int32_t>((colour.z * 255.0f) * scale));
     return 0xff000000U | (red << 16U) | (green << 8U) | blue;
 }
-} // namespace
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GenerateFFT(float cellSize) {
     wave.specularExponent = 16.0f;
     wave.specularIntensity = 1.0f;
@@ -3767,7 +4172,9 @@ void GenerateFFT(float cellSize) {
         bin.speedA = bin.speedB = 0.0f;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *GenerateDistanceFalloffRowMajor(float exponent, std::span<std::byte, 0x100> kernel) {
     WriteWaveKernel(kernel.data(), 0, 0.0f);
     for (std::size_t index = 1; index < 64; ++index) {
@@ -3776,6 +4183,9 @@ void *GenerateDistanceFalloffRowMajor(float exponent, std::span<std::byte, 0x100
     }
     return kernel.data();
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *GenerateDistanceFalloffKernel8x8(float exponent, std::span<std::byte, 0x100> kernel) {
     for (std::size_t index = 0; index < 64; ++index) {
         const int x = static_cast<int>(index % 8), y = static_cast<int>(index / 8);
@@ -3783,6 +4193,9 @@ void *GenerateDistanceFalloffKernel8x8(float exponent, std::span<std::byte, 0x10
     }
     return kernel.data();
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *FillFftKernel(float scale, void *kernel) {
     if (!kernel)
         return nullptr;
@@ -3795,12 +4208,18 @@ void *FillFftKernel(float scale, void *kernel) {
     }
     return kernel;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FillFftDistance(const void *kernel) {
     if (!kernel)
         return;
     for (std::size_t index = 0; index < 64; ++index)
         wave.bins[index].amplitude = ReadWaveKernel(kernel, index);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyFft(const void *first, const void *second) {
     if (!first || !second)
         return;
@@ -3809,24 +4228,42 @@ void ApplyFft(const void *first, const void *second) {
         wave.bins[index].speedB = ReadWaveKernel(second, index);
     }
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FinalizeFft(float scrollU, float scrollV) {
     wave.scrollU = scrollU;
     wave.scrollV = scrollV;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<const LegacyWaveVertex, 289> GetWaveVertices() {
     return wave.vertices;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<const float, 289> GetWaveHeights() {
     return wave.real;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WaveLightingView GetWaveLightingView() {
     return {wave.real, wave.imaginary, wave.lightingFlags, wave.cellSize, wave.lightAmbient, wave.lightDirection, wave.ambient, wave.diffuse, wave.specular,
         wave.specularExponent, wave.specularIntensity, wave.scrollU, wave.scrollV};
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWaveLighting(float ambient, const Vector3 &direction) {
     wave.lightAmbient = ambient;
     wave.lightDirection = direction;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void BuildWaveLightingTable(std::uint32_t flags, float ambient, float, const Vector3 &diffuse, const Vector3 &specular, float exponent, float intensity) {
     wave.lightingFlags = flags;
@@ -3836,6 +4273,9 @@ void BuildWaveLightingTable(std::uint32_t flags, float ambient, float, const Vec
     wave.specularExponent = exponent;
     wave.specularIntensity = intensity;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyWaveTextureMeshResource(std::int32_t slotIndex) {
     UpdateWaveSpectrum();
     UpdateWaveNormals();
@@ -3845,7 +4285,9 @@ bool ApplyWaveTextureMeshResource(std::int32_t slotIndex) {
         node->borrowedMesh ? const_cast<LegacyDrawResources &>(node->borrowedMesh->drawResources) : node->drawResources, wave.vertices,
         shenGetScaledDeltaTickTime(wave.scrollU), shenGetScaledDeltaTickTime(wave.scrollV));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyWaveTextureResource(std::int32_t slotIndex) {
     UpdateWaveSpectrum();
     UpdateWaveNormals();
@@ -3858,6 +4300,9 @@ bool ApplyWaveTextureResource(std::int32_t slotIndex) {
     std::size_t cursor = 0;
     return ApplyAnimatedStripTree(*model, cursor, -1, true);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyWaveReflectionResource(std::int32_t slotIndex) {
     const std::span<const MapModelRuntimeSlot, 33> slots = GetMapModelSlots();
     if (slotIndex < 0 || static_cast<std::size_t>(slotIndex) >= slots.size())
@@ -3867,13 +4312,17 @@ bool ApplyWaveReflectionResource(std::int32_t slotIndex) {
         return false;
     return ApplyWaveReflectionTree(*model, model->nodes.data(), PackWaveReflectionColour(wave.diffuse, 1.0f), PackWaveReflectionColour(wave.specular, 0.7f));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetTextureAnimationUV(float scrollU, float scrollV) {
     textureAnimationU = scrollU;
     textureAnimationV = scrollV;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyTextureAnimationResource(std::int32_t slotIndex) {
     const std::span<const MapModelRuntimeSlot, 33> slots = GetMapModelSlots();
     if (slotIndex < 0 || static_cast<std::size_t>(slotIndex) >= slots.size())
@@ -3884,8 +4333,10 @@ bool ApplyTextureAnimationResource(std::int32_t slotIndex) {
     std::size_t cursor = 0;
     return ApplyAnimatedStripTree(*model, cursor, -1, false);
 }
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t springTextureFrame{};
 std::int32_t springTexturePreset{};
 MT7Node *springTextureNodes[32]{};
@@ -3900,8 +4351,10 @@ std::uint32_t *waterTextureDestination{};
 Vector3 waterTexturePositions[64]{};
 std::int32_t waterTexturePositionCount{};
 MT7Node *waterTextureExtraNode{};
+#endif
 
 } // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t *FindSpringTextureCommand(MT7Node *node, std::int32_t ordinal) {
     std::uint32_t *const mesh = reinterpret_cast<std::uint32_t *>(node->runtimeMesh);
     std::uint32_t *strip = mesh + mesh[6] + 6;
@@ -3916,9 +4369,11 @@ std::uint32_t *FindSpringTextureCommand(MT7Node *node, std::int32_t ordinal) {
     }
     return nullptr;
 }
+#endif
 
-// @verified - p
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// @verified - p
 MT7Node *BindSpringTextureAnimation() {
     MT7Model *const model = const_cast<MT7Model *>(GetMapModelSlots().data()[springTexturePreset].reader);
     MT7Node *node = model->nodes.data()->runtimeChild;
@@ -3934,8 +4389,10 @@ MT7Node *BindSpringTextureAnimation() {
     }
     return node;
 }
-} // namespace
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 MT7Node *InitializeSpringTextureAnimation(std::int32_t preset) {
     std::memset(springTextureNodes, 0, sizeof(springTextureNodes));
@@ -3943,7 +4400,9 @@ MT7Node *InitializeSpringTextureAnimation(std::int32_t preset) {
     springTexturePreset = preset;
     return BindSpringTextureAnimation();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t *AdvanceSpringTextureAnimation() {
     springTextureFrame = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(springTextureFrame) + 1U);
@@ -3954,7 +4413,9 @@ std::uint32_t *AdvanceSpringTextureAnimation() {
     *springTextureDestinations[3] = *springTextureSamples[3][sample];
     return springTextureDestinations[3];
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 MT7Node *InitializeWaterTextureAnimation(std::int32_t preset) {
     std::memset(waterTextureNodes, 0, sizeof(waterTextureNodes));
@@ -3990,7 +4451,9 @@ MT7Node *InitializeWaterTextureAnimation(std::int32_t preset) {
     }
     return node;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AdvanceWaterTextureAnimation() {
     waterTextureFrame = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(waterTextureFrame) + 1U);
@@ -4002,10 +4465,12 @@ void AdvanceWaterTextureAnimation() {
     }
     (void)ApplyWaveReflectionResource(waterTextureSlots[2]);
 }
+#endif
 
 namespace {
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native DispatchModelFlag2WithOptionalAltTransform: the opaque Lambert dispatch of one node mesh. Header bit 0x40 draws it
+// under the command placement transform.
 std::uint32_t DispatchModelFlag2WithOptionalAltTransform(const MT7Model &model, const MT7Node &node) {
     const std::byte *const mesh = node.runtimeMesh ? node.runtimeMesh : model.source.data() + node.xb01Offset;
     std::uint32_t flags{};
@@ -4024,8 +4489,10 @@ std::uint32_t DispatchModelFlag2WithOptionalAltTransform(const MT7Model &model, 
     return ExecuteLegacyDrawCommandStream(
         model.source, node.xb01Offset, node.borrowedMesh ? node.borrowedMesh->drawResources : node.drawResources, LegacyModelShaderPath::Lambert, 1.0f);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The native water draws place one node at a position under a vertex-colour type; the set draws also refresh the light transforms.
 std::uint32_t DrawWaterSetNode(const MT7Model &model, const MT7Node &node, const Vector3 &position, std::int32_t vertexColourType, bool refreshLights) {
     const std::int32_t previous = GetLegacyVertexColourType();
     SetLegacyVertexColourType(vertexColourType);
@@ -4039,16 +4506,20 @@ std::uint32_t DrawWaterSetNode(const MT7Model &model, const MT7Node &node, const
     SetLegacyVertexColourType(previous);
     return draws;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool HashWaterSetNode(const MT7Node *node) {
     Matrix4x4_PushActiveTransform();
     const bool hashed = node && d3t::HashModel(node, GetLegacyPerspectiveProjection());
     Matrix4x4::Pop(1);
     return hashed;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Each reflection-set node draws under the single vertex-colour light with the weather lighting, which the native draw leaves
+// engaged.
 std::uint32_t DrawWaterReflectionNode(const MT7Model &model, const MT7Node &node) {
     for (std::uint32_t index = 0; index < 16; ++index)
         SetLegacyVertexColourStateEnabled(index, false);
@@ -4057,10 +4528,12 @@ std::uint32_t DrawWaterReflectionNode(const MT7Model &model, const MT7Node &node
     BeginTemporaryMapWeatherLighting(lighting);
     return DrawWaterSetNode(model, node, node.position, 2, true);
 }
+#endif
+
 } // namespace
-
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The set's four map slots leave the slot pass. Under the weather light, the current tile draws at every
+// authored position, followed by the current reflection and the extra node.
 std::uint32_t DrawWaterTextureSet() {
     const std::int32_t sample = waterTextureFrame % 16;
     for (const std::int32_t slot : waterTextureSlots)
@@ -4082,8 +4555,10 @@ std::uint32_t DrawWaterTextureSet() {
     EndTemporaryMapWeatherLighting(lighting);
     return draws;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The reflection and extra nodes alone.
 std::uint32_t DrawWaterReflectionSet() {
     const std::int32_t sample = waterTextureFrame % 16;
     SetMapModelSlotEnabled(waterTextureSlots[2], 0);
@@ -4099,8 +4574,10 @@ std::uint32_t DrawWaterReflectionSet() {
         draws += DrawWaterReflectionNode(*slots[waterTextureSlots[3]].reader, *waterTextureExtraNode);
     return draws;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The spring slot leaves the slot pass and its second frame node draws in its place.
 std::uint32_t DrawSpringTextureNode() {
     SetMapModelSlotEnabled(springTexturePreset, 0);
     MT7Node *const node = springTextureNodes[1];
@@ -4108,8 +4585,10 @@ std::uint32_t DrawSpringTextureNode() {
         return 0;
     return DrawWaterSetNode(*GetMapModelSlots()[springTexturePreset].reader, *node, node->position, 1, false);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The reflection-only set on slots 24 and 25; the tile and position slots keep their earlier values.
 MT7Node *InitializeWaterReflectionSet() {
     std::memset(waterTextureNodes, 0, sizeof(waterTextureNodes));
     std::memset(waterReflectionNodes, 0, sizeof(waterReflectionNodes));
@@ -4126,22 +4605,28 @@ MT7Node *InitializeWaterReflectionSet() {
     waterTextureExtraNode = slots[25].reader ? slots[25].reader->nodes.data()->runtimeChild : nullptr;
     return waterTextureExtraNode;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void AdvanceWaterReflectionSet() {
     waterTextureFrame = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(waterTextureFrame) + 1U);
     (void)ApplyWaveReflectionResource(waterTextureSlots[2]);
 }
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::array<Vector3, 289> waterSurfacePositions{};
 Vector3 waterSurfaceQuery{};
 std::int32_t waterSurfaceCell{-1};
 Vector3 floatingSurfaceOrigin{};
 std::int32_t floatingSurfaceNodeCount{};
-
+// The PE reserves this table in the zero-filled .data tail; the two native users only read it.
 const std::int16_t floatingSurfacePreviousAngles[30][2]{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ContainsWaterSurfaceQuad(std::int32_t first, std::int32_t stride) {
     if (waterSurfaceCell != -1)
         return false;
@@ -4156,7 +4641,9 @@ bool ContainsWaterSurfaceQuad(std::int32_t first, std::int32_t stride) {
     const float da = (x - d.x) * (a.z - d.z) - (z - d.z) * (a.x - d.x);
     return (ab >= 0.0f && bc >= 0.0f && cd >= 0.0f && da >= 0.0f) || (ab <= 0.0f && bc <= 0.0f && cd <= 0.0f && da <= 0.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SelectWaterSurfaceCell(std::int32_t first, std::int32_t stride) {
     if (waterSurfaceCell != -1)
         return;
@@ -4174,7 +4661,9 @@ void SelectWaterSurfaceCell(std::int32_t first, std::int32_t stride) {
     }
     waterSurfaceCell = first;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SampleWaterSurfaceHeight() {
     waterSurfaceCell = -1;
     for (std::int32_t first : {0, 8, 144, 136})
@@ -4191,7 +4680,7 @@ void SampleWaterSurfaceHeight() {
         }
     }
     const std::int32_t index = waterSurfaceCell;
-
+    // Native callers author all three sample points inside the surface; there is no out-of-grid height fallback.
     const float x = waterSurfaceQuery.x, z = waterSurfaceQuery.z, dy = 0.0f - waterSurfaceQuery.y;
     const Vector3 &near = waterSurfacePositions[index];
     const Vector3 &far = waterSurfacePositions[index + 18];
@@ -4208,7 +4697,9 @@ void SampleWaterSurfaceHeight() {
              (x - origin.x) * ((second.z - origin.z) * (secondHeight - height) - (firstHeight - height) * (first.z - origin.z))) /
             ((second.x - origin.x) * (first.z - origin.z) - (second.z - origin.z) * (first.x - origin.x)));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateFloatingSurfaceNode(MT7Node *node) {
     for (; node; node = node->runtimeSibling) {
@@ -4240,8 +4731,10 @@ void UpdateFloatingSurfaceNode(MT7Node *node) {
             UpdateFloatingSurfaceNode(node->runtimeChild);
     }
 }
-}
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateFloatingSurfaceModels(std::int32_t surfaceSlot, const FloatingSurfaceBinding *bindings) {
     MT7Model *const surface = const_cast<MT7Model *>(GetMapModelSlots().data()[surfaceSlot].reader);
@@ -4256,104 +4749,708 @@ void UpdateFloatingSurfaceModels(std::int32_t surfaceSlot, const FloatingSurface
         UpdateFloatingSurfaceNode(model->nodes.data());
     }
 }
+#endif
 
 namespace {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native fixedShadowMesh0 XB01 source.
 constexpr std::array<std::uint32_t, 413> fixedShadowMesh0{{
-    0x31304258U, 0x00000000U, 0x00000000U, 0x3f000000U, 0x32800000U, 0x3f000001U, 0x00000008U, 0x00000091U,
-    0x00000001U, 0x00000001U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00008800U, 0x00000000U,
-    0x00000000U, 0x00000000U, 0x00000000U, 0x00000401U, 0x00000001U, 0x00200000U, 0x00000000U, 0x00000202U,
-    0x00000000U, 0x00000f04U, 0x3f36db6eU, 0x3f36db6eU, 0x3f36db6eU, 0x3f800000U, 0x3f333333U, 0x3f333333U,
-    0x3f333333U, 0x3f800000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x3f800000U, 0x00000000U, 0x3f800000U,
-    0x00000216U, 0x00000000U, 0x0000040bU, 0x00000001U, 0x0000ffffU, 0x00000000U, 0x0000060dU, 0x00000004U,
-    0x00010000U, 0x00010100U, 0x00010300U, 0x00010400U, 0x0000040eU, 0x00000001U, 0x00000600U, 0x00000000U,
-    0x00005d10U, 0x00000005U, 0x000000b4U, 0x00020000U, 0x00010001U, 0x00030002U, 0x00000004U, 0x00050005U,
-    0x00010000U, 0x00040006U, 0x00070007U, 0x00050004U, 0x00060008U, 0x00090009U, 0x00070006U, 0x00030001U,
-    0x000a000aU, 0x000b0003U, 0x00010005U, 0x000c000cU, 0x000a0001U, 0x00050007U, 0x000d000dU, 0x000c0005U,
-    0x00070009U, 0x000e000eU, 0x000d0007U, 0x000b000aU, 0x000f000fU, 0x0010000bU, 0x000a000cU, 0x00110011U,
-    0x000f000aU, 0x000c000dU, 0x00120012U, 0x0011000cU, 0x000d000eU, 0x00130013U, 0x0012000dU, 0x0010000fU,
-    0x00140014U, 0x00150010U, 0x000f0011U, 0x00160016U, 0x0014000fU, 0x00110012U, 0x00170017U, 0x00160011U,
-    0x00120013U, 0x00180018U, 0x00170012U, 0x00150014U, 0x00190019U, 0x001a0015U, 0x00140016U, 0x001b001bU,
-    0x00190014U, 0x00160017U, 0x001c001cU, 0x001b0016U, 0x00170018U, 0x001d001dU, 0x001c0017U, 0x001a0019U,
-    0x00000000U, 0x0002001aU, 0x0019001bU, 0x00040004U, 0x00000019U, 0x001b001cU, 0x00060006U, 0x0004001bU,
-    0x001c001dU, 0x00080008U, 0x0006001cU, 0x0008001dU, 0x0002001eU, 0x001f001aU, 0x001d0018U, 0x001a001eU,
-    0x001f0015U, 0x00180013U, 0x0015001eU, 0x001f0010U, 0x0013000eU, 0x0010001eU, 0x001f000bU, 0x000e0009U,
-    0x000b001eU, 0x001f0003U, 0x00090008U, 0x0003001eU, 0x001f0002U, 0x00000000U, 0x00000000U, 0x00000000U,
-    0x00010401U, 0x00000001U, 0x01120020U, 0x00000400U, 0x3eddb3d7U, 0x3f400000U, 0x00000000U, 0x3f5cb228U,
-    0x3f01ba55U, 0xb3deb6b5U, 0x00000000U, 0x00000001U, 0x3e5db3dfU, 0x3f400000U, 0x3ec00000U, 0x3edcb22bU,
-    0x3f01ba55U, 0x3f3f20d4U, 0x00000000U, 0x00000001U, 0x3e800001U, 0x3f6ed9ecU, 0x00000000U, 0x3efc11a0U,
-    0x3f5ed366U, 0xb3800001U, 0x00000000U, 0x00000001U, 0x3e000007U, 0x3f6ed9ecU, 0x3e5db3d7U, 0x3e7c11a4U,
-    0x3f5ed367U, 0x3eda4c48U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f000000U, 0x00000000U, 0x3f800000U,
-    0x33000000U, 0xb4000000U, 0x00000000U, 0x00000001U, 0x3e800005U, 0x3f000000U, 0x3eddb3d6U, 0x3f000002U,
-    0x00000000U, 0x3f5db3d6U, 0x00000000U, 0x00000001U, 0x3eddb3d9U, 0x3e800000U, 0x00000000U, 0x3f5cb228U,
-    0xbf01ba53U, 0xb31479cdU, 0x00000000U, 0x00000001U, 0x3e5db3dfU, 0x3e800000U, 0x3ebfffffU, 0x3edcb22bU,
-    0xbf01ba54U, 0x3f3f20d5U, 0x00000000U, 0x00000001U, 0x3e800001U, 0x3d8930a4U, 0x00000000U, 0x3efc11a0U,
-    0xbf5ed366U, 0xb3130e7eU, 0x00000000U, 0x00000001U, 0x3e000005U, 0x3d8930a4U, 0x3e5db3d6U, 0x3e7c11a4U,
-    0xbf5ed366U, 0x3eda4c4aU, 0x00000000U, 0x00000001U, 0xbe5db3d5U, 0x3f400000U, 0x3ec00002U, 0xbedcb222U,
-    0x3f01ba55U, 0x3f3f20d6U, 0x00000000U, 0x00000001U, 0xbdfffffbU, 0x3f6ed9ecU, 0x3e5db3dbU, 0xbe7c1198U,
-    0x3f5ed367U, 0x3eda4c4cU, 0x00000000U, 0x00000001U, 0xbe7ffffbU, 0x3f000000U, 0x3eddb3d9U, 0xbefffffaU,
-    0xb313cd3aU, 0x3f5db3d9U, 0x00000000U, 0x00000001U, 0xbe5db3d3U, 0x3e800000U, 0x3ec00002U, 0xbedcb224U,
-    0xbf01ba53U, 0x3f3f20d9U, 0x00000000U, 0x00000001U, 0xbdfffffbU, 0x3d8930a4U, 0x3e5db3d9U, 0xbe7c119cU,
-    0xbf5ed365U, 0x3eda4c4cU, 0x00000000U, 0x00000001U, 0xbeddb3d9U, 0x3f400000U, 0x33800000U, 0xbf5cb228U,
-    0x3f01ba55U, 0x34000001U, 0x00000000U, 0x00000001U, 0xbe800001U, 0x3f6ed9ecU, 0x33400000U, 0xbefc119fU,
-    0x3f5ed366U, 0x33800001U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x3f000000U, 0x33a00000U, 0xbf800000U,
-    0x00000000U, 0x34200000U, 0x00000000U, 0x00000001U, 0xbeddb3d9U, 0x3e800000U, 0x33a00000U, 0xbf5cb228U,
-    0xbf01ba54U, 0x34200000U, 0x00000000U, 0x00000001U, 0xbe800001U, 0x3d8930a4U, 0x33200000U, 0xbefc119fU,
-    0xbf5ed366U, 0x33dc95bdU, 0x00000000U, 0x00000001U, 0xbe5db3dbU, 0x3f400000U, 0xbec00000U, 0xbedcb22aU,
-    0x3f01ba55U, 0xbf3f20d5U, 0x00000000U, 0x00000001U, 0xbe000003U, 0x3f6ed9ecU, 0xbe5db3d8U, 0xbe7c11a4U,
-    0x3f5ed365U, 0xbeda4c4aU, 0x00000000U, 0x00000001U, 0xbe800003U, 0x3f000000U, 0xbeddb3d7U, 0xbf000002U,
-    0x00000000U, 0xbf5db3d7U, 0x00000000U, 0x00000001U, 0xbe5db3dbU, 0x3e800000U, 0xbec00000U, 0xbedcb22bU,
-    0xbf01ba53U, 0xbf3f20d6U, 0x00000000U, 0x00000001U, 0xbe000003U, 0x3d8930a4U, 0xbe5db3d7U, 0xbe7c11a4U,
-    0xbf5ed365U, 0xbeda4c49U, 0x00000000U, 0x00000001U, 0x3e5db3d7U, 0x3f400000U, 0xbec00000U, 0x3edcb226U,
-    0x3f01ba54U, 0xbf3f20d7U, 0x00000000U, 0x00000001U, 0x3e000001U, 0x3f6ed9ecU, 0xbe5db3daU, 0x3e7c119dU,
-    0x3f5ed367U, 0xbeda4c4cU, 0x00000000U, 0x00000001U, 0x3e7fffffU, 0x3f000000U, 0xbeddb3d8U, 0x3f000000U,
-    0x33800000U, 0xbf5db3d8U, 0x00000000U, 0x00000001U, 0x3e5db3d7U, 0x3e800000U, 0xbec00001U, 0x3edcb226U,
-    0xbf01ba53U, 0xbf3f20d7U, 0x00000000U, 0x00000001U, 0x3dffffffU, 0x3d8930a4U, 0xbe5db3d8U, 0x3e7c119fU,
-    0xbf5ed366U, 0xbeda4c4cU, 0x00000000U, 0x00000001U, 0x00000001U, 0x00000000U, 0x00000000U, 0x00000000U,
-    0xbf800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x00000001U, 0x3f800000U, 0x00000000U, 0x00000000U,
+    0x31304258U,
+    0x00000000U,
+    0x00000000U,
+    0x3f000000U,
+    0x32800000U,
+    0x3f000001U,
+    0x00000008U,
+    0x00000091U,
+    0x00000001U,
+    0x00000001U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00008800U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000401U,
+    0x00000001U,
+    0x00200000U,
+    0x00000000U,
+    0x00000202U,
+    0x00000000U,
+    0x00000f04U,
+    0x3f36db6eU,
+    0x3f36db6eU,
+    0x3f36db6eU,
+    0x3f800000U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000216U,
+    0x00000000U,
+    0x0000040bU,
+    0x00000001U,
+    0x0000ffffU,
+    0x00000000U,
+    0x0000060dU,
+    0x00000004U,
+    0x00010000U,
+    0x00010100U,
+    0x00010300U,
+    0x00010400U,
+    0x0000040eU,
+    0x00000001U,
+    0x00000600U,
+    0x00000000U,
+    0x00005d10U,
+    0x00000005U,
+    0x000000b4U,
+    0x00020000U,
+    0x00010001U,
+    0x00030002U,
+    0x00000004U,
+    0x00050005U,
+    0x00010000U,
+    0x00040006U,
+    0x00070007U,
+    0x00050004U,
+    0x00060008U,
+    0x00090009U,
+    0x00070006U,
+    0x00030001U,
+    0x000a000aU,
+    0x000b0003U,
+    0x00010005U,
+    0x000c000cU,
+    0x000a0001U,
+    0x00050007U,
+    0x000d000dU,
+    0x000c0005U,
+    0x00070009U,
+    0x000e000eU,
+    0x000d0007U,
+    0x000b000aU,
+    0x000f000fU,
+    0x0010000bU,
+    0x000a000cU,
+    0x00110011U,
+    0x000f000aU,
+    0x000c000dU,
+    0x00120012U,
+    0x0011000cU,
+    0x000d000eU,
+    0x00130013U,
+    0x0012000dU,
+    0x0010000fU,
+    0x00140014U,
+    0x00150010U,
+    0x000f0011U,
+    0x00160016U,
+    0x0014000fU,
+    0x00110012U,
+    0x00170017U,
+    0x00160011U,
+    0x00120013U,
+    0x00180018U,
+    0x00170012U,
+    0x00150014U,
+    0x00190019U,
+    0x001a0015U,
+    0x00140016U,
+    0x001b001bU,
+    0x00190014U,
+    0x00160017U,
+    0x001c001cU,
+    0x001b0016U,
+    0x00170018U,
+    0x001d001dU,
+    0x001c0017U,
+    0x001a0019U,
+    0x00000000U,
+    0x0002001aU,
+    0x0019001bU,
+    0x00040004U,
+    0x00000019U,
+    0x001b001cU,
+    0x00060006U,
+    0x0004001bU,
+    0x001c001dU,
+    0x00080008U,
+    0x0006001cU,
+    0x0008001dU,
+    0x0002001eU,
+    0x001f001aU,
+    0x001d0018U,
+    0x001a001eU,
+    0x001f0015U,
+    0x00180013U,
+    0x0015001eU,
+    0x001f0010U,
+    0x0013000eU,
+    0x0010001eU,
+    0x001f000bU,
+    0x000e0009U,
+    0x000b001eU,
+    0x001f0003U,
+    0x00090008U,
+    0x0003001eU,
+    0x001f0002U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00010401U,
+    0x00000001U,
+    0x01120020U,
+    0x00000400U,
+    0x3eddb3d7U,
+    0x3f400000U,
+    0x00000000U,
+    0x3f5cb228U,
+    0x3f01ba55U,
+    0xb3deb6b5U,
+    0x00000000U,
+    0x00000001U,
+    0x3e5db3dfU,
+    0x3f400000U,
+    0x3ec00000U,
+    0x3edcb22bU,
+    0x3f01ba55U,
+    0x3f3f20d4U,
+    0x00000000U,
+    0x00000001U,
+    0x3e800001U,
+    0x3f6ed9ecU,
+    0x00000000U,
+    0x3efc11a0U,
+    0x3f5ed366U,
+    0xb3800001U,
+    0x00000000U,
+    0x00000001U,
+    0x3e000007U,
+    0x3f6ed9ecU,
+    0x3e5db3d7U,
+    0x3e7c11a4U,
+    0x3f5ed367U,
+    0x3eda4c48U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x33000000U,
+    0xb4000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3e800005U,
+    0x3f000000U,
+    0x3eddb3d6U,
+    0x3f000002U,
+    0x00000000U,
+    0x3f5db3d6U,
+    0x00000000U,
+    0x00000001U,
+    0x3eddb3d9U,
+    0x3e800000U,
+    0x00000000U,
+    0x3f5cb228U,
+    0xbf01ba53U,
+    0xb31479cdU,
+    0x00000000U,
+    0x00000001U,
+    0x3e5db3dfU,
+    0x3e800000U,
+    0x3ebfffffU,
+    0x3edcb22bU,
+    0xbf01ba54U,
+    0x3f3f20d5U,
+    0x00000000U,
+    0x00000001U,
+    0x3e800001U,
+    0x3d8930a4U,
+    0x00000000U,
+    0x3efc11a0U,
+    0xbf5ed366U,
+    0xb3130e7eU,
+    0x00000000U,
+    0x00000001U,
+    0x3e000005U,
+    0x3d8930a4U,
+    0x3e5db3d6U,
+    0x3e7c11a4U,
+    0xbf5ed366U,
+    0x3eda4c4aU,
+    0x00000000U,
+    0x00000001U,
+    0xbe5db3d5U,
+    0x3f400000U,
+    0x3ec00002U,
+    0xbedcb222U,
+    0x3f01ba55U,
+    0x3f3f20d6U,
+    0x00000000U,
+    0x00000001U,
+    0xbdfffffbU,
+    0x3f6ed9ecU,
+    0x3e5db3dbU,
+    0xbe7c1198U,
+    0x3f5ed367U,
+    0x3eda4c4cU,
+    0x00000000U,
+    0x00000001U,
+    0xbe7ffffbU,
+    0x3f000000U,
+    0x3eddb3d9U,
+    0xbefffffaU,
+    0xb313cd3aU,
+    0x3f5db3d9U,
+    0x00000000U,
+    0x00000001U,
+    0xbe5db3d3U,
+    0x3e800000U,
+    0x3ec00002U,
+    0xbedcb224U,
+    0xbf01ba53U,
+    0x3f3f20d9U,
+    0x00000000U,
+    0x00000001U,
+    0xbdfffffbU,
+    0x3d8930a4U,
+    0x3e5db3d9U,
+    0xbe7c119cU,
+    0xbf5ed365U,
+    0x3eda4c4cU,
+    0x00000000U,
+    0x00000001U,
+    0xbeddb3d9U,
+    0x3f400000U,
+    0x33800000U,
+    0xbf5cb228U,
+    0x3f01ba55U,
+    0x34000001U,
+    0x00000000U,
+    0x00000001U,
+    0xbe800001U,
+    0x3f6ed9ecU,
+    0x33400000U,
+    0xbefc119fU,
+    0x3f5ed366U,
+    0x33800001U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x3f000000U,
+    0x33a00000U,
+    0xbf800000U,
+    0x00000000U,
+    0x34200000U,
+    0x00000000U,
+    0x00000001U,
+    0xbeddb3d9U,
+    0x3e800000U,
+    0x33a00000U,
+    0xbf5cb228U,
+    0xbf01ba54U,
+    0x34200000U,
+    0x00000000U,
+    0x00000001U,
+    0xbe800001U,
+    0x3d8930a4U,
+    0x33200000U,
+    0xbefc119fU,
+    0xbf5ed366U,
+    0x33dc95bdU,
+    0x00000000U,
+    0x00000001U,
+    0xbe5db3dbU,
+    0x3f400000U,
+    0xbec00000U,
+    0xbedcb22aU,
+    0x3f01ba55U,
+    0xbf3f20d5U,
+    0x00000000U,
+    0x00000001U,
+    0xbe000003U,
+    0x3f6ed9ecU,
+    0xbe5db3d8U,
+    0xbe7c11a4U,
+    0x3f5ed365U,
+    0xbeda4c4aU,
+    0x00000000U,
+    0x00000001U,
+    0xbe800003U,
+    0x3f000000U,
+    0xbeddb3d7U,
+    0xbf000002U,
+    0x00000000U,
+    0xbf5db3d7U,
+    0x00000000U,
+    0x00000001U,
+    0xbe5db3dbU,
+    0x3e800000U,
+    0xbec00000U,
+    0xbedcb22bU,
+    0xbf01ba53U,
+    0xbf3f20d6U,
+    0x00000000U,
+    0x00000001U,
+    0xbe000003U,
+    0x3d8930a4U,
+    0xbe5db3d7U,
+    0xbe7c11a4U,
+    0xbf5ed365U,
+    0xbeda4c49U,
+    0x00000000U,
+    0x00000001U,
+    0x3e5db3d7U,
+    0x3f400000U,
+    0xbec00000U,
+    0x3edcb226U,
+    0x3f01ba54U,
+    0xbf3f20d7U,
+    0x00000000U,
+    0x00000001U,
+    0x3e000001U,
+    0x3f6ed9ecU,
+    0xbe5db3daU,
+    0x3e7c119dU,
+    0x3f5ed367U,
+    0xbeda4c4cU,
+    0x00000000U,
+    0x00000001U,
+    0x3e7fffffU,
+    0x3f000000U,
+    0xbeddb3d8U,
+    0x3f000000U,
+    0x33800000U,
+    0xbf5db3d8U,
+    0x00000000U,
+    0x00000001U,
+    0x3e5db3d7U,
+    0x3e800000U,
+    0xbec00001U,
+    0x3edcb226U,
+    0xbf01ba53U,
+    0xbf3f20d7U,
+    0x00000000U,
+    0x00000001U,
+    0x3dffffffU,
+    0x3d8930a4U,
+    0xbe5db3d8U,
+    0x3e7c119fU,
+    0xbf5ed366U,
+    0xbeda4c4cU,
+    0x00000000U,
+    0x00000001U,
+    0x00000001U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x00000001U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
     0x3f800000U,
     0x00000000U,
     0x00000000U,
     0x00000001U,
     0x00000000U,
 }};
-
+// Native fixedShadowMesh1 XB01 source.
 constexpr std::array<std::uint32_t, 285> fixedShadowMesh1{{
-    0x31304258U, 0x00000000U, 0x00000000U, 0x3f000000U, 0x00000000U, 0x3f5db3d7U, 0x00000008U, 0x00000051U,
-    0x00000001U, 0x00000001U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00004300U, 0x00000000U,
-    0x00000000U, 0x00000000U, 0x00000000U, 0x00000401U, 0x00000001U, 0x00200000U, 0x00000000U, 0x00000202U,
-    0x00000000U, 0x00000f04U, 0x3f36db6eU, 0x3f36db6eU, 0x3f36db6eU, 0x3f800000U, 0x3f333333U, 0x3f333333U,
-    0x3f333333U, 0x3f800000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x3f800000U, 0x00000000U, 0x3f800000U,
-    0x00000216U, 0x00000000U, 0x00000309U, 0x00000001U, 0x1d000042U, 0x0000040bU, 0x00000001U, 0x0000ffffU,
-    0x00000000U, 0x0000060dU, 0x00000004U, 0x00010000U, 0x00010100U, 0x00010300U, 0x00010400U, 0x0000040eU,
-    0x00000001U, 0x00000600U, 0x00000000U, 0x00001510U, 0x00000005U, 0x00000024U, 0x00020000U, 0x00010001U,
-    0x00030002U, 0x00060004U, 0x00050005U, 0x00070006U, 0x000a0008U, 0x00090009U, 0x000b000aU, 0x000e000cU,
-    0x000d000dU, 0x000f000eU, 0x00120010U, 0x00110011U, 0x00130012U, 0x00160014U, 0x00150015U, 0x00170016U,
-    0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x00000000U,
-    0x0000c401U, 0x00000001U, 0x01120020U, 0x00000300U, 0xbf000001U, 0x3f800000U, 0x3f000000U, 0x00000000U,
-    0x3f800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x3f800000U, 0xbf000000U, 0x00000000U,
-    0x3f800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f800000U, 0x3f000000U, 0x00000000U,
-    0x3f800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f800000U, 0xbf000000U, 0x00000000U,
-    0x3f800000U, 0x80000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0x3f000000U, 0x00000000U,
-    0xbf800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0xbf000000U, 0x00000000U,
-    0xbf800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0x3f000000U, 0x00000000U,
-    0xbf800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0xbf000000U, 0x00000000U,
-    0xbf800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0xbf000000U, 0x00000000U,
-    0x00000000U, 0xbf800000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0xbf000000U, 0x00000000U,
-    0x00000000U, 0xbf800000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x3f800000U, 0xbf000000U, 0x00000000U,
-    0x00000000U, 0xbf800000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f800000U, 0xbf000000U, 0x80000000U,
-    0x80000000U, 0xbf800000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0xbf000000U, 0x3f800000U,
-    0x00000000U, 0x80000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0x3f000000U, 0x3f800000U,
-    0x00000000U, 0x80000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f800000U, 0xbf000000U, 0x3f800000U,
-    0x00000000U, 0x80000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f800000U, 0x3f000000U, 0x3f800000U,
-    0x00000000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0x3f000000U, 0x00000000U,
-    0x00000000U, 0x3f800000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0x3f000000U, 0x00000000U,
-    0x00000000U, 0x3f800000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x3f800000U, 0x3f000000U, 0x00000000U,
-    0x00000000U, 0x3f800000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x3f800000U, 0x3f000000U, 0x80000000U,
-    0x00000000U, 0x3f800000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0x3f000000U, 0xbf800000U,
-    0x80000000U, 0x80000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0xbf000000U, 0xbf800000U,
-    0x80000000U, 0x80000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x3f800000U, 0x3f000000U, 0xbf800000U,
-    0x80000000U, 0x80000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x3f800000U, 0xbf000000U, 0xbf800000U,
+    0x31304258U,
+    0x00000000U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f5db3d7U,
+    0x00000008U,
+    0x00000051U,
+    0x00000001U,
+    0x00000001U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00004300U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000401U,
+    0x00000001U,
+    0x00200000U,
+    0x00000000U,
+    0x00000202U,
+    0x00000000U,
+    0x00000f04U,
+    0x3f36db6eU,
+    0x3f36db6eU,
+    0x3f36db6eU,
+    0x3f800000U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000216U,
+    0x00000000U,
+    0x00000309U,
+    0x00000001U,
+    0x1d000042U,
+    0x0000040bU,
+    0x00000001U,
+    0x0000ffffU,
+    0x00000000U,
+    0x0000060dU,
+    0x00000004U,
+    0x00010000U,
+    0x00010100U,
+    0x00010300U,
+    0x00010400U,
+    0x0000040eU,
+    0x00000001U,
+    0x00000600U,
+    0x00000000U,
+    0x00001510U,
+    0x00000005U,
+    0x00000024U,
+    0x00020000U,
+    0x00010001U,
+    0x00030002U,
+    0x00060004U,
+    0x00050005U,
+    0x00070006U,
+    0x000a0008U,
+    0x00090009U,
+    0x000b000aU,
+    0x000e000cU,
+    0x000d000dU,
+    0x000f000eU,
+    0x00120010U,
+    0x00110011U,
+    0x00130012U,
+    0x00160014U,
+    0x00150015U,
+    0x00170016U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x0000c401U,
+    0x00000001U,
+    0x01120020U,
+    0x00000300U,
+    0xbf000001U,
+    0x3f800000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x3f800000U,
+    0xbf000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f800000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f800000U,
+    0xbf000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x3f800000U,
+    0xbf000000U,
+    0x00000000U,
+    0x00000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f800000U,
+    0xbf000000U,
+    0x80000000U,
+    0x80000000U,
+    0xbf800000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f800000U,
+    0xbf000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f800000U,
+    0x3f000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x3f800000U,
+    0x3f000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x3f800000U,
+    0x3f000000U,
+    0x80000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0x3f000000U,
+    0xbf800000U,
+    0x80000000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0xbf000000U,
+    0xbf800000U,
+    0x80000000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x3f800000U,
+    0x3f000000U,
+    0xbf800000U,
+    0x80000000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x3f800000U,
+    0xbf000000U,
+    0xbf800000U,
     0x80000000U,
     0x00000000U,
     0x00000000U,
@@ -4371,7 +5468,9 @@ std::array<LegacyDrawResources, 2> fixedShadowResources;
 std::array<ScenarioShadowModelCacheEntry, scenarioShadowModelCacheCapacity> scenarioShadowModelCache;
 std::int32_t scenarioShadowModelCacheCount;
 std::vector<std::unique_ptr<ShadowModelResource>> scenarioShadowModels;
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseShadowModel(ShadowModelResource &resource, bool releaseBacking = true) {
     if (!resource.model.source.empty())
         ReleaseModelFormat7(resource.model);
@@ -4379,7 +5478,9 @@ void ReleaseShadowModel(ShadowModelResource &resource, bool releaseBacking = tru
         HLib::FreeTaskData(resource.allocation);
     resource.allocation = nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // SYD_S.MT7 loads through LoadFile_Wrapper into the heap head; ReadMT7 reads the SYD_xS models through FileRead, which
 // takes them from the heap tail.
 bool LoadShadowFile(ShadowModelResource &resource, const char *path, shen_name token, bool retainOriginal, bool fromTail) {
@@ -4405,7 +5506,9 @@ bool LoadShadowFile(ShadowModelResource &resource, const char *path, shen_name t
     ReleaseShadowModel(resource);
     return false;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 MT7Model *LoadScenarioShadowFile(const char *directory, const char *filename, shen_name token) {
     std::uint32_t size{};
     void *const allocation = LoadLegacySceneFile(directory, filename, token, &size);
@@ -4425,30 +5528,38 @@ MT7Model *LoadScenarioShadowFile(const char *directory, const char *filename, sh
     scenarioShadowModels.push_back(std::move(resource));
     return model;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool PrepareFixedShadowMeshes() {
-
-
+    // PrepareFixedShadowMeshes uploads two fixed XB01 allocations, not a synthetic
+    // screen quad. The immutable native bytes remain the source owner.
     const bool first = PrepareLegacyDrawResources(std::as_bytes(std::span(fixedShadowMesh0)), 0, fixedShadowResources[0]);
     const bool second = PrepareLegacyDrawResources(std::as_bytes(std::span(fixedShadowMesh1)), 0, fixedShadowResources[1]);
     return first && second;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RetireSharedShadowReader() {
     // SHDS backing remains owned by its HLib arena; replacement only retires decoded resources.
     ReleaseShadowModel(sharedShadowModel, false);
     for (LegacyDrawResources &resources : fixedShadowResources)
         ReleaseLegacyDrawResources(resources);
 }
-} // namespace
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 MT7Model *LoadShadowSprite() {
     scenarioShadowModelCacheCount = 0;
     scenarioShadowModelCache = {};
     shadowSprite = LoadScenarioShadowFile("misc", "KAGE200G.MT7", MEMORY_SHADOW_SPRITE);
     return shadowSprite;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 MT7Model *CreateMT7(const char *image) {
     char directory[64], filename[16]{};
     const bool sceneModel = image[0] == '@';
@@ -4480,15 +5591,21 @@ MT7Model *CreateMT7(const char *image) {
     }
     return model;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetShadowData() {
     // ResetShadowData retires exactly these three readers before their SVMD backing.
     for (auto &resource : shadowDataModels)
         ReleaseShadowModel(resource);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr const char *shadowDataPaths[]{"/misc/SYD_NS.MT7", "/misc/SYD_RS.MT7", "/misc/SYD_SS.MT7"};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // Each module change reloads the three models after ResetShadowData freed them.
 bool Read_SYDNSRSSS() {
     bool succeeded = true;
@@ -4496,7 +5613,9 @@ bool Read_SYDNSRSSS() {
         succeeded = LoadShadowFile(shadowDataModels[index], shadowDataPaths[index], SHEN_NAME(SVMD), false, true) && succeeded;
     return succeeded;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool LoadSYD() {
     characterShadowRuntime = g_characterShadowRuntime;
     characterShadowRuntimeIndex = 0;
@@ -4512,7 +5631,9 @@ bool LoadSYD() {
     characterShadowMode = 0;
     return succeeded;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 shen_name MVTR_Reader() {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -4525,7 +5646,9 @@ shen_name MVTR_Reader() {
         characterShadowStrongestOnly = 0;
     return g_currentMap;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RetireSharedShadowModel() {
     RetireSharedShadowReader();
     for (const std::unique_ptr<ShadowModelResource> &resource : scenarioShadowModels)
@@ -4533,7 +5656,9 @@ void RetireSharedShadowModel() {
     scenarioShadowModels.clear();
     shadowSprite = nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *LoadSYD_S() {
     RetireSharedShadowReader();
     if (!LoadShadowFile(sharedShadowModel, "/misc/SYD_S.MT7", MEMORY_SHARED_SHADOW, true, false))
@@ -4544,9 +5669,11 @@ void *LoadSYD_S() {
     }
     return sharedShadowModel.allocation;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *AllocateSHDS() {
-
+    // AllocateSHDS can only reconstruct the real bytes captured by LoadSYD_S.
     RetireSharedShadowReader();
     if (sharedShadowOriginalBytes.empty())
         return nullptr;
@@ -4562,17 +5689,23 @@ void *AllocateSHDS() {
     }
     return sharedShadowModel.allocation;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const MT7Model *GetSHDS() {
     return sharedShadowModel.allocation ? &sharedShadowModel.model : nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const MT7Model *GetShadowDataModel(std::size_t index) {
     if (index >= shadowDataModels.size() || !shadowDataModels[index].allocation)
         return nullptr;
     return &shadowDataModels[index].model;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t DrawFixedShadowMesh(std::size_t index, float alpha) {
     if (index >= fixedShadowResources.size())
         return 0;
@@ -4580,19 +5713,28 @@ std::uint32_t DrawFixedShadowMesh(std::size_t index, float alpha) {
                                     std::as_bytes(std::span(fixedShadowMesh1)).first(sizeof(fixedShadowMesh1));
     return ExecuteLegacyDrawCommandStream(bytes, 0, fixedShadowResources[index], LegacyModelShaderPath::Lambert, alpha);
 }
-
-} // namespace shenmue::s2
-
-namespace shenmue { namespace s2 {
+#endif
 
 HLib::Task *QueueObjectDrawTask(std::uint8_t nextFunctionIndex) {
-    HLib::Task *const task = HLib::EnqueueTaskWithParameter(OBJ_Object_Callback, nextFunctionIndex, 5, sizeof(ObjectDrawTaskParameters), OBJECT_DRAW_SCENE_TASK);
+#if SHENMUE_IS_DC
+    const std::int8_t index = nextFunctionIndex;
+    InitializeObjectDrawNullsub();
+    HLib::Task *const task = HLib::EnqueueTaskWithParameter(OBJ_Object_Callback, index, 5, sizeof(ObjectDrawTaskParameters), OBJECT_DRAW_SCENE_TASK);
+#else
+    HLib::Task *const task =
+        HLib::EnqueueTaskWithParameter(OBJ_Object_Callback, nextFunctionIndex, 5, sizeof(ObjectDrawTaskParameters), OBJECT_DRAW_SCENE_TASK);
+#endif
+#if SHENMUE_IS_DC
+    static_cast<ObjectDrawTaskParameters *>(HLib::GetTaskParameter(task))->submissionState = 0;
+#else
     if (auto *const parameters = static_cast<ObjectDrawTaskParameters *>(HLib::GetTaskParameter(task))) {
         parameters->submittedOpaque = 0;
         parameters->submittedTransparent = 0;
     }
+#endif
     return task;
 }
 
 
-} }
+} // namespace s2
+} // namespace shenmue

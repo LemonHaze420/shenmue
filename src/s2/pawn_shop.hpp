@@ -1,8 +1,96 @@
 #pragma once
-
 #include "shenmue.h"
+#include "s2/hlib.hpp"
+#include "common/types.hpp"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/pawn.hpp"
+#include "s2/texture_dc.hpp"
 
+namespace shenmue {
+namespace s2 {
+struct PawnSaleSelection {
+    std::uint32_t flags;
+    std::uint8_t helpTopic, retained05;
+    std::uint16_t result;
+};
+struct PawnLegacyDrawState {
+    std::int32_t view, left, right, top, bottom;
+    std::int32_t targetScroll, interpolationFrames, previousTarget, scrollStart, scroll, contentHeight;
+    std::int32_t background, modeLabel, shopLabel;
+    std::int32_t primaryLabels[20], secondaryLabels[20];
+    std::uint32_t labelOwners[20];
+    std::int32_t actionLabels[6];
+    std::int32_t frame, titleOffset;
+    char title[16];
+};
+struct PawnShopRuntime {
+    HLib::Task *mainTask, *drawTask, *releaseTask;
+    std::int32_t releaseFrames;
+    PawnDataHeader *data;
+    PawnSaleSelection selection;
+    std::uint32_t shopName;
+    std::int32_t setCursor;
+    std::uint32_t savedHelpVisible, savedHelpSelected;
+    std::int32_t itemCursor, itemCount;
+    std::uint32_t savedNpcLoadState;
+    std::int32_t savedCharacterDisplay;
+    std::uint16_t pendingResult, retained3e;
+    std::int32_t transitionFrames;
+    std::int32_t *setOrder;
+    std::uint32_t *setScores;
+    PawnStockCount *stockScratch;
+    std::uint16_t *items;
+    std::int16_t *quantities;
+    PawnLegacyDrawState draw;
+};
+typedef char PawnSelectionSizeCheck[sizeof(PawnSaleSelection) == 8 ? 1 : -1];
+typedef char PawnDrawSizeCheck[sizeof(PawnLegacyDrawState) == 0x158 ? 1 : -1];
+typedef char PawnRuntimeSizeCheck[sizeof(PawnShopRuntime) == 0x1b0 ? 1 : -1];
+typedef char PawnRuntimeSelectionCheck[offsetof(PawnShopRuntime, selection) == 0x14 ? 1 : -1];
+typedef char PawnRuntimeOrderCheck[offsetof(PawnShopRuntime, setOrder) == 0x44 ? 1 : -1];
+typedef char PawnRuntimeDrawCheck[offsetof(PawnShopRuntime, draw) == 0x58 ? 1 : -1];
 
+struct PawnWindowWork {
+    std::int32_t state, first, row;
+    std::uint32_t flags, available;
+    TextureChunk *ptx;
+    float x, y, velocity, retained24;
+};
+struct PawnWindowShop {
+    std::int32_t item;
+    std::uint32_t shop;
+};
+typedef char PawnWindowSizeCheck[sizeof(PawnWindowWork) == 0x28 ? 1 : -1];
+typedef char PawnWindowPtxCheck[offsetof(PawnWindowWork, ptx) == 0x14 ? 1 : -1];
+typedef char PawnWindowPositionCheck[offsetof(PawnWindowWork, x) == 0x18 ? 1 : -1];
+extern PawnShopRuntime pawnShop;
+extern PawnWindowWork pawnWindow;
+
+void CreatePAWNShops();
+std::int32_t OpenPAWNShop(shen_name name, std::uint32_t mode = 0);
+void ClosePAWNShop();
+std::int32_t IsPAWNShopOpen();
+std::int32_t GetDailyTaskIndex();
+std::int32_t GetPawnSaleResult();
+std::int32_t GetPawnSalePrice();
+std::int32_t CommitPawnSale();
+std::int32_t SetPawnSaleTransition(std::int32_t frames);
+std::uint32_t GetPawnAvailableSaleModes(shen_name shopName);
+const char *GetPawnShopLabel(shen_name shopName);
+void CleanupPawnSale();
+void PawnShopControl(void *data);
+void PawnShopDraw(void *data);
+void PawnShopRelease(void *data);
+HLib::Task *Queue_pw_CtrlPawnWindow();
+std::int32_t OpenPawnWindow(float transition);
+bool IsPawnWindowOpen();
+void PWIN_Callback(void *data);
+void PWIN_Update(void *data);
+} // namespace s2
+} // namespace shenmue
+
+#else
+#pragma once
 
 #include "s2/hlib.hpp"
 #include "common/types.hpp"
@@ -16,13 +104,17 @@ inline constexpr shen_name TASK_PAWN = SHEN_NAME(PAWN);
 inline constexpr std::array<std::uint32_t, 6> PAWN_SALE_MODE_FLAGS{0x80000003U, 0x80000007U, 0x80000002U, 0x80000000U, 0x80000006U, 0x80000004U};
 inline constexpr std::uint16_t PAWN_CURSOR_ICON = 0x405;
 
-// CreatePAWNShops publishes its three tasks after allocating the PAWNDATA workspace.
-
+// CreatePAWNShops publishes the three-task PAWN shop owner only after its
+// PAWNDATA-backed workspace has been sized and allocated successfully.
 char *CreatePAWNShops();
 void ReleasePAWNShops();
 bool OpenPAWNShop(shen_name shopName, std::uint32_t mode = 0);
 void ClosePAWNShop();
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsPAWNShopOpen() noexcept;
+#else
 bool IsPAWNShopOpen() noexcept;
+#endif
 std::int32_t GetDailyTaskIndex() noexcept;
 
 struct PawnSaleSelection {
@@ -33,7 +125,7 @@ struct PawnSaleSelection {
 static_assert(sizeof(PawnSaleSelection) == 8);
 static_assert(offsetof(PawnSaleSelection, helpTopic) == 4);
 static_assert(offsetof(PawnSaleSelection, result) == 6);
-
+// PC v1.07 game-owned PAWN draw globals.
 struct PawnLegacyDrawState {
     std::int32_t view, left, right, top, bottom;
     std::int32_t targetScroll, interpolationFrames, previousTarget, scrollStart, scroll, contentHeight;
@@ -64,6 +156,7 @@ static_assert(offsetof(PawnFlyerSetRow, count) == 772);
 static_assert(offsetof(PawnFlyerSetRow, label) == 776);
 extern std::array<PawnFlyerSetRow, 12> pawnFlyerRows;
 PawnFlyerSetRow GetPawnFlyerSetRow(std::int32_t index);
+
 std::uint32_t GetPawnAvailableSaleModes(shen_name shopName);
 std::int32_t GetPawnSaleResult();
 std::int32_t GetPawnSalePrice();
@@ -96,15 +189,15 @@ std::uint32_t GetPawnSaleSelectedTotal();
 void RefreshPawnSaleItems(shen_name shopName);
 void RefreshPawnSaleSets(shen_name shopName);
 const char *GetPawnShopLabel(shen_name shopName);
-
-
+// Native twelve-row flyer staging owner. Collected flags retain their contents
+// between rebuilds unless the inspection producer explicitly fills them.
 void RefreshPawnFlyerSetRows(std::int32_t firstRow, std::int32_t inspection);
 
 inline constexpr shen_name PAWN_WINDOW_TASK{SHEN_NAME(PWIN)};
 inline constexpr shen_name PAWN_WINDOW_TEXT{SHEN_NAME(PWNM)};
 
-
-
+// Native PWIN window state record: shop-list phase, scroll position, row, draw flag bit 0,
+// owned-flyer mask, the borrowed ITPH PTX buffer and the slide position/velocity.
 struct PawnWindowWork {
     std::int32_t state;
     std::int32_t first;
@@ -124,7 +217,7 @@ static_assert(offsetof(PawnWindowWork, ptx) == 0x18);
 static_assert(offsetof(PawnWindowWork, x) == 0x20);
 static_assert(offsetof(PawnWindowWork, velocity) == 0x28);
 
-
+// Native shop-flyer table: the flyer item each pawn shop requires, terminated by item -1.
 struct PawnWindowShop {
     std::int32_t item;
     shen_name shop;
@@ -167,3 +260,4 @@ void ReleasePawnTaskOwners();
 
 } // namespace shenmue::s2
 
+#endif

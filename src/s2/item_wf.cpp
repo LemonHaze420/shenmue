@@ -1,8 +1,18 @@
-#include "shenmue.h"
-
-
 #include "s2/item_wf.hpp"
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/gauge.hpp"
+#include "s2/inventory_dc.hpp"
+#include "s2/item_selection_queries_dc.hpp"
+#include "s2/help_icon_dc.hpp"
+#include "s2/legacy_sprite_dc.hpp"
+#include "s2/sound_program.hpp"
+#include "s2/window.hpp"
+#include "s2/moves_scroll.hpp"
+#include "s2/npc_data_dc.hpp"
+#include "s2/texture_dc.hpp"
+#include "s2/ui_state_dc.hpp"
+#else
 #include "d3t/object_store.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
@@ -31,44 +41,122 @@
 #include "s2/ui.hpp"
 #include <bit>
 #include <cstring>
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 namespace {
+
+HLib::Task *wfMainControl{};
+
+constexpr std::size_t itemPtxPrefixSize = 0xb0;
+
+constexpr std::size_t itemPtxSize = itemPtxPrefixSize + 256 * 16 * 4;
+
+std::array<std::uint8_t, 384> guiItemActions{};
+
+std::uint8_t temporarySelectedItemState{};
+
+std::int16_t itemLookState{};
+
+std::uint32_t itemLookNumber{};
+
+std::uint32_t itemLookFlags{};
+
+std::int32_t itemLookMode{};
+
+std::uint32_t previousNpcLoadState{};
+
+std::int32_t pendingNpcLoadRestore{};
+
+bool showingItemGameMenu{};
+
+PadControlEntry *itemLookPadControl{};
+
+PadControlEntry *previousItemLookPadControl{};
+
+void *itemModelFile{};
+
+std::uint32_t itemModelFileSize{};
+
+MT7Model itemModel;
+
+MT7Node *itemRoot{};
+
+Vector3i itemLookRotation{};
+
+float itemLookScale{};
+
+float itemLookMaximumScale{}, itemLookMinimumScale{};
+
+std::int32_t itemLookWorldYaw{};
+
+Vector3 itemLookEventPosition{};
+
+Vector3 previousItemCameraEye{}, previousItemCameraTarget{};
+
+CameraState previousItemCameraState{};
+
+std::uint16_t previousItemPerspective{}, previousItemUiVisible{}, previousItemUiSelected{}, previousItemUiMode{};
+
+std::uint8_t previousItemHelpTopic{}, previousItemHelpMode{};
+
+bool previousItemPlayerDisplay{}, previousItemPlayerVisible{};
+
+std::int32_t previousItemWeatherLight{}, previousItemPostFxBank{};
+
+std::int32_t itemLookTexture{};
+
+alignas(4) std::array<std::byte, itemPtxSize> itemLookPtx;
+
+ItemPreviewDrawData itemPreview{};
+
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+namespace {
+
+std::uint32_t GetSpecialWfScroll();
+void RefreshWfMasks(WfTaskData &wf);
+bool InitializeWfTextures(WfTaskData &wf);
+void ReleaseWf(WfTaskData &wf);
+void RefreshWfText(WfTaskData &wf);
+void FinishWfLearn(WfTaskData &wf);
+void DrawWf(void *parameter);
+
+} // namespace
+
+void Queue_wf_MainControl(std::uint8_t nextFunctionIndex);
+bool GetwfMainControlState() noexcept;
+void wf_MainControl_Callback(void *parameter);
+bool OpenWfScrollMenu();
+std::int64_t CloseWfScrollMenu(std::int32_t force);
+void ICSU_CtrlItemLook_Callback(void *);
+void CloseItemLook();
+std::uint32_t GetGuiItemAction(std::uint32_t item) noexcept;
+void ClearGuiItemActions() noexcept;
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 int ItemTextureClear_Nullsub(void *) {
     return 0;
 }
-HLib::Task *wfMainControl{};
-constexpr std::size_t itemPtxPrefixSize = 0xb0;
-constexpr std::size_t itemPtxSize = itemPtxPrefixSize + 256 * 16 * 4;
-std::array<std::uint8_t, 384> guiItemActions{};
-std::uint8_t temporarySelectedItemState{};
-std::int16_t itemLookState{};
-std::uint32_t itemLookNumber{};
-std::uint32_t itemLookFlags{};
-std::int32_t itemLookMode{};
-std::uint32_t previousNpcLoadState{};
-std::int32_t pendingNpcLoadRestore{};
-bool showingItemGameMenu{};
-PadControlEntry *itemLookPadControl{};
-PadControlEntry *previousItemLookPadControl{};
-void *itemModelFile{};
-std::uint32_t itemModelFileSize{};
-MT7Model itemModel;
-MT7Node *itemRoot{};
-Vector3i itemLookRotation{};
-float itemLookScale{};
-float itemLookMaximumScale{}, itemLookMinimumScale{};
-std::int32_t itemLookWorldYaw{};
-Vector3 itemLookEventPosition{};
-Vector3 previousItemCameraEye{}, previousItemCameraTarget{};
-CameraState previousItemCameraState{};
-std::uint16_t previousItemPerspective{}, previousItemUiVisible{}, previousItemUiSelected{}, previousItemUiMode{};
-std::uint8_t previousItemHelpTopic{}, previousItemHelpMode{};
-bool previousItemPlayerDisplay{}, previousItemPlayerVisible{};
-std::int32_t previousItemWeatherLight{}, previousItemPostFxBank{};
-std::int32_t itemLookTexture{};
-alignas(4) std::array<std::byte, itemPtxSize> itemLookPtx;
-ItemPreviewDrawData itemPreview{};
+
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 void SetupItemInspectInView() {
     const float depth = -0.14999999f;
@@ -81,6 +169,14 @@ void SetupItemInspectInView() {
     itemLookWorldYaw = -camCtrlGetNextRotY();
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 void SetupItemInspectTransform() {
     const MapControlData *control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *ryo = static_cast<Character *>(control->ryo);
@@ -88,7 +184,13 @@ void SetupItemInspectTransform() {
         return;
     GetInventoryItemDistances(itemLookNumber, &itemLookMinimumScale, &itemLookMaximumScale);
     itemLookScale = (itemLookMaximumScale + itemLookMinimumScale) * 0.5f;
-    const std::int16_t yaw = static_cast<std::int16_t>(-static_cast<std::int16_t>(GetCharacterMotionYaw(ryo)));
+    const std::int16_t yaw = static_cast<std::int16_t>(-static_cast<std::int16_t>(
+#if SHENMUE_IS_DC
+charGetMotionWorkYaw
+#else
+GetCharacterMotionYaw
+#endif
+(ryo)));
     const Vector3 position = GetCharacterWorldPosition(ryo);
     itemLookEventPosition = position;
     itemRoot->rotation = {};
@@ -118,6 +220,14 @@ void SetupItemInspectTransform() {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 bool LoadItemModel() {
     const char *modelName = GetInventoryItemModel(itemLookNumber);
     const char *directory = Filepath_Gen(FilepathGenMode::ItemDirectory);
@@ -138,6 +248,14 @@ bool LoadItemModel() {
     itemRoot = itemModel.nodes.empty() ? nullptr : &itemModel.nodes[0];
     return itemRoot != nullptr;
 }
+
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 void DrawItemModelPreview(void *parameter) {
     ItemPreviewDrawData &preview = *static_cast<ItemPreviewDrawData *>(parameter);
@@ -187,6 +305,14 @@ void DrawItemModelPreview(void *parameter) {
     ImmediateLightWork(nullptr);
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 void icsuRenderItem() {
     if (!itemRoot)
         return;
@@ -210,6 +336,14 @@ void icsuRenderItem() {
     HLib::ExecuteCallbackNow(DrawItemModelPreview, &itemPreview);
     SetItemPreviewGlareIntensity(1);
 }
+
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 void icsuMoveRotateAdjustItemScale() {
     std::int32_t *yaw = &itemLookRotation.y;
@@ -282,18 +416,80 @@ void icsuMoveRotateAdjustItemScale() {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 WfTaskData *GetWfTaskData() {
     return wfMainControl ? static_cast<WfTaskData *>(HLib::GetTaskParameter(wfMainControl)) : nullptr;
 }
 
-std::uint32_t GetSpecialWfScroll() {
-    for (const WfScrollDefinition &definition : wfSpecialScrollDefinitions) {
-        const std::uint32_t item = static_cast<std::uint32_t>(3000 + definition.itemOffset);
-        if (GetItemState(item))
-            return item;
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void ReleaseWfResources(NativeWfTaskData &wf);
+
+HLib::Task *wfMainControl = 0;
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t GetwfMainControlState() {
+    HLib::Task *const task = wfMainControl;
+    if (task) {
+        const NativeWfTaskData *const wf = static_cast<NativeWfTaskData *>(HLib::GetTaskParameter(task));
+        if (wf) {
+            if (wf->state == -1)
+                return 0;
+            return 1;
+        }
     }
     return 0;
 }
+
+#else
+
+bool GetwfMainControlState() noexcept {
+    const WfTaskData *wf = GetWfTaskData();
+    return wf && wf->state != -1;
+}
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void RefreshWfMasks(NativeWfTaskData &wf) {
+    wf.owned = 0;
+    wf.learned = 0;
+    const NativeWfScrollDefinition *definition = wfScrollDefinitions;
+    std::int32_t index;
+    for (index = 0; index < 25; ++index, ++definition) {
+        if (index == 9 || !GetItemState(static_cast<std::uint32_t>(definition->itemOffset + 3000)))
+            continue;
+        const std::uint32_t mask = 1U << index;
+        wf.owned |= mask;
+        if (definition->move >= 0 && GetMoveProficiency(definition->category, static_cast<std::uint8_t>(definition->move)))
+            wf.learned |= mask;
+    }
+    definition = wfSpecialScrollDefinitions;
+    for (index = 0; index < 2; ++index, ++definition)
+        if (GetItemState(static_cast<std::uint32_t>(definition->itemOffset + 3000)))
+            wf.owned |= 0x200U;
+}
+
+#else
+
+namespace {
 
 void RefreshWfMasks(WfTaskData &wf) {
     wf.owned = 0;
@@ -309,6 +505,593 @@ void RefreshWfMasks(WfTaskData &wf) {
     if (GetSpecialWfScroll())
         wf.owned |= 1U << 24;
 }
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void ReleaseWf(NativeWfTaskData &wf) {
+    ReleaseWfResources(wf);
+    wf.flags = 0;
+    wf.state = -1;
+    icsToggleIconState(8, 0);
+    HLib::SetupTimedTask(wfMainControl, 0);
+}
+
+#else
+
+namespace {
+
+void ReleaseWf(WfTaskData &wf) {
+    wf.npcLoadState = 1;
+    EV_NPC_NewLoadSw(1);
+    if (wf.ptx)
+        HLib::FreeTaskData(wf.ptx);
+    wf.ptx = nullptr;
+    for (std::int32_t &texture : wf.textures) {
+        if (texture != -1)
+            ReleaseNamedTexture(texture);
+        texture = -1;
+    }
+    wf.flags = 0;
+    wf.state = -1;
+    icsToggleIconState(8, 0);
+    HLib::SetupTimedTask(wfMainControl, 0);
+}
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t OpenWfScrollMenu() {
+    HLib::Task *const task = wfMainControl;
+    if (task) {
+        NativeWfTaskData *const wf = static_cast<NativeWfTaskData *>(HLib::GetTaskParameter(task));
+        RefreshWfMasks(*wf);
+        if (wf->owned) {
+            HLib::ResolveDeferredCallback(wfMainControl);
+            wf->state = 0;
+            wf->flags = 0;
+            wf->row = 0;
+            wf->first = 0;
+            wf->x = -320.0f;
+            wf->y = 240.0f;
+            wf->retained34 = 0.0f;
+            wf->velocity = 1.0f;
+            wf->retained30 = 0.0f;
+            icsToggleIconState(8, 1);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#else
+
+bool OpenWfScrollMenu() {
+    WfTaskData *wf = GetWfTaskData();
+    if (!wf)
+        return false;
+    RefreshWfMasks(*wf);
+    if (!wf->owned)
+        return false;
+    HLib::ResolveDeferredCallback(wfMainControl);
+    wf->x = -320.0f;
+    wf->y = 240.0f;
+    wf->velocity = 1.0f;
+    wf->state = 0;
+    wf->flags = 0;
+    wf->row = 0;
+    wf->first = 0;
+    wf->reserved34 = 0;
+    icsToggleIconState(8, 1);
+    return true;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void OpenWfScrollWidget() {
+    WfTaskData *wf = GetWfTaskData();
+    if (!wf)
+        return;
+    RefreshWfMasks(*wf);
+    if (!wf->owned)
+        return;
+    HLib::ResolveDeferredCallback(wfMainControl);
+    wf->state = 6;
+    wf->flags = 0;
+    wf->row = 0;
+    wf->first = 0;
+    wf->x = -320.0f;
+    wf->y = 240.0f;
+    wf->reserved34 = 0;
+    wf->velocity = 1.0f;
+    icsToggleIconState(8, 1);
+    RefreshWfMasks(*wf);
+}
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void CloseWfScrollMenu(std::int32_t force) {
+    if (!force || !GetwfMainControlState() || !wfMainControl)
+        return;
+    NativeWfTaskData *const wf = static_cast<NativeWfTaskData *>(HLib::GetTaskParameter(wfMainControl));
+    if (wf)
+        ReleaseWf(*wf);
+}
+
+#else
+
+std::int64_t CloseWfScrollMenu(std::int32_t force) {
+    if (!force)
+        return 1;
+    WfTaskData *wf = GetWfTaskData();
+    if (!wf || wf->state == -1)
+        return 1;
+    if (GetCurrentItemSelectState() & 1U)
+        CloseItemLook();
+    SetNewEwzoTypeForMoveLearned(1, 0, 0);
+    ReleaseWf(*wf);
+    return 1;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void StopWfScrollMenu() {
+    if (WfTaskData *wf = GetWfTaskData()) {
+        if (wf->state == 5)
+            FinishWfLearn(*wf);
+        else
+            ReleaseWf(*wf);
+    }
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void LearnWfScroll(std::int32_t index) {
+    WfTaskData *wf = GetWfTaskData();
+    if (!wf)
+        return;
+    RefreshWfMasks(*wf);
+    if (!wf->owned)
+        return;
+    HLib::ResolveDeferredCallback(wfMainControl);
+    wf->row = index;
+    wf->first = 0;
+    wf->state = 4;
+    wf->remaining = 90.0f;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::uint32_t GetWfOwnedScrolls() {
+    WfTaskData *wf = GetWfTaskData();
+    if (!wf)
+        return 0;
+    RefreshWfMasks(*wf);
+    return wf->owned;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::uint32_t GetWfLearnedScrolls() {
+    WfTaskData *wf = GetWfTaskData();
+    if (!wf)
+        return 0;
+    RefreshWfMasks(*wf);
+    return wf->learned;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::uint16_t GetWfPromptIcon(std::uint16_t prompt, std::uint32_t scroll) {
+    const std::uint32_t learned = GetWfLearnedScrolls();
+    return wfPromptIcons[prompt][(learned >> (scroll & 31U)) & 1U];
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void BuildWfMenuEntries(std::span<WfMenuEntry, 25> entries) {
+    const std::uint32_t owned = GetWfOwnedScrolls();
+    for (std::uint32_t index = 0; index < entries.size(); ++index) {
+        const WfScrollDefinition &definition = wfScrollDefinitions[index];
+        WfMenuEntry &entry = entries[index];
+        entry.index = static_cast<std::int32_t>(index);
+        entry.itemOffset = definition.itemOffset;
+        entry.category = definition.category;
+        entry.move = definition.move;
+        entry.prompt = definition.prompt;
+        entry.label = owned & (1U << index) ? shenGetAmtOf(static_cast<std::uint32_t>(3000 + definition.itemOffset)) :
+                                              "UIGNRLQSTN"; // @text EN: "? ? ?" | JA: "ï¼Ÿï¼Ÿï¼Ÿ"
+    }
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// @verified - p
+std::int32_t FindWfScrollDefinition(std::int32_t item) noexcept {
+    const std::int32_t offset = item >= 3000 ? item - 3000 : item;
+    for (std::int32_t index = 0; index < 25; ++index)
+        if (wfScrollDefinitions[static_cast<std::size_t>(index)].itemOffset == offset)
+            return index;
+    return -1;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::int32_t GetWfScrollPreviewRow(std::int32_t index) {
+    if (index >= 3000)
+        index = FindWfScrollDefinition(index);
+    if (index == -1)
+        return -1;
+    const WfScrollDefinition &definition = wfScrollDefinitions[static_cast<std::size_t>(index)];
+    // The special scroll reads the group word eight bytes before the category-three move bank: native value zero.
+    if (definition.move == -1)
+        return 0;
+    return GetWazamakiMoveCategory(definition.category)[static_cast<std::uint16_t>(definition.move)].group;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// @verified - p
+void BuildOwnedWfScrollSlots(std::span<std::int32_t, 26> slots) {
+    std::size_t count = 0;
+    for (std::int32_t index = 0; index < 25; ++index) {
+        if (index != 24 && GetItemState(static_cast<std::uint32_t>(3000 + wfScrollDefinitions[static_cast<std::size_t>(index)].itemOffset)))
+            slots[count++] = index;
+    }
+    for (const WfScrollDefinition &definition : wfSpecialScrollDefinitions) {
+        const std::int32_t item = 3000 + definition.itemOffset;
+        if (GetItemState(static_cast<std::uint32_t>(item)))
+            slots[count] = item;
+    }
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void GetWfScrollMove(std::int32_t index, std::int32_t *category, std::int32_t *move) noexcept {
+    *category = wfScrollDefinitions[static_cast<std::size_t>(index)].category;
+    *move = wfScrollDefinitions[static_cast<std::size_t>(index)].move;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::uint32_t GetWfScrollItem(std::int32_t index) noexcept {
+    const std::int8_t offset =
+        index == 3009 || index == 3010 ? wfMenuSpecialReadThroughOffset : wfScrollDefinitions[static_cast<std::size_t>(index)].itemOffset;
+    return static_cast<std::uint32_t>(3000 + offset);
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void ICSU_InitItemLook_Callback(void *) {
+    itemLookState = 0;
+    itemLookPadControl = nullptr;
+    itemLookPadControl = AllocatePadControlEntry();
+    itemRoot = nullptr;
+    itemModelFile = nullptr;
+    itemLookWorldYaw = 0;
+    temporarySelectedItemState = 0;
+    pendingNpcLoadRestore = false;
+    HLib::SetCurrentTaskTo(ICSU_CtrlItemLook_Callback);
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void ICSU_CtrlItemLook_Callback(void *) {
+    using enum CameraState;
+    if (g_loadingFlag & 2U) {
+        icsuRenderItem();
+        return;
+    }
+    switch (itemLookState) {
+    case 1:
+        icsuMoveRotateAdjustItemScale();
+        icsuRenderItem();
+        break;
+    case 2:
+        if (LoadItemModel()) {
+            itemLookState = 1;
+            camCtrlGetNextCamPos(&previousItemCameraEye);
+            camCtrlGetTargetPosition(&previousItemCameraTarget);
+            previousItemCameraState = camCtrlGetState();
+            previousItemPerspective = camCtrlGetPerspective();
+            previousItemHelpTopic = helpGetCurrentIconIdx(1);
+            previousItemHelpMode = helpGetCurrentIconIdx(0);
+            previousItemUiSelected = static_cast<std::uint16_t>(GetUiFlag(1));
+            previousItemUiVisible = static_cast<std::uint16_t>(GetUiFlag(0));
+            MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            Character *ryo = static_cast<Character *>(control->ryo);
+            if (ryo) {
+                previousItemPlayerDisplay = IsOfThisVisibilityType(ryo, 3);
+                previousItemPlayerVisible = charaGetWasVisible(ryo);
+                EV_SetCharDisplay(ryo, CVM_DisplayEnabled, 0);
+                charaSetVisibilityFlagTo(ryo, 0);
+            }
+            camCtrlSetState(Event);
+            camCtrlSetPerspective(8192);
+            EV_EventSetUpHelpIcon_0(0x12, 0);
+            previousItemUiMode = static_cast<std::uint16_t>(GetUiFlag(2));
+            if (previousItemUiMode)
+                SetHelpIconMenuFlags(0x21);
+            else
+                CheckHelpIcon(0x21, 0, CheckHelpIconOp::Add);
+            previousItemWeatherLight = SetWeatherLightManager(0);
+            SetupItemInspectTransform();
+            camCtrlSetTargetPosition(itemLookEventPosition);
+        } else {
+            itemLookState = 0;
+            (void)ExecuteAicaCommand(0x800abU, 0, 0);
+            SetItemSelectorDelayedResult(0);
+            icsToggleIconState(0, 0);
+        }
+        break;
+    case 3:
+        itemLookState = 4;
+        break;
+    case 4:
+        itemLookState = 2;
+        break;
+    default:
+        break;
+    }
+    ClearGuiItemActions();
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+bool OpenItemLook(std::uint32_t item, std::int32_t mode) {
+    previousItemPostFxBank = static_cast<std::int32_t>(GetPostFxBankValue(1));
+    SelectPostFxBank(1, 0);
+    const char *modelName = GetInventoryItemModel(item);
+    (void)Filepath_Gen(FilepathGenMode::ItemDirectory);
+    if (!modelName)
+        return false;
+    char filename[32];
+    std::snprintf(filename, sizeof(filename), hasItemRegistered(item) & 0x20U ? "%sG.MT7" : "%sI.MT7", modelName);
+    itemLookNumber = item;
+    itemLookState = 3;
+    itemLookFlags = hasItemRegistered(item);
+    itemLookMode = mode;
+    previousNpcLoadState = static_cast<std::uint32_t>(GetNpcNewLoadState());
+    EV_NPC_NewLoadSw(0);
+    pendingNpcLoadRestore = true;
+    icsToggleIconState(0, 1);
+    if (itemLookPadControl && !(itemLookPadControl->flags & 2U))
+        previousItemLookPadControl = BindPadControlEntry(itemLookPadControl);
+    ParseGuiPtx(itemLookPtx.data(), 256, 16, SHEN_NAME(ICSU), SHEN_NAME(IWAO));
+    itemLookTexture = static_cast<std::int32_t>(ReadTexnTexture(itemLookPtx.data()));
+    ItemTextureClear_Nullsub(itemLookPtx.data());
+    ReplacePtxTexture(static_cast<std::uint32_t>(itemLookTexture), itemLookPtx.data());
+    return true;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void SetItemLookShowingGameMenu() noexcept {
+    showingItemGameMenu = true;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void ToggleGameMenu() noexcept {
+    if (showingItemGameMenu) {
+        DisableElement(UIElement::GameMenu);
+        DestroySharedItemsWidget();
+        g_inputBuffer[0].pressedPriority = 0;
+    }
+    showingItemGameMenu = false;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void CloseItemLook() {
+    SelectPostFxBank(1, previousItemPostFxBank);
+    if (itemModelFile) {
+        ReleaseModelFormat7(itemModel);
+        HLib::FreeTaskData(itemModelFile);
+        itemModelFile = nullptr;
+        itemRoot = nullptr;
+    }
+    SetItemSelectorDelayedResult(0);
+    if (GetCurrentItemSelectState() & 1U) {
+        EV_EventSetUpHelpIcon_0(previousItemHelpTopic, previousItemHelpMode);
+        if (previousItemUiMode)
+            SetHelpIconMenuFlags(previousItemUiVisible);
+        else
+            ResetHelpIconsToItemPrompt();
+        temporarySelectedItemState = 0;
+        camCtrlSetPerspective(previousItemPerspective);
+        camCtrlSetState(previousItemCameraState);
+        camCtrlSetNextPosition(previousItemCameraEye);
+        camCtrlSetTargetPosition(previousItemCameraTarget);
+        MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        Character *ryo = static_cast<Character *>(control->ryo);
+        if (ryo) {
+            EV_SetCharDisplay(ryo, CVM_DisplayEnabled, previousItemPlayerDisplay);
+            charaSetVisibilityFlagTo(ryo, previousItemPlayerVisible);
+        }
+        if (itemLookPadControl && (itemLookPadControl->flags & 2U))
+            BindPadControlEntry(previousItemLookPadControl);
+        itemLookState = 0;
+        SetWeatherLightManager(previousItemWeatherLight);
+        icsToggleIconState(0, 0);
+        (void)ExecuteAicaCommand(0x900abU, 0, 0);
+        if (pendingNpcLoadRestore)
+            EV_NPC_NewLoadSw(previousNpcLoadState);
+        pendingNpcLoadRestore = false;
+        ReleaseNamedTexture(itemLookTexture);
+    }
+    ToggleGameMenu();
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void InspectWfScroll(std::int32_t index) {
+    const std::uint32_t item = index == 24 ? GetSpecialWfScroll() : GetWfScrollItem(index);
+    showingItemGameMenu = true;
+    if (!OpenItemLook(item, 1)) {
+        (void)ExecuteAicaCommand(0x800abU, 0, 0);
+        DisableElement(UIElement::GameMenu);
+    }
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::uint32_t GetGuiItemAction(std::uint32_t item) noexcept {
+    const std::span<const InventoryItemDefinition> definitions = GetInventoryItemDefinitions(S2InventoryBank::Type0);
+    for (std::uint32_t index = 0; index < definitions.size(); ++index)
+        if (definitions[index].id == item)
+            return guiItemActions[index];
+    return 0;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::uint8_t SetGuiItemAction(std::uint32_t item, std::uint8_t flags, std::int32_t enabled) noexcept {
+    const std::span<const InventoryItemDefinition> definitions = GetInventoryItemDefinitions(S2InventoryBank::Type0);
+    for (std::uint32_t index = 0; index < definitions.size(); ++index) {
+        if (definitions[index].id != item)
+            continue;
+        const std::uint8_t previous = guiItemActions[index];
+        guiItemActions[index] = enabled ? static_cast<std::uint8_t>(previous | flags) : static_cast<std::uint8_t>(previous & ~flags);
+        return previous;
+    }
+    return 0;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void ClearGuiItemActions() noexcept {
+    guiItemActions.fill(0);
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::int64_t UpdateSelectedItemStateFlag(std::int16_t item) {
+    std::int64_t result = GetShouldRenderIcons(RenderIconSlot::Any);
+    if (!result) {
+        result = GetCurrentItemSelectState();
+        if (!(result & 1)) {
+            result = OpenItemLook(static_cast<std::uint32_t>(item), 0);
+            if (result)
+                temporarySelectedItemState = 1;
+        }
+    }
+    return result;
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void SetItemLookRotation(std::int16_t pitch, std::int16_t yaw, std::int16_t roll) noexcept {
+    itemLookRotation = {pitch, yaw, roll};
+}
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void ReleaseItemWfOwners() {
+    if (itemLookState || itemModelFile)
+        CloseItemLook();
+    if (wfMainControl) {
+        StopWfScrollMenu();
+        wfMainControl = nullptr;
+    }
+    itemLookPadControl = nullptr;
+    previousItemLookPadControl = nullptr;
+}
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static bool InitializeWfTextures(NativeWfTaskData *wf) {
+    if (!wf)
+        return false;
+    std::int32_t index;
+    wf->npcLoadState = GetNpcNewLoadState();
+    wf->ptx = 0;
+    EV_NPC_NewLoadSw(0);
+    EV_ResetFreeTalkFlags();
+    for (index = 0; index < 6; ++index)
+        wf->textures[index] = -1;
+    wf->ptx = HLib::AllocateTaskData(0x834, SHEN_NAME4('W', 'F', 'T', 'X'));
+    if (!wf->ptx) {
+        EV_NPC_NewLoadSw(wf->npcLoadState);
+        return false;
+    }
+    *reinterpret_cast<std::uint32_t *>(static_cast<std::byte *>(wf->ptx) + 0x82c) = 0;
+    *reinterpret_cast<std::uint32_t *>(static_cast<std::byte *>(wf->ptx) + 0x830) = 0;
+    for (index = 0; index < 6; ++index) {
+        ParseGuiPtx(static_cast<TextureChunk *>(wf->ptx), 16, 256, SHEN_NAME4('W', 'F', 'T', 'X'),
+            (static_cast<std::uint32_t>(index + '0') << 24) | SHEN_NAME4('S', 'K', 'L', '\0'), 0x500);
+        wf->textures[index] = LoadAndFindTEXN_Wrapper(static_cast<TextureChunk *>(wf->ptx));
+    }
+    return true;
+}
+
+#else
+
+namespace {
 
 bool InitializeWfTextures(WfTaskData &wf) {
     wf.npcLoadState = static_cast<std::uint32_t>(GetNpcNewLoadState());
@@ -328,22 +1111,61 @@ bool InitializeWfTextures(WfTaskData &wf) {
     return true;
 }
 
-void ReleaseWf(WfTaskData &wf) {
-    wf.npcLoadState = 1;
-    EV_NPC_NewLoadSw(1);
-    if (wf.ptx)
-        HLib::FreeTaskData(wf.ptx);
-    wf.ptx = nullptr;
-    for (std::int32_t &texture : wf.textures) {
-        if (texture != -1)
-            ReleaseNamedTexture(texture);
-        texture = -1;
-    }
-    wf.flags = 0;
-    wf.state = -1;
-    icsToggleIconState(8, 0);
-    HLib::SetupTimedTask(wfMainControl, 0);
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static std::uint32_t GetSpecialWfScroll() {
+    const NativeWfScrollDefinition *definition = wfSpecialScrollDefinitions;
+    for (std::int32_t index = 0; index < 2; ++index, ++definition)
+        if (GetItemState(static_cast<std::uint32_t>(definition->itemOffset + 3000)))
+            return static_cast<std::uint32_t>(definition->itemOffset + 3000);
+    return 0;
 }
+
+#else
+
+namespace {
+
+std::uint32_t GetSpecialWfScroll() {
+    for (const WfScrollDefinition &definition : wfSpecialScrollDefinitions) {
+        const std::uint32_t item = static_cast<std::uint32_t>(3000 + definition.itemOffset);
+        if (GetItemState(item))
+            return item;
+    }
+    return 0;
+}
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void RefreshWfText(NativeWfTaskData &wf) {
+    static const char unknown[] = "¡©¡©¡©¡©";
+    std::int32_t index = wf.first;
+    for (std::int32_t row = 0; row < 6; ++row, ++index) {
+        const char *label;
+        if (wf.owned & (1U << index)) {
+            if (index != 9)
+                label = shenGetAmtOf(static_cast<std::uint32_t>(3000 + wfScrollDefinitions[index].itemOffset));
+            else
+                label = GetSpecialWfScrollLabel();
+        } else
+            label = unknown;
+        RasterizeWindowTextLine4bpp(static_cast<std::byte *>(wf.ptx) + 0x2c, 256, label, 1, 1);
+        ReplacePtxTexture(wf.textures[row], static_cast<TextureChunk *>(wf.ptx));
+    }
+}
+
+#else
+
+namespace {
 
 void RefreshWfText(WfTaskData &wf) {
     std::uint32_t index = static_cast<std::uint32_t>(wf.first);
@@ -365,6 +1187,14 @@ void RefreshWfText(WfTaskData &wf) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 void FinishWfLearn(WfTaskData &wf) {
     wf.remaining = 0.0f;
     SetNewEwzoTypeForMoveLearned(1, 0, 0);
@@ -373,6 +1203,77 @@ void FinishWfLearn(WfTaskData &wf) {
     SetMovesMenuItemActionState(0);
     RefreshWazamakiLearnedGroups();
 }
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static bool MoveWfSelection(NativeWfTaskData &wf, std::uint16_t buttons) {
+    const std::int32_t oldRow = wf.row, oldFirst = wf.first;
+    if ((buttons & 0x1000U) && --wf.row < 0) {
+        wf.row = 0;
+        if (--wf.first < 0)
+            wf.first = 0;
+    }
+    if ((buttons & 0x2000U) && ++wf.row > 5) {
+        wf.row = 5;
+        if (++wf.first + 5 > 24)
+            --wf.first;
+    }
+    if (wf.row == oldRow && wf.first == oldFirst)
+        return false;
+    ExecuteAicaCommand(0x200ab, 0, 0);
+    return true;
+}
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static const std::uint16_t wfPromptIcons[3][2] = {{266, 265}, {268, 267}, {270, 269}};
+
+// @verified - d
+static void DrawWf(void *parameter) {
+    const NativeWfTaskData &wf = *static_cast<NativeWfTaskData *>(parameter);
+    if ((wf.flags & 1U) == 0)
+        return;
+    LegacyIconSprite label;
+    label.scaleX = label.scaleY = 1.0f;
+    label.width = 256;
+    label.height = 32;
+    label.alignment = 5;
+    label.flags = 0;
+    label.depth = 2.299999713897705f;
+    label.rotation = 0;
+    LegacyIconSprite prompt;
+    InitializeLegacyIconSprite(prompt);
+    prompt.depth = 2.309999704360962f;
+    Vector2 position;
+    position.x = wf.x;
+    position.y = wf.y;
+    label.x = wf.x + 52.0f;
+    label.y = wf.y + -100.0f;
+    prompt.x = wf.x + -140.0f;
+    DrawLegacyItemWindow(position, 0.009794319048523903f, 9, 6);
+    for (std::int32_t row = 0; row < 6; ++row) {
+        const NativeWfScrollDefinition *const definition = &wfScrollDefinitions[wf.first + row];
+        label.icon = wf.textures[row];
+        prompt.y = label.y = (wf.y + -100.0f) + static_cast<float>(40 * row);
+        PrepareDrawTextureWithMode(label);
+        prompt.icon = wfPromptIcons[definition->prompt][0];
+        if (wf.learned & (1 << (wf.first + row)))
+            prompt.icon = wfPromptIcons[definition->prompt][1];
+        PrepareDrawWithMode(prompt);
+    }
+    shenSubmitQuadsUI(label.x, (wf.y + -100.0f) + static_cast<float>(40 * wf.row), 0x1f0000ffU, 0xbf0000ffU, 244, 40, 2.1999998092651367f);
+}
+
+#else
+
+namespace {
 
 void DrawWf(void *parameter) {
     WfTaskData &wf = *static_cast<WfTaskData *>(parameter);
@@ -396,10 +1297,37 @@ void DrawWf(void *parameter) {
     shenSubmitQuadsUI(label.x, static_cast<float>(40 * wf.row) + (wf.y - 100.0f), 0x1effffffU, 0xbeffffffU, 244, 40, 0.70000005f);
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 bool MoveWfPosition(WfTaskData &wf, bool advancing) {
     return advancing ? AdvanceIconPosition(wf.x, wf.velocity, 320.0f) : RetreatIconPosition(wf.x, wf.velocity, -320.0f);
 }
+
 } // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void Queue_wf_MainControl(std::uint8_t nextFunctionIndex) {
+    const std::int8_t index = nextFunctionIndex;
+    wfMainControl = HLib::EnqueueTaskWithParameter(wf_MainControl_Callback, index, 0, sizeof(NativeWfTaskData), SHEN_NAME(ICWF));
+    if (wfMainControl) {
+        NativeWfTaskData *const wf = static_cast<NativeWfTaskData *>(HLib::GetTaskParameter(wfMainControl));
+        wf->state = -1;
+        wf->flags = 0;
+        HLib::SetupTimedTask(wfMainControl, 0);
+    }
+}
+
+#else
 
 void Queue_wf_MainControl(std::uint8_t nextFunctionIndex) {
     wfMainControl = HLib::EnqueueTaskWithParameter(wf_MainControl_Callback, nextFunctionIndex, 0, sizeof(WfTaskData), TASK_ICWF);
@@ -411,10 +1339,104 @@ void Queue_wf_MainControl(std::uint8_t nextFunctionIndex) {
     }
 }
 
-bool GetwfMainControlState() noexcept {
-    const WfTaskData *wf = GetWfTaskData();
-    return wf && wf->state != -1;
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void wf_MainControl_Callback(void *parameter) {
+    NativeWfTaskData &wf = *static_cast<NativeWfTaskData *>(parameter);
+    std::uint16_t pressed, repeated;
+    pressed = GetPadControlData(1);
+    repeated = GetPadControlData(2);
+    std::uint16_t available = 0;
+    switch (wf.state) {
+    case -1:
+        break;
+    case 0:
+        if (InitializeWfTextures(&wf)) {
+            wf.flags |= 1U;
+            wf.state = 1;
+            RefreshWfMasks(wf);
+            RefreshWfText(wf);
+        } else {
+            ReleaseWf(wf);
+        }
+        break;
+    case 1:
+        if (AdvanceIconPosition(reinterpret_cast<ItemEffectPosition *>(&wf.x), 320.0f))
+            wf.state = 2;
+        break;
+    case 2: {
+        available |= 0x200;
+        const std::int32_t index = wf.row + wf.first;
+        const std::uint32_t mask = 1U << index;
+        if (wf.owned & mask)
+            available |= 0x400;
+        if (pressed & 0x200U) {
+            wf.state = 6;
+            ExecuteAicaCommand(0x100ab, 0, 0);
+        } else if (pressed & 0x400U) {
+            if (!(available & 0x400U)) {
+                ExecuteAicaCommand(0x800ab, 0, 0);
+            } else if (index != 9 && !(wf.learned & mask)) {
+                wf.state = 4;
+                wf.flags &= ~1U;
+                wf.remaining = 90.0f;
+            } else {
+                std::uint32_t item = static_cast<std::uint32_t>(3000 + wfScrollDefinitions[index].itemOffset);
+                if (index == 9)
+                    item = GetSpecialWfScroll();
+                if (OpenItemLook(static_cast<std::int32_t>(item))) {
+                    wf.state = 3;
+                    wf.flags &= ~1U;
+                    ExecuteAicaCommand(0x500ab, 0, 0);
+                } else {
+                    ExecuteAicaCommand(0x800ab, 0, 0);
+                }
+            }
+        } else if (MoveWfSelection(wf, repeated)) {
+            RefreshWfText(wf);
+        }
+        RequestHelpIconSelection(available);
+        break;
+    }
+    case 3:
+        if (!IsAnyItemSelectActive()) {
+            ExecuteAicaCommand(0x100ab, 0, 0);
+            wf.state = 2;
+            wf.flags |= 1U;
+        }
+        break;
+    case 4: {
+        const NativeWfScrollDefinition &definition = wfScrollDefinitions[wf.row + wf.first];
+        SetMoveLearningEntry(0, definition.category, definition.move, 12);
+        SetNewEwzoTypeForMoveLearned(0, definition.category, definition.move);
+        wf.state = 5;
+        wf.remaining = 90.0f;
+        break;
+    }
+    case 5:
+        wf.remaining -= 1.0f;
+        if (!(wf.remaining > 0.0f)) {
+            wf.remaining = 0.0f;
+            SetNewEwzoTypeForMoveLearned(1, 0, 0);
+            RefreshWfMasks(wf);
+            RefreshWfText(wf);
+            wf.flags |= 1U;
+            wf.state = 2;
+            ExecuteAicaCommand(0x100ab, 0, 0);
+        }
+        break;
+    case 6:
+        if (RetreatIconPosition(reinterpret_cast<ItemEffectPosition *>(&wf.x), -320.0f))
+            ReleaseWf(wf);
+        break;
+    }
+    HLib::ExecuteCallbackNow(DrawWf, &wf);
 }
+
+#else
 
 void wf_MainControl_Callback(void *parameter) {
     WfTaskData &wf = *static_cast<WfTaskData *>(parameter);
@@ -507,374 +1529,7 @@ void wf_MainControl_Callback(void *parameter) {
         HLib::ExecuteCallbackNow(DrawWf, &wf);
 }
 
-bool OpenWfScrollMenu() {
-    WfTaskData *wf = GetWfTaskData();
-    if (!wf)
-        return false;
-    RefreshWfMasks(*wf);
-    if (!wf->owned)
-        return false;
-    HLib::ResolveDeferredCallback(wfMainControl);
-    wf->x = -320.0f;
-    wf->y = 240.0f;
-    wf->velocity = 1.0f;
-    wf->state = 0;
-    wf->flags = 0;
-    wf->row = 0;
-    wf->first = 0;
-    wf->reserved34 = 0;
-    icsToggleIconState(8, 1);
-    return true;
-}
+#endif
 
-void OpenWfScrollWidget() {
-    WfTaskData *wf = GetWfTaskData();
-    if (!wf)
-        return;
-    RefreshWfMasks(*wf);
-    if (!wf->owned)
-        return;
-    HLib::ResolveDeferredCallback(wfMainControl);
-    wf->state = 6;
-    wf->flags = 0;
-    wf->row = 0;
-    wf->first = 0;
-    wf->x = -320.0f;
-    wf->y = 240.0f;
-    wf->reserved34 = 0;
-    wf->velocity = 1.0f;
-    icsToggleIconState(8, 1);
-    RefreshWfMasks(*wf);
-}
-
-std::int64_t CloseWfScrollMenu(std::int32_t force) {
-    if (!force)
-        return 1;
-    WfTaskData *wf = GetWfTaskData();
-    if (!wf || wf->state == -1)
-        return 1;
-    if (GetCurrentItemSelectState() & 1U)
-        CloseItemLook();
-    SetNewEwzoTypeForMoveLearned(1, 0, 0);
-    ReleaseWf(*wf);
-    return 1;
-}
-
-void StopWfScrollMenu() {
-    if (WfTaskData *wf = GetWfTaskData()) {
-        if (wf->state == 5)
-            FinishWfLearn(*wf);
-        else
-            ReleaseWf(*wf);
-    }
-}
-
-void LearnWfScroll(std::int32_t index) {
-    WfTaskData *wf = GetWfTaskData();
-    if (!wf)
-        return;
-    RefreshWfMasks(*wf);
-    if (!wf->owned)
-        return;
-    HLib::ResolveDeferredCallback(wfMainControl);
-    wf->row = index;
-    wf->first = 0;
-    wf->state = 4;
-    wf->remaining = 90.0f;
-}
-
-std::uint32_t GetWfOwnedScrolls() {
-    WfTaskData *wf = GetWfTaskData();
-    if (!wf)
-        return 0;
-    RefreshWfMasks(*wf);
-    return wf->owned;
-}
-
-std::uint32_t GetWfLearnedScrolls() {
-    WfTaskData *wf = GetWfTaskData();
-    if (!wf)
-        return 0;
-    RefreshWfMasks(*wf);
-    return wf->learned;
-}
-
-std::uint16_t GetWfPromptIcon(std::uint16_t prompt, std::uint32_t scroll) {
-    const std::uint32_t learned = GetWfLearnedScrolls();
-    return wfPromptIcons[prompt][(learned >> (scroll & 31U)) & 1U];
-}
-
-void BuildWfMenuEntries(std::span<WfMenuEntry, 25> entries) {
-    const std::uint32_t owned = GetWfOwnedScrolls();
-    for (std::uint32_t index = 0; index < entries.size(); ++index) {
-        const WfScrollDefinition &definition = wfScrollDefinitions[index];
-        WfMenuEntry &entry = entries[index];
-        entry.index = static_cast<std::int32_t>(index);
-        entry.itemOffset = definition.itemOffset;
-        entry.category = definition.category;
-        entry.move = definition.move;
-        entry.prompt = definition.prompt;
-        entry.label =
-            owned & (1U << index) ? shenGetAmtOf(static_cast<std::uint32_t>(3000 + definition.itemOffset)) : "UIGNRLQSTN"; // @text EN: "? ? ?" | JA: "ï¼Ÿï¼Ÿï¼Ÿ"
-    }
-}
-// @verified - p
-std::int32_t FindWfScrollDefinition(std::int32_t item) noexcept {
-    const std::int32_t offset = item >= 3000 ? item - 3000 : item;
-    for (std::int32_t index = 0; index < 25; ++index)
-        if (wfScrollDefinitions[static_cast<std::size_t>(index)].itemOffset == offset)
-            return index;
-    return -1;
-}
-
-std::int32_t GetWfScrollPreviewRow(std::int32_t index) {
-    if (index >= 3000)
-        index = FindWfScrollDefinition(index);
-    if (index == -1)
-        return -1;
-    const WfScrollDefinition &definition = wfScrollDefinitions[static_cast<std::size_t>(index)];
-
-    if (definition.move == -1)
-        return 0;
-    return GetWazamakiMoveCategory(definition.category)[static_cast<std::uint16_t>(definition.move)].group;
-}
-
-// @verified - p
-void BuildOwnedWfScrollSlots(std::span<std::int32_t, 26> slots) {
-    std::size_t count = 0;
-    for (std::int32_t index = 0; index < 25; ++index) {
-        if (index != 24 && GetItemState(static_cast<std::uint32_t>(3000 + wfScrollDefinitions[static_cast<std::size_t>(index)].itemOffset)))
-            slots[count++] = index;
-    }
-    for (const WfScrollDefinition &definition : wfSpecialScrollDefinitions) {
-        const std::int32_t item = 3000 + definition.itemOffset;
-        if (GetItemState(static_cast<std::uint32_t>(item)))
-            slots[count] = item;
-    }
-}
-
-void GetWfScrollMove(std::int32_t index, std::int32_t *category, std::int32_t *move) noexcept {
-    *category = wfScrollDefinitions[static_cast<std::size_t>(index)].category;
-    *move = wfScrollDefinitions[static_cast<std::size_t>(index)].move;
-}
-
-std::uint32_t GetWfScrollItem(std::int32_t index) noexcept {
-    const std::int8_t offset =
-        index == 3009 || index == 3010 ? wfMenuSpecialReadThroughOffset : wfScrollDefinitions[static_cast<std::size_t>(index)].itemOffset;
-    return static_cast<std::uint32_t>(3000 + offset);
-}
-
-void ICSU_InitItemLook_Callback(void *) {
-    itemLookState = 0;
-    itemLookPadControl = nullptr;
-    itemLookPadControl = AllocatePadControlEntry();
-    itemRoot = nullptr;
-    itemModelFile = nullptr;
-    itemLookWorldYaw = 0;
-    temporarySelectedItemState = 0;
-    pendingNpcLoadRestore = false;
-    HLib::SetCurrentTaskTo(ICSU_CtrlItemLook_Callback);
-}
-
-void ICSU_CtrlItemLook_Callback(void *) {
-    using enum CameraState;
-    if (g_loadingFlag & 2U) {
-        icsuRenderItem();
-        return;
-    }
-    switch (itemLookState) {
-    case 1:
-        icsuMoveRotateAdjustItemScale();
-        icsuRenderItem();
-        break;
-    case 2:
-        if (LoadItemModel()) {
-            itemLookState = 1;
-            camCtrlGetNextCamPos(&previousItemCameraEye);
-            camCtrlGetTargetPosition(&previousItemCameraTarget);
-            previousItemCameraState = camCtrlGetState();
-            previousItemPerspective = camCtrlGetPerspective();
-            previousItemHelpTopic = helpGetCurrentIconIdx(1);
-            previousItemHelpMode = helpGetCurrentIconIdx(0);
-            previousItemUiSelected = static_cast<std::uint16_t>(GetUiFlag(1));
-            previousItemUiVisible = static_cast<std::uint16_t>(GetUiFlag(0));
-            MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-            Character *ryo = static_cast<Character *>(control->ryo);
-            if (ryo) {
-                previousItemPlayerDisplay = IsOfThisVisibilityType(ryo, 3);
-                previousItemPlayerVisible = charaGetWasVisible(ryo);
-                EV_SetCharDisplay(ryo, CVM_DisplayEnabled, 0);
-                charaSetVisibilityFlagTo(ryo, 0);
-            }
-            camCtrlSetState(Event);
-            camCtrlSetPerspective(8192);
-            EV_EventSetUpHelpIcon_0(0x12, 0);
-            previousItemUiMode = static_cast<std::uint16_t>(GetUiFlag(2));
-            if (previousItemUiMode)
-                SetHelpIconMenuFlags(0x21);
-            else
-                CheckHelpIcon(0x21, 0, CheckHelpIconOp::Add);
-            previousItemWeatherLight = SetWeatherLightManager(0);
-            SetupItemInspectTransform();
-            camCtrlSetTargetPosition(itemLookEventPosition);
-        } else {
-            itemLookState = 0;
-            (void)ExecuteAicaCommand(0x800abU, 0, 0);
-            SetItemSelectorDelayedResult(0);
-            icsToggleIconState(0, 0);
-        }
-        break;
-    case 3:
-        itemLookState = 4;
-        break;
-    case 4:
-        itemLookState = 2;
-        break;
-    default:
-        break;
-    }
-    ClearGuiItemActions();
-}
-
-bool OpenItemLook(std::uint32_t item, std::int32_t mode) {
-    previousItemPostFxBank = static_cast<std::int32_t>(GetPostFxBankValue(1));
-    SelectPostFxBank(1, 0);
-    const char *modelName = GetInventoryItemModel(item);
-    (void)Filepath_Gen(FilepathGenMode::ItemDirectory);
-    if (!modelName)
-        return false;
-    char filename[32];
-    std::snprintf(filename, sizeof(filename), hasItemRegistered(item) & 0x20U ? "%sG.MT7" : "%sI.MT7", modelName);
-    itemLookNumber = item;
-    itemLookState = 3;
-    itemLookFlags = hasItemRegistered(item);
-    itemLookMode = mode;
-    previousNpcLoadState = static_cast<std::uint32_t>(GetNpcNewLoadState());
-    EV_NPC_NewLoadSw(0);
-    pendingNpcLoadRestore = true;
-    icsToggleIconState(0, 1);
-    if (itemLookPadControl && !(itemLookPadControl->flags & 2U))
-        previousItemLookPadControl = BindPadControlEntry(itemLookPadControl);
-    ParseGuiPtx(itemLookPtx.data(), 256, 16, SHEN_NAME(ICSU), SHEN_NAME(IWAO));
-    itemLookTexture = static_cast<std::int32_t>(ReadTexnTexture(itemLookPtx.data()));
-    ItemTextureClear_Nullsub(itemLookPtx.data());
-    ReplacePtxTexture(static_cast<std::uint32_t>(itemLookTexture), itemLookPtx.data());
-    return true;
-}
-
-void SetItemLookShowingGameMenu() noexcept {
-    showingItemGameMenu = true;
-}
-
-void ToggleGameMenu() noexcept {
-    if (showingItemGameMenu) {
-        DisableElement(UIElement::GameMenu);
-        DestroySharedItemsWidget();
-        g_inputBuffer[0].pressedPriority = 0;
-    }
-    showingItemGameMenu = false;
-}
-
-void CloseItemLook() {
-    SelectPostFxBank(1, previousItemPostFxBank);
-    if (itemModelFile) {
-        ReleaseModelFormat7(itemModel);
-        HLib::FreeTaskData(itemModelFile);
-        itemModelFile = nullptr;
-        itemRoot = nullptr;
-    }
-    SetItemSelectorDelayedResult(0);
-    if (GetCurrentItemSelectState() & 1U) {
-        EV_EventSetUpHelpIcon_0(previousItemHelpTopic, previousItemHelpMode);
-        if (previousItemUiMode)
-            SetHelpIconMenuFlags(previousItemUiVisible);
-        else
-            ResetHelpIconsToItemPrompt();
-        temporarySelectedItemState = 0;
-        camCtrlSetPerspective(previousItemPerspective);
-        camCtrlSetState(previousItemCameraState);
-        camCtrlSetNextPosition(previousItemCameraEye);
-        camCtrlSetTargetPosition(previousItemCameraTarget);
-        MapControlData *control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-        Character *ryo = static_cast<Character *>(control->ryo);
-        if (ryo) {
-            EV_SetCharDisplay(ryo, CVM_DisplayEnabled, previousItemPlayerDisplay);
-            charaSetVisibilityFlagTo(ryo, previousItemPlayerVisible);
-        }
-        if (itemLookPadControl && (itemLookPadControl->flags & 2U))
-            BindPadControlEntry(previousItemLookPadControl);
-        itemLookState = 0;
-        SetWeatherLightManager(previousItemWeatherLight);
-        icsToggleIconState(0, 0);
-        (void)ExecuteAicaCommand(0x900abU, 0, 0);
-        if (pendingNpcLoadRestore)
-            EV_NPC_NewLoadSw(previousNpcLoadState);
-        pendingNpcLoadRestore = false;
-        ReleaseNamedTexture(itemLookTexture);
-    }
-    ToggleGameMenu();
-}
-
-void InspectWfScroll(std::int32_t index) {
-    const std::uint32_t item = index == 24 ? GetSpecialWfScroll() : GetWfScrollItem(index);
-    showingItemGameMenu = true;
-    if (!OpenItemLook(item, 1)) {
-        (void)ExecuteAicaCommand(0x800abU, 0, 0);
-        DisableElement(UIElement::GameMenu);
-    }
-}
-
-std::uint32_t GetGuiItemAction(std::uint32_t item) noexcept {
-    const std::span<const InventoryItemDefinition> definitions = GetInventoryItemDefinitions(S2InventoryBank::Type0);
-    for (std::uint32_t index = 0; index < definitions.size(); ++index)
-        if (definitions[index].id == item)
-            return guiItemActions[index];
-    return 0;
-}
-
-std::uint8_t SetGuiItemAction(std::uint32_t item, std::uint8_t flags, std::int32_t enabled) noexcept {
-    const std::span<const InventoryItemDefinition> definitions = GetInventoryItemDefinitions(S2InventoryBank::Type0);
-    for (std::uint32_t index = 0; index < definitions.size(); ++index) {
-        if (definitions[index].id != item)
-            continue;
-        const std::uint8_t previous = guiItemActions[index];
-        guiItemActions[index] = enabled ? static_cast<std::uint8_t>(previous | flags) : static_cast<std::uint8_t>(previous & ~flags);
-        return previous;
-    }
-    return 0;
-}
-
-void ClearGuiItemActions() noexcept {
-    guiItemActions.fill(0);
-}
-
-std::int64_t UpdateSelectedItemStateFlag(std::int16_t item) {
-    std::int64_t result = GetShouldRenderIcons(RenderIconSlot::Any);
-    if (!result) {
-        result = GetCurrentItemSelectState();
-        if (!(result & 1)) {
-            result = OpenItemLook(static_cast<std::uint32_t>(item), 0);
-            if (result)
-                temporarySelectedItemState = 1;
-        }
-    }
-    return result;
-}
-
-void SetItemLookRotation(std::int16_t pitch, std::int16_t yaw, std::int16_t roll) noexcept {
-    itemLookRotation = {pitch, yaw, roll};
-}
-
-void ReleaseItemWfOwners() {
-    if (itemLookState || itemModelFile)
-        CloseItemLook();
-    if (wfMainControl) {
-        StopWfScrollMenu();
-        wfMainControl = nullptr;
-    }
-    itemLookPadControl = nullptr;
-    previousItemLookPadControl = nullptr;
-}
-
-} // namespace shenmue::s2
-
+} // namespace s2
+} // namespace shenmue

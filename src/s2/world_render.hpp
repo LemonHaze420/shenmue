@@ -1,10 +1,73 @@
 #pragma once
 
-#include "shenmue.h"
-
-
-
 #include "common/math.hpp"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/character_dc.hpp"
+#include <cstddef>
+#include <cstdint>
+namespace shenmue {
+namespace s2 {
+extern std::byte fixedCharacterShadowMesh0[2136];
+extern std::byte fixedCharacterShadowMesh1[928];
+extern float g_mazeUnitDrawDistance;
+extern std::int32_t g_mazeTerrainDrawEnabled;
+void SetMazeUnitDrawDistance(float distance);
+void SetMazeTerrainDrawEnabled(std::int32_t enabled);
+
+struct Character;
+struct MT7ModelChunk;
+static const float characterShadowThreshold = 0.003000000026077032f;
+void *GetFixedShadowMesh(std::uint32_t index);
+// GameJam builds these from C (shadow_cast_dc.c)
+extern "C" {
+float GetCharacterShadowDistanceFade(const Vector3 *position, const Character *character);
+float ComputeShadowLightSource(const Vector3 *position, Vector3 *source, float strength, std::uint32_t lightIndex);
+void DrawProjectedCharacterShadow(CharacterUpdateCallback callback, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale, float groundY,
+    float strength, const MT7Node *sourceRoot, const MT7Node *shadowRoot, Character *character);
+void DrawProjectedFixedShadow(
+    const Vector3 *position, const Vector3i *rotation, const Vector3 *scale, float groundY, void *mesh, float strength, Character *character);
+void DrawMotionCharacterShadow(const Vector3 *position, float groundY, MT7Node *model, MT7Node *shadow, float strength, Character *character);
+void DrawCharacterShadowSprite(const Vector3 *position, float groundY, Character *character);
+void DrawProjectedSharedCharacterShadow(const Vector3 *position, std::uint32_t lightIndex, float groundY, Character *character, float opacity);
+}
+void DrawObject_AssignShadow(const Vector3 *position, float groundY, MT7Node *model, std::int32_t mode, Character *character);
+void DrawShenmueEntity(void *parameter);
+
+struct WaveBin {
+    float amplitude, phaseA, speedA, phaseB, speedB;
+};
+typedef char Layout_world_render_0[(sizeof(WaveBin) == 0x14) ? 1 : -1];
+typedef char Layout_world_render_1[(offsetof(WaveBin, amplitude) == 0) ? 1 : -1];
+typedef char Layout_world_render_2[(offsetof(WaveBin, speedA) == 8) ? 1 : -1];
+typedef char Layout_world_render_3[(offsetof(WaveBin, speedB) == 0x10) ? 1 : -1];
+extern float g_waveLightAmbient;
+extern Vector3 g_waveLightDirection;
+void ApplyWaveformToMesh(void *mesh);
+void ApplyWaveReflectionToMesh(void *mesh);
+void ApplyWaveReflectionToNode(MT7Node *node);
+void ApplyWaveformToNode(MT7Node *node);
+struct FloatingSurfaceBinding {
+    std::int32_t slot;
+    Vector3 origin;
+};
+float FindWaterSurfaceHeight(Vector3 position, MT7Node *root);
+void UpdateFloatingSurfaceModels(std::int32_t surfaceSlot, const FloatingSurfaceBinding *bindings);
+void ApplyWaveformToModel(MT7ModelChunk *model);
+void GenerateFFT(float cellSize);
+void BuildWaveLightingTable(std::uint32_t flags, float ambient, float retained, float diffuseR, float diffuseG, float diffuseB, float specularR,
+    float specularG, float specularB, float exponent, float intensity);
+void *FillFftKernel(float scale, void *kernel);
+void FillFftDistance(const void *kernel);
+void ApplyFft(const void *first, const void *second);
+void FinalizeFft(float scrollU, float scrollV);
+void SetWaveLighting(float ambient, const Vector3 *direction);
+} // namespace s2
+} // namespace shenmue
+#endif
+#else
+#include "s2/air_data.hpp"
 #include "s2/hlib.hpp"
 #include "s2/legacy_draw.hpp"
 
@@ -34,13 +97,13 @@ std::uint32_t mtRecursiveSetFlag(const MT7Model &model, const MT7Node *node, flo
 extern Vector3 g_scriptedModelScale;
 extern std::int32_t g_modelDeformationSuppressed;
 void InitModelVector();
-
+// The D3T light direction is reset by SkyDomeProbe and republished by the LGHT task.
 extern Vector3 g_d3tLightDirection;
-
-
+// The nine HD sky-dome sources under a directory are placed for the Sky
+// and SkyProbe caches; the release frees each source's realized model handle.
 void LoadSkyDomeModels(const char *directory);
 void ReleaseSkyDomeModels(const std::uint32_t *handles);
-
+// Native SetupRenderBufferHandles/SkyDomeProbe, run by MapControlTask_Enqueue on /scene/maps/<map>.
 void SetupRenderBufferHandles();
 void SkyDomeProbe(const char *mapDirectory);
 extern Matrix4x4 g_scriptedIncomingTransform;
@@ -61,11 +124,11 @@ inline constexpr shen_name SCENARIO_DUMMY_CHARACTER{SHEN_NAME(dumy)};
 void ApplyTranslationRotationScaleXYZToCharaByID(shen_name character, float scaleY, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale);
 void ApplyTranslationRotationScaleXYZToCharaSibling(
     shen_name character, std::int32_t siblingOrdinal, const Vector3 *position, const Vector3i *rotation, const Vector3 *scale);
-
+// Native g_entity is scoped by the character core, not retained by the model.
 struct Character;
 Character *SetScriptedModelEntity(Character *entity);
-
-
+// Callback-based projected shadow; the caller supplies its
+// entity TRS and selected root, and retains all model ownership.
 void ProjectCharacterShadow(
     Character *character, const Vector3 &position, const Vector3i &rotation, const Vector3 &scale, float groundY, const MT7Model *root, float strength);
 void ProjectFixedCharacterShadow(
@@ -82,7 +145,7 @@ void ResetCharacterShadowStencilReference();
 
 struct MapModelRuntimeSlot;
 struct MapCellOffset;
-
+// Native ACPH/ACPD consumer; 0 is world, 1 includes field-grid depth, 2 queues projected MAPS shadows.
 std::uint32_t ProcessObjectRenderCommandStream(const MapModelRuntimeSlot &slot, std::span<const MapCellOffset> visibleCells, MapCellOffset cameraCell,
     LegacyModelShaderPath shaderPath, std::int32_t mode);
 std::uint32_t ProcessAlphaObjectRenderCommandStream(
@@ -109,6 +172,7 @@ std::uint32_t DrawAirWorldPass();
 void InitializeAirPresentation(const void *mapInfo);
 void ResetAirPresentation();
 inline constexpr shen_name TASK_AIRD = SHEN_NAME(AIRD);
+// Native AllocateDomeMesh reads DOOM.BIN as DOOE and copies each sky model out of it as DOME task data.
 inline constexpr shen_name AIR_DOOM_FILE{SHEN_NAME(DOOE)};
 inline constexpr shen_name AIR_DOME_MODEL{SHEN_NAME(DOME)};
 extern std::int32_t g_airDrawDomeEnabled;
@@ -118,25 +182,12 @@ extern std::uint32_t g_airClearColour;
 void SetClearColourForClouds(std::uint32_t colour);
 void SetCloudAndSkyColour(std::uint32_t skyColour, std::uint32_t cloudColour);
 std::uint32_t GetWeatherCloudOrSkyColour(std::int32_t channel);
+#if defined(SHENMUE_NULL_LIBRARY)
+#pragma region NullLibrary
+bool ReadNullAirSky(float *nightBlend);
+#pragma endregion
+#endif
 void SetIsSkySetup(std::int32_t value);
-struct AirPlanetDrawRecord {
-    Vector3 position{};
-    Vector3 orbitInput{-3200.0f, 0.0f, 0.0f};
-    Vector3i rotation{};
-    Vector3i intermediateRotation{};
-    std::int32_t tilt{6144};
-    Vector3i timeRotation{0, 0, 32768};
-    Vector3 scale{20.0f, 20.0f, 20.0f};
-    float intensity{0.40000001f};
-};
-static_assert(sizeof(AirPlanetDrawRecord) == 0x50);
-static_assert(offsetof(AirPlanetDrawRecord, orbitInput) == 0x0c);
-static_assert(offsetof(AirPlanetDrawRecord, rotation) == 0x18);
-static_assert(offsetof(AirPlanetDrawRecord, intermediateRotation) == 0x24);
-static_assert(offsetof(AirPlanetDrawRecord, tilt) == 0x30);
-static_assert(offsetof(AirPlanetDrawRecord, timeRotation) == 0x34);
-static_assert(offsetof(AirPlanetDrawRecord, scale) == 0x40);
-static_assert(offsetof(AirPlanetDrawRecord, intensity) == 0x4c);
 void SetPlanetRotByIndex(const Vector3i &rotation, std::int32_t index);
 void UpdateCelestialRotation(const Vector3i &angles, const Vector3 &input, Vector3 &output);
 void UpdateCelestialCoordinates();
@@ -164,8 +215,8 @@ void UpdateWeatherClouds(WeatherAir *air, std::int32_t frames);
 void UpdateClouds(WeatherAir *air);
 HLib::Task *QueueAirDrawTask(std::uint8_t nextFunctionIndex);
 
-
-
+// Native environmental FFT resource owner. Kernels are
+// caller-owned 8x8 float tables; byte spans preserve their authored storage.
 void GenerateFFT(float cellSize);
 void *GenerateDistanceFalloffRowMajor(float exponent, std::span<std::byte, 0x100> kernel);
 void *GenerateDistanceFalloffKernel8x8(float exponent, std::span<std::byte, 0x100> kernel);
@@ -175,8 +226,8 @@ void ApplyFft(const void *first, const void *second);
 void FinalizeFft(float scrollU, float scrollV);
 std::span<const LegacyWaveVertex, 289> GetWaveVertices();
 std::span<const float, 289> GetWaveHeights();
-
-
+// Native surface lighting intentionally continues its real-height reads into
+// the adjacent imaginary array; expose both borrowed banks without cross-array arithmetic.
 struct WaveLightingView {
     std::span<const float, 289> real;
     std::span<const float, 289> imaginary;
@@ -224,7 +275,7 @@ static_assert(offsetof(FloatingSurfaceBinding, origin) == 4);
 inline constexpr Vector2 floatingSurfaceSamplePoints[3]{{0.0f, 3.8f}, {1.4f, -3.98f}, {-1.4f, -3.98f}};
 void UpdateFloatingSurfaceModels(std::int32_t surfaceSlot, const FloatingSurfaceBinding *bindings);
 
-
+// Native shadow readers have separate per-map and cached shared lifetimes.
 inline constexpr shen_name MEMORY_SHADOW_SPRITE{SHEN_NAME(SHDM)};
 inline constexpr shen_name MEMORY_SHARED_SHADOW{SHEN_NAME(SHDS)};
 inline constexpr std::size_t scenarioShadowModelCacheCapacity = 10;
@@ -248,3 +299,4 @@ std::uint32_t DrawFixedShadowMesh(std::size_t index, float alpha);
 
 } // namespace shenmue::s2
 
+#endif

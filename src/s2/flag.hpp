@@ -2,6 +2,11 @@
 
 #include "common/math.hpp"
 #include "common/types.hpp"
+#include "s2/flag_data.hpp"
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scenario_flags_dc.hpp"
+#endif
 
 #include <array>
 #include <cstddef>
@@ -20,14 +25,68 @@ struct MT7Node;
 struct Character;
 
 inline constexpr std::array<std::uint32_t, 62> FLAG_DEBUG_MODEL_COMMAND_TEMPLATE{
-    0x00000001U, 0x00000001U, 0x00000000U, 0x00000000U, 0x00000000U, 0x3f3504f3U, 0x8200002dU, 0x83400000U,
-    0x909804c0U, 0x04000000U, 0x00000000U, 0x00000000U, 0x00000000U, 0x3f3504f3U, 0x00000000U, 0x00000000U,
-    0x3f800000U, 0x3f333333U, 0x3f333333U, 0x3f333333U, 0x3f333333U, 0x00000000U, 0x3f800000U, 0x3f800000U,
-    0x3f800000U, 0x00000088U, 0x00000011U, 0x00000004U, 0xbf000001U, 0x00000000U, 0x3f000000U, 0x00000000U,
-    0x3f800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0xbf000001U, 0x00000000U, 0xbf000000U, 0x00000000U,
-    0x3f800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0x3f000000U, 0x00000000U,
-    0x3f800000U, 0x00000000U, 0x00000000U, 0x00000001U, 0x3f000001U, 0x00000000U, 0xbf000000U, 0x00000000U,
-    0x3f800000U, 0x80000000U, 0x00000000U, 0x00000001U, 0x00000000U, 0x00000004U,
+    0x00000001U,
+    0x00000001U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f3504f3U,
+    0x8200002dU,
+    0x83400000U,
+    0x909804c0U,
+    0x04000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f3504f3U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f333333U,
+    0x00000000U,
+    0x3f800000U,
+    0x3f800000U,
+    0x3f800000U,
+    0x00000088U,
+    0x00000011U,
+    0x00000004U,
+    0xbf000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0x00000000U,
+    0x00000004U,
 };
 extern std::uint8_t g_flagDebugIntersectionDraw;
 std::uint32_t flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, const Vector3 &third, const Vector3 &fourth);
@@ -109,29 +168,9 @@ void nullsub(void *) noexcept;
 bool ComputeAngle(const Vector3 &origin, float radius, std::int16_t yaw, std::int32_t halfAngle, const Vector3 &point);
 
 
-struct FlagBinHeader {
-    std::int32_t field00;
-    std::int32_t flagRecordTable;
-    std::uint32_t flagCount;
-    std::int32_t flagWorkCount;
-    std::int32_t flagWorkTable;
-    std::int32_t field14;
-    std::int32_t contextTable;
-};
-
-static_assert(sizeof(FlagBinHeader) == 0x1c);
-static_assert(offsetof(FlagBinHeader, flagCount) == 0x08);
-static_assert(offsetof(FlagBinHeader, contextTable) == 0x18);
 
 // Context table rows name the record list and search-target table of a map or callback context.
 // Both offsets are dwords from the start of the context table; a zero name terminates the table.
-struct FlagContextEntry {
-    shen_name name;
-    std::int32_t recordList;
-    std::int32_t targetTable;
-};
-
-static_assert(sizeof(FlagContextEntry) == 0x0c);
 
 // Flag records start with the stepUpdateFlagUtil mode table offset and mode count; the
 // GetShenmueFlag condition stream follows this header.
@@ -142,18 +181,6 @@ struct FlagDefinition {
 };
 
 static_assert(sizeof(FlagDefinition) == 0x08);
-
-
-
-
-struct FlagRecord {
-    std::uint8_t opcode;
-    std::uint8_t length;
-    std::uint16_t branch;
-    std::int32_t argument[5];
-};
-
-static_assert(sizeof(FlagRecord) == 0x18);
 
 // GetShenmueFlag condition opcodes; the operand is the low 24 bits of each command dword.
 enum class ShenFlagOp : std::uint8_t {
@@ -221,122 +248,7 @@ enum StepRangeMode : std::uint32_t {
 };
 
 // shenEvaluateFlag record opcodes.
-enum class FlagOp : std::uint8_t {
-    End = 0x00,
-    IfPlayerNearPoint = 0x01,
-    IfPlayerInRect = 0x02,
-    IfShenmueFlag = 0x03,
-    IfEntryPoint = 0x04,
-    IfCharaSector = 0x05,
-    SceneChange = 0x06,
-    LoadAreaRestart = 0x07,
-    LoadAreaRestartValue = 0x08,
-    IfCharaWithinDistance = 0x09,
-    SetStepFlags = 0x0a,
-    IfInternalFlagEquals = 0x0b,
-    IfEvaluationMode1 = 0x0c,
-    IfEvaluationMode0 = 0x0d,
-    IfActionButton = 0x0e,
-    IfRyoNotBusy = 0x0f,
-    IfAuthorNotLoaded = 0x10,
-    LockPlayerControl = 0x11,
-    CallContextRecords = 0x12,
-    IfPlayerControlEnabled = 0x13,
-    FadeOutSoundAndHold = 0x14,
-    SetInternalFlag = 0x15,
-    SetTimeOfDay = 0x16,
-    IfQronStream = 0x17,
-    LoadPackRestart = 0x18,
-    LoadPackRestartValue = 0x19,
-    WarmStartNpcsRelease = 0x1a,
-    WaitForIdleEvaluations = 0x1b,
-    SceneChangeFadeMode9 = 0x1c,
-    FadeOutAndHold = 0x1d,
-    IfPlayerHeightNear = 0x1f,
-    ExecAreaSlotRestart = 0x20,
-    ExecAreaSlotRestartValue = 0x21,
-    ShowEventMessage = 0x22,
-    IfPlayerIdle = 0x24,
-    IfPlayerNotRunning = 0x25,
-    Repeat = 0x26,
-    PlayPlayerMotionF003 = 0x27,
-    ReturnToFreeQuest = 0x28,
-    WarmStartNpcs = 0x29,
-    IfCashAtLeast = 0x2a,
-    WaitAreaSlotUnloaded = 0x2b,
-    LoadEventPackRestartValue = 0x2c,
-    DeferEventPackRestartValue = 0x2d,
-    IfScenarioRecord = 0x2e,
-    IfItemOwned = 0x30,
-    IfNamedActionButton = 0x31,
-    IfPlayerNotInMenu = 0x32,
-    IfSearchTarget = 0x33,
-    IfCharaSectorOrSearch = 0x34,
-    SetLoadingPhaseBits = 0x35,
-    IfPointOnScreen = 0x36,
-    IfCharaPointOnScreen = 0x37,
-    IfPointOnScreenOrSearch = 0x38,
-    IfActionButtonOrSearch = 0x39,
-    IfCloseAndFacing = 0x3a,
-    LoadAreaNext = 0x3b,
-    LoadAreaNextValue = 0x3c,
-    ExecAreaSlotNext = 0x3d,
-    ExecAreaSlotNextValue = 0x3e,
-    LoadPackNext = 0x3f,
-    LoadPackNextAlt = 0x40,
-    DeferEventPackNext = 0x41,
-    DeferEventPackNextValue = 0x42,
-    IfEntityEnabledOnScreen = 0x43,
-    IfCharaVisible = 0x44,
-    AlwaysFalse = 0x45,
-    IfEvaluationMode2 = 0x46,
-    IfQueryMode2 = 0x47,
-    IfTimeReached = 0x48,
-    SceneChangeFadeMode8 = 0x49,
-    IfEntryPointSaveScene = 0x4a,
-    AdvanceTimeToDeadline = 0x4b,
-    WaitNpcRelease = 0x4c,
-    IfEvaluationMode3 = 0x4d,
-    IfQueryMode3 = 0x4e,
-    WaitSpecialPose = 0x4f,
-    ChooseAction = 0x50,
-    LockPlayerControlMode3 = 0x51,
-    IfSegaCoins = 0x52,
-    PlayVoice = 0x53,
-    IfCurfewSceneChange = 0x54,
-    WarmStartHumanNpcs = 0x55,
-    UnlockPartyCharas = 0x56,
-    IfSavedAreaJump = 0x57,
-    IfRyoNotBusyOrSearch = 0x58,
-    WaitSearchRelease = 0x59,
-    IfActEquals = 0x5a,
-    IfPointOnScreenOrSearchB = 0x5b,
-    StartFlagCamera = 0x5c,
-    IfMapEquals = 0x5d,
-    LockPlayerControlMode2 = 0x5f,
-    IfCurfewWithin = 0x60,
-    ApplyInvertedFlagSteps = 0x61,
-    IfEntityOnScreenEnable = 0x62,
-    SetPlayerFlag1000 = 0x63,
-};
 
-enum ShenPlayerFlags : std::uint32_t {
-    SPF_Active = 0x00000002U,
-    SPF_HelpIconShown = 0x00000020U,
-    SPF_WaitTimeAdvance = 0x00000040U,
-    SPF_PackLoadPending = 0x00000080U,
-    SPF_PackExecutePending = 0x00000100U,
-    SPF_NpcReleasePending = 0x00000200U,
-    SPF_SpecialPosePending = 0x00000400U,
-    SPF_ActionChoicePending = 0x00000800U,
-    SPF_EventMessageShown = 0x00001000U,
-    SPF_VoicePending = 0x00002000U,
-    SPF_FadeHold = 0x00004000U,
-    SPF_CurfewSceneChange = 0x00008000U,
-    SPF_SearchReleasePending = 0x00010000U,
-    SPF_CurfewReached = 0x00040000U,
-    SPF_DetachedVoicePending = 0x00080000U,
-};
 
 
 struct ShenPlayerData {
@@ -392,25 +304,6 @@ struct FlagCallbackEntry {
     std::int32_t minute;
 };
 
-struct FlagSector {
-    float radius;
-    std::int32_t yawOffset;
-    std::int32_t playerHalfAngle;
-    std::int32_t charaHalfAngle;
-    Vector3 offset;
-    float heightTolerance;
-};
-
-static_assert(sizeof(FlagSector) == 0x20);
-
-struct FlagTargetOffset {
-    Vector3 position;
-    float lockonAngle;
-    std::int16_t yaw;
-    std::uint16_t yawLimit;
-};
-
-static_assert(sizeof(FlagTargetOffset) == 0x14);
 inline constexpr std::array<FlagTargetOffset, 14> flagTargetOffsets{{
     {.position = {.x = 0.0f, .y = 0.74f, .z = 0.13f}, .lockonAngle = 0.5f, .yaw = -32768, .yawLimit = 15928},
     {.position = {.x = 0.3f, .y = 1.11f, .z = 0.32f}, .lockonAngle = 0.5f, .yaw = -32768, .yawLimit = 15928},
@@ -456,7 +349,9 @@ static_assert(sizeof(FlagCandidate) == 0x10);
 extern ShenPlayerData shenPlayerData;
 extern std::int32_t g_systemManageDebugDisplay;
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 std::int32_t GetShenmueFlag(std::int32_t flag);
+#endif
 std::int32_t EV_GetShenmueFlag(std::int32_t flag);
 // Bit 0 of the result reports a STEP write.
 std::uint32_t stepUpdateFlagUtil(std::uint8_t mode, std::int32_t flag);

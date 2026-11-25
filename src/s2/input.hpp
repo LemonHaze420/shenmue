@@ -1,6 +1,10 @@
 #pragma once
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC
+#include "s2/input_dc.hpp"
+#else
+
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
 
@@ -26,6 +30,8 @@ enum ControllerInputSelector : std::int32_t {
     INPUT_DEVICE_STATE = 12,
     INPUT_DEVICE_UNAVAILABLE = 13,
 };
+
+// Native legacy input bits; physical face-button mappings depend on the input mode.
 inline constexpr std::uint16_t PAD_BUTTON_X = 0x0400U;
 inline constexpr std::uint16_t PAD_UP = 0x1000U;
 inline constexpr std::uint16_t PAD_DOWN = 0x2000U;
@@ -34,7 +40,7 @@ inline constexpr std::uint16_t PAD_RIGHT = 0x8000U;
 inline constexpr std::uint16_t PAD_TRIGGER_LEFT = 0x0040U;
 inline constexpr std::uint16_t PAD_TRIGGER_RIGHT = 0x0080U;
 
-
+// The S2 PC legacy input slot is two bytes larger than the corresponding S1 slot.
 
 struct LegacyInputSlot {
     std::uint8_t enabled;
@@ -67,7 +73,7 @@ static_assert(offsetof(LegacyInputSlot, deviceState) == 0x16);
 
 extern std::array<LegacyInputSlot, 5> g_inputBuffer;
 
-
+// Reads only banks 0..3; all selected fields are zero-extended.
 std::uint32_t EVT_GetControllerInput(std::uint8_t userIndex, std::int32_t selector);
 std::uint64_t GetCurrentControlInput(std::int32_t selector);
 std::uint32_t GetControllerUserIndex();
@@ -85,7 +91,7 @@ struct KeyState {
 };
 static_assert(sizeof(KeyState) == 0x0c);
 
-// Window input adapter; coordinates are client pixels.
+// Window-event adapter for the replaced Nuklear input owner; coordinates are client pixels.
 struct WindowUIInput {
     Vector2 position{};
     Vector2 previousPosition{};
@@ -95,8 +101,8 @@ struct WindowUIInput {
 };
 WindowUIInput ConsumeWindowUIInput();
 
-
-
+// The database's 0x50 ControllerState annotation omits the DWORD button width.
+// Native polling and detection use this 0x54 stride; the unconsumed tail remains opaque.
 struct PhysicalControllerState {
     std::uint32_t buttons;
     std::uint8_t leftTrigger;
@@ -124,7 +130,14 @@ static_assert(offsetof(PhysicalControllerState, pressedButtons) == 0x2c);
 static_assert(offsetof(PhysicalControllerState, triggerPressed) == 0x30);
 static_assert(offsetof(PhysicalControllerState, active) == 0x50);
 
+#if defined(SHENMUE_NULL_LIBRARY)
+#pragma region NullLibrary
+void SetNullControllerState(std::uint32_t index, const PhysicalControllerState &state) noexcept;
+#pragma endregion
+#endif
+
 extern std::int32_t g_mouseLookInputActive;
+
 std::uint64_t GetIsKeyboardActive();
 void DetectActiveInputDevice(std::uint32_t controllerIndex);
 void SetXInputFlags();
@@ -194,11 +207,11 @@ LegacyInputSlot *ctrlGetPadInputBuffer0(PadControlEntry *control);
 
 std::int64_t Queue_KeyRepeat(std::uint32_t inputIndex);
 void HandleInputs();
-
+// Native input-selection initializer, suspension and injection operations.
 void InitializeInputSelectionState();
 void SetInputDeviceSelectionSuspended(std::int32_t suspended);
 void InjectInputButtons(std::uint16_t buttons);
-
+// One frame of the analog0e/0f stick pair consumed by PLYM.
 void InjectInputAnalog(std::int16_t stickX, std::int16_t stickY);
 std::int32_t CountConnectedInputDevices();
 bool SelectInputDeviceForButtons(std::uint16_t buttons);
@@ -238,8 +251,8 @@ struct ButtonMediationResult {
     std::uint32_t flags;
 };
 
-
-
+// PC v1.07 BTNM reserves twelve records, but registration admits only eleven.
+// The callback operates on the native static owner, not its task allocation.
 struct ButtonMediationControl {
     std::uint32_t flags;
     std::int32_t count;
@@ -286,3 +299,5 @@ shen_name GetMediatedButtonOwner(std::uint32_t button);
 std::uint64_t CheckMediatedDoublePress();
 
 } // namespace shenmue::s2
+
+#endif

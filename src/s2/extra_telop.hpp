@@ -1,5 +1,47 @@
 #pragma once
 
+#include "shenmue.h"
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hlib.hpp"
+#include "s2/legacy_sprite_types.hpp"
+
+namespace shenmue { namespace s2 {
+
+const shen_name TASK_XTLP = SHEN_NAME(XTLP);
+const shen_name RESOURCE_TLPF = SHEN_NAME(TLPF);
+
+struct ExtraTelopDefinition {
+    const char *text, *spriteName;
+    std::int16_t glyphSize;
+};
+static const ExtraTelopDefinition extraTelopDefinitions[7] = {
+    {"\263\260\314\347\304\272\311\252", "GAIMON.SPR", 128},
+    {"\304\260\322\246", "CHOUKEI.SPR", 128},
+    {"\317\242\274\352\313\244", "RENSYUHO.SPR", 128},
+    {"\265\301", "BTK_GI.SPR", 256}, {"\262\374", "BTK_KAI.SPR", 256},
+    {"\270\371", "BTK_KOU.SPR", 256}, {"\303\300", "BTK_TAN.SPR", 256}
+};
+struct ExtraTelopGlyph {
+    std::uint32_t retained00;
+    float x, y, scaleX, scaleY;
+    std::byte retained14[0x78];
+};
+typedef char ExtraTelopGlyphSizeCheck[(sizeof(ExtraTelopGlyph) == 0x8c) ? 1 : -1];
+typedef char ExtraTelopGlyphPositionCheck[(offsetof(ExtraTelopGlyph, x) == 4) ? 1 : -1];
+static const float extraTelopRowPositions[9] = {0, 240, 340, 340, 340, 340, 340, 340, 340};
+extern HLib::Task *g_extraTelopTask;
+extern std::int32_t g_extraTelopMode, g_extraTelopPhase, g_extraTelopRemainingFrames, g_extraTelopGlyphCount;
+extern std::int32_t g_extraTelopTextures[8];
+extern ExtraTelopGlyph g_extraTelopGlyphs[8];
+extern char g_extraTelopText[24];
+extern const char *g_extraTelopDisplayedText;
+std::int32_t ShowBigKanjiText(const char *text);
+void QueueExtraTelop(const char *text, std::int32_t mode);
+
+} } // namespace shenmue::s2
+
+#else
 #include "s2/ui.hpp"
 #include <array>
 #include <cstdint>
@@ -61,3 +103,4 @@ std::int64_t ShowBigKanjiText(const char *text);
 void QueueExtraTelop(const char *text, std::int32_t mode);
 
 } // namespace shenmue::s2
+#endif

@@ -1,8 +1,20 @@
 #pragma once
-
 #include "shenmue.h"
-
-
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hlib.hpp"
+namespace shenmue { namespace s2 {
+struct TitleWarningTaskData {
+    std::int32_t textureIndex;
+    std::uint32_t retained04[2];
+};
+typedef char TitleWarningTaskSizeCheck[sizeof(TitleWarningTaskData) == 12 ? 1 : -1];
+extern HLib::Task *titleWarningTask;
+void QueueTitleWarningTask();
+void TitleWarningCallback(void *data);
+void SubmitTitleWarningLogo(void *data);
+} }
+#else
+#pragma once
 
 #include "shenmue.h"
 #include "common/types.hpp"
@@ -32,6 +44,7 @@ inline constexpr std::array<std::int32_t, 3> TITLE_WARNING_DIGIT_X{142, 142, 146
 void LoadTitleWarningLogo(TitleWarningTaskData *data, std::int32_t texture, std::int32_t x, std::int32_t y);
 void DrawTitleWarningDecorations(std::int32_t logo, const std::byte *parameters);
 void FreeTitleWarningResources();
+
 enum class TitleWarningPhase : std::int32_t { Inactive = 0, Begin = 1, Visible = 2, Tail = 3 };
 inline constexpr std::array<std::array<std::int16_t, 2>, 47> TITLE_WARNING_LOGOS{{
     {-1,-1},{0,7},{1,4},{1,5},{3,6},{0,7},{0,7},{0,8},{1,9},{3,10},{1,11},{1,12},
@@ -43,3 +56,4 @@ inline constexpr std::array<std::int16_t, 4> TITLE_WARNING_LOGO_Y{240, 240, 400,
 
 } // namespace shenmue::s2
 
+#endif

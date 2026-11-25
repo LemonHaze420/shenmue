@@ -1,6 +1,20 @@
 #include "shenmue.h"
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/party_companion.hpp"
+#include "s2/character_alpha_dc.hpp"
+#include "s2/character_yaw_dc.hpp"
+#include "s2/character_components_dc.hpp"
+#include "s2/character_control_dc.hpp"
+#include "s2/character_control_constructor_dc.hpp"
+#include "s2/camera_conversation_dc.hpp"
+#include "s2/door_control_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/scenario_character_query_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/model_component.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -39,15 +53,129 @@
 #include "s2/world_render.hpp"
 #include "s2/pause.hpp"
 #include "s2/player.hpp"
-#include "s2/string_utility.hpp"
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+#include "s2/string_utility.hpp"
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/npc_data_dc.hpp"
+#include "s2/math.hpp"
+#include "s2/scalar_math_dc.hpp"
+#include "s2/maze_dc.hpp"
+#include "s2/qron_dc.hpp"
+#include "s2/player_ground_state_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/field_query_dc.hpp"
+#include "s2/field_event_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/modifier_vertices_dc.hpp"
+#include "s2/character_state_flags_dc.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include <cfloat>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <algorithm>
 #include <array>
 #include <bit>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cmath>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstdio>
 #include <cstdlib>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cstring>
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/conversation_fade_dc.hpp"
+#include "s2/conversation_dc.hpp"
+#include "s2/scenario_talk_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/player_stats_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include <cri_adxt.h>
+#include "s2/conversation_playback_dc.hpp"
+#include "s2/startup_assets_dc.hpp"
+#include "s2/face_controller_dc.hpp"
+#include "s2/sound_table_dc.hpp"
+#include <sg_xpt.h>
+#include <cri_adxf.h>
+#include "s2/scenario_control_dc.hpp"
+#include "s2/scenario_actions_dc.hpp"
+#include "s2/frame_dc.hpp"
+#include "s2/scenario_scnt.hpp"
+#include "s2/model_dc.hpp"
+#include "s2/particle_effects.hpp"
+#include "s2/ship_spray.hpp"
+#include "s2/hiki.hpp"
+#include "s2/event_character_state_dc.hpp"
+#include "s2/reflector_board_dc.hpp"
+#include "s2/input_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/event_vector_dc.hpp"
+#include "s2/lighting_dc.hpp"
+#include "s2/moves_scroll.hpp"
+#include "platform/dc/mt7.hpp"
+#include "s2/scenario_flags_dc.hpp"
+#include "s2/player_control_state_dc.hpp"
+#include "s2/pad_control_dc.hpp"
+#include "s2/scene_assets_dc.hpp"
+#include "s2/story_state.hpp"
+#include "s2/date_time.hpp"
+#include "s2/ui_state_dc.hpp"
+#include "s2/author_control_state_dc.hpp"
+#include "s2/character_pose_dc.hpp"
+#include "s2/debug_screen_dc.hpp"
+#include "s2/event_character_model_dc.hpp"
+#include "s2/npc_area_route.hpp"
+#include "s2/player_movement_dc.hpp"
+#include "s2/player_readiness_dc.hpp"
+#include "s2/screen_film_dc.hpp"
+#include "s2/search_runtime_dc.hpp"
+#include "s2/map_region_dc.hpp"
+#include "s2/game_system_dc.hpp"
+#include "s2/hand_dc.hpp"
+#include "s2/object_xforms.hpp"
+#include "s2/sound_program.hpp"
+#include "s2/calendar_dc.hpp"
+#include "s2/search_dc.hpp"
+#include "s2/help_icon_dc.hpp"
+#include "s2/map_event_character_dc.hpp"
+#include "s2/map_region_data_dc.hpp"
+#include "s2/door_state_dc.hpp"
+#include "platform/dc/runtime_arithmetic.hpp"
+#include "s2/player_config_dc.hpp"
+#include "s2/player_model_dc.hpp"
+#include "s2/button_mediation_dc.hpp"
+#include "s2/speak_icon_setup_dc.hpp"
+#include "s2/speak_icon_state_dc.hpp"
+#include "s2/search_commands_dc.hpp"
+#include "platform/dc/sdk.hpp"
+#include "s2/flag_data.hpp"
+#include "s2/inventory_dc.hpp"
+#include "s2/flag_context_dc.hpp"
+#include "s2/fight_blur_dc.hpp"
+#include "s2/game_save_area.hpp"
+#include "s2/hlib.hpp"
+#include "s2/system_modules_dc.hpp"
+#include "s2/screen_film.hpp"
+#include "s2/texture_dc.hpp"
+#include "s2/save_screen_state_dc.hpp"
+#include <cstdarg>
+#include <cstdio>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <limits>
 #include <memory>
 #include <new>
@@ -57,12 +185,112 @@
 #include <vector>
 #include "s2/area_names.hpp"
 #include "s2/model_component_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+
+namespace s2 {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t GetConversationPlaybackEnabled();
+
+std::int32_t InitializePartyGuide();
+
+std::int32_t PickClosestTargetForPlacement(const Vector3 *point);
+
+std::int32_t GetPartyGuideRouteIndex();
+
+void FindClosestTargetForPlacement(const Vector3 *point);
+
+std::int32_t SetPartyGuideRouteHint(std::int32_t routeIndex);
+
+std::int32_t SetPartyGuideDirection();
+
+std::int32_t PartyGuideEndState();
+
+std::int32_t AdvancePartyGuide(float distance);
+
+std::int32_t SamplePartyGuide(Vector3 *point, std::int16_t *yaw);
+
+std::int16_t CopyHeading(const Vector3 &from, const Vector3 &to);
+
+float PartyGuideLaneBounds(float &low, float &high);
+
+bool GetNpcRouteLaneBounds(shen_name name, std::int32_t parameter, float *low, float *high);
+
+std::int32_t PartyGuideCallbackInitialize();
+
+std::int32_t PartyGuideCallbackPick(const Vector3 *point);
+
+void PartyGuideCallbackFind(const Vector3 *point);
+
+std::int32_t PartyGuideCallbackEndState();
+
+std::int32_t PartyGuideCallbackDirection();
+
+void PartyGuideCallbackRouteHint(std::int32_t routeIndex);
+
+void PartyGuideCallbackSample(Vector3 *point, std::int16_t *yaw);
+
+std::int32_t PartyGuideCallbackAdvance(float distance);
+
+PartyCompanion *FindPartyCompanionByName(shen_name name);
+
+std::int32_t AttachPartyCompanion(Character *character);
+
+void StopConversationStream(ConversationStream &stream);
+
+void ExpandFreeTalkRecord(const std::byte *source, ScenarioFreeTalkCharacter *record);
+
+static PartyCompanionTransition s_partyCompanionTransition;
+PartyCompanionTransition *g_pPartyCompanionTransition = &s_partyCompanionTransition;
+
+std::int32_t EV_npcLockUnlock(shen_name name);
+
+std::int32_t IsNaviActive();
+
+bool mtwkCopyTransition(MotionWork *work, const Vector3 *position, std::int32_t yaw, std::int32_t operation, std::int32_t copyType);
+
+Vector3 GetPlayerTargetWorldPosition();
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 using namespace model_component_detail;
+#endif
+
+namespace player_detail {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+PlayerPlacementNode *plymUpdatePlacementChain(PlayerPlacementNode *node);
+#endif
+
+} // namespace player_detail
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t EV_ForceLoadNpc(shen_name name);
+
+std::int32_t GetNpcRestingMotion(const Character *character);
+
+static ProcGenInfo s_procGenInfo;
+ProcGenInfo *g_pProcGenInfos = &s_procGenInfo;
+
+std::int32_t mazeFindPartitionDirection(std::int32_t sourcePartition, std::int32_t sourceElement, std::int32_t targetPartition, std::int32_t targetElement,
+    std::int32_t *partition, std::int32_t *element);
+
+void ReleaseConversationPacket(void *request);
+#endif
 
 namespace model_component_detail {
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t ReleaseCompletedPartyGuideRoute(PartyCompanion &party);
+void UpdatePartyCharacterState(PartyCompanion &party);
+std::int32_t UpdatePartyPlayerProximity(PartyCompanion &party);
+void UpdatePartyControl(PartyCompanion &party);
+std::int32_t ResetPartyPlacementNearPlayer(PartyCompanion &party);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdatePartyCompanion(Character *character, void *payload);
 
 float SquaredDistance(const Vector3 &left, const Vector3 &right) {
@@ -71,18 +299,102 @@ float SquaredDistance(const Vector3 &left, const Vector3 &right) {
     const float z = left.z - right.z;
     return x * x + y * y + z * z;
 }
+#endif
 
-// Vector3::ComputeSquaredDistance: a separation under the epsilon on every axis is zero.
-// @verified - p
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const float x = left.x - right.x;
+#endif
     const float y = left.y - right.y;
     const float z = left.z - right.z;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (std::fabs(x) < FLT_EPSILON && std::fabs(y) < FLT_EPSILON && std::fabs(z) < FLT_EPSILON)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const float x = left.x - right.x;
     if (std::fabs(x) < kCharacterControlEpsilon && std::fabs(y) < kCharacterControlEpsilon && std::fabs(z) < kCharacterControlEpsilon)
+#endif
         return 0.0f;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    return x * x + y * y + z * z;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     return (y * y + x * x) + z * z;
+#endif
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+std::int32_t RecordPartyPlayerTrail(PartyCompanion &party, const Vector3 &position) {
+    std::int32_t appended = 0;
+    std::int32_t append = 0;
+    Vector3 delta;
+    am2Vector3Subtract(&delta, &position, &party.previousPlayerPosition);
+    party.trailDistance += am2Vector3Length(&delta);
+    if (!party.trailCount) {
+        append = 1;
+    } else if (party.trailDistance > 1.0f) {
+        std::int32_t previous = party.trailWriteIndex - 1;
+        if (previous < 0)
+            previous = 31;
+        if (Vector3_ComputeSquaredDistance(party.trail[previous], position) > 0.80000001f)
+            append = 1;
+    }
+    if (append) {
+        party.trail[party.trailWriteIndex] = position;
+        if (++party.trailWriteIndex > 31)
+            party.trailWriteIndex = 0;
+        if (++party.trailCount > 32)
+            party.trailCount = 32;
+        party.trailDistance = 0.0f;
+        appended = 1;
+    }
+    party.previousPlayerPosition = position;
+    return appended;
 }
 
+
+// @verified - d
+void ClearPartyPlayerTrail(PartyCompanion &party) {
+    party.trailDistance = 0.0f;
+    party.trailWriteIndex = 0;
+    party.trailCount = 0;
+}
+
+
+// @verified - d
+void InitializePartyCompanion(PartyCompanion &party) {
+    party.flags = 0;
+    party.name = 0;
+    party.character = 0;
+    party.behaviorState = 0;
+    party.motionState = 0;
+    party.mode = 2;
+    party.runBlend = 0.0f;
+    party.frameCount = 0;
+    PartyPlacementNode *placement = &party.placement;
+    std::size_t placementSize = sizeof(party.placement);
+    std::memset(placement, 0, placementSize);
+    std::memset(&party.trailPlacement, 0, placementSize);
+    party.selectedPlacement = 0;
+    party.movement = &party.embeddedMovement;
+    InitializePlayerMovementController(party.movement);
+    ClearPartyPlayerTrail(party);
+    party.followDistance = 3.5f;
+    party.routeMarker = 0;
+    party.routeIndex = -1;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // The XZ form; a separation under the epsilon on both axes is zero.
 // @verified - p
 float Vector3_PlanarSquaredDistance(const Vector3 &left, const Vector3 &right) {
@@ -210,10 +522,18 @@ void AdjustPartyControllerFloor(std::uint32_t, Vector3 *target, MotionWork *, vo
             target->y = height;
     }
 }
+#endif
 
-// @verified - p
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void ConfigurePartyMotion(PartyCompanion &party) {
     MotionWork *const work = party.motionWork;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    mtwkCopyTransition(work, 0, 0, 1, 0);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     mtwkCopyTransition(work, nullptr, 0, 1, 0);
     const std::uint16_t idle = PartyIdleMotion(party);
     mtwkSetRequestedRootMode(work, 1);
@@ -223,8 +543,29 @@ void ConfigurePartyMotion(PartyCompanion &party) {
     mtwkSetExtraFlag(work, 55, 0);
     mtwkAssignTargetCallback(work, AdjustPartyControllerFloor, 25);
     mtwkAssignTargetCallback(work, AdjustPartyControllerFloor, 30);
+#endif
 }
+#endif
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+std::int32_t ReleaseCompletedPartyGuideRoute(PartyCompanion &party) {
+    if (!IsNpcRouteReady(SHEN_NAME(M01_)) || !InitializePartyGuide())
+        return 0;
+    Vector3 position;
+    GetCharacterWorldPosition(party.character, &position);
+    PickClosestTargetForPlacement(&position);
+    FindClosestTargetForPlacement(0);
+    if (SetPartyGuideDirection() < 1) {
+        const shen_name guideName = SHEN_NAME(M01_);
+        StopNpcScriptRoute(0, guideName, 0);
+        EV_npcLockUnlock(guideName);
+    }
+    return 0;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void plymUpdatePlacementNode(PartyPlacementNode &node) {
     node.delta = {node.position.x - node.previousPosition.x, node.position.y - node.previousPosition.y, node.position.z - node.previousPosition.z};
@@ -489,11 +830,15 @@ void SelectPartyAvoidancePlacement(PartyCompanion &party) {
     placement.next = &avoidance;
     party.selectedPlacement = &avoidance;
 }
+#endif
 
 } // namespace model_component_detail
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+ // namespace model_component_detail
 
-
+// The guide restarts on the area's KMZ maze, or on the M01_ route once its NPC is placed. The high bound and
+// the target survive from the previous walk.
 // @verified - p
 std::int32_t InitializePartyGuide() {
     ProcGenInfo &guide = g_procGenInfos;
@@ -528,8 +873,8 @@ std::int32_t InitializePartyGuide() {
     return 1;
 }
 
-
-
+// Native PickClosestTargetForPlacement: the walk starts at the route point (or maze partition element, seeded by the route hint)
+// nearest `point`; the start becomes the new route hint.
 // @verified - p
 std::int32_t PickClosestTargetForPlacement(const Vector3 *point) {
     ProcGenInfo &guide = g_procGenInfos;
@@ -559,8 +904,8 @@ std::int32_t PickClosestTargetForPlacement(const Vector3 *point) {
     return guide.routeIndex;
 }
 
-
-
+// Native FindClosestTarget_Wrapper: the walk's goal is the route point (or maze element) nearest `point`, or the end of the current
+// partition without one.
 // @verified - p
 void FindClosestTargetForPlacement(const Vector3 *point) {
     ProcGenInfo &guide = g_procGenInfos;
@@ -585,13 +930,13 @@ void FindClosestTargetForPlacement(const Vector3 *point) {
     }
 }
 
-
+// The PLYM placement builders seed the route hint.
 // @verified - p
 void SetPartyGuideRouteHint(std::int32_t routeIndex) {
     g_procGenInfos.routeIndex = routeIndex;
 }
 
-
+// The walk's direction toward its goal (maze: through the partition graph).
 // @verified - p
 std::int32_t SetPartyGuideDirection() {
     ProcGenInfo &guide = g_procGenInfos;
@@ -612,8 +957,8 @@ std::int32_t SetPartyGuideDirection() {
     return direction;
 }
 
-
-
+// 1 once the walk reaches its goal (or has no direction), -1 at the end of a partition short of it, 0 on the
+// way, 99 without a guide.
 // @verified - p
 std::int32_t PartyGuideEndState() {
     const ProcGenInfo &guide = g_procGenInfos;
@@ -637,7 +982,7 @@ std::int32_t PartyGuideEndState() {
     return 0;
 }
 
-
+// A maze walk at the end of its partition crosses into the next one toward the goal.
 // @verified - p
 std::int32_t AdvancePartyGuidePartition() {
     ProcGenInfo &guide = g_procGenInfos;
@@ -656,8 +1001,8 @@ std::int32_t AdvancePartyGuidePartition() {
     return 1;
 }
 
-
-
+// The walk moves `distance` along the route (maze: two-unit steps), clamped at the goal and the route ends;
+// 1 when it arrives.
 // @verified - p
 std::int32_t AdvancePartyGuide(float distance) {
     ProcGenInfo &guide = g_procGenInfos;
@@ -714,7 +1059,7 @@ std::int32_t PartyGuideParameter() {
     return std::min(std::max(static_cast<std::int32_t>(guide.parameter), guide.low), guide.high);
 }
 
-
+// The walk's point and the heading along the route there.
 // @verified - p
 void SamplePartyGuide(Vector3 *point, std::int16_t *yaw) {
     const ProcGenInfo &guide = g_procGenInfos;
@@ -737,7 +1082,7 @@ void SamplePartyGuide(Vector3 *point, std::int16_t *yaw) {
     }
 }
 
-
+// The walk's goal point.
 // @verified - p
 std::int32_t SamplePartyGuideTarget(Vector3 *point) {
     const ProcGenInfo &guide = g_procGenInfos;
@@ -751,10 +1096,12 @@ std::int32_t SamplePartyGuideTarget(Vector3 *point) {
     }
     return 0;
 }
+#endif
 
 namespace model_component_detail {
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Once the player stands past M01_'s goal, the route NPC is released.
 void ReleaseCompletedPartyGuideRoute() {
     constexpr shen_name guideName{SHEN_NAME(M01_)};
     if (g_currentMap.name == SHEN_NAME(KSH1) || !IsNpcRouteReady(guideName) || !InitializePartyGuide())
@@ -1611,10 +1958,40 @@ std::int32_t UpdatePartyCameraVisibility(PartyCompanion &party) {
     party.flags |= 0x100U;
     return 0;
 }
+#endif
 
-// Binds a late motion work, steps the embedded movement state, and refreshes the companion's pose, route and guide gates.
-// @verified - p
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void UpdatePartyCharacterState(PartyCompanion &party) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    MotionWork *const work = charFindMotionwork(party.character);
+    if (work && !party.motionWork) {
+        party.motionWork = work;
+        party.movement->motion = work;
+        ConfigurePartyMotion(party);
+    }
+    UpdatePlayerMovementState(*party.movement);
+    GetCharacterWorldPosition(party.character, &party.position);
+    party.yaw = static_cast<std::int16_t>(GetCharacterWorldYaw(party.character));
+    if (IsNpcRouteLoadedOrVisible(party.name))
+        SetNpcRouteYaw(party.name, party.yaw);
+    party.flags &= ~0x20000U;
+    if (party.flags & 0x10000U)
+        party.flags |= 0x20000U;
+    party.flags &= ~0x10000U;
+    party.flags &= ~0x80U;
+    if (plymIsPlacementBlockedForParty())
+        party.flags |= 0x80U;
+    if (IsNaviActive())
+        party.flags |= 0x80U;
+    const shen_name guideName = SHEN_NAME(M01_);
+    if (IsNpcRouteReady(guideName)) {
+        EV_CheckWarmStartNpcRoute(guideName);
+        SetNpcRouteMotionState(0, guideName, 2);
+    }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     MotionWork *const work = FindMotionWork(party.character);
     if (work && !party.motionWork) {
         party.motionWork = work;
@@ -1651,8 +2028,42 @@ void UpdatePartyCharacterState(PartyCompanion &party) {
         if (GetQronFloorAtPosition(player) != floor)
             party.flags |= 0x80000U;
     }
+#endif
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t UpdatePartyCameraVisibility(PartyCompanion &party) {
+    std::int32_t visible = 0;
+    Vector3 projected;
+    float width;
+    party.flags &= ~0x100U;
+    matrix_stack::Matrix4x4_Push(0);
+    matrix_stack::LoadMatrix(camCtrlGetProjectionMatrix(0));
+    Matrix4x4::TransformPoint(party.position, projected);
+    Matrix4x4::Pop(1);
+    if (projected.z < 0.0f) {
+        width = -projected.z * camCtrlGetHalfVerticalFovTangent();
+        width = (width < 0.0f ? -width : width) + 0.44999999f;
+        if (width > (projected.x < 0.0f ? -projected.x : projected.x))
+            visible = 1;
+    }
+    if (visible)
+        party.flags |= 0x100U;
+    if (visible)
+        return 0;
+    return 1;
 }
 
+
+// @verified - d
+std::int32_t UpdatePartyPlayerProximity(PartyCompanion &party) {
+    UpdatePartyCameraVisibility(party);
+    return 0;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // Requested resets, camera visibility, and the count of frames spent close behind the player.
 // @verified - p
 void UpdatePartyPlayerProximity(PartyCompanion &party) {
@@ -1670,14 +2081,1297 @@ void UpdatePartyPlayerProximity(PartyCompanion &party) {
     else
         ++party.playerOverlapFrames;
 }
+#endif
 
-// @verified - p
+} // namespace model_component_detail
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace model_component_detail
+std::int32_t FindFieldSegmentOffsetInWorld(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
+#endif
+
+namespace model_component_detail {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+static float Vector3_PlanarSquaredDistance(const Vector3 &left, const Vector3 &right);
+
+// @verified - d
+std::int32_t ResetPartyPlacementNearPlayer(PartyCompanion &party) {
+    Vector3 position, player, offset, hit, back;
+    std::int32_t angle, yaw, heading;
+    offset.x = 0.0f;
+    offset.y = 0.0f;
+    offset.z = -1.0f;
+    GetCharacterWorldPosition(party.character, &position);
+    plymUpdatePlayerSearchLocation(&player);
+    yaw = playerGetRotY();
+    player.y += 0.40000001f;
+    position.y += 0.40000001f;
+    const std::int32_t blocked = FindFieldSegmentOffsetInWorld(&hit, &player, &position);
+    player.y -= 0.40000001f;
+    position.y -= 0.40000001f;
+    if (!blocked && Vector3_PlanarSquaredDistance(position, player) < 900.0f) {
+        if (((position.y - player.y) < 0.0f ? -(position.y - player.y) : (position.y - player.y)) < 5.0f)
+            return 0;
+    }
+    switch (party.mode) {
+    case 1:
+    default:
+        angle = -0x6000;
+        break;
+    case 2:
+        angle = -0x2000;
+        break;
+    }
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&player);
+    Matrix4x4::RotateAroundY_Wrapper(yaw + angle);
+    Matrix4x4::TransformPoint(offset, position);
+    PopCurrentMatrix(1);
+    if (FindFieldSegmentOffsetInWorld(&hit, &position, &player)) {
+        am2Vector3Subtract(&back, &player, &hit);
+        dc::sdk::SetVectorLength(&back, &back, 0.0099999998f);
+        am2Vector3Add(&position, &hit, &back);
+    }
+    position.y += 0.40000001f;
+    RaycastInWorldGrid(&position, &position, GetCharacterCollisionRadius(party.character));
+    position.y -= 0.40000001f;
+    switch (party.mode) {
+    case 1:
+    default:
+        heading = CopyHeading(position, player);
+        break;
+    case 2:
+        heading = yaw;
+        break;
+    }
+    SetCharacterWorldPosition(party.character, &position);
+    SetCharacterWorldYaw(party.character, heading);
+    party.character->alpha = 0.0099999998f;
+    return 1;
+}
+
+
+// @verified - d
+static float Vector3_PlanarSquaredDistance(const Vector3 &left, const Vector3 &right) {
+    const float x = left.x - right.x, z = left.z - right.z;
+    if (std::fabs(x) < FLT_EPSILON && std::fabs(z) < FLT_EPSILON)
+        return 0.0f;
+    return x * x + z * z;
+}
+
+
+// @verified - d
+static inline Vector3 PartyLocalPosition(const Vector3 &point, const Vector3 &origin, std::int16_t yaw) {
+    Vector3 result;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-yaw);
+    matrix_stack::TranslateInverseVector(&origin);
+    Matrix4x4::TransformPoint(point, result);
+    PopCurrentMatrix(1);
+    return result;
+}
+
+
+// @verified - d
+static Vector3 PartyWorldPosition(const Vector3 &point, const Vector3 &origin, std::int16_t yaw) {
+    Vector3 result;
+    matrix_stack::Matrix4x4_Push(0);
+    matrix_stack::UnitCurrentMatrix();
+    Matrix4x4::preTranslate(origin.x, origin.y, origin.z);
+    Matrix4x4::RotateAroundY_Wrapper(yaw);
+    Matrix4x4::TransformPoint(point, result);
+    Matrix4x4::Pop(1);
+    return result;
+}
+
+
+// @verified - d
+static inline void PartyOffsetPosition(Vector3 *output, const Vector3 &origin, std::int16_t yaw, float x, float y, float z) {
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&origin);
+    Matrix4x4::RotateAroundY_Wrapper(yaw);
+    Matrix4x4::preTranslate(x, y, z);
+    matrix_stack::GetTranslation(output);
+    PopCurrentMatrix(1);
+}
+
+
+// @verified - d
+static const Vector3 *PartyTrailSample(const PartyCompanion &party, std::int32_t relative) {
+    std::int32_t direction = 1;
+    if (!party.trailCount || !relative)
+        return 0;
+    if (relative < 0) {
+        direction = -1;
+        relative = -relative;
+    }
+    if (relative > 32)
+        return 0;
+    if (relative > party.trailCount)
+        relative = party.trailCount;
+    std::int32_t index = party.trailWriteIndex;
+    if (party.trailCount < 32 && direction < 0)
+        index = 0;
+    if (direction < 0)
+        --index;
+    index -= relative * direction;
+    if (index < 0)
+        index += 31;
+    if (index > 31)
+        index -= 32;
+    return &party.trail[index];
+}
+#endif
+
+} // namespace model_component_detail
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace model_component_detail
+void GetPlayerTargetWorldPosition(Vector3 *position);
+std::int16_t Vector3_GetFixedYaw(const Vector3 *direction);
+#endif
+
+namespace model_component_detail {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+static void PreparePartyFollowPlacement(PartyCompanion &party) {
+    PartyPlacementNode *const placement = &party.placement;
+    PartyPlacementNode *const trail = &party.trailPlacement;
+    if (!ctrlGetRootNode())
+        return;
+    Vector3 player, position, offset, target, chosen, sample, local, previous;
+    GetPlayerTargetWorldPosition(&player);
+    plymGetAngY();
+    RecordPartyPlayerTrail(party, player);
+    GetCharacterWorldPosition(party.character, &position);
+    GetCharacterWorldYaw(party.character);
+    position = party.position;
+    if (party.movement->flags & 8U) {
+        const PlayerMovementState &movement = *party.movement;
+        matrix_stack::PushUnitMatrix();
+        Matrix4x4::RotateAroundY_Wrapper(-movement.targetWorldYaw);
+        Matrix4x4::preTranslate(-movement.targetWorldPosition.x, -movement.targetWorldPosition.y, -movement.targetWorldPosition.z);
+        Matrix4x4::TransformPoint(position, local);
+        PopCurrentMatrix(1);
+        float height = -local.z * 0.74999994f;
+        height = (height < 0.0f ? 0.0f : height) < movement.targetHeightScale * 0.22499999f ? (height < 0.0f ? 0.0f : height) :
+                                                                                              movement.targetHeightScale * 0.22499999f;
+        position.y = movement.targetWorldPosition.y + height;
+    }
+    player.y += 0.40000001f;
+    position.y += 0.40000001f;
+    am2Vector3Subtract(&offset, &position, &player);
+    const float distance = am2Vector3NormalizeInPlace(&offset);
+    if (distance > party.followDistance)
+        am2Vector3Scale(&offset, &offset, party.followDistance);
+    else
+        am2Vector3Scale(&offset, &offset, distance);
+    am2Vector3Add(&target, &player, &offset);
+    target.y += 1.5f;
+    target.y = FindFieldIntersectionHeight(&target);
+    if (target.y == FLT_MAX)
+        target.y = player.y;
+    else
+        target.y += 0.40000001f;
+    placement->position = target;
+    placement->targetYaw = Vector3_GetFixedYaw(&offset) + 0x8000;
+    if (party.flags & 0x20000U) {
+        placement->position = party.requestedPosition;
+        placement->targetYaw = party.requestedPositionYaw;
+    }
+    if (!TestFieldWorldSegment(&player, &position))
+        return;
+    previous = target;
+    const Vector3 *point;
+    for (std::int32_t index = 0; index < party.trailCount && (point = PartyTrailSample(party, index + 1)); ++index) {
+        sample.x = point->x;
+        sample.y = point->y + 0.40000001f;
+        sample.z = point->z;
+        if (!TestFieldWorldSegment(&sample, &position)) {
+            chosen = sample;
+            if (Vector3_ComputeSquaredDistance(sample, position) < 4.0f) {
+                flddPushIntersectionFlag(0x40);
+                if (TestFieldWorldSegment(&sample, &previous)) {
+                    chosen = previous;
+                    trail->flags |= 0x40000U;
+                }
+            }
+            placement->next = trail;
+            trail->position = chosen;
+            break;
+        }
+        previous = sample;
+    }
+    if (!placement->next)
+        placement->flags |= 8U;
+}
+
+
+// @verified - d
+static void PreparePartyGuidePlacement(PartyCompanion &party) {
+    Vector3 sample;
+    Vector3 goal;
+    PartyPlacementNode *placement = &party.placement;
+    PartyPlacementNode *trail = &party.trailPlacement;
+    goal.x = -111.4f;
+    goal.y = 23.511999f;
+    goal.z = -132.3f;
+    if (!InitializePartyGuide()) {
+        placement->flags |= 8U;
+        return;
+    }
+    SetPartyGuideRouteHint(party.routeIndex);
+    party.routeIndex = PickClosestTargetForPlacement(&party.position);
+    if (party.flags & 0x40000000U) {
+        if (party.routeMarker)
+            mazeGetMarkerPosition(party.routeMarker, &goal);
+        FindClosestTargetForPlacement(&goal);
+    } else {
+        FindClosestTargetForPlacement(0);
+    }
+    SetPartyGuideDirection();
+    if (PartyGuideEndState() > 0) {
+        placement->flags |= 0x20U;
+        return;
+    }
+    std::int16_t yaw;
+    SamplePartyGuide(&sample, &yaw);
+    party.routeYaw = yaw;
+    float low, high;
+    party.routeWidth = PartyGuideLaneBounds(low, high);
+    Vector3 local;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-party.yaw);
+    matrix_stack::TranslateInverseVector(&party.position);
+    Matrix4x4::TransformPoint(sample, local);
+    PopCurrentMatrix(1);
+    if ((local.z > -1.0f || Vector3_PlanarSquaredDistance(party.position, sample) < 2.25f) && PartyGuideEndState() < 1)
+        AdvancePartyGuide(1.0f);
+    if (PartyGuideEndState() < 1)
+        AdvancePartyGuide(2.0f);
+    SamplePartyGuide(&sample, &yaw);
+    if (Vector3_ComputeSquaredDistance(party.position, sample) < 1.0f && PartyGuideEndState() < 1) {
+        AdvancePartyGuide(2.0f);
+        SamplePartyGuide(&sample, &yaw);
+    }
+    placement->position = sample;
+    placement->targetYaw = yaw;
+    Vector3 player;
+    plymUpdatePlayerSearchLocation(&player);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-party.routeYaw);
+    matrix_stack::TranslateInverseVector(&party.position);
+    Matrix4x4::TransformPoint(player, player);
+    PopCurrentMatrix(1);
+    PartyGuideLaneBounds(low, high);
+    float lateral = player.x < 0.0f ? high - 0.75f : low + 0.75f;
+    lateral = (lateral < -1.0f ? -1.0f : lateral) < 1.0f ? (lateral < -1.0f ? -1.0f : lateral) : 1.0f;
+    party.routeLateralOffset = InterpolateTo(lateral, party.routeLateralOffset, 0.079999998f);
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&placement->position);
+    Matrix4x4::RotateAroundY_Wrapper(placement->targetYaw);
+    Matrix4x4::preTranslate(party.routeLateralOffset, 0.0f, 0.0f);
+    matrix_stack::GetTranslation(&placement->position);
+    PopCurrentMatrix(1);
+    flddToggleFlag(0x428);
+    if (!GlobalRayIntersectionTest(party.position, placement->position, 0.34999999f))
+        return;
+    PartyGuideCallbackInitialize();
+    PartyGuideCallbackPick(&placement->position);
+    PartyGuideCallbackRouteHint(party.routeIndex);
+    PartyGuideCallbackFind(&party.position);
+    PartyGuideCallbackDirection();
+    while (PartyGuideCallbackEndState() < 1) {
+        Vector3 retry;
+        std::int16_t retryYaw;
+        PartyGuideCallbackSample(&retry, &retryYaw);
+        retry.y += 0.40000001f;
+        flddToggleFlag(0x428);
+        if (!GlobalRayIntersectionTest(party.position, retry, 0.34999999f)) {
+            placement->next = trail;
+            trail->position = retry;
+            return;
+        }
+        PartyGuideCallbackAdvance(5.0f);
+    }
+}
+
+
+// @verified - d
+static void PreparePartyPlacement(PartyCompanion &party) {
+    PartyPlacementNode *const placement = &party.placement;
+    PartyPlacementNode *const trail = &party.trailPlacement;
+    PartyPlacementNode *const avoidance = &party.avoidancePlacement;
+    placement->character = party.character;
+    placement->next = 0;
+    trail->next = 0;
+    avoidance->next = 0;
+    placement->flags &= 0x7ffbffd7U;
+    trail->flags = (trail->flags & 0x7ffbffd7U) | 0x800U;
+    avoidance->flags = (avoidance->flags & 0x7ffbffd7U) | 0x20000U;
+    switch (party.mode) {
+    case 1:
+        PreparePartyFollowPlacement(party);
+        break;
+    case 2:
+        PreparePartyGuidePlacement(party);
+        break;
+    }
+    party.selectedPlacement = player_detail::plymUpdatePlacementChain(placement);
+}
+
+
+// @verified - d
+static void FindPartyObstacles(PartyCompanion &party) {
+    const PartyPlacementNode &placement = *party.selectedPlacement;
+    Vector3 start, plusStart, minusStart, end, plusEnd, minusEnd, sideways, point;
+    Character *first, *second, *third;
+    float firstDistance, secondDistance, thirdDistance;
+    sideways.x = 0.40000001f;
+    sideways.y = 0.0f;
+    sideways.z = 0.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(placement.characterBearingYaw);
+    Matrix4x4::TransformPoint(sideways, sideways);
+    PopCurrentMatrix(1);
+    party.obstacleDistance = 10.0f;
+    party.obstacleCharacter = 0;
+    third = 0;
+    second = 0;
+    first = 0;
+    firstDistance = secondDistance = thirdDistance = 10.0f;
+    start = party.position;
+    end = placement.position;
+    start.y += 0.40000001f;
+    end.y += 0.40000001f;
+    am2Vector3Add(&plusStart, &start, &sideways);
+    am2Vector3Add(&plusEnd, &end, &sideways);
+    am2Vector3Subtract(&minusStart, &start, &sideways);
+    am2Vector3Subtract(&minusEnd, &end, &sideways);
+    ccmUpdateEntityFlag(party.character);
+    if (CheckPointInCylinder(&start, &end)) {
+        first = GetPointFound();
+        GetCharacterWorldPosition(first, &point);
+        firstDistance = Vector3_PlanarSquaredDistance(start, point);
+    }
+    ccmUpdateEntityFlag(party.character);
+    if (CheckPointInCylinder(&minusStart, &minusEnd)) {
+        second = GetPointFound();
+        GetCharacterWorldPosition(second, &point);
+        secondDistance = Vector3_PlanarSquaredDistance(minusStart, point);
+    }
+    ccmUpdateEntityFlag(party.character);
+    if (CheckPointInCylinder(&plusStart, &plusEnd)) {
+        third = GetPointFound();
+        GetCharacterWorldPosition(third, &point);
+        thirdDistance = Vector3_PlanarSquaredDistance(plusStart, point);
+    }
+    if (firstDistance < secondDistance && firstDistance < thirdDistance) {
+        party.obstacleDistance = firstDistance;
+        party.obstacleCharacter = first;
+    } else if (secondDistance < thirdDistance) {
+        party.obstacleDistance = secondDistance;
+        party.obstacleCharacter = second;
+    } else {
+        party.obstacleDistance = thirdDistance;
+        party.obstacleCharacter = third;
+    }
+    if (party.obstacleCharacter)
+        party.obstacleDistance = std::sqrt(party.obstacleDistance);
+}
+
+
+// @verified - d
+
+static void SelectPartyAvoidancePlacement(PartyCompanion &party) {
+    PartyPlacementNode &placement = *party.selectedPlacement;
+    std::uint32_t direction = 0;
+    PartyPlacementNode &avoidance = party.avoidancePlacement;
+    float side = 1.0f;
+    Vector3 obstacle, local, hit;
+    if (!party.obstacleCharacter)
+        party.flags &= 0xffff3fffU;
+    if (!party.obstacleCharacter)
+        return;
+    GetCharacterWorldPosition(party.obstacleCharacter, &obstacle);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-placement.characterBearingYaw);
+    matrix_stack::TranslateInverseVector(&party.position);
+    Matrix4x4::TransformPoint(obstacle, local);
+    PopCurrentMatrix(1);
+    if (!(party.flags & 0xc000U))
+        direction = local.x < 0.0f ? 0x4000U : 0x8000U;
+    if (party.obstacleDistance > 3.0f)
+        return;
+    if (direction & 0x4000U)
+        side = 1.0f;
+    if (direction & 0x8000U)
+        side = -1.0f;
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&party.position);
+    Matrix4x4::RotateAroundY_Wrapper(placement.characterBearingYaw);
+    Matrix4x4::preTranslate(side, 0.0f, -party.obstacleDistance);
+    matrix_stack::GetTranslation(&avoidance.position);
+    PopCurrentMatrix(1);
+    if (FindFieldSegmentOffsetInWorld(&hit, &avoidance.position, &party.position)) {
+        matrix_stack::PushUnitMatrix();
+        matrix_stack::TranslateVector(&party.position);
+        Matrix4x4::RotateAroundY_Wrapper(placement.characterBearingYaw);
+        Matrix4x4::preTranslate(-side, 0.0f, -party.obstacleDistance);
+        matrix_stack::GetTranslation(&avoidance.position);
+        PopCurrentMatrix(1);
+    }
+    avoidance.targetYaw = placement.targetYaw;
+    placement.next = &avoidance;
+    party.selectedPlacement = &avoidance;
+}
+
+
+// @verified - d
+static void UpdatePartyStairController(PartyCompanion &party) {
+    PlayerMovementState &movement = *party.movement;
+    std::int32_t steps;
+    Vector3 anchor, position, local, probe, right, left;
+    std::int32_t yaw;
+    float height;
+    steps = movement.stepDirection = 0;
+    GetCharacterWorldPosition(party.character, &position);
+    probe = position;
+    probe.y += 1.5f;
+    height = FindFieldIntersectionHeight(&probe);
+    if (probe.y - height < 3.4199998f) {
+        probe.y = height;
+        steps = flddQueryStairOrigin(&probe, &anchor, &yaw);
+    }
+    if (!steps) {
+        matrix_stack::PushUnitMatrix();
+        matrix_stack::TranslateVector(&party.position);
+        Matrix4x4::RotateAroundY_Wrapper(party.yaw);
+        Matrix4x4::preTranslate(0.0f, 0.0f, -0.60000002f);
+        matrix_stack::GetTranslation(&probe);
+        PopCurrentMatrix(1);
+        probe.y += 1.5f;
+        height = FindFieldIntersectionHeight(&probe);
+        if (probe.y - height < 3.4199998f) {
+            probe.y = height;
+            steps = flddQueryStairOrigin(&probe, &anchor, &yaw);
+        }
+        if (!steps) {
+            matrix_stack::PushUnitMatrix();
+            matrix_stack::TranslateVector(&party.position);
+            Matrix4x4::RotateAroundY_Wrapper(party.requestedYaw);
+            Matrix4x4::preTranslate(0.0f, 0.0f, -0.60000002f);
+            matrix_stack::GetTranslation(&probe);
+            PopCurrentMatrix(1);
+            probe.y += 1.5f;
+            height = FindFieldIntersectionHeight(&probe);
+            if (probe.y - height < 3.4199998f) {
+                probe.y = height;
+                steps = flddQueryStairOrigin(&probe, &anchor, &yaw);
+            }
+        }
+    }
+    if (steps > 0) {
+        std::uint32_t flags = ccmGetFlags(party.character);
+        if (!(movement.flags & 8U)) {
+            movement.targetHeightScale = static_cast<std::int8_t>(steps);
+            movement.targetWorldPosition = anchor;
+            movement.targetWorldYaw = static_cast<std::int16_t>(yaw);
+            movement.cachedCharacterControlFlags = flags;
+        } else if (movement.targetWorldPosition.y != anchor.y) {
+            movement.targetHeightScale = static_cast<std::int8_t>(steps);
+            movement.targetWorldPosition = anchor;
+            movement.targetWorldYaw = static_cast<std::int16_t>(yaw);
+        }
+        movement.flags |= 8U;
+        flags &= 0xffffffbdU;
+        flags |= 0x900U;
+        AssignCharacterControlFlags(party.character, flags);
+    } else {
+        if (movement.flags & 8U)
+            AssignCharacterControlFlags(party.character, movement.cachedCharacterControlFlags);
+        movement.flags &= ~8U;
+    }
+    mtwkGetControllerTargetPosition(party.motionWork, 6, right);
+    mtwkGetControllerTargetPosition(party.motionWork, 5, left);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-movement.targetWorldYaw);
+    matrix_stack::TranslateInverseVector(&movement.targetWorldPosition);
+    Matrix4x4::TransformPoint(right, right);
+    Matrix4x4::TransformPoint(left, left);
+    PopCurrentMatrix(1);
+    std::int32_t step = static_cast<std::int32_t>(right.y / 0.22499999f);
+    std::int32_t leftStep = static_cast<std::int32_t>(left.y / 0.22499999f);
+    std::int8_t &grounded = movement.groundedStepIndex;
+    std::int32_t lowest = leftStep > step ? step : leftStep;
+    if (lowest < 0)
+        lowest = 0;
+    std::int32_t scale = movement.targetHeightScale;
+    if (scale > lowest)
+        scale = lowest;
+    grounded = static_cast<std::int8_t>(scale);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-movement.targetWorldYaw);
+    matrix_stack::TranslateInverseVector(&movement.targetWorldPosition);
+    Matrix4x4::TransformPoint(position, local);
+    PopCurrentMatrix(1);
+    local.z = -local.z;
+    movement.stepDirection = 0;
+    if (steps > 0) {
+        std::int32_t difference, direction;
+        if ((static_cast<std::int16_t>(mtwkGetEntityYaw(party.motionWork) - movement.targetWorldYaw) < 0 ?
+                    -static_cast<std::int16_t>(mtwkGetEntityYaw(party.motionWork) - movement.targetWorldYaw) :
+                    static_cast<std::int16_t>(mtwkGetEntityYaw(party.motionWork) - movement.targetWorldYaw)) > 0x4000) {
+            difference = static_cast<std::int16_t>(party.requestedYaw - movement.targetWorldYaw);
+            if (difference < 0)
+                difference = -difference;
+            direction = 1;
+            if (difference > 0x4000)
+                direction = -1;
+        } else {
+            difference = static_cast<std::int16_t>(party.requestedYaw - movement.targetWorldYaw);
+            if (difference < 0)
+                difference = -difference;
+            direction = 1;
+            if (difference > 0x4000)
+                direction = -1;
+        }
+        if (direction == 1) {
+            if (local.z > -0.30000001f && static_cast<float>(steps - 1) * 0.30000001f > local.z && movement.groundedStepIndex < steps)
+                movement.stepDirection = 1;
+        } else if (direction == -1) {
+            if (local.z > -0.075000003f && static_cast<float>(steps) * 0.30000001f > local.z && movement.groundedStepIndex > 0)
+                movement.stepDirection = -1;
+        }
+    }
+}
+
+
+static void UpdatePartyMotionController(PartyCompanion &party) {
+    const PartyPlacementNode &placement = *party.selectedPlacement;
+    PlayerMovementState &movement = *party.movement;
+    Vector3 position, target, local, world, direction;
+    std::int32_t animation;
+    GetCharacterWorldPosition(party.character, &position);
+    UpdatePartyStairController(party);
+    const std::int32_t previousState = static_cast<std::int8_t>(party.motionState);
+    switch (previousState) {
+    case 0:
+        switch (party.requestedAction) {
+        case 0:
+            break;
+        case 3:
+            if (movement.stepDirection) {
+                party.motionState = 6;
+                party.motionPhase = 0;
+            } else {
+                mtwkCopyTransition(party.motionWork, &placement.position, placement.targetYaw, 0, 1);
+                mtwkCopyTransition(party.motionWork, 0, 0, 16, 0);
+                party.motionState = 1;
+                party.behaviorState = 1;
+            }
+            break;
+        case 2:
+            mtwkCopyTransition(party.motionWork, 0, party.requestedYaw, 13, 0);
+            party.motionState = 4;
+            break;
+        case 13: {
+            am2Vector3Subtract(&direction, plymUpdatePlayerSearchLocation(0), &party.separationTarget);
+            std::int32_t yaw = Vector3_GetFixedYaw(&direction);
+            if (party.movement->flags & 8U)
+                yaw = party.yaw;
+            mtwkCopyTransition(party.motionWork, &party.separationTarget, yaw, 0, 0);
+            mtwkCopyTransition(party.motionWork, 0, 0, 2, 0);
+            party.motionState = 3;
+            break;
+        }
+        case 1:
+        case 14:
+            if (party.idleFrames > 150) {
+                NpcRouteLiveEntry *const entry = FindNpcRouteEntry(party.name);
+                if (entry) {
+                    const std::int8_t *const profile = reinterpret_cast<const std::int8_t *>(entry->scriptRecord);
+                    const std::uint16_t idle = SelectNpcProfileMotion(entry->node, profile[5], profile[4], profile[8]);
+                    if (mtwkGetAnimationId(movement.motion, LowerBody) != idle) {
+                        mtwkSetRequestedRootMode(movement.motion, 1);
+                        mtwkSetFrameTime(movement.motion, 20, LowerBody);
+                        mtwkRequestMotion(movement.motion, idle, LowerBody);
+                    }
+                }
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+    case 1:
+        if (movement.stepDirection) {
+            party.motionState = 6;
+            party.motionPhase = 0;
+            break;
+        }
+        mtwkCopyTransition(party.motionWork, &placement.position, placement.targetYaw, 0, 0);
+        mtwkCopyTransition(party.motionWork, 0, 0, 16, 0);
+        if (party.runBlend < 0.5f) {
+            if (mtwkCopyTransition(party.motionWork, 0, 0, 15, 0))
+                mtwkCopyTransition(party.motionWork, 0, 0, 14, 0);
+        } else if (!mtwkCopyTransition(party.motionWork, 0, 0, 15, 0))
+            mtwkCopyTransition(party.motionWork, 0, 0, 8, 0);
+        switch (party.requestedAction) {
+        case 1:
+        case 13:
+            mtwkCopyTransition(party.motionWork, 0, party.yaw, 13, 0);
+            party.motionState = 3;
+            break;
+        case 14:
+            mtwkCopyTransition(party.motionWork, &placement.position, placement.targetYaw, 6, 0);
+            party.motionState = 3;
+            break;
+        case 11:
+            mtwkCopyTransition(party.motionWork, 0, 0, 2, 0);
+            party.motionState = 5;
+            break;
+        }
+        if (!mtwkSetExtraFlag(party.motionWork, 58, 1) && static_cast<std::int8_t>(party.motionState) == 1)
+            party.motionState = 3;
+        break;
+    case 3:
+        switch (party.requestedAction) {
+        case 3:
+            mtwkCopyTransition(party.motionWork, &placement.position, placement.targetYaw, 0, 0);
+            party.motionState = 1;
+            break;
+        case 11:
+            mtwkCopyTransition(party.motionWork, 0, party.yaw, 13, 0);
+            party.motionState = 5;
+            break;
+        }
+        if (static_cast<std::int8_t>(party.motionState) == 3) {
+            if (mtwkCopyTransition(party.motionWork, 0, 0, 15, 0))
+                mtwkCopyTransition(party.motionWork, 0, 0, 14, 0);
+            if (mtwkCopyTransition(party.motionWork, 0, 0, 3, 0))
+                mtwkCopyTransition(party.motionWork, 0, 0, 2, 0);
+            if (party.stateFrames > 120U) {
+                mtwkCopyTransition(party.motionWork, 0, party.yaw, 13, 0);
+                party.motionState = 0;
+                party.behaviorState = 0;
+            } else if (!mtwkSetExtraFlag(party.motionWork, 58, 1)) {
+                party.motionState = 0;
+                party.behaviorState = 0;
+            }
+        }
+        break;
+    case 4:
+        if (!mtwkSetExtraFlag(party.motionWork, 58, 1))
+            party.motionState = 0;
+        break;
+    case 5:
+        switch (party.doorPhase) {
+        case 0:
+            if (!ClaimDoor(party.doorId, ctrlGetScenarioCharaName(party.character)))
+                break;
+            ++party.doorPhase;
+        case 1:
+            GetCharacterWorldPosition(party.character, &position);
+            ComputeDoorIngress(party.doorId, &position, &target);
+            if (mtwkCopyTransition(party.motionWork, &target, g_doorIngress.rotation.y, 0, 0)) {
+                animation = GetNpcDoorAnimation(party.doorId, party.character, &position);
+                mtwkSetTimeRelated(party.motionWork, 1, 5, animation);
+                ++party.doorPhase;
+                toggleCCMflagsByAmt(party.character, 0x800U);
+            }
+            break;
+        case 2:
+            if (!mtwkSetExtraFlag(party.motionWork, 58, 1)) {
+                GetCharacterWorldPosition(party.character, &position);
+                animation = GetNpcDoorAnimation(party.doorId, party.character, &position);
+                BeginDoorAnimation(party.doorId, ctrlGetScenarioCharaName(party.character), animation);
+                ccmClearFlags(party.character, 0x80U);
+                ++party.doorPhase;
+            }
+            break;
+        case 3:
+            if (mtwkSetRegionFlag(party.motionWork, 65, 1, LowerBody)) {
+                toggleCCMflagsByAmt(party.character, 0x80U);
+                ccmClearFlags(party.character, 0x800U);
+                ++party.doorPhase;
+            }
+            break;
+        case 4:
+            party.motionState = 0;
+            party.doorPhase = 0;
+            break;
+        }
+        break;
+    case 6:
+        switch (static_cast<std::int8_t>(party.motionPhase)) {
+        case 0:
+            if (!movement.stepDirection)
+                party.motionState = 1;
+            else {
+                party.stairDirection = movement.stepDirection;
+                matrix_stack::PushUnitMatrix();
+                Matrix4x4::RotateAroundY_Wrapper(-movement.targetWorldYaw);
+                matrix_stack::TranslateInverseVector(&movement.targetWorldPosition);
+                Matrix4x4::TransformPoint(position, local);
+                PopCurrentMatrix(1);
+                local.y = movement.groundedStepIndex * 0.22499999f;
+                local.z = -(movement.groundedStepIndex * 0.30000001f - 0.15000001f);
+                matrix_stack::PushUnitMatrix();
+                matrix_stack::TranslateVector(&movement.targetWorldPosition);
+                Matrix4x4::RotateAroundY_Wrapper(movement.targetWorldYaw);
+                Matrix4x4::TransformPoint(local, world);
+                PopCurrentMatrix(1);
+                std::int16_t yaw = movement.targetWorldYaw;
+                if (party.stairDirection == -1)
+                    yaw -= 0x8000;
+                mtwkCopyTransition(party.motionWork, &world, yaw, 0, 0);
+                mtwkCopyTransition(party.motionWork, 0, 0, 2, 0);
+                ++party.motionPhase;
+            }
+            break;
+        case 1:
+            if (mtwkCopyTransition(party.motionWork, 0, 0, 3, 0))
+                party.motionPhase = 0;
+            else if (!mtwkSetExtraFlag(party.motionWork, 58, 1)) {
+                ++party.motionPhase;
+                mtwkSetRequestedRootMode(party.motionWork, 3);
+                mtwkSetFrameTime(party.motionWork, 1, LowerBody);
+                if (party.stairDirection == 1)
+                    RequestPlayerMotion(movement, 0xf02b);
+                else if (party.stairDirection == -1)
+                    RequestPlayerMotion(movement, 0xf009);
+            }
+            break;
+        case 2:
+            if (!movement.stepDirection || party.requestedAction == 1) {
+                if ((movement.playerMotionFlags & 2U) && (movement.playerMotionFlags & 1U)) {
+                    mtwkSetRequestedRootMode(movement.motion, 1);
+                    mtwkSetFrameTime(movement.motion, 20, LowerBody);
+                    mtwkRequestMotion(movement.motion, GetNpcRestingMotion(party.character), LowerBody);
+                    movement.flags |= 0x20000U;
+                    party.motionState = 1;
+                    if (party.requestedAction == 1)
+                        party.motionState = 3;
+                }
+            } else if (mtwkSetRegionFlag(party.motionWork, 65, 1, LowerBody))
+                movement.flags |= 0x20000U;
+            break;
+        }
+        if (movement.flags & 0x20000U) {
+            movement.flags &= ~0x20000U;
+            matrix_stack::PushUnitMatrix();
+            Matrix4x4::RotateAroundY_Wrapper(-movement.targetWorldYaw);
+            matrix_stack::TranslateInverseVector(&movement.targetWorldPosition);
+            Matrix4x4::TransformPoint(position, local);
+            PopCurrentMatrix(1);
+            local.y = movement.groundedStepIndex * 0.22499999f;
+            local.z = -(movement.groundedStepIndex * 0.30000001f - 0.15000001f);
+            matrix_stack::PushUnitMatrix();
+            matrix_stack::TranslateVector(&movement.targetWorldPosition);
+            Matrix4x4::RotateAroundY_Wrapper(movement.targetWorldYaw);
+            Matrix4x4::TransformPoint(local, world);
+            PopCurrentMatrix(1);
+            SetCharacterWorldPosition(party.character, &world);
+        }
+        break;
+    }
+    ++party.stateFrames;
+    if (static_cast<std::int8_t>(party.motionState) != previousState)
+        party.stateFrames = 0;
+}
+
+
+// @verified - d
+static std::int32_t RelocatePartyAlongTrail(PartyCompanion &party) {
+    std::int32_t relocated = 0;
+    Vector3 player, local, sample;
+    const Vector3 *point;
+    std::int32_t index;
+    float distance, width;
+    if (party.flags & 0x100U)
+        return 0;
+    plymUpdatePlayerSearchLocation(&player);
+    const float maximum = Vector3_PlanarSquaredDistance(party.position, player);
+    float minimum = 25.0f;
+    if (maximum < 100.0f)
+        minimum = 0.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-CopyHeading(party.position, player));
+    matrix_stack::TranslateInverseVector(&player);
+    for (index = 0; index < party.trailCount && (point = PartyTrailSample(party, ~index)) != 0; ++index) {
+        sample = *point;
+        Matrix4x4::TransformPoint(sample, local);
+        if (local.z < 0.0f)
+            continue;
+        distance = Vector3_PlanarSquaredDistance(player, sample);
+        if (distance < minimum || distance > maximum)
+            continue;
+        matrix_stack::Matrix4x4_Push(0);
+        matrix_stack::LoadMatrix(camCtrlGetProjectionMatrix(0));
+        Matrix4x4::TransformPoint(sample, local);
+        PopCurrentMatrix(1);
+        if (local.z < 0.0f) {
+            width = -local.z * camCtrlGetHalfVerticalFovTangent();
+            if ((width < 0.0f ? -width : width) + 0.44999999f > (local.x < 0.0f ? -local.x : local.x))
+                continue;
+        }
+        relocated = 1;
+        break;
+    }
+    PopCurrentMatrix(1);
+    if (relocated) {
+        SetCharacterWorldPosition(party.character, &sample);
+        party.position = sample;
+    }
+    return relocated;
+}
+
+
+static std::int32_t RelocatePartyAcrossQronFloor(PartyCompanion &party) {
+    Vector3 probe, previous, player;
+    const Vector3 *point;
+    std::int32_t index;
+    float floor;
+    std::int32_t relocated = 0;
+    if (!MatchAreaNamePattern(g_currentMap, SHEN_NAME(Q???)))
+        return 0;
+    if ((GetQronCurrentFlags() & 1U) == 0)
+        return 0;
+    plymUpdatePlayerSearchLocation(&player);
+    probe = party.position;
+    probe.y += 0.5f;
+    floor = FindFieldIntersectionHeight(&probe);
+    if (floor != -FLT_MAX && party.position.y - floor < 2.6999998f) {
+        if (!(party.movement->flags & 8U))
+            toggleCCMflagsByAmt(party.character, 2U);
+    } else
+        ccmClearFlags(party.character, 2U);
+    if (floor != -FLT_MAX) {
+        if (party.position.y - floor < 2.6999998f)
+            return 0;
+        if (party.position.y - player.y < 1.8f)
+            return 0;
+    }
+    previous = player;
+    for (index = 0; index < party.trailCount && (point = PartyTrailSample(party, index + 1)) != 0; ++index) {
+        probe = *point;
+        probe.y += 0.5f;
+        floor = FindFieldIntersectionHeight(&probe);
+        probe.y = point->y;
+        if (floor == -FLT_MAX || (probe.y = floor, point->y - floor > 1.8f)) {
+            relocated = 1;
+            break;
+        }
+        previous = probe;
+    }
+    if (relocated) {
+        SetCharacterWorldPosition(party.character, &previous);
+        party.position = previous;
+    }
+    return relocated;
+}
+
+
+#define PARTY_FABS(value) ((value) < 0.0f ? -(value) : (value))
+
+// @verified - d
+static std::int32_t FindPartySeparationTarget(PartyCompanion &party) {
+    PlayerMovementState *const movement = party.movement;
+    Vector3 player, local, first, second, firstTarget, secondTarget, hit, back;
+    Matrix4x4 playerFrame;
+    Vector3 origin, probe, stairOrigin;
+    std::int32_t stairYaw, yaw, delta, firstStairs, secondStairs, ret;
+    std::int16_t angle;
+    float radius, width;
+    if (!ctrlGetRootNode())
+        return 0;
+    plymUpdatePlayerSearchLocation(&player);
+    yaw = playerGetRotY();
+    origin.x = party.position.x;
+    origin.y = party.position.y + 0.40000001f;
+    origin.z = party.position.z;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-yaw);
+    matrix_stack::TranslateInverseVector(&player);
+    matrix_stack::GetMatrix(&playerFrame);
+    Matrix4x4::TransformPoint(origin, local);
+    PopCurrentMatrix(1);
+    radius = GetCharacterCollisionCapsuleMargin(ctrlGetRootNode());
+    width = radius * 2.0f;
+    if (PARTY_FABS(local.x) > width * 0.94999999f)
+        return 0;
+    if (local.z < 0.0f) {
+        ret = 0;
+        width = radius * 2.0f;
+        if (PARTY_FABS(local.z) < 1.5f && PARTY_FABS(local.x) > 0.25f) {
+            first = local;
+            first.x = width;
+            second = local;
+            second.x = -width;
+            ret = 1;
+        }
+    } else {
+        ret = 1;
+        first = local;
+        first.x = width;
+        second = local;
+        second.x = -width;
+    }
+    if (!ret)
+        return 0;
+    if (!(party.movement->flags & 8U)) {
+        matrix_stack::PushUnitMatrix();
+        matrix_stack::TranslateVector(&player);
+        Matrix4x4::RotateAroundY_Wrapper(yaw);
+        Matrix4x4::TransformPoint(first, first);
+        Matrix4x4::TransformPoint(second, second);
+        PopCurrentMatrix(1);
+        if (FindFieldSegmentOffsetInWorld(&hit, &first, &origin)) {
+            am2Vector3Subtract(&back, &first, &origin);
+            dc::sdk::SetVectorLength(&back, &back, -0.0099999998f);
+            am2Vector3Add(&first, &hit, &back);
+        }
+        RaycastInWorldGrid(&firstTarget, &first, radius);
+        probe = firstTarget;
+        probe.y += 0.5f;
+        probe.y = FindFieldIntersectionHeight(&probe);
+        firstStairs = flddQueryStairOrigin(&probe, &stairOrigin, &stairYaw);
+        if (FindFieldSegmentOffsetInWorld(&hit, &second, &origin)) {
+            am2Vector3Subtract(&back, &second, &origin);
+            dc::sdk::SetVectorLength(&back, &back, -0.0099999998f);
+            am2Vector3Add(&second, &hit, &back);
+        }
+        RaycastInWorldGrid(&secondTarget, &second, radius);
+        probe = secondTarget;
+        probe.y += 0.5f;
+        probe.y = FindFieldIntersectionHeight(&probe);
+        secondStairs = flddQueryStairOrigin(&probe, &stairOrigin, &stairYaw);
+        matrix_stack::Matrix4x4_Push(0);
+        matrix_stack::LoadMatrix(&playerFrame);
+        Matrix4x4::TransformPoint(firstTarget, first);
+        Matrix4x4::TransformPoint(secondTarget, second);
+        PopCurrentMatrix(1);
+    } else {
+        angle = movement->targetWorldYaw;
+        delta = static_cast<std::int16_t>(movement->targetWorldYaw - yaw);
+        if ((delta < 0 ? -delta : delta) > 0x3fff)
+            angle = movement->targetWorldYaw + 0x8000;
+        first.x = 0.5f;
+        first.y = 0.40000001f;
+        first.z = 0.0f;
+        second.x = -0.5f;
+        second.y = 0.40000001f;
+        second.z = 0.0f;
+        matrix_stack::PushUnitMatrix();
+        matrix_stack::TranslateVector(&origin);
+        Matrix4x4::RotateAroundY_Wrapper(angle);
+        Matrix4x4::TransformPoint(first, first);
+        Matrix4x4::TransformPoint(second, second);
+        PopCurrentMatrix(1);
+        if (FindFieldSegmentOffsetInWorld(&hit, &first, &origin)) {
+            am2Vector3Subtract(&back, &first, &origin);
+            dc::sdk::SetVectorLength(&back, &back, -0.0099999998f);
+            am2Vector3Add(&first, &hit, &back);
+        }
+        RaycastInWorldGrid(&firstTarget, &first, radius);
+        if (FindFieldSegmentOffsetInWorld(&hit, &second, &origin)) {
+            am2Vector3Subtract(&back, &second, &origin);
+            dc::sdk::SetVectorLength(&back, &back, -0.0099999998f);
+            am2Vector3Add(&second, &hit, &back);
+        }
+        RaycastInWorldGrid(&secondTarget, &second, radius);
+        matrix_stack::Matrix4x4_Push(0);
+        matrix_stack::LoadMatrix(&playerFrame);
+        Matrix4x4::TransformPoint(firstTarget, first);
+        Matrix4x4::TransformPoint(secondTarget, second);
+        PopCurrentMatrix(1);
+        secondStairs = 0;
+        firstStairs = 0;
+    }
+    if (!ret)
+        return 0;
+    if (local.z < 0.0f) {
+        if (local.x < 0.0f) {
+            if (PARTY_FABS(second.x) > width * 0.85000002f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else if (PARTY_FABS(first.x) > width * 0.85000002f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else if (PARTY_FABS(second.x) > width * 0.5f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else if (PARTY_FABS(first.x) > width * 0.5f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else
+                ret = 0;
+        } else {
+            if (PARTY_FABS(first.x) > width * 0.85000002f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else if (PARTY_FABS(second.x) > width * 0.85000002f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else if (PARTY_FABS(first.x) > width * 0.5f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else if (PARTY_FABS(second.x) > width * 0.5f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else
+                ret = 0;
+        }
+    } else {
+        ret = 1;
+        if (local.x > 0.0f) {
+            if (PARTY_FABS(first.x) > width * 0.85000002f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else if (PARTY_FABS(second.x) > width * 0.85000002f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else if (PARTY_FABS(first.x) > width * 0.5f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else if (PARTY_FABS(second.x) > width * 0.5f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else
+                ret = 0;
+        } else {
+            if (PARTY_FABS(second.x) > width * 0.85000002f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else if (PARTY_FABS(first.x) > width * 0.85000002f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else if (PARTY_FABS(second.x) > width * 0.5f && !secondStairs)
+                party.separationTarget = secondTarget;
+            else if (PARTY_FABS(first.x) > width * 0.5f && !firstStairs)
+                party.separationTarget = firstTarget;
+            else
+                ret = 0;
+        }
+    }
+    return ret;
+}
+
+
+#undef PARTY_FABS
+
+static void UpdatePartyFollowBehavior(PartyCompanion &party) {
+    PartyPlacementNode *const current = &party.placement;
+    const PartyPlacementNode &placement = *party.selectedPlacement;
+    Vector3 hit, player, search;
+    bool relocated = false;
+    float limit;
+    playerGetRotY();
+    plymUpdatePlayerSearchLocation(&player);
+    float distance = Vector3_ComputeSquaredDistance(player, party.position);
+    const float height = party.position.y - player.y;
+    if ((height < 0.0f ? -height : height) > 3.2399998f)
+        distance += 36.0f;
+    party.requestedAction = 0;
+    if ((party.flags & 0x40U) && static_cast<std::int8_t>(party.behaviorState) != 7) {
+        party.behaviorState = 7;
+        party.motionState = 0;
+    }
+    if ((placement.flags & 8U) && RelocatePartyAlongTrail(party)) {
+        party.behaviorState = 0;
+        party.motionState = 0;
+        mtwkCopyTransition(party.motionWork, 0, party.yaw, 13, 0);
+        relocated = true;
+    }
+    if (RelocatePartyAcrossQronFloor(party)) {
+        party.behaviorState = 0;
+        party.motionState = 0;
+        mtwkCopyTransition(party.motionWork, 0, party.yaw, 13, 0);
+        relocated = true;
+    }
+    switch (static_cast<std::int8_t>(party.behaviorState)) {
+    case 0: {
+        party.runBlend = 0.0f;
+        if (relocated)
+            break;
+        if (static_cast<std::int8_t>(party.motionState) == 1) {
+            party.behaviorState = 1;
+            break;
+        }
+        party.requestedAction = 1;
+        ++party.idleFrames;
+        limit = (party.followDistance + 0.55000001f) * (party.followDistance + 0.55000001f);
+        if (party.flags & 0x20000U)
+            limit = 0.3025f;
+        if (distance > limit) {
+            party.requestedAction = 3;
+            break;
+        }
+        if (MatchAreaNamePattern(g_currentMap, SHEN_NAME(Q???)) && (GetQronCurrentFlags() & 1U)) {
+            plymUpdatePlayerSearchLocation(&search);
+            if (GetQronFloorAtPosition(search) != GetQronFloorAtPosition(party.position))
+                break;
+        }
+        if (static_cast<std::int32_t>(party.frameCount) >= 11 && FindPartySeparationTarget(party))
+            party.requestedAction = 13;
+        break;
+    }
+    case 1: {
+        std::uint32_t door = flddQueryCategory6InRadius(&party.position);
+        if (((door >> 8) & 0xffU) == 0x35U)
+            door = 0;
+        if (door && (placement.flags & 0x40000U) && FindFieldSegmentOffsetInWorld(&hit, &placement.position, &party.position)) {
+            party.requestedAction = 11;
+            party.behaviorState = 8;
+            party.doorPhase = 0;
+            party.doorId = shen_name(door);
+            break;
+        }
+        if (party.flags & 0x800U) {
+            if (party.runBlend < 0.5f) {
+                if (distance > 225.0f)
+                    party.runBlend = 1.0f;
+            } else if (distance < 100.0f)
+                party.runBlend = 0.0f;
+        }
+        limit = party.followDistance * party.followDistance;
+        if (party.flags & 0x20000U)
+            limit = 0.0f;
+        if (distance < limit)
+            party.requestedAction = 1;
+        if (current->distance < 0.55000001f && (height < 0.0f ? -height : height) < 1.8f)
+            party.requestedAction = 1;
+        break;
+    }
+    case 6:
+    case 7:
+        if (!(party.flags & 0x40U))
+            party.behaviorState = 0;
+        break;
+    case 8:
+        if (party.doorPhase == 4)
+            party.behaviorState = 0;
+        else
+            party.requestedAction = 11;
+        break;
+    default:
+        break;
+    }
+    if (party.behaviorState)
+        party.idleFrames = 0;
+}
+
+
+// @verified - d
+static void UpdatePartyGuideBehavior(PartyCompanion &party) {
+    PartyPlacementNode &placement = party.placement;
+    PartyPlacementNode *selected = party.selectedPlacement;
+    const bool conversation = IsConversationCameraCharacter(party.character);
+    Vector3 position, player, local, target;
+    GetCharacterWorldPosition(party.character, &position);
+    position.y += 0.15000001f;
+    plymUpdatePlayerSearchLocation(&player);
+    Vector3_ComputeSquaredDistance(player, position);
+    if (party.flags & 0x40000U) {
+        if (placement.distance > 0.55000001f)
+            party.flags &= ~0x40000U;
+    } else if (!(placement.distance > 0.55000001f) && (placement.flags & 0x20U)) {
+        party.flags |= 0x40000U;
+    }
+    party.requestedAction = 0;
+    switch (static_cast<std::int8_t>(party.behaviorState)) {
+    case 0:
+        party.runBlend = 0.0f;
+        if (conversation && (party.flags & 0x40000U)) {
+            party.behaviorState = 6;
+            break;
+        }
+        if (placement.distance < 0.55000001f && (placement.flags & 0x20U)) {
+            matrix_stack::PushUnitMatrix();
+            Matrix4x4::RotateAroundY_Wrapper(-placement.targetYaw);
+            matrix_stack::TranslateInverseVector(&party.position);
+            Matrix4x4::TransformPoint(player, local);
+            PopCurrentMatrix(1);
+            std::int16_t yaw;
+            if (local.x < 0.0f)
+                yaw = placement.targetYaw + 24576;
+            else
+                yaw = placement.targetYaw - 24576;
+            std::int32_t difference = static_cast<std::int16_t>(yaw - party.yaw);
+            if (difference < 0)
+                difference = -difference;
+            if (difference > 0x2000) {
+                party.requestedYaw = yaw;
+                party.requestedAction = 2;
+                return;
+            }
+        }
+        if (!(selected->flags & 8U) && !(party.flags & 0x80U) && !(placement.distance < 0.55000001f))
+            party.requestedAction = 3;
+        break;
+    case 1:
+        if (!(selected->flags & 8U)) {
+            if (placement.distance < 0.55000001f)
+                party.requestedAction = 14;
+            if (!(party.flags & 0x80U))
+                return;
+        }
+        party.requestedAction = 1;
+        break;
+    case 6:
+    case 7:
+        party.runBlend = 0.0f;
+        if (!conversation)
+            party.behaviorState = 0;
+        else if (party.flags & 0x40000U) {
+            target.x = target.y = target.z = 0.0f;
+            if (ctrlGetRootNode())
+                charaGetMotWorldPos(ctrlGetRootNode(), 5, &target);
+            RequestNpcSpecialMotionTarget(party.name, &target);
+        }
+        break;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 8:
+    default:
+        party.runBlend = 0.0f;
+        break;
+    }
+}
+
+
+static void PartyBehaviorNullsub(PartyCompanion &) {
+}
+
+
+static void PartyBehaviorClearFlag(PartyCompanion &party) {
+    party.flags &= ~0x10U;
+}
+
+
+static void UpdatePartyBehavior(PartyCompanion &party) {
+    party.requestedYaw = party.selectedPlacement->characterBearingYaw;
+    switch (party.mode) {
+    case 1:
+        UpdatePartyFollowBehavior(party);
+        break;
+    case 2:
+        UpdatePartyGuideBehavior(party);
+        break;
+    case 3:
+        PartyBehaviorNullsub(party);
+        break;
+    case 4:
+        PartyBehaviorClearFlag(party);
+        break;
+    }
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 void UpdatePartyControl(PartyCompanion &party) {
     PreparePartyPlacement(party);
     if (party.flags & 0x2000U)
         return;
     FindPartyObstacles(party);
     SelectPartyAvoidancePlacement(party);
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    UpdatePartyBehavior(party);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     party.requestedAction = 0;
     party.requestedYaw = party.selectedPlacement->characterBearingYaw;
     if (party.frameCount >= 2U) {
@@ -1688,45 +3382,138 @@ void UpdatePartyControl(PartyCompanion &party) {
         else if (party.mode == 4)
             party.flags &= ~0x10U;
     }
+#endif
     UpdatePartyMotionController(party);
 }
+#endif
 
-// PTYC update: an inactive follower still records the player's trail.
-// @verified - p
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+std::int32_t UpdatePartyRequestedPlacement(PartyCompanion &party) {
+    if (party.flags & 0x200U) {
+        ResetPartyPlacementNearPlayer(party);
+        party.flags &= 0xfffff9ffU;
+    }
+    return 0;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void UpdatePartyCompanion(Character *character, void *payload) {
     PartyCompanion &party = *static_cast<PartyCompanion *>(payload);
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const bool inactive = (party.flags & 2U) == 0;
+#endif
     party.character = character;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (!(party.flags & 2U) && party.mode == 1) {
+        Vector3 position;
+        GetPlayerTargetWorldPosition(&position);
+        RecordPartyPlayerTrail(party, position);
+    }
+    if (party.flags & 2U) {
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if (inactive && party.mode == 1)
         RecordPartyPlayerTrail(party, GetPlayerTargetWorldPosition());
     if (!(party.flags & 2U))
         return;
-    ++party.frameCount;
-    UpdatePartyCharacterState(party);
-    UpdatePartyPlayerProximity(party);
-    UpdatePartyControl(party);
+#endif
+        ++party.frameCount;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+        UpdatePartyRequestedPlacement(party);
+#endif
+        UpdatePartyCharacterState(party);
+        UpdatePartyPlayerProximity(party);
+        UpdatePartyControl(party);
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    }
+#endif
 }
+#endif
 
 } // namespace model_component_detail
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+ // namespace model_component_detail
+
+// @verified - d
 PartyCompanion *FindPartyCompanion(const Character *character) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    return character ? static_cast<PartyCompanion *>(charFindComp(character, SHEN_NAME(PTYC))) : 0;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     return static_cast<PartyCompanion *>(FindModelComponent(character, kPartyToken));
+#endif
 }
 
+
+// @verified - d
 shen_name FindNavigationPartyCompanion(shen_name name) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const PartyCompanion *party = 0;
+    std::uint32_t names[4] = {SHEN_NAME4('R', 'E', 'N', '_'), SHEN_NAME4('S', 'I', 'N', '_'), SHEN_NAME4('J', 'O', 'P', '_'), 0};
+    if (!name) {
+        const std::uint32_t *entry = names;
+        for (;;) {
+            if (!*entry)
+                break;
+            party = FindPartyCompanionByName(shen_name(*entry));
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     PartyCompanion *party = nullptr;
     if (name.name) {
         party = FindPartyCompanion(ctrlGetScenarioChara(name));
     } else {
         for (const shen_name candidate : kPartyNames) {
             party = FindPartyCompanion(ctrlGetScenarioChara(candidate));
+#endif
             if (party)
                 break;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+            ++entry;
+#endif
         }
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    } else
+        party = FindPartyCompanionByName(name);
+    if (!party)
+        return shen_name(0);
+    if (!(party->flags & 2U))
+        return shen_name(0);
+    if (!(party->flags & 0x10000000U))
+        return shen_name(0);
+    return party->name;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     }
     return party && (party->flags & 0x10000002U) == 0x10000002U ? party->name : shen_name{};
+#endif
 }
+#endif
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t IsPartyCompanion(shen_name name) {
+    if (!FindPartyCompanionByName(name))
+        return 0;
+    return 1;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsPartyCompanionPlaced(shen_name name) {
     const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     return party && (party->flags & 0x202U) == 2U;
@@ -1838,6 +3625,7 @@ void ReactivatePartyCompanion(PartyCompanion &party) {
 }
 
 // @verified - p
+// @verified - d
 std::int32_t ActivatePartyCompanion(shen_name name) {
     EV_CheckWarmStartNpcRoute(name);
     if (!EV_ForceLoadNpc(name))
@@ -1904,28 +3692,657 @@ std::int32_t plymGetPartyAuthorStatus(shen_name name) {
         return 0;
     return party->behaviorState ? 2 - (party->motionState != 0) : 2;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 std::int32_t FindPTYCForChara(shen_name name) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const PartyCompanion *const party = FindPartyCompanionByName(name);
+    return party ? (static_cast<std::int32_t>(party->flags) >> 1) & 1 : 0;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     return party && (party->flags & 2U) != 0;
+#endif
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t SetPartyCompanionActiveBit(shen_name name, std::int32_t enabled) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return 0;
+    std::int32_t previous = static_cast<std::int32_t>(party->flags) >> 1;
+    previous &= 1;
+    if (enabled)
+        party->flags |= 2U;
+    else
+        party->flags &= ~2U;
+    return previous;
 }
 
-std::int32_t ptycCharaUnlock(shen_name name) {
-    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
+
+// @verified - d
+std::int32_t SetPartyCompanionMode(shen_name name, std::int32_t mode) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return 0;
+    switch (mode) {
+    case 0:
+    default:
+        party->mode = 0;
+        break;
+    case 1:
+        party->mode = 1;
+        break;
+    case 2:
+        party->mode = 2;
+        break;
+    case 4:
+        party->mode = 4;
+        party->behaviorState = 10;
+        break;
+    }
+    return 1;
+}
+
+
+std::int32_t IsPartyCompanionBehaviorIdle(shen_name name) {
+    const PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party || !(party->flags & 2U))
+        return 0;
+    if (*reinterpret_cast<const std::uint32_t *>(&party->behaviorState) & 0xffffU)
+        return 0;
+    return 1;
+}
+
+
+std::int32_t PausePartyConversation(shen_name name) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
     if (!party)
         return -1;
-    if ((party->flags & 0x40000000U) != 0 || name.name == SHEN_NAME(SIN_))
+    party->flags |= 0x40U;
+    return 0;
+}
+
+
+// @verified - d
+std::int32_t ResumePartyConversation(shen_name name) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return -1;
+    party->flags &= ~0x40U;
+    return 0;
+}
+
+
+// @verified - d
+void ReactivatePartyCompanion(PartyCompanion &party) {
+    party.flags |= 0x402U;
+    party.behaviorState = 0;
+    party.motionState = 0;
+    party.motionPhase = 0;
+    party.runBlend = 0.0f;
+    party.frameCount = 0;
+    mtwkCopyTransition(charFindMotionwork(party.character), 0, GetCharacterWorldYaw(party.character), 13, 0);
+    toggleCCMflagsByAmt(party.character, 0x300000U);
+    cpamSetFlag(party.character, 1);
+}
+
+
+// @verified - d
+void ReleaseConversationBuffer(ConversationBuffer &buffer) {
+    StopConversationStream(buffer.stream);
+    ReleaseConversationPacket(buffer.packetRequest);
+    if (buffer.speaker) {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        scenAssignFacialClip(control->scenarioTask, defaultFacialClip, buffer.speaker);
+    }
+    buffer.packetRequest = 0;
+    buffer.callback = 0;
+}
+
+
+// @verified - d
+void PauseOrDestroyAudioAndSubtitles(std::int32_t paused) {
+    if (GetConversationPlaybackEnabled())
+        return;
+    if (paused) {
+        ConversationBuffer *const buffers = g_conversationTaskData->buffers;
+        for (std::int32_t index = 0; index < 2; ++index)
+            if (buffers[index].callback)
+                ReleaseConversationBuffer(buffers[index]);
+    } else {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        scenDestroySubtitles(control->scenarioTask);
+    }
+}
+
+
+// @verified - d
+std::int32_t InitializePartyGuide() {
+    shen_name name;
+    ProcGenInfo &guide = *g_pProcGenInfos;
+    std::int32_t result = 0;
+    guide.initialised = 0;
+    guide.maze = 0;
+    guide.routeIndex = -1;
+    guide.parameter = 0.0f;
+    guide.name = 0;
+    guide.currentParameter = 0;
+    guide.stride = 1;
+    guide.maximum = 0;
+    guide.low = 0;
+    guide.direction = 1;
+    guide.partition = -1;
+    guide.partitionCount = 0;
+    if (!MatchAreaNamePattern(g_currentMap, SHEN_NAME4('K', 'M', 'Z', '?'))) {
+        guide.maze = 0;
+        name = SHEN_NAME4('M', '0', '1', '_');
+        guide.name = name;
+        guide.currentParameter = GetNpcRouteCurrentParameter(name);
+        guide.stride = GetNpcRouteStride(name);
+        guide.low = GetNpcRouteLowParameter(name);
+        guide.high = GetNpcRouteHighParameter(name);
+        guide.maximum = GetNpcRouteMaximumParameter(name);
+        guide.parameter = static_cast<float>(guide.currentParameter);
+        if (IsNpcRouteReady(name))
+            result = 1;
+    } else {
+        guide.maze = 1;
+        guide.partitionCount = static_cast<std::int8_t>(mazeGetNumPartitions());
+        result = 1;
+    }
+    if (result)
+        guide.initialised = 1;
+    return result;
+}
+
+
+std::int32_t PartyGuideInitializeAdapter() {
+    return InitializePartyGuide();
+}
+
+
+// @verified - d
+std::int32_t PickClosestTargetForPlacement(const Vector3 *point) {
+    ProcGenInfo &guide = *g_pProcGenInfos;
+    if (!guide.initialised)
         return 0;
-    if ((party->flags & 0x2000U) == 0)
-        EV_npcLockUnlock(name);
-    party->flags &= ~2U;
-    if ((party->flags & 0x2000U) == 0 && party->motionState == 5 && party->doorId != 0 && party->doorPhase > 0) {
-        party->doorPhase = 0;
-        ReleaseDoor(static_cast<std::int32_t>(party->doorId), ctrlGetScenarioCharaName(party->character));
+    if (!guide.maze) {
+        guide.currentParameter = FindNearestNpcRouteParameter(guide.name, point);
+        guide.parameter = static_cast<float>(guide.currentParameter);
+    } else {
+        std::int32_t partition, element;
+        element = -1;
+        partition = -1;
+        if (guide.routeIndex != -1) {
+            partition = (guide.routeIndex >> 16) & 0xffff;
+            element = guide.routeIndex & 0xffff;
+        }
+        mazeFindClosestTarget(&partition, &element, point);
+        guide.partition = static_cast<std::int8_t>(partition);
+        guide.currentParameter = element;
+        guide.parameter = static_cast<float>(guide.currentParameter);
+        guide.low = 0;
+        guide.high = GetMZNRDataForID(guide.partition) - 1;
+        guide.maximum = guide.high;
+    }
+    guide.routeIndex = GetPartyGuideRouteIndex();
+    return guide.routeIndex;
+}
+
+
+std::int32_t GetPartyGuideRouteIndex() {
+    const ProcGenInfo &guide = *g_pProcGenInfos;
+    std::int32_t routeIndex;
+    if (!guide.maze)
+        routeIndex = guide.currentParameter;
+    else
+        routeIndex = (guide.currentParameter & 0xffff) | (guide.partition << 16);
+    return routeIndex;
+}
+
+
+// @verified - d
+void FindClosestTargetForPlacement(const Vector3 *point) {
+    ProcGenInfo &guide = *g_pProcGenInfos;
+    if (!guide.initialised)
+        return;
+    if (!point) {
+        guide.targetPartition = guide.partition;
+        guide.targetParameter = guide.high;
+    } else if (!guide.maze) {
+        guide.targetPartition = guide.partition;
+        guide.targetParameter = FindNearestNpcRouteParameter(guide.name, point);
+    } else {
+        std::int32_t partition, element;
+        element = -1;
+        partition = -1;
+        if (guide.routeIndex != -1) {
+            partition = (guide.routeIndex >> 16) & 0xffff;
+            element = guide.routeIndex & 0xffff;
+        }
+        mazeFindClosestTarget(&partition, &element, point);
+        guide.targetPartition = partition;
+        guide.targetParameter = element;
+    }
+}
+
+
+// @verified - d
+std::int32_t SetPartyGuideRouteHint(std::int32_t routeIndex) {
+    g_pProcGenInfos->routeIndex = routeIndex;
+    return 0;
+}
+
+
+void SetPartyGuideBackward() {
+    g_pProcGenInfos->direction = -1;
+}
+
+
+// @verified - d
+std::int32_t SetPartyGuideDirection() {
+    ProcGenInfo &guide = *g_pProcGenInfos;
+    if (!guide.initialised)
+        return 0;
+    std::int32_t direction;
+    if (!guide.maze) {
+        direction = 0;
+        if (static_cast<float>(guide.targetParameter) > guide.parameter)
+            direction = 1;
+        if (static_cast<float>(guide.targetParameter) < guide.parameter)
+            direction = -1;
+    } else {
+        std::int32_t partition, element;
+        direction = mazeFindPartitionDirection(
+            guide.partition, static_cast<std::int32_t>(guide.parameter), guide.targetPartition, guide.targetParameter, &partition, &element);
+    }
+    guide.direction = static_cast<std::int8_t>(direction);
+    return direction;
+}
+
+
+std::int32_t RefreshPartyGuideDirection() {
+    return SetPartyGuideDirection();
+}
+
+
+// @verified - d
+std::int32_t PartyGuideEndState() {
+    const ProcGenInfo &guide = *g_pProcGenInfos;
+    if (!guide.initialised)
+        return 99;
+    if (!guide.direction)
+        return 1;
+    if (guide.direction > 0) {
+        if (guide.partition == guide.targetPartition) {
+            if (!(guide.parameter < static_cast<float>(guide.targetParameter)))
+                return 1;
+        } else if (!(guide.parameter < static_cast<float>(guide.high)))
+            return -1;
+    } else {
+        if (guide.partition == guide.targetPartition) {
+            if (!(guide.parameter > static_cast<float>(guide.targetParameter)))
+                return 1;
+        } else if (!(guide.parameter > static_cast<float>(guide.low)))
+            return -1;
     }
     return 0;
 }
 
+
+// @verified - d
+std::int32_t AdvancePartyGuidePartition() {
+    ProcGenInfo &guide = *g_pProcGenInfos;
+    if (!guide.maze)
+        return 1;
+    std::int32_t partition, element;
+    if (!mazeFindPartitionDirection(
+            guide.partition, static_cast<std::int32_t>(guide.parameter), guide.targetPartition, guide.targetParameter, &partition, &element))
+        return 0;
+    guide.partition = static_cast<std::int8_t>(partition);
+    guide.parameter = static_cast<float>(element);
+    guide.low = 0;
+    guide.high = GetMZNRDataForID(partition) - 1;
+    guide.direction = static_cast<std::int8_t>(mazeFindPartitionDirection(
+        guide.partition, static_cast<std::int32_t>(guide.parameter), guide.targetPartition, guide.targetParameter, &partition, &element));
+    return 1;
+}
+
+
+// @verified - d
+std::int32_t AdvancePartyGuide(float distance) {
+    ProcGenInfo &guide = *g_pProcGenInfos;
+    std::int32_t steps = 0;
+    if (!guide.maze) {
+        float length = 0.0f;
+        const std::int32_t start = static_cast<std::int32_t>(guide.parameter);
+        std::int32_t parameter = start;
+        float minimum = 0.0f;
+        const float maximum = static_cast<float>(guide.maximum);
+        if (guide.direction > 0) {
+            for (;;) {
+                if (!(maximum > static_cast<float>(parameter)))
+                    break;
+                const float segment = GetNpcRouteSegmentLength(guide.name, parameter);
+                ++parameter;
+                if (segment < 0.0f)
+                    break;
+                length += segment;
+                steps = parameter - start;
+                if (length > distance)
+                    break;
+            }
+        } else {
+            for (;;) {
+                if (!(static_cast<float>(parameter) > minimum))
+                    break;
+                const float segment = GetNpcRouteSegmentLength(guide.name, --parameter);
+                if (segment < 0.0f)
+                    break;
+                length += segment;
+                steps = start - parameter;
+                if (length > distance)
+                    break;
+            }
+        }
+    } else {
+        steps = static_cast<std::int32_t>((distance + 1.99999f) * 0.5f);
+    }
+    guide.parameter += static_cast<float>(guide.direction * steps);
+    if (guide.direction > 0) {
+        if (guide.partition == guide.targetPartition && static_cast<float>(guide.targetParameter) < guide.parameter)
+            guide.parameter = static_cast<float>(guide.targetParameter);
+        if (guide.parameter > static_cast<float>(guide.maximum))
+            guide.parameter = static_cast<float>(guide.maximum);
+    } else if (guide.direction < 0) {
+        if (guide.partition == guide.targetPartition && guide.parameter < static_cast<float>(guide.targetParameter))
+            guide.parameter = static_cast<float>(guide.targetParameter);
+        if (guide.parameter < 0.0f)
+            guide.parameter = 0.0f;
+    }
+    const std::int32_t end = PartyGuideEndState();
+    if (end > 0)
+        return 1;
+    if (end < 0)
+        AdvancePartyGuidePartition();
+    return 0;
+}
+
+
+// @verified - d
+std::int32_t SamplePartyGuide(Vector3 *point, std::int16_t *yaw) {
+    const ProcGenInfo &guide = *g_pProcGenInfos;
+    std::int32_t clamped = static_cast<std::int32_t>(guide.parameter);
+    if (clamped < guide.low)
+        clamped = guide.low;
+    std::int32_t parameter = guide.high;
+    if (parameter > clamped)
+        parameter = clamped;
+    Vector3 next, previous;
+    std::int32_t angle;
+    if (!guide.maze) {
+        SampleNpcRoute(guide.name, parameter, point, &angle);
+        *yaw = static_cast<std::int16_t>(angle);
+    } else {
+        mazeSamplePartition(guide.partition, parameter, point);
+        if (guide.direction >= 0) {
+            if (parameter < guide.high) {
+                mazeSamplePartition(guide.partition, parameter + 1, &next);
+                *yaw = CopyHeading(*point, next);
+            } else {
+                mazeSamplePartition(guide.partition, parameter - 1, &previous);
+                *yaw = CopyHeading(previous, *point);
+            }
+        } else {
+            if (parameter > guide.low) {
+                mazeSamplePartition(guide.partition, parameter - 1, &next);
+                *yaw = CopyHeading(*point, next);
+            } else {
+                mazeSamplePartition(guide.partition, parameter + 1, &previous);
+                *yaw = CopyHeading(previous, *point);
+            }
+        }
+    }
+    return 0;
+}
+
+
+// @verified - d
+float PartyGuideLaneBounds(float &low, float &high) {
+    const ProcGenInfo &guide = *g_pProcGenInfos;
+    std::int32_t parameter = static_cast<std::int32_t>(guide.parameter);
+    if (parameter < guide.low)
+        parameter = guide.low;
+    std::int32_t clamped = guide.high;
+    if (clamped > parameter)
+        clamped = parameter;
+    if (!guide.maze)
+        GetNpcRouteLaneBounds(guide.name, clamped, &low, &high);
+    else {
+        low = -1.5f;
+        high = 1.5f;
+    }
+    return (low < 0.0f ? -low : low) + (high < 0.0f ? -high : high);
+}
+
+
+void DrawPartyGuideDebug() {
+    const ProcGenInfo &guide = *g_pProcGenInfos;
+    SetDebugScreenTextPosition(20, 5);
+    shenmue_s2_event_DebugLogToScreen("FLAG: %d\n", guide.initialised);
+    shenmue_s2_event_DebugLogToScreen("TYPE: %d\n", guide.maze);
+    shenmue_s2_event_DebugLogToScreen("TIME: %d\n", static_cast<std::int32_t>(guide.parameter));
+    shenmue_s2_event_DebugLogToScreen(" STA: %d\n", guide.low);
+    shenmue_s2_event_DebugLogToScreen(" END: %d\n", guide.high);
+    shenmue_s2_event_DebugLogToScreen("LINE: %d\n", guide.partition);
+    shenmue_s2_event_DebugLogToScreen(" DIR: %d\n", guide.direction);
+    shenmue_s2_event_DebugLogToScreen("TGTL: %d\n", guide.targetPartition);
+    shenmue_s2_event_DebugLogToScreen("TGTT: %d\n", guide.targetParameter);
+}
+
+
+std::int32_t PartyGuideCallbackReinitialize() {
+    return PartyGuideInitializeAdapter();
+}
+
+
+void PartyGuideCallbackBackward() {
+    SetPartyGuideBackward();
+}
+
+
+PartyCompanion *FindPartyCompanionByName(shen_name name) {
+    Character *const character = ctrlGetScenarioChara(name);
+    return character ? static_cast<PartyCompanion *>(charFindComp(character, shen_name(PARTY_COMPANION_COMPONENT))) : 0;
+}
+
+
+// @verified - d
+std::int32_t ActivatePartyCompanion(shen_name name) {
+    EV_CheckWarmStartNpcRoute(name);
+    if (!EV_ForceLoadNpc(name))
+        return -1;
+    EV_CheckWarmStartNpcRoute(name);
+    Character *const character = ctrlGetScenarioChara(name);
+    if (!character)
+        return -1;
+    PartyCompanion *party = static_cast<PartyCompanion *>(charFindComp(character, SHEN_NAME(PTYC)));
+    if (party) {
+        party->character = character;
+        ReactivatePartyCompanion(*party);
+    } else {
+        if (AttachPartyCompanion(character) == -1)
+            return -1;
+        party = static_cast<PartyCompanion *>(charFindComp(character, SHEN_NAME(PTYC)));
+    }
+    EV_npcUpdateFlags(name);
+    model_component_detail::ReleaseCompletedPartyGuideRoute(*party);
+    if (name == SHEN_NAME(REN_))
+        mtwkSetTimeRelated(charFindMotionwork(character), 1, 0, GetNpcRestingMotion(character));
+    return 0;
+}
+
+
+// @verified - d
+std::int32_t FreeInactivePartyCompanion(shen_name name) {
+    if (ctrlGetScenarioChara(name))
+        return -1;
+    EV_npcFree(name);
+    return 0;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
+std::int32_t ptycCharaUnlock(shen_name name) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+    PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
+#endif
+    if (!party)
+        return -1;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (!(party->flags & 0x40000000U) && name != SHEN_NAME(SIN_))
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+    if ((party->flags & 0x40000000U) != 0 || name.name == SHEN_NAME(SIN_))
+        return 0;
+    if ((party->flags & 0x2000U) == 0)
+#endif
+        EV_npcLockUnlock(name);
+    party->flags &= ~2U;
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+    if ((party->flags & 0x2000U) == 0 && party->motionState == 5 && party->doorId != 0 && party->doorPhase > 0) {
+        party->doorPhase = 0;
+        ReleaseDoor(static_cast<std::int32_t>(party->doorId), ctrlGetScenarioCharaName(party->character));
+    }
+#endif
+    return 0;
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+std::int32_t DeactivatePartyCompanion(shen_name name) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return -1;
+    party->flags &= ~2U;
+    EV_CheckWarmStartNpcRoute(name);
+    EV_npcFree(name);
+    return 0;
+}
+
+
+// @verified - d
+std::int32_t SetPartyNpcRouteReload(shen_name name, std::int32_t enabled) {
+    if (enabled) {
+        if (!IsNpcRouteLoadedOrVisible(name))
+            EV_CheckWarmStartNpcRoute(name);
+    } else if (IsNpcRouteLoadedOrVisible(name)) {
+        EV_npcLockUnlock(name);
+    }
+    return 0;
+}
+
+
+std::int32_t SetPartyCompanionRouteReloadFlag(shen_name name, std::int32_t enabled) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return -1;
+    if (enabled) {
+        party->flags |= 0x10U;
+        EV_CheckWarmStartNpcRoute(name);
+    } else {
+        party->flags &= ~0x10U;
+        EV_npcLockUnlock(name);
+    }
+    return 0;
+}
+
+
+std::int32_t IsPartyGuideCharaPresent() {
+    if (ctrlGetScenarioChara(SHEN_NAME(M01_)))
+        return 1;
+    return 0;
+}
+
+
+shen_name GetPartyGuideCharaName() {
+    if (ctrlGetScenarioChara(SHEN_NAME(M01_)))
+        return SHEN_NAME(M01_);
+    return shen_name(0);
+}
+
+
+// @verified - d
+std::int32_t ResetPartyCompanionTransition(PartyCompanionTransition *) {
+    std::uint32_t *const words = reinterpret_cast<std::uint32_t *>(g_pPartyCompanionTransition);
+    words[0] = 0;
+    words[1] = 0;
+    words[2] = 0;
+    words[3] = 0;
+    words[4] = 0;
+    words[5] = 0;
+    words[6] = 0;
+    words[7] = 0;
+    return 0;
+}
+
+
+// @verified - d
+std::int32_t ExportPartyCompanionTransition(std::uint8_t *state) {
+    PartyCompanion *party = 0;
+    shen_name names[4] = {SHEN_NAME4('R', 'E', 'N', '_'), SHEN_NAME4('S', 'I', 'N', '_'), SHEN_NAME4('J', 'O', 'P', '_'), 0};
+    shen_name name = 0;
+    PartyCompanionTransition *const transition = g_pPartyCompanionTransition;
+    std::int32_t result = 0;
+    for (const shen_name *entry = names; *entry; ++entry) {
+        name = *entry;
+        party = FindPartyCompanionByName(name);
+        if (party)
+            break;
+    }
+    if (!party) {
+        std::uint32_t *const words = reinterpret_cast<std::uint32_t *>(transition);
+        words[0] = 0;
+        words[1] = 0;
+        words[2] = 0;
+        words[3] = 0;
+        words[4] = 0;
+        words[5] = 0;
+        words[6] = 0;
+        words[7] = 0;
+    } else {
+        transition->present = 1;
+        transition->name = name;
+        GetCharacterWorldPosition(party->character, &transition->position);
+        transition->yaw = static_cast<std::int16_t>(GetCharacterWorldYaw(party->character));
+        transition->routeIndex = party->routeIndex;
+        transition->routeMarker = party->routeMarker;
+        transition->mode = party->mode;
+        result = 1;
+    }
+    std::memcpy(state, transition, sizeof(*transition));
+    ResetPartyCompanionTransition(transition);
+    return result;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t PTYCUtils(shen_name name, std::int32_t command, std::int32_t argument) {
     PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
@@ -1992,18 +4409,258 @@ std::int32_t PTYCUtils(shen_name name, std::int32_t command, std::int32_t argume
 void ResetPartyCompanionTransition() {
     partyTransition = {};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 std::uint32_t GetPartyCompanionTransitionPending() {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    return g_pPartyCompanionTransition->present;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     return partyTransition.present;
+#endif
 }
 
+
+// @verified - d
 std::int32_t ImportPartyCompanionTransition(const PartyCompanionTransition &state) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    PartyCompanionTransition *const transition = g_pPartyCompanionTransition;
+#endif
     if (!state.present)
         return -1;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    *transition = state;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     partyTransition = state;
+#endif
+    return 0;
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+void PartyCompanionTransitionNullsub1() {
+}
+
+
+void PartyCompanionTransitionNullsub2() {
+}
+
+
+std::int32_t SetPartyCompanionFlag2(shen_name name, std::int32_t enabled) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return -1;
+    std::int32_t previous = static_cast<std::int32_t>(party->flags) >> 1;
+    previous &= 1;
+    if (enabled) {
+        if (previous)
+            return previous;
+        party->flags |= 0x1002U;
+        party->behaviorState = 0;
+        party->motionState = 0;
+        party->motionPhase = 0;
+        return previous;
+    }
+    if (!previous)
+        return 0;
+    party->flags &= ~2U;
+    party->flags &= ~0x1000U;
+    if (mtwkSetExtraFlag(party->motionWork, 58, 1))
+        mtwkCopyTransition(party->motionWork, 0, party->yaw, 13, 0);
+    return previous;
+}
+
+
+std::int32_t SetPartyCompanionFlag2000(shen_name name, std::int32_t enabled) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return -1;
+    std::int32_t previous = static_cast<std::int32_t>(party->flags) >> 13;
+    previous &= 1;
+    if (enabled) {
+        if (previous == 0) {
+            const volatile std::uint32_t &flags = party->flags;
+            party->flags = flags | 0x2000U;
+            if (mtwkSetExtraFlag(party->motionWork, 58, 1))
+                mtwkCopyTransition(party->motionWork, 0, party->yaw, 13, 0);
+            TouchCameraMathWork(reinterpret_cast<void *>(name));
+        }
+        return previous;
+    }
+    if (!previous)
+        return 0;
+    party->flags &= ~0x2000U;
+    party->behaviorState = 0;
+    party->motionState = 0;
+    party->motionPhase = 0;
+    TouchCameraMathWork(reinterpret_cast<void *>(name));
+    return previous;
+}
+
+
+std::int32_t RequestPartyCompanionPosition(shen_name name, const Vector3 *position, std::int16_t yaw) {
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party || !position || party->mode != 1)
+        return -1;
+    if (model_component_detail::Vector3_ComputeSquaredDistance(*position, party->position) < 0.3025f && !party->behaviorState)
+        return 1;
+    party->requestedPosition = *position;
+    party->requestedPositionYaw = yaw;
+    party->flags |= 0x10000U;
     return 0;
 }
 
+
+// @verified - d
+std::int32_t PTYCUtils(shen_name name, std::int32_t command, std::int32_t argument) {
+    std::int32_t result = 0;
+    PartyCompanion *const party = FindPartyCompanionByName(name);
+    if (!party)
+        return 0;
+    switch (command) {
+    case 0:
+        result = SetPartyCompanionMode(name, argument);
+        break;
+    case 1:
+        if (argument >= 0)
+            party->routeMarker = argument;
+        else
+            result = party->routeMarker;
+        break;
+    case 2:
+        result = SetPartyCompanionFlag2(name, argument);
+        break;
+    case 3:
+        result = SetPartyCompanionFlag2000(name, argument);
+        break;
+    case 4:
+        result = plymGetPartyAuthorStatus(name);
+        break;
+    case 5: {
+        const Vector3 *const *const request = reinterpret_cast<const Vector3 *const *>(argument);
+        result = RequestPartyCompanionPosition(name, request[0], *reinterpret_cast<const std::int16_t *>(request + 1));
+        break;
+    }
+    case 6:
+        result = IsPartyCompanion(name);
+        break;
+    case 7:
+        result = FindPTYCForChara(name);
+        break;
+    case 8:
+        result = DeactivatePartyCompanion(name);
+        break;
+    }
+    return result;
+}
+
+
+std::int32_t PartyGuideCallbackInitialize() {
+    return InitializePartyGuide();
+}
+
+
+std::int32_t PartyGuideCallbackPick(const Vector3 *point) {
+    return PickClosestTargetForPlacement(point);
+}
+
+
+void PartyGuideCallbackFind(const Vector3 *point) {
+    FindClosestTargetForPlacement(point);
+}
+
+
+std::int32_t PartyGuideCallbackEndState() {
+    return PartyGuideEndState();
+}
+
+
+std::int32_t PartyGuideCallbackDirection() {
+    return SetPartyGuideDirection();
+}
+
+
+void PartyGuideCallbackRouteHint(std::int32_t routeIndex) {
+    SetPartyGuideRouteHint(routeIndex);
+}
+
+
+void PartyGuideCallbackSample(Vector3 *point, std::int16_t *yaw) {
+    SamplePartyGuide(point, yaw);
+}
+
+
+std::int32_t PartyGuideCallbackAdvance(float distance) {
+    return AdvancePartyGuide(distance);
+}
+
+
+float PartyGuideCallbackLaneBounds(float &low, float &high) {
+    return PartyGuideLaneBounds(low, high);
+}
+
+
+// @verified - d
+std::int32_t AttachPartyCompanion(Character *character) {
+    using namespace model_component_detail;
+    PartyCompanion *const party =
+        static_cast<PartyCompanion *>(AllocateModelComponent(character, SHEN_NAME4('P', 'T', 'Y', 'C'), sizeof(PartyCompanion), UpdatePartyCompanion));
+    if (!party)
+        return -1;
+    InitializePartyCompanion(*party);
+    party->flags |= 0x12U;
+    party->flags |= 0x800U;
+    party->flags |= 0x200U;
+    party->name = ctrlGetScenarioCharaName(character);
+    party->character = character;
+    party->embeddedMovement.character = character;
+    PlayerMovementState *const movement = &party->embeddedMovement;
+    movement->flags |= 0x24U;
+    SetCharacterMotionEnabled(character, 1);
+    cpamSetFlag(party->character, 1);
+    toggleCCMflagsByAmt(character, 0x300000U);
+    if (party->name == SHEN_NAME4('S', 'I', 'N', '_')) {
+        SetCharacterType(character, 4);
+        party->flags |= 0x800U;
+    }
+    party->routeMarker = 9;
+    if (g_currentMap != SHEN_NAME4('K', 'M', 'Z', '1'))
+        party->routeMarker = 0;
+    if (MatchAreaNamePattern(g_currentMap, SHEN_NAME4('K', 'M', 'Z', '?')))
+        party->flags |= 0x40000000U;
+    PartyCompanionTransition *const transition = g_pPartyCompanionTransition;
+    if (transition->present && party->name == transition->name) {
+        party->flags &= ~0x200U;
+        SetCharacterWorldPosition(character, &transition->position);
+        SetCharacterWorldYaw(character, transition->yaw);
+        party->routeIndex = transition->routeIndex;
+        party->routeMarker = transition->routeMarker;
+        party->mode = transition->mode;
+        transition->present = 0;
+        party->flags |= 0x20000000U;
+        party->character->alpha = 0.0f;
+        toggleCCMflagsByAmt(character, 0x200000U);
+        if (party->mode == 1)
+            party->flags |= 0x200U;
+    }
+    if (charFindMotionwork(character)) {
+        party->motionWork = charFindMotionwork(character);
+        movement->motion = party->motionWork;
+        ConfigurePartyMotion(*party);
+    }
+    return 0;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t ExportPartyCompanionTransition(PartyCompanionTransition &state) {
     std::int32_t present = 0;
@@ -2027,13 +4684,9 @@ std::int32_t ExportPartyCompanionTransition(PartyCompanionTransition &state) {
     partyTransition = {};
     return present;
 }
+#endif
 
-} // namespace shenmue::s2
-
-
-namespace shenmue { namespace s2 {
-
-// @verified - d
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (!defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
     PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(name));
     if (!party)
@@ -2044,5 +4697,8 @@ std::int32_t SetPartyConversationPaused(shen_name name, bool paused) {
         party->flags &= ~0x40U;
     return 0;
 }
+#endif
 
-} } // namespace shenmue::s2
+} // namespace s2
+
+} // namespace shenmue

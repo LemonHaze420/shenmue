@@ -300,7 +300,11 @@ bool npcIsNpcTaskActive();
 
 NpcRouteStateContext *FindNpcRouteStateContext(shen_name character);
 std::uint64_t IsNpcLoadedOrVisible(shen_name character);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsNpcRouteReady(shen_name character);
+#else
 bool IsNpcRouteReady(shen_name character);
+#endif
 void npcReleaseSpecialAnchor(shen_name character);
 bool IsNpcRouteActive(shen_name character);
 bool HasNpcFreeTalkFlag(shen_name character);

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "s2/face_expression.hpp"
-
 #include "common/math.hpp"
+#include "s2/face_data.hpp"
+#include "s2/face_expression.hpp"
 
 #include <array>
 #include <cstddef>
@@ -27,47 +27,7 @@ enum FacialNodeSelection : std::int32_t {
     FacialNodeReplacement = 1,
 };
 
-
-
 #pragma pack(push, 4)
-struct FacialMorphGroup {
-    std::int32_t count;
-    std::int32_t offset;
-};
-
-
-struct FacialModelData {
-    std::uint32_t signature;
-    std::uint32_t size;
-    std::uint32_t version;
-    std::int32_t modelOffset;
-    std::int32_t reserved10;
-    std::int32_t reserved14;
-    std::uint32_t reserved18;
-    std::int32_t upperExpression;
-    std::int32_t expression;
-    std::int32_t mouthExpression;
-    float upperFaceFrame;
-    float upperFaceDuration;
-    float lowerFaceFrame;
-    float lowerFaceDuration;
-    float eyelidFrame;
-    float eyelidDuration;
-    float mouthFrame;
-    float mouthDuration;
-    std::uint32_t flags;
-    float expressionScale;
-    float eyelid0OuterWeight;
-    float eyelid1OuterWeight;
-    float eyelid0InnerWeight;
-    float eyelid1InnerWeight;
-    std::array<float, 30> shapeCoefficients;
-    std::int32_t eyelid0Mode;
-    std::int32_t eyelid1Mode;
-    std::array<std::int32_t, 6> lookLimits;
-    std::array<FacialMorphGroup, 10> groups;
-};
-
 struct FacialMorphVertex {
     Vector3 neutral;
     Vector3 start;
@@ -82,24 +42,24 @@ struct FacialEyeControl {
     std::array<std::byte, 14> reserved00;
     std::uint8_t rotationFlags;
     std::uint8_t reserved0f;
-    Vector3 target;
+    Vector3 target; // 0x10
     std::uint32_t reserved1c;
-    MT7Node *headNode;
-    MT7Node *eyeNode;
+    MT7Node *headNode; // 0x20
+    MT7Node *eyeNode;  // 0x28
     std::uint32_t reserved30;
-    Vector3i headRotation;
-    Vector3i eyeRotation;
-    Vector3i targetHeadRotation;
-    Vector3i targetEyeRotation;
-    Vector3i headRotationStep;
-    std::array<std::int32_t, 2> eyeRotationStep;
+    Vector3i headRotation;                       // 0x34
+    Vector3i eyeRotation;                        // 0x40
+    Vector3i targetHeadRotation;                 // 0x4c
+    Vector3i targetEyeRotation;                  // 0x58
+    Vector3i headRotationStep;                   // 0x64
+    std::array<std::int32_t, 2> eyeRotationStep; // 0x70
     std::int32_t pitchUpper;
     std::int32_t pitchLower;
     std::int32_t headYawUpper;
     std::int32_t headYawLower;
     std::int32_t eyeYawUpper;
     std::int32_t eyeYawLower;
-    std::int16_t transitionFrames;
+    std::int16_t transitionFrames; // 0x90
     std::int16_t elapsedFrames;
     std::int32_t reserved94;
 };
@@ -142,6 +102,12 @@ struct FacialMorphControl {
     const LegacyVertexBufferBinding *buffer{};
     std::uint32_t byteOffset{};
 };
+
+#if defined(SHENMUE_NULL_LIBRARY)
+#pragma region NullLibrary
+extern void (*g_nullFacialVertexWritten)(const FacialMorphControl *, const Vector3 *);
+#pragma endregion
+#endif
 
 struct FacialModelResource {
     FacialModelData data{};

@@ -1,6 +1,31 @@
 #include "shenmue.h"
 
-
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/npc_data_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/character_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/player_state_dc.hpp"
+#include "s2/player_ground_state_dc.hpp"
+#include "s2/door_control_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/weather_dc.hpp"
+#include "s2/date_time.hpp"
+#include "s2/npc_area_route.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/scenario_flags_dc.hpp"
+#include "s2/motion_registry_dc.hpp"
+#include "s2/motion_ground_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "s2/qron_dc.hpp"
+#include "common/matrix_stack.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include <cmath>
+#include <cfloat>
+#include <cstring>
+#else
 #include "s2/npc_package.hpp"
 
 #include "s2/archive_data.hpp"
@@ -46,14 +71,30 @@
 #include <vector>
 
 #include "s2/npc_package_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 using namespace npc_package_detail;
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int64_t npcGetCurrentTimeSimState();
+std::int64_t ResetCurrentTimeSimState();
+std::int64_t npcSetCurrentTimeSimStateEnabled();
+std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 namespace npc_package_detail {
 
-
-
+// The loading presentation yield native inlines in its long NPC rebuild loops: while the loading screen draws, a loop that
+// has run past 15000 x 12.5 timer units since the last present draws the loading modes, flushes and profiles a frame.
 void YieldNpcLoadingPresentation() {
     npcSimDeltaTime = GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta);
     if (!IsLoadingDrawActive())
@@ -107,7 +148,13 @@ void TickNpcRouteEntry(NpcRouteLiveEntry &entry, std::int32_t currentTime) {
             if (static_cast<std::size_t>(entry.poolIndex) >= npcAuthoredEntryCount) {
                 entry.node = ctrlGetScenarioChara(entry.name);
                 if (entry.node) {
-                    entry.motionWork = FindMotionWork(entry.node);
+                    entry.motionWork =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(entry.node);
                     npcSlotFlags[entry.poolIndex] |= 1U;
                 } else
                     npcSlotFlags[entry.poolIndex] &= ~1U;
@@ -188,7 +235,13 @@ void TickNpcRouteLiveEntries() {
         npcPlayerDisplacement = std::sqrt(x * x + y * y + z * z);
         if (std::abs(npcPlayerDisplacement) < 0.00000011920929f)
             npcPlayerDisplacement = 0.0099999998f;
-        if (MotionWork *const work = FindMotionWork(g_playerRuntime.character))
+        if (MotionWork *const work =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(g_playerRuntime.character))
             npcPlayerCenter = work->runtime.clusterCenter;
         npcPlayerRadius = 0.34999999f;
         npcSchedule.floor = static_cast<std::int32_t>(GetQronNextStream());
@@ -283,19 +336,123 @@ void TickNpcRouteLiveEntries() {
 }
 } // namespace npc_package_detail
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+extern DateTime npcCurrentDateTime;
+
+extern std::uint32_t npcCurrentSeconds, npcRouteBuildCount;
+
+extern std::int32_t npcCrowdPhase, npcReloadPassStarted;
+
+extern float npcStreamThrottle, npcStreamThrottleWithBias, npcHalfHourWeatherForecast;
+
+extern Vector3 npcPlayerPosition;
+
+void InterpretNpcScheduleEntry(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+void mtwkSetEnvironmentEnabled(MotionWork *work, std::uint32_t enabled);
+
+void RankNpcStreamEntry(NpcRouteLiveEntry *entry);
+
+extern std::int32_t npcScheduleSimulationActive, npcSimulationSinglePass, npcSimulationTime, npcSimulationStop;
+
+std::int32_t npcCurrentTimeSimState = 0;
+
+void ProcessNpcDeferredBranches(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+void PrimeNpcInterpreter(NpcRouteLiveEntry *entry);
+
+std::int32_t PollNpcStateCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t ExecuteNpcScheduleOpcode(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t TickNpcRouteStateContext(NpcRouteStateContextPrefix *context);
+
+std::int32_t TickNpcSpecialMotion(NpcRouteLiveEntry *entry);
+
+void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry);
+
+void BeginNpcAreaRoute(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t TickNpcAreaRouteState(NpcRouteLiveEntry *entry);
+
+void UpdateNpcRouteQueryState(NpcRouteLiveEntry *entry, std::int32_t moving);
+
+Character *ctrlGetRootNode();
+
+bool CheckNpcSpecialMotionTarget(shen_name name, Character *character);
+
+std::int32_t StopNpcFollowingMotion(shen_name name);
+
+std::int32_t NpcRouteConditionsChanged(NpcRouteLiveEntry *entry);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t npcGetCurrentTimeSimState();
+std::int32_t npcSetCurrentTimeSimStateEnabled();
+std::int32_t ResetCurrentTimeSimState();
+void npcAdvanceTime(std::int32_t hour, std::int32_t minute);
+void TickNpcTimedMotion(NpcRouteLiveEntry *entry);
+std::int32_t UpdateNpcViewVisibility(NpcRouteLiveEntry *entry);
+void InterpretNpcScheduleEntry(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+void RankNpcStreamEntry(NpcRouteLiveEntry *entry);
+void TickNpcRouteSlices(std::int32_t currentTime);
+#else
+namespace npc_package_detail {
+
+void YieldNpcLoadingPresentation();
+void SelectNpcStreamEntries();
+void TickNpcRouteEntry(NpcRouteLiveEntry &entry, std::int32_t currentTime);
+void UpdateNpcStreamThrottle(bool forceForecast);
+void TickNpcRouteLiveEntries();
+
+} // namespace npc_package_detail
+
+std::int64_t npcGetCurrentTimeSimState();
+std::int64_t npcSetCurrentTimeSimStateEnabled();
+std::int64_t npcResetDateTimeIfNeeded();
+std::int64_t ResetCurrentTimeSimState();
+std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute);
+void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int32_t skipAuthoredSeed);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t npcGetCurrentTimeSimState() {
+    return npcCurrentTimeSimState;
+}
+
+#else
+
 std::int64_t npcGetCurrentTimeSimState() {
     return static_cast<std::uint32_t>(npcCurrentTimeSimState);
 }
 
-std::int64_t ResetCurrentTimeSimState() {
-    npcCurrentTimeSimState = 0;
-    return 0;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t npcSetCurrentTimeSimStateEnabled() {
+    npcCurrentTimeSimState = 1;
+    return 1;
 }
+
+#else
 
 std::int64_t npcSetCurrentTimeSimStateEnabled() {
     npcCurrentTimeSimState = 1;
     return 1;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::int64_t npcResetDateTimeIfNeeded() {
     const std::int64_t result = npcGetCurrentTimeSimState();
@@ -304,6 +461,49 @@ std::int64_t npcResetDateTimeIfNeeded() {
     shenGetCurrentDateTime(npcPausedDateTime);
     return npcSetCurrentTimeSimStateEnabled();
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ResetCurrentTimeSimState() {
+    npcCurrentTimeSimState = 0;
+    return 0;
+}
+
+#else
+
+std::int64_t ResetCurrentTimeSimState() {
+    npcCurrentTimeSimState = 0;
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void TickNpcTimedMotion(NpcRouteLiveEntry *entry) {
+    if (entry->timedMotionHandle && entry->timedMotionHandle->character && TickTimedNodeMotion(&entry->timedMotionHandle->animation) == 1) {
+        NpcTimedMotionSlotPrefix *const slot = entry->timedMotionHandle;
+        InitializeTimedNodeMotion(
+            &slot->animation, slot->character->model, reinterpret_cast<const TimedNodeMotionHeader *>(MOTN_GetDataForAnimId(slot->motion)));
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
+    const std::uint32_t end = (static_cast<std::uint32_t>(hour) * 3600U + static_cast<std::uint32_t>(minute) * 60U) * 2U;
+    SimulateNpcScheduleTime(0, static_cast<std::int32_t>(end), 0);
+    ResetCurrentTimeSimState();
+}
+
+#else
 
 std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
     const std::int64_t result = npcGetCurrentTimeSimState();
@@ -340,6 +540,10 @@ std::int64_t npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
     return ResetCurrentTimeSimState();
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int32_t skipAuthoredSeed) {
     ActivateNpcAreaRoutes(false);
     npcIsTimeAdvancing = 1;
@@ -362,5 +566,360 @@ void BuildRouteTimeWindow(std::int32_t startTick, std::int32_t endTick, std::int
     npcTimeAdvanceBreak = 0;
     ActivateNpcAreaRoutes(true);
 }
-} // namespace shenmue::s2
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void TickNpcRouteSlices(std::int32_t currentTime) {
+    NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+    for (std::int32_t index = 0; index < npcRouteEntryCount; ++index, ++entry) {
+        if (entry->flags & 0x100000U)
+            continue;
+        const std::int32_t slice = index * 5 / npcRouteEntryCount;
+        if (entry->flags & 0x4000000U)
+            npcSlotFlags[index] |= 2U;
+        if (npcSlotFlags[index] || npcCrowdPhase == slice)
+            InterpretNpcScheduleEntry(entry, currentTime);
+        if (npcCrowdPhase == slice)
+            RankNpcStreamEntry(entry);
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void InterpretNpcScheduleEntry(NpcRouteLiveEntry *entry, std::int32_t currentTime) {
+    Vector3 probe;
+    Vector3 point;
+    Vector3 position;
+    Vector3i rotation;
+    if (entry->flags & 8U) {
+        if ((&entry->stateContext)->routeFlags & 0x10U) {
+            MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            entry->node = scenFindChara(control->scenarioTask, entry->name);
+            if (entry->node) {
+                entry->motionWork = charFindMotionwork(entry->node);
+                npcSlotFlags[entry->poolIndex] |= 1U;
+            } else
+                npcSlotFlags[entry->poolIndex] &= ~1U;
+            if (!npcSlotFlags[entry->poolIndex])
+                (&entry->stateContext)->routeFlags |= 0x10000U;
+            else
+                (&entry->stateContext)->routeFlags &= ~0x10000U;
+            TickNpcRouteStateContext(&entry->stateContext);
+        }
+        if ((entry->flags & 0x80U) && static_cast<std::int8_t>(entry->liveState) == 2)
+            TickNpcSpecialMotion(entry);
+        UpdateNpcMotionAttachments(entry);
+        return;
+    }
+    if (npcGetCurrentTimeSimState())
+        return;
+    entry->previousPosition = entry->localPosition;
+    if (!(entry->flags & 0x10U)) {
+        if (entry->nextTimedCommand && currentTime >= entry->nextTimedCommandTime && (entry->flags & 0x20000U)) {
+            entry->currentCommand = entry->nextTimedCommand;
+            entry->scheduleProgress = 1;
+            entry->waitDuration = 0;
+        }
+        ProcessNpcDeferredBranches(entry, currentTime);
+        switch (static_cast<std::int8_t>(entry->scheduleProgress)) {
+        case 0:
+            PrimeNpcInterpreter(entry);
+        case 1:
+            if (PollNpcStateCallback(entry) != 1) {
+                std::int32_t result;
+                do {
+                    result = ExecuteNpcScheduleOpcode(entry, currentTime);
+                    if (result == 2) {
+                        result = 0;
+                        npcSimulationStop = 1;
+                    }
+                    ProcessNpcDeferredBranches(entry, currentTime);
+                } while (result);
+            }
+            break;
+        case 2:
+            if (currentTime - entry->waitStartTime >= entry->waitDuration) {
+                entry->waitDuration = 0;
+                entry->scheduleProgress = 1;
+            }
+            break;
+        case 3:
+        case 4:
+            break;
+        }
+    }
+    switch (static_cast<std::int8_t>(entry->liveState)) {
+    case 0:
+        break;
+    case 13:
+        TickNpcSpecialMotion(entry);
+        if (!CheckNpcSpecialMotionTarget(entry->name, ctrlGetRootNode()) || ((&entry->stateContext)->flags & 1U) == 0) {
+            StopNpcFollowingMotion(entry->name);
+            break;
+        }
+    case 1:
+        if (!npcSlotFlags[entry->poolIndex])
+            (&entry->stateContext)->routeFlags |= 0x10000U;
+        else
+            (&entry->stateContext)->routeFlags &= ~0x10000U;
+        if (!TickNpcRouteStateContext(&entry->stateContext))
+            break;
+        if (entry->node)
+            mtwkSetSpeed(entry->motionWork, entry->motionSpeed, LowerBody);
+        entry->currentAreaPoint = entry->pendingAreaPoint;
+        if (*reinterpret_cast<const std::uint32_t *>(entry->currentCommand) == 0x2aU) {
+            if (reinterpret_cast<const std::uint32_t *>(entry->currentCommand)[3])
+                EV_SetPlayerFlag(PlayerFlagWriteMode_Internal, reinterpret_cast<const std::uint32_t *>(entry->currentCommand)[1],
+                    reinterpret_cast<const std::uint32_t *>(entry->currentCommand)[2]);
+            else
+                stepUpdateFlagUtil(
+                    reinterpret_cast<const std::uint32_t *>(entry->currentCommand)[1], reinterpret_cast<const std::uint32_t *>(entry->currentCommand)[2]);
+            entry->currentCommand += 16;
+        }
+        if (GetNpcAreaPointRouteState(entry->currentAreaPoint))
+            BeginNpcAreaRoute(entry, currentTime);
+        else {
+            entry->scheduleProgress = 1;
+            entry->liveState = 0;
+        }
+        UpdateNpcRouteQueryState(entry, 0);
+        break;
+    case 2:
+        TickNpcSpecialMotion(entry);
+        break;
+    case 3:
+        if (entry->flags & 0x400U)
+            TickNpcTimedMotion(entry);
+        break;
+    case 7:
+        probe = entry->localPosition;
+        probe.y += 1.0f;
+        if (!camCtrlIsInsideDepthScaledRect(probe, 1.0f)) {
+            probe = entry->localPosition;
+            Vector3i &savedRotation = reinterpret_cast<Vector3i &>(point);
+            savedRotation.x = entry->rotation.x;
+            savedRotation.y = entry->rotation.y;
+            savedRotation.z = entry->rotation.z;
+            entry->localPosition = entry->alternatePosition;
+            entry->rotation.x = entry->alternateRotation.x;
+            entry->rotation.y = entry->alternateRotation.y;
+            entry->rotation.z = entry->alternateRotation.z;
+            entry->alternatePosition = probe;
+            entry->alternateRotation.x = savedRotation.x;
+            entry->alternateRotation.y = savedRotation.y;
+            entry->alternateRotation.z = savedRotation.z;
+            if (entry->node) {
+                SetCharacterWorldPosition(entry->node, &entry->localPosition);
+                charaSetWorldRot(entry->node, entry->rotation);
+            }
+        }
+        break;
+    case 11:
+        entry->liveState = 12;
+        break;
+    case 12: {
+        if (!entry->node || !npcMotionClipFrames[static_cast<std::int8_t>(entry->retained324)] || mtwkSetRegionFlag(entry->motionWork, 0x44, 1, LowerBody))
+            break;
+        SampleNativeMotionRoot(
+            npcMotionClipFallbackAnimations[static_cast<std::int8_t>(entry->retained324)], charGetMotionRigType(entry->node), entry->animationFrame, &point);
+        GetCharacterWorldPosition(entry->node, &position);
+        GetCharacterWorldRotation(entry->node, &rotation);
+        matrix_stack::PushUnitMatrix();
+        Matrix4x4::SetViewMatrixFromEuler(rotation.x, rotation.y, rotation.z);
+        Matrix4x4::TransformPoint(point, point);
+        PopCurrentMatrix(1);
+        position.x -= point.x;
+        position.z -= point.z;
+        SetCharacterWorldPosition(entry->node, &position);
+        entry->liveState = 8;
+    }
+    case 8:
+        if (!npcMotionClipFrames[static_cast<std::int8_t>(entry->retained324)])
+            break;
+        entry->animationFrame = ++entry->animationFrame >= static_cast<std::int32_t>(npcMotionClipFrameCounts[static_cast<std::int8_t>(entry->retained324)]) ?
+            0 :
+            entry->animationFrame;
+        if (entry->node) {
+            point = entry->localPosition;
+            EV_SetCharDisplay(entry->node, CVM_MotionworkDisplayCheck, camCtrlIsInsideDepthScaledRect(point, GetCharacterDisplayRadius(entry->node)));
+            Matrix4x4::TransformPoint(point, point);
+            do {
+                float *view = &entry->node->viewPosition.x;
+                const float *source = &point.x;
+                *view++ = *source++;
+                *view++ = *source++;
+                *view = *source;
+            } while (0);
+            const float distance = Vector3::CalcMagnitude(point);
+            if (distance < 1.0e-5f)
+                entry->node->drawDistance = 0.0f;
+            else
+                entry->node->drawDistance = distance;
+            mtwkSetDrawOverrideData(entry->motionWork,
+                npcMotionClipFrames[static_cast<std::int8_t>(entry->retained324)] +
+                    npcMotionClipBoneCounts[static_cast<std::int8_t>(entry->retained324)] * entry->animationFrame);
+        }
+        break;
+    case 9:
+        TickNpcAreaRouteState(entry);
+        if (entry->routeMotionState == 23) {
+            entry->scheduleProgress = 1;
+            entry->liveState = 0;
+            npcSlotFlags[entry->poolIndex] &= ~4U;
+        }
+        break;
+    case 15:
+        if (entry->node && mtwkSetRegionFlag(entry->motionWork, 0x41, 1, LowerBody))
+            mtwkRequestMotion(entry->motionWork,
+                entry->currentMotionId = SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+                    static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8])),
+                LowerBody);
+        break;
+    case 14:
+        if (entry->node) {
+            if (currentTime == (currentTime / 60) * 60)
+                mtwkRequestMotion(entry->motionWork, entry->scriptRecord[4] ? 0x807b : 0x8039, RightArm);
+            else if (mtwkSetRegionFlag(entry->motionWork, 0x41, 1, LowerBody))
+                mtwkRequestRegionDetach(entry->motionWork, LowerBody);
+        }
+        break;
+    }
+    if (entry->attachedCharacter && entry->node) {
+        MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        Character *const target = scenFindChara(control->scenarioTask, entry->attachedCharacter);
+        if (target) {
+            GetCharacterWorldPosition(target, &position);
+            GetCharacterWorldRotation(target, &rotation);
+            matrix_stack::PushUnitMatrix();
+            Matrix4x4::preTranslate(position.x, position.y, position.z);
+            Matrix4x4::SetViewMatrixFromEuler(rotation.x, rotation.y, rotation.z);
+            Matrix4x4::preTranslate(entry->attachmentOffset.x, entry->attachmentOffset.y, entry->attachmentOffset.z);
+            matrix_stack::GetTranslation(&position);
+            PopCurrentMatrix(1);
+            SetCharacterWorldPosition(entry->node, &position);
+            rotation.y += entry->attachmentYaw;
+            entry->localPosition = position;
+            charaSetWorldRot(entry->node, rotation);
+        }
+    }
+    if (((&entry->stateContext)->routeFlags & 0x400U) && !(entry->flags & 7U)) {
+        if (NpcRouteConditionsChanged(entry) == 1) {
+            if (entry->stateContext.otherName)
+                ReleaseDoor(entry->stateContext.otherName, entry->stateContext.scriptOwner);
+            ClearNpcAreaRouteForEntry(entry);
+            InitializeNpcInterpreterState(entry, -1);
+        }
+        (&entry->stateContext)->routeFlags &= ~0x400U;
+    }
+    UpdateNpcMotionAttachments(entry);
+    UpdateNpcViewVisibility(entry);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position) {
+    if (!context) {
+        NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+        if (!entry)
+            return;
+        context = &entry->stateContext;
+    }
+    context->scenePosition = *position;
+    context->localPosition = context->scenePosition;
+    context->localPosition.x += npcRouteOrigin.x;
+    context->localPosition.z += npcRouteOrigin.z;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void RankNpcStreamEntry(NpcRouteLiveEntry *entry) {
+    *reinterpret_cast<float *>(entry->retained364) = entry->streamSortKey;
+    Vector3 point;
+    if (std::fabs(entry->localPosition.y) < FLT_EPSILON) {
+        camCtrlGetNextCamPos(&point);
+        am2Vector3SubtractInPlace(&point, &entry->localPosition);
+        point.y = 0.0f;
+    } else
+        Matrix4x4::TransformPoint(entry->localPosition, point);
+    point.x += point.x;
+    point.z += 4.5f;
+    entry->streamSortKey = Vector3::CalcMagnitude(point);
+    point.z += npcStreamThrottleWithBias;
+    entry->streamSortKey += Vector3::CalcMagnitude(point);
+    if (entry->streamSortKey < 50.0f)
+        npcSlotFlags[entry->poolIndex] |= 2U;
+    else
+        npcSlotFlags[entry->poolIndex] &= ~2U;
+    if (*reinterpret_cast<float *>(entry->retained36c) > FLT_EPSILON) {
+        entry->streamSortKey -= *reinterpret_cast<float *>(entry->retained36c);
+        if (entry->streamSortKey < 0.0f)
+            entry->streamSortKey = 0.0f;
+    } else if (*reinterpret_cast<float *>(entry->retained36c) < -FLT_EPSILON)
+        entry->streamSortKey -= *reinterpret_cast<float *>(entry->retained36c);
+    if (entry->flags & 0x10000U) {
+        entry->streamSortKey -= 2.0f;
+        if (entry->streamSortKey < 0.0f)
+            entry->streamSortKey = 0.0f;
+    }
+    if (entry->flags & 0x200U)
+        entry->streamSortKey = 0.0f;
+    else
+        entry->streamSortKey += 0.0099999998f;
+    NpcRouteLiveEntry *insertion = entry;
+    if (!entry->previous) {
+        while (insertion->next && insertion->next->streamSortKey < entry->streamSortKey)
+            insertion = insertion->next;
+    } else if (entry->streamSortKey < entry->previous->streamSortKey) {
+        while (insertion->previous) {
+            insertion = insertion->previous;
+            if (!(insertion->streamSortKey > entry->streamSortKey))
+                break;
+        }
+    } else if (!entry->next) {
+        while (insertion->previous) {
+            insertion = insertion->previous;
+            if (!(insertion->streamSortKey > entry->streamSortKey))
+                break;
+        }
+    } else if (entry->next->streamSortKey < entry->streamSortKey) {
+        while (insertion->next && insertion->next->streamSortKey < entry->streamSortKey)
+            insertion = insertion->next;
+    }
+    if (insertion == entry || insertion->next == entry)
+        return;
+    if (entry->previous)
+        entry->previous->next = entry->next;
+    else
+        npcCrowdHead = entry->next;
+    if (entry->next)
+        entry->next->previous = entry->previous;
+    entry->next = insertion->next;
+    entry->previous = insertion;
+    if (entry->next)
+        entry->next->previous = entry;
+    if (entry->previous)
+        entry->previous->next = entry;
+}
+
+#endif
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" void __attribute__((renesas)) shenmue_s2_event_npcAdvanceTime(std::int32_t hour, std::int32_t minute) {
+    shenmue::s2::npcAdvanceTime(hour, minute);
+}
+#else
+#endif

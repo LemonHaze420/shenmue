@@ -93,7 +93,11 @@ void StopScenarioSequence();
 
 void ResetScenarioEventObjectMapNames();
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t ScenarioCharacterIsRyo(shen_name name);
+#else
 bool ScenarioCharacterIsRyo(shen_name name);
+#endif
 
 std::int32_t GetScenarioFollowEligibility(shen_name character);
 
@@ -117,19 +121,31 @@ bool AssignScenarioCharacter(HLib::Task *scenarioTask, shen_name characterId, Ch
 
 bool UnassignScenarioCharacter(HLib::Task *scenarioTask, Character *character);
 
+#if SHENMUE_S2_GCC295
+std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag);
+#else
 std::int64_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag);
+#endif
 
 std::uint8_t ClearOrSetShenmueFlags(std::int32_t flag, std::int32_t enabled);
 
 std::int64_t SetScenarioByteStat(std::int32_t index, std::int32_t value);
 
+#if SHENMUE_S2_GCC295
+void EV_SetPlayerFlag(PlayerFlagWriteMode mode, std::int32_t flag, std::int32_t value);
+#else
 void EV_SetPlayerFlag(PlayerFlagWriteMode mode, std::int16_t flag, std::int32_t value);
+#endif
 
 void EV_GetCharaPosition(shen_name name, std::uint32_t bone, Vector3 *position, std::uint32_t mode);
 
 void GetScenarioCharacterEulerAngles(shen_name name, Vector3i *rotation, std::uint32_t flags);
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t DoesScenarioCharacterExist(shen_name name);
+#else
 bool DoesScenarioCharacterExist(shen_name name);
+#endif
 
 void EV_AT_SetPos(shen_name character, std::uint32_t flags, const Vector3 &requested);
 
@@ -164,7 +180,6 @@ extern EventAuvwRuntime eventAuvwRuntime;
 extern std::int32_t butterflyRegionIndex;
 
 extern std::int32_t butterflySlotIndex;
-
 
 inline constexpr shen_name eventTaskToken{SHEN_NAME(EVNT)};
 inline constexpr shen_name ryoName{SHEN_NAME(RYO_)};
@@ -277,14 +292,11 @@ extern std::int32_t scntExpressionResult;
 
 const std::byte *FindScenarioConversationRoot(ScenarioFreeTalkRecord &record, std::int32_t step);
 
-
 // The reset payload is ten scalar control bytes, four eight-word groups,
 // eight -1 record selections, three eight-byte groups, one sixteen-byte
 // group, four talk flags, three zero counters and a -1 current selection.
 inline constexpr Vector3 scenarioTalkDefaultLocation{};
 void SolveRyoMatrix(shen_name origin, shen_name other, std::uint16_t yaw, Vector3 *result);
-
-
 
 void ReleaseScenarioStepCharacter(ScenarioEventRuntime &scenario);
 
@@ -325,9 +337,6 @@ const shen_name *ScenarioParticipants(const ScenarioFreeTalkRecord &record);
 shen_name ResolveScenarioParticipant(shen_name participant, const ScenarioFreeTalkRecord &record);
 
 extern std::int32_t scenarioTalkHandPoseCommand[19][3];
-
-
-
 
 void scenEndConversation();
 

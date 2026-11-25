@@ -57,7 +57,11 @@ std::uint64_t SetScenarioCharacterFlag40(shen_name character, std::int32_t enabl
 void SetScenarioCharacterDrawControl(shen_name character, std::int32_t mode, std::int32_t argument);
 void SetScenarioCharacterType(shen_name character, std::int32_t type);
 bool IsScenarioCharacterDisplayEnabled(shen_name character);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t DoesScenarioCharacterExist(shen_name character);
+#else
 bool DoesScenarioCharacterExist(shen_name character);
+#endif
 void SetScenarioCharacterKillMode(shen_name character, std::uint32_t mode);
 void SetScenarioCharacterTransparency(shen_name character, float alpha);
 ReflectorBoardParams *SetScenarioReflectorBoardValues(shen_name character, const Vector4 *values);
@@ -73,7 +77,11 @@ void EV_AUVW_Initialize(std::int32_t state);
 void EV_AUVW_Update();
 void EV_MAZ_fishCtrl();
 Character *ctrlGetCharaByName(shen_name character);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t CheckIsArgEquZero(std::int32_t value);
+#else
 bool CheckIsArgEquZero(std::int32_t value);
+#endif
 void EV_SetFish(const Vector3 *minimum, const Vector3 *maximum, std::int32_t count, std::int32_t seed, Character *character);
 std::uint32_t EV_GetCurrentRefCount();
 void EV_SetCurrentRefCount(std::uint32_t count);

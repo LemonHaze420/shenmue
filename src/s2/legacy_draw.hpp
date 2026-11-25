@@ -104,8 +104,8 @@ static_assert(sizeof(LegacyBaseShaderParameters) == 0x80);
 static_assert(sizeof(LegacyShaderParameters) == 0x8a0);
 static_assert(offsetof(LegacyShaderParameters, constants) == 0x150);
 
-
-
+// S2 PC v1.07: the sixteen records captured by LegacyRenderPacketState.
+// World-to-view publication and per-model inverse transforms are separate.
 struct LegacyVertexColourStateRecord {
     std::uint16_t enabled{};
     std::uint16_t kind{};
@@ -137,6 +137,7 @@ static_assert(offsetof(LegacyVertexColourStateRecord, transformedPosition) == 0x
 static_assert(offsetof(LegacyVertexColourStateRecord, modelPosition) == 0x74);
 static_assert(offsetof(LegacyVertexColourStateRecord, range) == 0xa8);
 
+// Native SetupEffeTransform's default record, copied into all sixteen vertex-colour state records.
 inline constexpr LegacyVertexColourStateRecord LEGACY_VERTEX_COLOUR_STATE_DEFAULT{.enabled = 0,
     .kind = 0,
     .reserved04 = {1.0f, 1.0f, 1.0f, 1.0f},
@@ -159,6 +160,10 @@ inline constexpr LegacyVertexColourStateRecord LEGACY_VERTEX_COLOUR_STATE_DEFAUL
     .coneSine = 0.0f,
     .reservedB0 = 0};
 
+// Runtime-owned resources produced by the native XB01 preparation pass.
+// Read-only admissions retain resolved handles in these offset-keyed records.
+// Writable admissions publish the native handle words and retain their address
+// so game-owned texture animation changes are consumed at submission.
 struct LegacyDrawResources {
     std::vector<LegacyVertexBufferBinding> vertexBuffers;
     std::vector<LegacyIndexDraw> indexDraws;
@@ -181,8 +186,8 @@ bool UpdateLegacyWaveColours(
     std::span<const std::byte> bytes, std::uint32_t xb01Offset, LegacyDrawResources &resources, std::uint32_t diffuse, std::uint32_t specular);
 bool UpdateLegacyTextureUVs(std::span<const std::byte> bytes, std::uint32_t xb01Offset, LegacyDrawResources &resources, float scrollU, float scrollV);
 
-
-
+// A native MT7 XB01 swap borrows a different command allocation for one
+// hierarchy node, without replacing that node's children or local transform.
 struct LegacyNodeCommandOverride {
     std::uint32_t nodeSourceOffset{};
     std::span<const std::byte> bytes;
@@ -195,10 +200,10 @@ enum class LegacyModelShaderPath : std::uint8_t {
     Lambert,
 };
 
-
-
-
-
+// Walks the exact two-level XB01 stream used by PerformLegacyShaderPass:
+// outer packet lengths and inner command lengths are both measured in DWORDs.
+// The routine does not execute renderer state; it establishes and validates
+// the stream boundary consumed by the draw path.
 bool InspectLegacyDrawCommandStream(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, LegacyDrawCommandStreamStats &stats);
 
 bool PrepareLegacyDrawResources(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, LegacyDrawResources &resources);
@@ -209,16 +214,16 @@ bool RefreshLegacyDrawResources(
     std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &source, LegacyDrawResources &resources);
 bool UploadLegacyVertexBuffer(LegacyDrawResources &resources, std::uint32_t index, std::span<const std::byte> bytes);
 
-
-
+// InitShaderConstants/SetShaders state installed by the native renderer before
+// any legacy model is submitted.
 void InitializeLegacyDrawState();
-
+// Native post-effect banks initialized by InitializeLegacyPostProcessingParameters.
 void InitializeLegacyPostProcessingParameters();
-
+// Native retained-frame transition renderer.
 void InitializeLegacyPostFxTransitionTexture();
 void RenderLegacyPostFxTransition(float alpha);
 void ReleaseLegacyPostProcessingTargets();
-
+// Native startup owner for alpha matrices and process-lifetime render queues.
 bool InitSystemMatrices();
 bool GetLegacyRenderMask();
 std::uint32_t GetLegacyPerspectiveProjection();
@@ -228,6 +233,8 @@ bool SetLegacyBusyPreparingDraw(bool busy);
 void shenSetCharaDrawFlags(std::uint32_t mode);
 void shenSetRenderFlags();
 void SetLegacyStencilReference(std::uint32_t reference);
+void ResetLegacyDrawDiagnostics();
+void DumpLegacyDrawDiagnostics();
 void SetLegacyGlobalLighting(const Vector4 &colour);
 Vector3 GetLegacyParticleLightColour();
 Vector3 GetLegacyParticleLightDirection();
@@ -237,7 +244,7 @@ void SetLegacyFogMode(std::int32_t mode);
 void SetLegacyFogColour(std::uint32_t colour);
 void SetLegacyDepthFadeRange(float nearDistance, float farDistance);
 void SetLegacyDepthFadeBlue(float intensity);
-
+// Native SetAlphaOP: retain the area's operation and publish stage-0 setting 6.
 void SetLegacySavedAlphaOperation(std::uint32_t operation);
 float GetTexUVW(std::uint32_t index);
 std::int64_t SetTexUVW(std::uint32_t index, float width);
@@ -255,6 +262,7 @@ void SetLegacySelectedLightColour(std::uint32_t slot, const Vector4 &colour);
 std::uint32_t GetAvailableSelectedLightSlot();
 void SetSelectedLightIntensity(std::uint32_t slot, float intensity);
 float GetSelectedLightIntensity(std::uint32_t slot);
+// Native SetupEffeTransform: every vertex-colour state record takes the default record and the enabled mask clears.
 void SetupEffeTransform();
 void ClearLegacySelectedLights();
 void EnableStripEffect();
@@ -280,27 +288,27 @@ void SetShouldDomeRenderTo(std::int32_t enabled);
 void shenPushScreenOutputMatrixAndMultiply();
 bool GetModelCheck(const Vector3 *centre, float radius);
 LegacyModelShaderPath GetLegacyCharacterShaderPath();
-
-
+// PC v1.07 SetLegacyLambertFvfReference: publish the transformed Lambert FVF direction,
+// or clear its active marker when direction is null.
 void SetLegacyLambertFvfReference(const Vector3 *direction);
 void SetLegacyVertexColourType(std::int32_t type);
 std::int32_t GetLegacyVertexColourType();
 bool GetLegacyVertexColourStateEnabled(std::uint32_t slot);
 void SetLegacyVertexColourStateEnabled(std::uint32_t slot, bool enabled);
 
-
-
+// AccumulateProjectedModelMinimumHeight scans opcode-1 buffers carrying flag 2 under the active
+// model transform. Its native stride/4 walk is not the parsed mesh walk.
 bool AccumulateProjectedModelMinimumHeight(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, float &minimumHeight);
 
-
-
-
+// Native projected-shadow leaf. The map/global owner supplies the gameplay
+// gates and brackets the complete placement queue; this is not a model
+// material pass and never queues transparent draws.
 void SetLegacyProjectedShadowDirectionAndScale(const Vector3 &direction, float scale);
 std::uint32_t SetLegacyProjectedShadowStencilPartition(std::uint32_t partition);
 bool BeginLegacyProjectedShadowPass();
 std::uint32_t ExecuteProjectedShadowCommandStream(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources);
 void EndLegacyProjectedShadowPass();
-
+// Native DRWO character-shadow render-state bracket and stencil resolve.
 void BeginLegacyCharacterShadowFrame();
 bool SuspendLegacyCharacterShadowFrame();
 void ResumeLegacyCharacterShadowFrame(bool suspended);
@@ -311,14 +319,14 @@ std::uint32_t SetLegacyNavigationRenderMode(std::int32_t mode);
 void SetLegacyColourWriteMask(std::uint32_t mask);
 void PerformCommonShaderPass(std::uint32_t colour);
 
-
-
-
-
+// Native ShaderFunctions[2]/[3] selection: opaque packets submit immediately,
+// alpha-tested materials additionally queue their translucent pass, and
+// instance-alpha models queue every packet. The caller owns DepthPrepass
+// model transforms; return value counts immediate submissions only.
 std::uint32_t ExecuteLegacyDrawCommandStream(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources,
     LegacyModelShaderPath shaderPath = LegacyModelShaderPath::Lambert, float alpha = 1.0f);
 
-
+// Native PC legacy CPU material prefix; subcommands immediately follow this header.
 struct LegacyMaterialCommand {
     std::uint32_t header, renderFlags, blendFlags, reserved0c[3];
     Vector3 sortPosition;
@@ -346,8 +354,8 @@ inline constexpr std::array<std::uint32_t, 8> LEGACY_MATERIAL_SOURCE_BLEND_ARGUM
 inline constexpr std::array<std::uint32_t, 8> LEGACY_MATERIAL_DEPTH_ARGUMENTS{512, 516, 514, 518, 513, 517, 515, 519};
 inline constexpr std::array<std::uint32_t, 8> LEGACY_MATERIAL_DESTINATION_BLEND_ARGUMENTS{0, 1, 768, 769, 770, 771, 772, 773};
 
-
-
+// GAME's native opaque/instance-alpha model dispatch boundaries.
+// Port compatibility for FLAG's dormant 80-byte legacy debug material and four tagged vertex records.
 std::uint32_t SubmitLegacyFlagDebugQuadCompatibility(std::span<const std::byte> nativeModel);
 
 std::uint32_t ModelFlagDispatch_SetModelFlagDataOpaque(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources);
@@ -362,26 +370,27 @@ std::uint32_t ModelFlagDispatch_SetModelFlagDataAlpha(
 using LegacyUpdateCallback = void (*)(void *data);
 void SetUpdateCallback(LegacyUpdateCallback callback, void *data, float priority);
 
-
-
+// Native SD Transparent replay/reset boundary. Pending packet payloads retain
+// their source allocations and resource sidecars until this pass completes.
 std::uint32_t RenderQueuedLegacyShaderPasses();
 void BeginAndEndLegacyModelQuery(const std::byte *model);
 void AssignGeoLayout(std::span<const std::byte> modelBytes, std::uint32_t xb01Offset, const LegacyDrawResources &resources, std::int32_t flags);
 std::uint32_t GetTextureMappedData();
 std::uint32_t ComputeResolutionScaledIntensity();
 std::uint32_t FlushQueuedLegacyDrawPasses();
-
 std::uint32_t RenderQueuedLegacyDrawPasses();
 void SDTransparentHack();
 void ResetVertCount();
 void RenderQueuedLegacyDrawPassesOnly();
 std::int64_t ResetLegacyRenderQueue();
+// AIR's native immediate-submission wrappers use SetLegacyRenderQueueEnabled
+// only around one opaque or alpha draw, then restore native queue mode one.
 bool GetLegacyRenderQueueEnabled();
 void SetLegacyRenderQueueEnabled(bool enabled);
 void SetLegacyQueuedDrawDepthMode(std::int32_t fromGeometry, float fallbackDepth);
 
 struct LegacyEffectGpuFlags {
-
+    // Native emitter words +0x10, +0x14, and +0x18 respectively.
     std::uint32_t textureFlags{};
     std::uint32_t samplerControl{};
     std::uint32_t gpuFlags{};
@@ -395,6 +404,7 @@ inline constexpr std::array<std::array<std::uint32_t, 10>, 4> SAVED_ALPHA_OPERAT
     {{4, 2, 1, 3, 3, 2, 2, 2, 0, 1}},
 }};
 
+// Native effect-state owners shared by smoke and WeatherParticle's quad renderers.
 void SetEngineFlag(std::uint32_t index, std::uint32_t setting);
 void RestoreEngineFlag(std::uint32_t index);
 void SetAlphaFlags(std::uint32_t stage, std::uint32_t setting, std::uint32_t value);
@@ -430,18 +440,22 @@ struct LegacyFireQuad {
     float alpha{1.0f};
     // FireFftData graphics records +0x20 and +0x50 contain these handles.
     std::array<std::uint32_t, 2> textures{};
-
+    // Native selects graphics record zero when the tick low bit is set.
     std::uint32_t frameTick{};
 };
 
+// Native ParticleSystem draw boundary. BeginSmokeDraw maps the frame allocation,
+// AppendSmokeBillboard queues camera-space billboards, and EndSmokeDraw consumes
+// them. worldTransform is the already camera-composed current work transform from
+// the native callback loop; these APIs never apply CameraRuntime a second time.
 bool BeginSmokeDraw(std::uint32_t count, std::uint32_t emitterFlags, std::uint32_t texture, const LegacyEffectGpuFlags &gpuFlags, const Matrix4x4 &projection);
 bool AppendSmokeBillboard(
     const Matrix4x4 &worldTransform, const Vector3 &position, const Vector3i &rotation, bool xyz, float width, float height, std::uint32_t colour);
 void EndSmokeDraw();
 
-
-
-
+// Native QueueFireQuad/FlushQueuedLegacyDrawPasses boundary. The payload is copied into the retained
+// transparent queue and remains valid until FlushQueuedLegacyDrawPasses.
+// quad.worldTransform likewise contains the native camera-composed work value.
 bool QueueFireQuad(const LegacyFireQuad &quad);
 
 struct LegacyStripType3Vertex {

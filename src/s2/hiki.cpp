@@ -1,5 +1,6 @@
 #include "s2/hiki.hpp"
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "d3t/object_store.hpp"
 #include "s2/frame_pacing.hpp"
 #include "s2/legacy_draw.hpp"
@@ -9,8 +10,19 @@
 #include "s2/world_render.hpp"
 
 #include <cstring>
+#endif
 
-namespace shenmue::s2 {
+
+namespace shenmue {
+namespace s2 {
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void HIKI_Enqueue() {
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 g_hikiPosition{};
 std::int32_t g_hikiTextureIndex{};
 std::uint32_t g_effectDiffuseMask{};
@@ -18,8 +30,10 @@ HLib::Task *g_hikiTask{};
 HikiModelNode *g_hikiModel{};
 void *g_hikiModelImage{};
 std::uint8_t *g_hikiAlphaData{};
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 hikiLocalPosition{};
 std::int32_t hikiYaw{};
 std::int32_t hikiYawReserved{};
@@ -27,7 +41,9 @@ std::int16_t hikiScrollU{};
 std::int16_t hikiScrollV{};
 std::int32_t hikiSegmentCount{};
 float hikiSegmentSpacing{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t GetEffectTextureDimensionCode(std::int32_t dimension) {
     switch (dimension) {
@@ -49,7 +65,9 @@ std::uint32_t GetEffectTextureDimensionCode(std::int32_t dimension) {
         return 0;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 HikiTextureHeader *ParseHikiTexture(std::int32_t index, std::span<const std::byte> image, std::uint32_t flags) {
     const std::uint32_t *const words = reinterpret_cast<const std::uint32_t *>(image.data());
     const std::uint32_t width = static_cast<std::uint32_t>(static_cast<std::int16_t>(words[6]));
@@ -81,15 +99,19 @@ HikiTextureHeader *ParseHikiTexture(std::int32_t index, std::span<const std::byt
         record.header.words[2] = (record.header.words[2] & ~0x00100000U) | 0x40U;
     return &record.header;
 }
-} // namespace
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ResetHikiTextures() {
     g_effectDiffuseMask = 0xffffffffU;
     for (HikiTextureRecord &record : g_hikiTextures)
         record.texture.handle = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int64_t ResetHikiTaskData() {
     g_hikiTextureIndex = -1;
@@ -99,28 +121,38 @@ std::int64_t ResetHikiTaskData() {
     g_hikiTask = nullptr;
     return 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AssignHikiPosition(const Vector3 &position) {
     g_hikiPosition = position;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AssignHikiLocalPosition(const Vector3 &position) {
     hikiLocalPosition = position;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AssignHikiRotation(std::int32_t yaw) {
     hikiYaw = yaw;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AssignHikiTextureScroll(std::int16_t u, std::int16_t v) {
     hikiScrollU = u;
     hikiScrollV = v;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void HIKI_Enqueue() {
     if (g_hikiTextureIndex >= 0)
         return;
@@ -159,7 +191,9 @@ void HIKI_Enqueue() {
         g_hikiTask = HLib::EnqueueTaskWithoutParameter(Hiki_Callback, 13, 8, static_cast<std::int32_t>(TASK_HIKI.name));
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void Hiki_Callback(void *) {
     if (static_cast<double>(g_hikiOpacity) < 0.0001)
@@ -193,5 +227,8 @@ void Hiki_Callback(void *) {
     }
     Matrix4x4::Pop(1);
 }
+#endif
 
-} // namespace shenmue::s2
+
+} // namespace s2
+} // namespace shenmue

@@ -1,6 +1,16 @@
 #pragma once
 
 #include "s2/hlib.hpp"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+namespace shenmue { namespace s2 {
+extern std::int32_t g_hikiTextureIndex;
+extern void *g_hikiAllocation0, *g_hikiAllocation1, *g_hikiRetainedView;
+void ResetHikiTaskData();
+void HIKI_Enqueue();
+} } // namespace shenmue::s2
+#endif
+#else
 #include "s2/effect_texture.hpp"
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -98,3 +108,5 @@ void ApplyHikiTexture(std::int32_t textureIndex, HikiModelEntity &entity);
 void ScrollHikiTexture(std::int32_t textureIndex, std::int16_t u, std::int16_t v, HikiModelEntity &entity);
 
 } // namespace shenmue::s2
+
+#endif

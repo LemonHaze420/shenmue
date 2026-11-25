@@ -485,7 +485,11 @@ bool mtwkSetConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot, 
 void mtwkClearConstraintTarget(MotionWork *motionWork, MotionConstraintSlot slot);
 void mtwkClearAllConstraintTargets(MotionWork *motionWork);
 bool mtwkIsConstraintTargetSettled(const MotionWork *motionWork, MotionConstraintSlot slot);
+#if SHENMUE_S2_GCC295
+bool mtwkRequestMotion(MotionWork *motionWork, std::int32_t motionId, MotionRegion region);
+#else
 bool mtwkRequestMotion(MotionWork *motionWork, std::uint16_t motionId, MotionRegion region);
+#endif
 std::uint16_t mtwkGetAnimationId(const MotionWork *motionWork, MotionRegion region);
 std::int64_t mtwkIsCurrentAnimOpenEnded(const MotionWork *motionWork, MotionRegion region);
 
@@ -561,7 +565,11 @@ std::uint64_t mtwkSetTimeRelated(MotionWork *work, std::uint32_t mode, std::uint
 bool mtwkHasTrackCommand(const MotionWork *work, MotionRegion region);
 bool mtwkHasDependentTrack(const MotionWork *work);
 bool mtwkResetPositionTransition(MotionWork *motionWork);
+#if SHENMUE_S2_GCC295
+bool mtwkCopyTransition(MotionWork *motionWork, const Vector3 *position, std::int32_t yaw, std::int32_t operation, std::int32_t copyType);
+#else
 bool mtwkCopyTransition(MotionWork *motionWork, const Vector3 *position, std::uint16_t yaw, std::int16_t operation, std::int32_t copyType);
+#endif
 bool mtwkRequestPositionTransition(MotionWork *work, const Vector3 *position, std::uint16_t yaw, std::uint32_t motion, float startFrame);
 
 

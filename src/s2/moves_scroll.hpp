@@ -1,10 +1,36 @@
 #pragma once
 
-#include "shenmue.h"
-
-
-
 #include "common/types.hpp"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+namespace shenmue { namespace s2 {
+struct LegacyIconSprite;
+extern LegacyIconSprite moveAndTelopSprite;
+extern std::uint16_t g_moveUiClockAndNavigationHold;
+extern std::uint32_t wazamakiLegacyState;
+extern std::int8_t moveDefinitionCounts[4];
+std::uint32_t IsWazamakiInactive();
+bool UpdateWazamakiMenu();
+void CloseWazamakiMenu();
+void QueueWazamakiTask();
+std::int16_t SetMoveLearningEntry(std::uint8_t mode, std::uint8_t category, std::int16_t move, std::int16_t value);
+void SetNewEwzoTypeForMoveLearned(std::int8_t mode, std::int16_t category, std::int16_t move);
+std::int32_t GetMoveProficiency(std::uint8_t category, std::uint8_t move);
+void AddMoveProficiencyUsage(std::uint8_t category, std::int16_t move, std::int16_t amount);
+extern std::int16_t g_fightMoveTrainingGains[3][40];
+void ApplyMoveProficiencyUsage();
+void AwardStepMoveTraining();
+void SetupWZ2_CtrlWazamaki();
+
+struct NativeWazamakiDescription {
+    float x, y;
+    std::int32_t width, height;
+    float scaleX, scaleY, textX, textY;
+    std::int32_t columns, rows;
+    std::int32_t textures[8][2];
+};
+typedef char NativeWazamakiDescriptionSizeCheck[(sizeof(NativeWazamakiDescription) == 0x68) ? 1 : -1];
+} }
+#else
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -92,7 +118,6 @@ struct WazamakiMoveInfo {
     bool critical{};
 };
 
-
 struct NativeWazamakiGroup {
     std::uint8_t count, selected;
     std::array<std::uint8_t, 3> moves;
@@ -128,8 +153,8 @@ struct WazamakiSelection {
     std::uint8_t variant{};
 };
 
-
-
+// Native Wazamaki move-category tables joined with the
+// save-owned player-state banks. Categories are the retail 1..3 values.
 std::span<const WazamakiMoveInfo>
 GetWazamakiMoveCategory(std::uint8_t category) noexcept;
 WazamakiSelection GetWazamakiSelection() noexcept;
@@ -150,14 +175,14 @@ void ReleaseWazamakiPreviewModels();
 NativeWazamakiGroup *FindWazamakiGroup(std::int32_t row, std::int32_t *category, std::int32_t *groupIndex = nullptr);
 void RequestWazamakiPreviewMotion(std::uint8_t category, std::uint8_t id);
 
-
-
+// Native QueueWazamakiTask: queue WZOG on queue 15. The native debug-UI
+// predicate, not definition/image availability, chooses its presentation.
 void QueueWazamakiTask();
 bool UpdateWazamakiMenu();
 void CancelWazamakiMenu(std::int32_t force);
 
-
-
+// Native IsWazamakiInactive. Despite the retail symbol name, nonzero means that the
+// legacy moves-scroll owner is active. Retail's UI45 branch leaves it zero.
 std::uint32_t IsWazamakiInactive() noexcept;
 void SetupWZ2_CtrlWazamaki() noexcept;
 
@@ -171,3 +196,4 @@ bool IsMoveLearnedActive() noexcept;
 
 } // namespace shenmue::s2
 
+#endif

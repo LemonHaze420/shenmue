@@ -1,6 +1,15 @@
 #include "shenmue.h"
 
-
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+#include "s2/flag_context_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/field_collision_dc.hpp"
+#include "s2/frame_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/math.hpp"
+#include "s2/model_render_dc.hpp"
+#include <cstring>
+#else
 #include "s2/flag.hpp"
 
 #include "shenmue.h"
@@ -50,18 +59,179 @@
 #include <cstdio>
 #include <cstring>
 #include <limits>
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 ShenPlayerData shenPlayerData{};
+
 std::int32_t g_systemManageDebugDisplay{};
+
 std::uint8_t g_flagDebugIntersectionDraw{};
 
+// Native FLAG module globals, in their PC v1.07 BSS order.
 FlagWindObject *g_flagWindObject{};
+
+namespace {
+
+using WindVertexCallback = void (*)(FlagWindVertex *, Vector3 *, std::int32_t *);
+
+Vector3 flagWindMaximum, flagWindMinimum;
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+namespace {
+
+template <std::int32_t Type> void CountWindVertex(FlagWindVertex *destination, Vector3 *vertex, std::int32_t *count);
+template <std::int32_t Type> void BindWindVertex(FlagWindVertex *destination, Vector3 *vertex, std::int32_t *count);
+void WindModuleCallback(FlagWindVertex *context, Vector3 *, std::int32_t *);
+
+} // namespace
+
+void UpdateWindForModel(FlagWindObject *object);
+std::uint32_t flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, const Vector3 &third, const Vector3 &fourth);
+std::uint32_t flagDrawDebugCylinder(const Vector3 &location, float radius);
+std::uint32_t flagDrawDebugBox(float firstX, float firstZ, float secondX, float secondZ, float y);
+void nullsub(...) noexcept;
+void nullsub(void *) noexcept;
+bool ComputeAngle(const Vector3 &origin, float radius, std::int16_t yaw, std::int32_t halfAngle, const Vector3 &point);
+std::int32_t GetShenmueFlag(std::int32_t flag);
+std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode);
+std::int32_t flagRelated(shen_name map);
+std::int64_t shenRestartPlayerDataFlagEvaluation();
+std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode);
+void FLAG_CheckTask_Callback(void *);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
+// The last two count entries alias the following native bind table. Bind entry
+// nine aliases ChangeModuleTask_Init; these are not a ten-kind fallback policy.
+constexpr WindVertexCallback windCountCallbacks[]{CountWindVertex<0>, CountWindVertex<1>, CountWindVertex<2>, CountWindVertex<2>, CountWindVertex<2>,
+    CountWindVertex<2>, CountWindVertex<2>, CountWindVertex<7>, BindWindVertex<0>, BindWindVertex<1>};
+
+constexpr WindVertexCallback windBindCallbacks[]{BindWindVertex<0>, BindWindVertex<1>, BindWindVertex<2>, BindWindVertex<2>, BindWindVertex<2>,
+    BindWindVertex<2>, BindWindVertex<2>, BindWindVertex<7>, nullptr, WindModuleCallback};
+
+constexpr shen_name callbackContextCycle = SHEN_NAME(cylf);
+
+constexpr shen_name callbackContextSelf = SHEN_NAME(self);
+
+constexpr std::array<FlagCallbackEntry, 3> flagCallbackEntries{{{1011, 1200}, {1070, 1141}, {0, 0}}};
+
+constexpr std::array<FlagSector, 14> flagSectors{{
+    {1.8f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.0f, 0x8000, 0x3000, 0x3e38, {0.3f, 0.0f, 0.0f}, 0.3f},
+    {2.0f, 0x8000, 0x3000, 0x3e38, {-0.34f, 0.0f, 0.0f}, 0.3f},
+    {-1.0f, 0x4000, 0x4000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {3.0f, 0x4000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.0f, 0x8000, 0x238e, 0x238e, {0.0f, 0.0f, 0.0f}, 0.3f},
+    {2.0f, 0x8000, 0x238e, 0x238e, {0.0f, 0.0f, 0.0f}, 0.3f},
+}};
+
+constexpr std::array<SleepScheduleEntry, 24> sleepScheduleEntries{{
+    {16, 5940, 1379, 0x500, 40, 0, SHEN_NAME(WS00)},
+        {891, 5940, 1379, 0x501, 41, 0, SHEN_NAME(WTA0)},
+            {203, 5940, 1379, 0x502, 40, 0, SHEN_NAME(WTA0)},
+                {52, 5940, 1260, 0x603, 80, 0, SHEN_NAME(WK00)},
+                    {111, 5940, 1379, 0x504, 40, 0, SHEN_NAME(WN00)},
+                        {205, 5940, 1170, 0x605, 0, 0, SHEN_NAME(TOFB)},
+                            {1125, 5940, 1679, 0x605, 40, 0, SHEN_NAME(AR03)},
+                                {204, 5940, 1379, 0x606, 95, 0, SHEN_NAME(AB00)},
+                                    {127, 5940, 1560, 0x607, 60, 0, SHEN_NAME(AR02)},
+                                        {202, 5940, 1379, 0x508, 40, 0, SHEN_NAME(WB00)},
+                                            {455, 5940, 1499, 0x509, 77, 0, SHEN_NAME(YMQB)},
+                                                {133, 5940, 1379, 0x50a, 0, 0, SHEN_NAME(SYW0)},
+                                                    {771, 5940, 1559, 0x50b, 40, 0, SHEN_NAME(QR00)},
+                                                        {772, 5940, 1559, 0x50c, 41, 0, SHEN_NAME(QR00)},
+                                                            {736, 5940, 780, 0x50d, 40, 0, SHEN_NAME(QUG0)},
+                                                                {241, 5940, 705, 0x50e, 0, 0, SHEN_NAME(0523)},
+                                                                    {235, 5940, 990, 0x50f, 0, 0, SHEN_NAME(KWQA)},
+                                                                        {501, 1320, 1380, 0x101, 86, 0, SHEN_NAME(AR01)},
+                                                                            {502, 1320, 1380, 0x102, 79, 0, SHEN_NAME(WSY0)},
+                                                                                {503, 1320, 1380, 0x103, 80, 0, SHEN_NAME(WTA0)},
+                                                                                    {504, 1320, 1380, 0x104, 95, 0, SHEN_NAME(AB00)},
+                                                                                        {505, 1320, 1380, 0x105, 80, 0, SHEN_NAME(QRR0)},
+                                                                                            {670, 5940, 5940, 0x000, 1, 0, SHEN_NAME(0000)}, {},
+                                                                                        }};
+
+constexpr std::array<FlagContextSelector, 5> flagContextSelectors{{
+    {1160, SHEN_NAME(rcha)},
+        {620, SHEN_NAME(sel2)},
+            {1205, SHEN_NAME(lcha)},
+                {212, SHEN_NAME(lcha)}, {0, {}},
+            }};
+
+Vector3 flagCameraPosition{};
+
+Vector3 currentCameraPosition{};
+
+std::int32_t flagCameraFrame{};
+
+float flagPlayerAlpha{};
+
+Vector3 previousCameraPosition{};
+
+std::int32_t flagCandidateCount{};
+
+Vector3 orbitCameraPosition{};
+
+Vector3 orbitCameraTarget{};
+
+std::array<FlagRecord *, 10> flagCallStack{};
+
+Vector3 flagLocation{};
+
+std::int32_t systemManageFrames{};
+
+FlagRecord *selectedFlagCandidate{};
+
+std::array<FlagRecord *, 9> flagContextRecords{};
+
+#if SHENMUE_IS_DC
+std::array<char, 0x14> systemManageSource{};
+#else
+std::array<char, 0x18> systemManageSource{};
+#endif
+
+std::array<FlagCandidate, 10> flagCandidates{};
+
+std::array<std::uint32_t, 62> flagDebugModelCommands = FLAG_DEBUG_MODEL_COMMAND_TEMPLATE;
+
+#if SHENMUE_IS_XBOX
+std::array<char, 0x14> aberdeenSearchData{};
+#else
+std::array<char, 0x18> aberdeenSearchData{};
+#endif
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 FlagWindObject *GetCurrentFlagObjectForWind() {
     return g_flagWindObject;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 FlagWindModel *FindFlagWindModel(const MT7Node *node) {
     FlagWindObject *const object = GetCurrentFlagObjectForWind();
@@ -73,9 +243,11 @@ FlagWindModel *FindFlagWindModel(const MT7Node *node) {
     return nullptr;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 namespace {
-using WindVertexCallback = void (*)(FlagWindVertex *, Vector3 *, std::int32_t *);
-Vector3 flagWindMaximum, flagWindMinimum;
 
 bool SelectWindVertex(std::int32_t type, const Vector3 &vertex) {
     if (type == 0)
@@ -87,6 +259,14 @@ bool SelectWindVertex(std::int32_t type, const Vector3 &vertex) {
     return true;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 template <std::int32_t Type> void CountWindVertex(FlagWindVertex *destination, Vector3 *vertex, std::int32_t *count) {
     if constexpr (Type == 2) {
         if (!destination && vertex)
@@ -94,6 +274,14 @@ template <std::int32_t Type> void CountWindVertex(FlagWindVertex *destination, V
     } else if (!destination && SelectWindVertex(Type, *vertex))
         ++*count;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 template <std::int32_t Type> void BindWindVertex(FlagWindVertex *destination, Vector3 *vertex, std::int32_t *count) {
     if (SelectWindVertex(Type, *vertex)) {
@@ -103,16 +291,25 @@ template <std::int32_t Type> void BindWindVertex(FlagWindVertex *destination, Ve
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 void WindModuleCallback(FlagWindVertex *context, Vector3 *, std::int32_t *) {
     ChangeModuleTask_Init(context);
 }
 
+} // namespace
 
+#endif
 
-constexpr WindVertexCallback windCountCallbacks[]{CountWindVertex<0>, CountWindVertex<1>, CountWindVertex<2>, CountWindVertex<2>, CountWindVertex<2>,
-    CountWindVertex<2>, CountWindVertex<2>, CountWindVertex<7>, BindWindVertex<0>, BindWindVertex<1>};
-constexpr WindVertexCallback windBindCallbacks[]{BindWindVertex<0>, BindWindVertex<1>, BindWindVertex<2>, BindWindVertex<2>, BindWindVertex<2>,
-    BindWindVertex<2>, BindWindVertex<2>, BindWindVertex<7>, nullptr, WindModuleCallback};
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 void VisitWindVertex(WindVertexCallback callback, FlagWindVertex *destination, Vector3 *vertex, std::int32_t &count) {
     if (callback)
@@ -124,6 +321,14 @@ void VisitWindVertex(WindVertexCallback callback, FlagWindVertex *destination, V
             flagWindMinimum[axis] = (*vertex)[axis];
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::uint64_t VisitWindMeshVertices(void *mesh, WindVertexCallback callback, FlagWindVertex *destination, std::int32_t &count) {
     flagWindMaximum = {-100, -100, -100};
@@ -168,6 +373,14 @@ std::uint64_t VisitWindMeshVertices(void *mesh, WindVertexCallback callback, Fla
     return 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 std::uint32_t CountFlagWindModels(MT7Node *node) {
     const auto kind = static_cast<std::uint16_t>(node->id);
     std::uint32_t count = static_cast<std::uint16_t>(kind - 5000) <= 9U;
@@ -177,6 +390,14 @@ std::uint32_t CountFlagWindModels(MT7Node *node) {
         count += CountFlagWindModels(node->runtimeSibling);
     return count;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::int32_t CollectFlagWindModels(MT7Node *node, FlagWindModel *models, std::int32_t &index) {
     std::int32_t vertices = 0;
@@ -196,6 +417,14 @@ std::int32_t CollectFlagWindModels(MT7Node *node, FlagWindModel *models, std::in
         vertices += CollectFlagWindModels(node->runtimeSibling, models, index);
     return vertices;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::uint64_t PopulateFlagWindObject(MT7Node *root, FlagWindObject &object, std::uint32_t modelCount) {
     object.root = root;
@@ -227,6 +456,14 @@ std::uint64_t PopulateFlagWindObject(MT7Node *root, FlagWindObject &object, std:
     return 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 // @verified - p
 float EvaluateWindWave(std::int16_t angle) {
     float result = sin_fixed16(static_cast<std::int16_t>(22 * angle)) * 0.3f;
@@ -234,6 +471,14 @@ float EvaluateWindWave(std::int16_t angle) {
     result = sin_fixed16(static_cast<std::int16_t>(103 * angle)) * 0.15f + result;
     return sin_fixed16(static_cast<std::int16_t>(147 * angle)) * 0.18f + result;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // @verified - p
 void ApplyWaveformTransformSinewave(FlagWindVertex *vertices, std::uint32_t count, std::int16_t phase, float amplitude) {
@@ -251,6 +496,14 @@ void ApplyWaveformTransformSinewave(FlagWindVertex *vertices, std::uint32_t coun
         vertex.position->y = -negativeY - (0.0f < yOffset ? 0.0f : yOffset);
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // @verified - p
 void ApplyCurvedWindOscillation(FlagWindModel *model, float amplitude) {
@@ -278,6 +531,14 @@ void ApplyCurvedWindOscillation(FlagWindModel *model, float amplitude) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 // @verified - p
 void VerticalWaveOffsetZBend(FlagWindModel *model, float amplitude) {
     for (std::int32_t index = 0; index < model->vertexCount; ++index) {
@@ -292,6 +553,14 @@ void VerticalWaveOffsetZBend(FlagWindModel *model, float amplitude) {
         vertex.position->y = (offset < 0.0f ? -offset : offset) + vertex.originalPosition.y;
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // @verified - p
 void SineStackYCurve(FlagWindModel *model, float scale) {
@@ -313,6 +582,14 @@ void SineStackYCurve(FlagWindModel *model, float scale) {
         }
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // @verified - p
 void DualAxisZone(FlagWindModel *model, float scale) {
@@ -337,6 +614,14 @@ void DualAxisZone(FlagWindModel *model, float scale) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 // @verified - p
 void FreeWindModel(Character *character, void *payload) {
     if (!character || !payload)
@@ -352,6 +637,14 @@ void FreeWindModel(Character *character, void *payload) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 // @verified - p
 void UpdateWindForChara(Character *character, void *payload) {
     if (!character)
@@ -361,12 +654,21 @@ void UpdateWindForChara(Character *character, void *payload) {
     if (camCtrlIsInsideDepthScaledRect(position, radius))
         UpdateWindForModel(static_cast<FlagWindObject *>(payload));
 }
+
 } // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 void UpdateWindForFlag() {
     if (g_flagWindObject)
         UpdateWindForModel(g_flagWindObject);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 FlagWindObject *AllocateFlagObject(MT7Node *root) {
     const auto count = CountFlagWindModels(root);
@@ -377,6 +679,10 @@ FlagWindObject *AllocateFlagObject(MT7Node *root) {
         PopulateFlagWindObject(root, *object, count);
     return object;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 // @verified - p
 void AttachFlagWindComponent(Character *character) {
@@ -395,7 +701,12 @@ void AttachFlagWindComponent(Character *character) {
     (reinterpret_cast<ModelComponentHeader *>(object) - 1)->cleanup = FreeWindModel;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 namespace {
+
 void AnimateFlagCallback(Character *character, void *payload) {
     if (!character)
         return;
@@ -427,6 +738,14 @@ void AnimateFlagCallback(Character *character, void *payload) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 void FreeAnimatedFlag(Character *character, void *payload) {
     if (!character || !payload)
         return;
@@ -434,7 +753,12 @@ void FreeAnimatedFlag(Character *character, void *payload) {
     if (object.vertices)
         HLib::FreeTaskData(object.vertices);
 }
+
 } // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 // Collect the XB01 wind vertices (x > 0.05, y < -0.05) of a scenario character's first mesh and animate them per placement.
 void AssignAnimatedFlag(shen_name name, FlagAnimationPlacement *placements, std::int32_t count) {
@@ -467,6 +791,10 @@ void AssignAnimatedFlag(shen_name name, FlagAnimationPlacement *placements, std:
     VisitWindMeshVertices(mesh->runtimeMesh, BindWindVertex<0>, object->vertices, vertices);
     (reinterpret_cast<ModelComponentHeader *>(object) - 1)->cleanup = FreeAnimatedFlag;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 // @verified - p
 void UpdateWindForModel(FlagWindObject *object) {
@@ -527,92 +855,23 @@ void UpdateWindForModel(FlagWindObject *object) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 namespace {
-
-constexpr shen_name callbackContextCycle = SHEN_NAME(cylf);
-constexpr shen_name callbackContextSelf = SHEN_NAME(self);
-
-constexpr std::array<FlagCallbackEntry, 3> flagCallbackEntries{{{1011, 1200}, {1070, 1141}, {0, 0}}};
-
-constexpr std::array<FlagSector, 14> flagSectors{{
-    {1.8f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.0f, 0x8000, 0x3000, 0x3e38, {0.3f, 0.0f, 0.0f}, 0.3f},
-    {2.0f, 0x8000, 0x3000, 0x3e38, {-0.34f, 0.0f, 0.0f}, 0.3f},
-    {-1.0f, 0x4000, 0x4000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {3.0f, 0x4000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.5f, 0x8000, 0x3000, 0x3e38, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.0f, 0x8000, 0x238e, 0x238e, {0.0f, 0.0f, 0.0f}, 0.3f},
-    {2.0f, 0x8000, 0x238e, 0x238e, {0.0f, 0.0f, 0.0f}, 0.3f},
-}};
-
-constexpr std::array<SleepScheduleEntry, 24> sleepScheduleEntries{{
-    {16, 5940, 1379, 0x500, 40, 0, SHEN_NAME(WS00)},
-        {891, 5940, 1379, 0x501, 41, 0, SHEN_NAME(WTA0)},
-            {203, 5940, 1379, 0x502, 40, 0, SHEN_NAME(WTA0)},
-                {52, 5940, 1260, 0x603, 80, 0, SHEN_NAME(WK00)},
-                    {111, 5940, 1379, 0x504, 40, 0, SHEN_NAME(WN00)},
-                        {205, 5940, 1170, 0x605, 0, 0, SHEN_NAME(TOFB)},
-                            {1125, 5940, 1679, 0x605, 40, 0, SHEN_NAME(AR03)},
-                                {204, 5940, 1379, 0x606, 95, 0, SHEN_NAME(AB00)},
-                                    {127, 5940, 1560, 0x607, 60, 0, SHEN_NAME(AR02)},
-                                        {202, 5940, 1379, 0x508, 40, 0, SHEN_NAME(WB00)},
-                                            {455, 5940, 1499, 0x509, 77, 0, SHEN_NAME(YMQB)},
-                                                {133, 5940, 1379, 0x50a, 0, 0, SHEN_NAME(SYW0)},
-                                                    {771, 5940, 1559, 0x50b, 40, 0, SHEN_NAME(QR00)},
-                                                        {772, 5940, 1559, 0x50c, 41, 0, SHEN_NAME(QR00)},
-                                                            {736, 5940, 780, 0x50d, 40, 0, SHEN_NAME(QUG0)},
-                                                                {241, 5940, 705, 0x50e, 0, 0, SHEN_NAME(0523)},
-                                                                    {235, 5940, 990, 0x50f, 0, 0, SHEN_NAME(KWQA)},
-                                                                        {501, 1320, 1380, 0x101, 86, 0, SHEN_NAME(AR01)},
-                                                                            {502, 1320, 1380, 0x102, 79, 0, SHEN_NAME(WSY0)},
-                                                                                {503, 1320, 1380, 0x103, 80, 0, SHEN_NAME(WTA0)},
-                                                                                    {504, 1320, 1380, 0x104, 95, 0, SHEN_NAME(AB00)},
-                                                                                        {505, 1320, 1380, 0x105, 80, 0, SHEN_NAME(QRR0)},
-                                                                                            {670, 5940, 5940, 0x000, 1, 0, SHEN_NAME(0000)}, {},
-                                                                                        }};
-
-constexpr std::array<FlagContextSelector, 5> flagContextSelectors{{
-    {1160, SHEN_NAME(rcha)},
-        {620, SHEN_NAME(sel2)},
-            {1205, SHEN_NAME(lcha)},
-                {212, SHEN_NAME(lcha)}, {0, {}},
-            }};
-
-Vector3 flagCameraPosition{};
-Vector3 currentCameraPosition{};
-std::int32_t flagCameraFrame{};
-float flagPlayerAlpha{};
-Vector3 previousCameraPosition{};
-std::int32_t flagCandidateCount{};
-Vector3 orbitCameraPosition{};
-Vector3 orbitCameraTarget{};
-std::array<FlagRecord *, 10> flagCallStack{};
-Vector3 flagLocation{};
-std::int32_t systemManageFrames{};
-FlagRecord *selectedFlagCandidate{};
-std::array<FlagRecord *, 9> flagContextRecords{};
-#if SHENMUE_IS_DC
-std::array<char, 0x14> systemManageSource{};
-#else
-std::array<char, 0x18> systemManageSource{};
-#endif
-std::array<FlagCandidate, 10> flagCandidates{};
-std::array<std::uint32_t, 62> flagDebugModelCommands = FLAG_DEBUG_MODEL_COMMAND_TEMPLATE;
-#if SHENMUE_IS_XBOX
-std::array<char, 0x14> aberdeenSearchData{};
-#else
-std::array<char, 0x18> aberdeenSearchData{};
-#endif
 
 std::int32_t *FlagWords() {
     return reinterpret_cast<std::int32_t *>(g_flagDescriptorData);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::int32_t *FindFlagDefinition(std::int32_t flag) {
     const FlagBinHeader *const header = reinterpret_cast<const FlagBinHeader *>(g_flagDescriptorData);
@@ -622,10 +881,26 @@ std::int32_t *FindFlagDefinition(std::int32_t flag) {
     return words + words[header->flagRecordTable + flag];
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 std::int32_t *FlagContextTable() {
     const FlagBinHeader *const header = reinterpret_cast<const FlagBinHeader *>(g_flagDescriptorData);
     return FlagWords() + header->contextTable;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 FlagContextEntry *FindFlagContext(shen_name name) {
     FlagContextEntry *entry = reinterpret_cast<FlagContextEntry *>(FlagContextTable());
@@ -640,13 +915,37 @@ FlagContextEntry *FindFlagContext(shen_name name) {
     return nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 FlagRecord *FlagRecordAt(std::int32_t *words, std::int32_t offset) {
     return reinterpret_cast<FlagRecord *>(words + offset);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 FlagRecord *FlagAdvance(FlagRecord *record, std::uint32_t dwords) {
     return FlagRecordAt(reinterpret_cast<std::int32_t *>(record), static_cast<std::int32_t>(dwords));
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // True continues with the next record; false takes the record's branch.
 FlagRecord *FlagBranch(FlagRecord *record, bool condition) {
@@ -655,22 +954,62 @@ FlagRecord *FlagBranch(FlagRecord *record, bool condition) {
     return FlagAdvance(record, condition ? record->length : record->branch);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 Character *FlagPlayer() {
     return static_cast<Character *>(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 Character *FlagChara(shen_name id) {
     return scenFindChara(static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->scenarioTask, id);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // Vector3::DistanceBetween returns the squared distance.
 float FlagDistanceSquared(const Vector3 &a, const Vector3 &b) {
     return ((a.y - b.y) * (a.y - b.y) + (a.x - b.x) * (a.x - b.x)) + (a.z - b.z) * (a.z - b.z);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 std::int16_t FlagInverseAtan(float x, float z) {
     return static_cast<std::int16_t>(FixedAtan2(-x, -z));
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 bool TestCharaPositionWithinRange(shen_name charaA, const Vector3 &first, const Vector3 &second, shen_name charaB) {
     Vector3 origin{};
@@ -696,11 +1035,27 @@ bool TestCharaPositionWithinRange(shen_name charaA, const Vector3 &first, const 
     return position.x >= minimumX && maximumX >= position.x && position.z >= minimumZ && maximumZ >= position.z;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 Vector3 FlagCharaBone(Character *character) {
     Vector3 position{};
     charaGetMotWorldPos(character, 5, &position);
     return position;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 
 bool flagIsPlayerNearPoint(const FlagRecord *record) {
@@ -708,7 +1063,8 @@ bool flagIsPlayerNearPoint(const FlagRecord *record) {
     const Vector3 position = player ? GetCharacterWorldPosition(player) : Vector3{-1000.0f, -1000.0f, -1000.0f};
     const float radius = std::bit_cast<float>(record->argument[2]);
     const Vector3 point{std::bit_cast<float>(record->argument[0]), position.y, std::bit_cast<float>(record->argument[1])};
-    if ((g_flagDebugIntersectionDraw & 1U) != 0)
+    if ((g_flagDebugIntersectionDraw & 1U) != 0
+    )
         flagDrawDebugCylinder(point, radius);
     if (record->argument[4] == 0x8000) {
         return (position.x - point.x) * (position.x - point.x) + (position.z - point.z) * (position.z - point.z) <= radius * radius;
@@ -716,8 +1072,17 @@ bool flagIsPlayerNearPoint(const FlagRecord *record) {
     return ComputeAngle(position, radius, static_cast<std::int16_t>(record->argument[3]), record->argument[4], point);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 bool ryoCheckInRangeForFlag(const FlagRecord *record) {
-    if ((g_flagDebugIntersectionDraw & 1U) != 0) {
+    if ((g_flagDebugIntersectionDraw & 1U) != 0
+    ) {
         flagDrawDebugBox(std::bit_cast<float>(record->argument[0]), std::bit_cast<float>(record->argument[1]), std::bit_cast<float>(record->argument[2]),
             std::bit_cast<float>(record->argument[3]), 50.0f);
     }
@@ -725,6 +1090,14 @@ bool ryoCheckInRangeForFlag(const FlagRecord *record) {
     const Vector3 second{std::bit_cast<float>(record->argument[2]), 0.0f, std::bit_cast<float>(record->argument[3])};
     return TestCharaPositionWithinRange(SHEN_NAME(RYO_), first, second, shen_name{});
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 bool DoAngleCheck(const FlagSector &sector, shen_name chara, const Vector3 &playerPosition, std::int16_t playerYaw) {
     Character *const character = FlagChara(chara);
@@ -745,12 +1118,28 @@ bool DoAngleCheck(const FlagSector &sector, shen_name chara, const Vector3 &play
         sector.heightTolerance + point.y > playerPosition.y;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 bool shenCheckCloseAndFacing(const Vector3 &pointA, std::int16_t yawA, const Vector3 &pointB, std::int16_t yawB) {
     flagLocation = pointA;
     if (!ComputeAngle(pointB, 3.0f, yawB, 0x3000, pointA) || !ComputeAngle(pointA, 3.0f, yawA, 0x3e38, pointB))
         return false;
     return pointB.y > pointA.y - 1.0f && pointA.y + 1.0f > pointB.y;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 bool IsWithinLocationScreenSpace(const Vector3 &point) {
     flagLocation = point;
@@ -780,6 +1169,14 @@ bool IsWithinLocationScreenSpace(const Vector3 &point) {
     return !flddFindIntersections(point, bone);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 bool flddCheckCharaIntersection(const Vector3 &point, shen_name chara, std::int16_t halfAngle, float radius) {
     Character *const character = FlagChara(chara);
     if (!character)
@@ -799,11 +1196,27 @@ bool flddCheckCharaIntersection(const Vector3 &point, shen_name chara, std::int1
     return !flddFindIntersections(point, bone);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 
 void flagSetLocationToChara(shen_name chara) {
     if (Character *const character = FlagChara(chara))
         flagLocation = GetCharacterWorldPosition(character);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 bool flagTransformCharaOffset(shen_name chara, const Vector3 &offset, Vector3 &point) {
     Character *const character = FlagChara(chara);
@@ -818,6 +1231,14 @@ bool flagTransformCharaOffset(shen_name chara, const Vector3 &offset, Vector3 &p
     Matrix4x4::Pop(1);
     return true;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // Registers an action-button record as a nearest-trigger candidate for this evaluation.
 bool flagRegisterCandidate(FlagRecord *record) {
@@ -835,6 +1256,14 @@ bool flagRegisterCandidate(FlagRecord *record) {
     return record == selectedFlagCandidate;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 // Walks up to three records after a 0x000e020e action trigger and always
 // reports false.
 bool flagIsChainedTrigger(FlagRecord *record) {
@@ -849,12 +1278,28 @@ bool flagIsChainedTrigger(FlagRecord *record) {
     return false;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 void flagCopySystemManageSource(const char *source) {
     std::size_t index = 0;
     do
         systemManageSource[index] = source[index];
     while (source[index++] != '\0');
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::int32_t shenLoadScene(std::uint32_t slot, std::uintptr_t argument) {
     flagCopySystemManageSource(GetAreaSlotName(slot));
@@ -870,6 +1315,14 @@ std::int32_t shenLoadScene(std::uint32_t slot, std::uintptr_t argument) {
     flagCameraFrame = 0;
     return ExecuteCurrentAreaMainFunction(static_cast<EventFunctionType>(slot), argument) ? 1 : 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::int32_t shenLoadScene2(const char *areaId, std::uintptr_t argument) {
     if (!LoadAreaFunc_Wrapper_0(areaId, 0))
@@ -888,6 +1341,14 @@ std::int32_t shenLoadScene2(const char *areaId, std::uintptr_t argument) {
     return ExecuteAreaMainFunction(areaId, argument) ? 1 : 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 FlagRecord *shenMoveToFreeQuest() {
     FinishLoading();
     srchReset();
@@ -900,6 +1361,14 @@ FlagRecord *shenMoveToFreeQuest() {
     shenPlayerData.requiredRecord = shenPlayerData.triggerRecord;
     return shenPlayerData.triggerRecord;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 void SetHelpIconTopic(std::int16_t topic) {
     if (shenPlayerData.requestedHelpTopic != 0) {
@@ -914,6 +1383,14 @@ void SetHelpIconTopic(std::int16_t topic) {
         shenPlayerData.helpTopic = 0;
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // Publishes the chara-relative search-target positions of the FLAG context.
 std::int32_t shenUpdateFlagTargets(SearchTarget *targets) {
@@ -968,6 +1445,14 @@ std::int32_t shenUpdateFlagTargets(SearchTarget *targets) {
     return count;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 // Evaluates the context record lists selected by flagRelated.
 void shenEvaluateFlagContexts() {
     for (std::size_t index = 0; flagContextRecords[index]; ++index) {
@@ -975,6 +1460,14 @@ void shenEvaluateFlagContexts() {
         shenEvaluateFlag(shenPlayerData, 0);
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::int32_t stepFindSleepSchedule(std::int32_t flag) {
     std::int32_t index = 0;
@@ -985,10 +1478,26 @@ std::int32_t stepFindSleepSchedule(std::int32_t flag) {
     return -1;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 void stepSetDefaultStats() {
     for (std::int16_t stat = 16; stat <= 31; ++stat)
         EV_SetPlayerFlag(PlayerFlagWriteMode::Stat, stat, 85);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 void stepSelectSleepSchedule(const std::int32_t *flags) {
     const std::int32_t lateSleepWindow = GetShenmueFlag(528);
@@ -1031,6 +1540,14 @@ void stepSelectSleepSchedule(const std::int32_t *flags) {
     shenPlayerData.sleepScheduleFlag = entry.flag;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
+
 std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
     std::int32_t consumed = 1;
     for (const std::int32_t *stat = arguments + 1; *stat != -1; ++stat, ++consumed) {
@@ -1039,6 +1556,14 @@ std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
     }
     return consumed + 1;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 std::int32_t stepUpdateCurfewFlag(const std::int32_t *flags) {
     shenPlayerData.flags &= ~SPF_CurfewReached;
@@ -1049,6 +1574,14 @@ std::int32_t stepUpdateCurfewFlag(const std::int32_t *flags) {
     }
     return consumed + 1;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
+namespace {
 
 // Returns the argument dwords consumed after the extended command.
 std::int32_t stepExecuteExtendedCommand(std::int32_t operation, std::int32_t *arguments) {
@@ -1076,7 +1609,111 @@ std::int32_t stepExecuteExtendedCommand(std::int32_t operation, std::int32_t *ar
 
 } // namespace
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+
+static std::uint32_t flagDebugModelCommands[62] = {
+    0x00000001U,
+    0x00000001U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f3504f3U,
+    0x8200002dU,
+    0x83400000U,
+    0x909804c0U,
+    0x04000000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000000U,
+    0x3f3504f3U,
+    0x00000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f333333U,
+    0x3f333333U,
+    0x00000000U,
+    0x3f800000U,
+    0x3f800000U,
+    0x3f800000U,
+    0x00000088U,
+    0x00000011U,
+    0x00000004U,
+    0xbf000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0xbf000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0x3f000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x00000000U,
+    0x00000000U,
+    0x00000001U,
+    0x3f000001U,
+    0x00000000U,
+    0xbf000000U,
+    0x00000000U,
+    0x3f800000U,
+    0x80000000U,
+    0x00000000U,
+    0x00000001U,
+    0x00000000U,
+    0x00000004U,
+};
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+
+void flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, const Vector3 &third, const Vector3 &fourth) {
+    Vector3 normal, camera;
+    camCtrlGetNextCamPos(&camera);
+    *reinterpret_cast<Vector3 *>(flagDebugModelCommands + 2) = camera;
+    *reinterpret_cast<Vector3 *>(flagDebugModelCommands + 10) = camera;
+    *reinterpret_cast<float *>(flagDebugModelCommands + 19) = dc::sdk::SinFixed(g_frameCounter << 10) * 0.25f + 0.5f;
+    *reinterpret_cast<float *>(flagDebugModelCommands + 20) = dc::sdk::SinFixed(g_frameCounter << 10) * 0.25f + 0.5f;
+    *reinterpret_cast<float *>(flagDebugModelCommands + 17) = 0.5f;
+    *reinterpret_cast<float *>(flagDebugModelCommands + 18) = 0.0f;
+    ComputeTriangleNormal(first, second, third, normal);
+    std::uint32_t *vertex0 = flagDebugModelCommands + 28;
+    *reinterpret_cast<Vector3 *>(vertex0) = first;
+    *reinterpret_cast<Vector3 *>(vertex0 + 3) = normal;
+    std::uint32_t *vertex1 = flagDebugModelCommands + 36;
+    *reinterpret_cast<Vector3 *>(vertex1) = third;
+    *reinterpret_cast<Vector3 *>(vertex1 + 3) = normal;
+    std::uint32_t *vertex2 = flagDebugModelCommands + 44;
+    *reinterpret_cast<Vector3 *>(vertex2) = second;
+    *reinterpret_cast<Vector3 *>(vertex2 + 3) = normal;
+    std::uint32_t *vertex3 = flagDebugModelCommands + 52;
+    *reinterpret_cast<Vector3 *>(vertex3) = fourth;
+    *reinterpret_cast<Vector3 *>(vertex3 + 3) = normal;
+    *vertex0 |= 1U;
+    *vertex1 |= 1U;
+    *vertex2 |= 1U;
+    *vertex3 |= 1U;
+    dc::sdk::DrawSingleLightMT7Mesh(flagDebugModelCommands);
+}
+
+#else
+
+// Native quad construction; PC delivery uses the isolated legacy-debug compatibility adapter.
 std::uint32_t flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, const Vector3 &third, const Vector3 &fourth) {
     Vector3 camera{}, normal{};
     camCtrlGetNextCamPos(&camera);
@@ -1098,6 +1735,73 @@ std::uint32_t flagDrawDebugQuad(const Vector3 &first, const Vector3 &second, con
     }
     return SubmitLegacyFlagDebugQuadCompatibility(std::as_bytes(std::span(flagDebugModelCommands)));
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+
+// @verified - d
+static void DrawFlagDebugSide(const Vector3 &first, const Vector3 &second) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    Vector3 upper, lowerFirst, upperSecond, lower;
+    upper.x = first.x;
+    upper.y = second.y;
+    upper.z = first.z;
+    lowerFirst.x = first.x;
+    lowerFirst.y = first.y;
+    lowerFirst.z = first.z;
+    upperSecond.x = second.x;
+    upperSecond.y = second.y;
+    upperSecond.z = second.z;
+    lower.x = second.x;
+    lower.y = first.y;
+    lower.z = second.z;
+    flagDrawDebugQuad(upper, lowerFirst, upperSecond, lower);
+#else
+    const Vector3 upper = {first.x, second.y, first.z};
+    const Vector3 lower = {second.x, first.y, second.z};
+    flagDrawDebugQuad(upper, first, second, lower);
+#endif
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+
+// @verified - d
+void flagDrawDebugCylinder(const Vector3 &location, float radius) {
+    Vector3 playerPosition, first, second, third, centre;
+    std::int32_t index;
+    centre = location;
+    Character *player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
+    if (player)
+        GetCharacterWorldPosition(player, &playerPosition);
+    else
+        playerPosition.x = playerPosition.y = playerPosition.z = -1000.0f;
+    for (index = 0; index < 8; ++index) {
+        const std::int32_t angle = (index * 8192) + (g_frameCounter << 9);
+        first.x = dc::sdk::SinFixed(angle) * radius + location.x;
+        first.y = location.y - 100.0f;
+        first.z = dc::sdk::CosFixed(angle) * radius + location.z;
+        second.x = dc::sdk::SinFixed(angle + 4096) * radius + location.x;
+        second.y = location.y + 200.0f;
+        second.z = dc::sdk::CosFixed(angle + 4096) * radius + location.z;
+        third.x = dc::sdk::SinFixed(angle + 8192) * radius + location.x;
+        third.y = location.y + 200.0f;
+        third.z = dc::sdk::CosFixed(angle + 8192) * radius + location.z;
+        DrawFlagDebugSide(first, second);
+        second.y = location.y - 100.0f;
+        DrawFlagDebugSide(second, third);
+        third.y = second.y = first.y = centre.y = location.y + 1.0f;
+        centre.y = FindFieldIntersectionHeight(&centre) + 0.1f;
+        first.y = FindFieldIntersectionHeight(&first) + 0.1f;
+        second.y = FindFieldIntersectionHeight(&second) + 0.1f;
+        third.y = FindFieldIntersectionHeight(&third) + 0.1f;
+        flagDrawDebugQuad(centre, first, second, third);
+    }
+}
+
+#else
 
 // @verified - p
 std::uint32_t flagDrawDebugCylinder(const Vector3 &location, float radius) {
@@ -1127,6 +1831,56 @@ std::uint32_t flagDrawDebugCylinder(const Vector3 &location, float radius) {
     return result;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM
+
+// @verified - d
+void flagDrawDebugBox(float firstX, float firstZ, float secondX, float secondZ, float y) {
+    Vector3 lower, upper, first, second, third, fourth;
+    first.x = firstX;
+    first.y = y + 1.0f;
+    first.z = firstZ;
+    second.x = firstX;
+    second.y = y + 1.0f;
+    second.z = secondZ;
+    third.x = secondX;
+    third.y = y + 1.0f;
+    third.z = secondZ;
+    fourth.x = secondX;
+    fourth.y = y + 1.0f;
+    fourth.z = firstZ;
+    lower.y = y - 5.0f;
+    upper.y = y + 200.0f;
+    lower.z = firstZ;
+    upper.x = firstX;
+    lower.x = firstX;
+    upper.z = secondZ;
+    DrawFlagDebugSide(upper, lower);
+    lower.x = firstX;
+    upper.z = secondZ;
+    lower.z = secondZ;
+    upper.x = secondX;
+    DrawFlagDebugSide(upper, lower);
+    lower.z = secondZ;
+    upper.x = secondX;
+    lower.x = secondX;
+    upper.z = firstZ;
+    DrawFlagDebugSide(upper, lower);
+    lower.x = secondX;
+    upper.z = firstZ;
+    lower.z = firstZ;
+    upper.x = firstX;
+    DrawFlagDebugSide(upper, lower);
+    first.y = FindFieldIntersectionHeight(&first) + 0.1f;
+    second.y = FindFieldIntersectionHeight(&second) + 0.1f;
+    third.y = FindFieldIntersectionHeight(&third) + 0.1f;
+    fourth.y = FindFieldIntersectionHeight(&fourth) + 0.1f;
+    flagDrawDebugQuad(first, second, third, fourth);
+}
+
+#else
+
 // @verified - p
 std::uint32_t flagDrawDebugBox(float firstX, float firstZ, float secondX, float secondZ, float y) {
     Vector3 first{firstX, y + 1.0f, firstZ}, second{firstX, y + 1.0f, secondZ};
@@ -1142,13 +1896,25 @@ std::uint32_t flagDrawDebugBox(float firstX, float firstZ, float secondX, float 
     return flagDrawDebugQuad(first, second, third, fourth);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 // @verified - p
 void nullsub(...) noexcept {
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 // @verified - p
 void nullsub(void *) noexcept {
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 bool ComputeAngle(const Vector3 &origin, float radius, std::int16_t yaw, std::int32_t halfAngle, const Vector3 &point) {
     const Vector3 delta{point.x - origin.x, point.y - origin.y, point.z - origin.z};
@@ -1159,6 +1925,10 @@ bool ComputeAngle(const Vector3 &origin, float radius, std::int16_t yaw, std::in
         difference = static_cast<std::uint16_t>(-difference);
     return static_cast<std::int32_t>(difference) < halfAngle;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t GetShenmueFlag(std::int32_t flag) {
     std::int8_t result = 0;
@@ -1227,9 +1997,17 @@ std::int32_t GetShenmueFlag(std::int32_t flag) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t EV_GetShenmueFlag(std::int32_t flag) {
     return GetShenmueFlag(flag);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::uint32_t stepUpdateFlagUtil(std::uint8_t mode, std::int32_t flag) {
     std::uint32_t result = 0;
@@ -1289,6 +2067,10 @@ std::uint32_t stepUpdateFlagUtil(std::uint8_t mode, std::int32_t flag) {
         }
     }
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode) {
     std::int32_t maximumStep = 0;
@@ -1358,6 +2140,10 @@ std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t stepScheduleFlagCallback() {
     for (const FlagCallbackEntry *entry = flagCallbackEntries.data(); entry->flag != 0; ++entry) {
         if (!GetShenmueFlag(entry->flag))
@@ -1373,6 +2159,10 @@ std::int32_t stepScheduleFlagCallback() {
     return plymScheduleCycleFlagCallback(0);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 void EV_stepSetFlags(std::uint8_t mode, std::int32_t flag) {
     if (flag != 0 && (stepUpdateFlagUtil(mode, flag) & 1U) != 0)
         stepUpdateFlagUtil(0, 200);
@@ -1382,6 +2172,10 @@ void EV_stepSetFlags(std::uint8_t mode, std::int32_t flag) {
     if (flag == 100)
         EV_ReconfigureNpcRoutesForStoryStep();
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t flagInitContext(ShenPlayerData &data, shen_name context) {
     data.loadingPhase = 0;
@@ -1414,6 +2208,10 @@ std::int32_t flagInitContext(ShenPlayerData &data, shen_name context) {
     return 1;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t flagRelated(shen_name map) {
     std::size_t count = 0;
     const std::int32_t initialized = flagInitContext(shenPlayerData, map);
@@ -1433,6 +2231,10 @@ std::int32_t flagRelated(shen_name map) {
     return initialized;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t shenUpdatePlayerDataFlags(std::int32_t active) {
     const std::int32_t previous = (shenPlayerData.flags & SPF_Active) != 0;
     if (active != 0)
@@ -1442,6 +2244,10 @@ std::int32_t shenUpdatePlayerDataFlags(std::int32_t active) {
     return previous;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int64_t shenRestartPlayerDataFlagEvaluation() {
     ShenPlayerData context;
     flagInitContext(context, shenPlayerData.callbackContext);
@@ -1450,10 +2256,18 @@ std::int64_t shenRestartPlayerDataFlagEvaluation() {
     return shenEvaluateFlag(shenPlayerData, 0);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t shenScheduleFlagCallback(std::int16_t minute) {
     plymSetCallback(shenRestartPlayerDataFlagEvaluation);
     return plymScheduleCycleFlagCallback(minute);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t npcSetCycleTimeLimitExpiry(shen_name, std::int16_t timeLimit) {
     if (timeLimit == 0) {
@@ -1467,6 +2281,10 @@ std::int32_t npcSetCycleTimeLimitExpiry(shen_name, std::int16_t timeLimit) {
     return plymScheduleCycleFlagCallback(minute);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 SearchTarget *shenFindFlagTarget(shen_name id) {
     SearchTarget *target = shenPlayerData.targets;
     if (!target || target->name.name == 0)
@@ -1478,6 +2296,10 @@ SearchTarget *shenFindFlagTarget(shen_name id) {
     return target;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t ryoIsCurrentScenarioFlagSatisfied() {
     const FlagRecord *const record = shenPlayerData.requiredRecord;
     if (record->opcode == static_cast<std::uint8_t>(FlagOp::IfPlayerNearPoint))
@@ -1486,6 +2308,10 @@ std::int32_t ryoIsCurrentScenarioFlagSatisfied() {
         return ryoCheckInRangeForFlag(record);
     return 1;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t shenGetMinutesUntilNextFrameMinute() {
     if ((shenPlayerData.flags & SPF_CurfewReached) != 0)
@@ -1501,25 +2327,49 @@ std::int32_t shenGetMinutesUntilNextFrameMinute() {
     return minutes < 0 ? 0 : minutes;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int16_t shenGetSleepScheduleFlag() {
     return shenPlayerData.sleepScheduleFlag;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::uint32_t shenIsCurfewSceneChange() {
     return shenPlayerData.flags & SPF_CurfewSceneChange;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 void shenSetFreeQuestInactive() {
     shenPlayerData.freeQuestActive = 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::uint32_t GetLoadingPhaseFlags() {
     return shenPlayerData.loadingPhase;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 void SetLoadingPhaseFlags(std::uint32_t flags) {
     shenPlayerData.loadingPhase = flags;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t shenSetPlayerDataFields(std::int32_t queryId, std::int8_t queryArgument) {
     if (!shenPlayerData.record)
@@ -1529,6 +2379,10 @@ std::int32_t shenSetPlayerDataFields(std::int32_t queryId, std::int8_t queryArgu
     return shenEvaluateFlag(shenPlayerData, 2);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t shenEvaluateFlagFor(std::int32_t queryId, std::int8_t queryArgument) {
     if (!shenPlayerData.record)
         return 0;
@@ -1536,6 +2390,10 @@ std::int32_t shenEvaluateFlagFor(std::int32_t queryId, std::int8_t queryArgument
     shenPlayerData.queryArgument = queryArgument;
     return shenEvaluateFlag(shenPlayerData, 3);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
     ++shenPlayerData.updateCount;
@@ -1640,6 +2498,10 @@ std::int32_t shenUpdateFlagEvaluation(std::int32_t mode) {
     return result;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
     using enum CameraState;
     std::uint32_t flags = shenPlayerData.flags;
@@ -1704,7 +2566,8 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             }
             return result;
         case FlagOp::IfPlayerNearPoint: {
-            if ((g_flagDebugIntersectionDraw & 1U) != 0) {
+            if ((g_flagDebugIntersectionDraw & 1U) != 0
+    ) {
                 flagDrawDebugCylinder(
                     {std::bit_cast<float>(arguments[0]), playerPosition.y, std::bit_cast<float>(arguments[1])}, std::bit_cast<float>(arguments[2]));
             }
@@ -1716,7 +2579,8 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
             break;
         }
         case FlagOp::IfPlayerInRect: {
-            if ((g_flagDebugIntersectionDraw & 1U) != 0) {
+            if ((g_flagDebugIntersectionDraw & 1U) != 0
+    ) {
                 flagDrawDebugBox(std::bit_cast<float>(arguments[0]), std::bit_cast<float>(arguments[1]), std::bit_cast<float>(arguments[2]),
                     std::bit_cast<float>(arguments[3]), playerPosition.y);
             }
@@ -2037,7 +2901,13 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
         case FlagOp::Repeat:
             break;
         case FlagOp::PlayPlayerMotionF003: {
-            MotionWork *const motionWork = FindMotionWork(player);
+            MotionWork *const motionWork =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(player);
             SetPlayerControlEnabled(0);
             shenToggleAreaFlags(0);
             mtwkSetRequestedRootMode(motionWork, 1);
@@ -2342,6 +3212,10 @@ std::int32_t shenEvaluateFlag(ShenPlayerData &data, std::int32_t mode) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 void Queue_FLAG_CheckTask() {
     plymSetCallback(shenRestartPlayerDataFlagEvaluation);
     SetWeatherShouldUpdateDay(GetInternalFlag(1001) ? 1 : 0);
@@ -2352,6 +3226,10 @@ void Queue_FLAG_CheckTask() {
     if (HasSavedAreaJumpLocation())
         shenPlayerData.state |= 1U;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 void FLAG_CheckTask_Callback(void *) {
     using enum CameraState;
@@ -2408,6 +3286,10 @@ void FLAG_CheckTask_Callback(void *) {
     SetPlayerControlEnabled(1);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 void CtrlSystemManage_Callback(void *) {
     if (systemManageSource[0] == '\0') {
         systemManageFrames = 0;
@@ -2420,11 +3302,19 @@ void CtrlSystemManage_Callback(void *) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
+
 HLib::Task *initCtrlSystemManage() {
     HLib::Task *const task = HLib::EnqueueTaskWithoutParameter(CtrlSystemManage_Callback, 14, 2, static_cast<std::int32_t>(SHEN_NAME(SYSM)));
     systemManageSource[0] = '\0';
     return task;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && SHENMUE_KIND == SHENMUE_KIND_GAMEJAM)
 
 const char *GetAberdeenSearchData() noexcept {
     std::size_t index = 0;
@@ -2435,5 +3325,7 @@ const char *GetAberdeenSearchData() noexcept {
     return aberdeenSearchData.data();
 }
 
-} // namespace shenmue::s2
+#endif
 
+} // namespace s2
+} // namespace shenmue

@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.22)
 
+option(SHENMUE_BUILD_S2_DC_COMPILER "Build the pinned S2 resident compiler in build/s2-dc-compiler" OFF)
 option(SHENMUE_DC_EVENT_OVERLAYS "Build Shenmue II Dreamcast event overlays" OFF)
-if(SHENMUE_DC_EVENT_OVERLAYS)
+if(SHENMUE_DC_EVENT_OVERLAYS OR SHENMUE_BUILD_S2_DC_COMPILER)
   project(shenmue_s2_events LANGUAGES NONE)
   if(NOT CMAKE_HOST_UNIX)
     message(FATAL_ERROR "Dreamcast event overlays require a Linux or WSL host")
@@ -9,6 +10,12 @@ if(SHENMUE_DC_EVENT_OVERLAYS)
   set(SHENMUE_DC_TOOLCHAIN_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/build/dc-toolchain" CACHE PATH "SH-4 binutils prefix")
   find_program(CMAKE_OBJCOPY NAMES sh4-elf-objcopy HINTS "${SHENMUE_DC_TOOLCHAIN_ROOT}/bin" REQUIRED)
   include(cmake/EventOverlays.cmake)
+  return()
+endif()
+
+if(SHENMUE_BUILD_DREAMCAST OR CMAKE_TOOLCHAIN_FILE MATCHES "Dreamcast(S2)?[.]cmake$")
+  project(shenmue_dc LANGUAGES C CXX ASM)
+  include(cmake/Dreamcast.cmake)
   return()
 endif()
 

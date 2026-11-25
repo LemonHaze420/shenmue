@@ -1,5 +1,6 @@
 #pragma once
 #include "shenmue.h"
+#include "s2/legacy_sprite_types.hpp"
 
 #include "s2/hlib.hpp"
 #include "s2/item_effect.hpp"
@@ -77,28 +78,10 @@ inline constexpr std::array<std::uint16_t, 5> QUICK_ICON_FACE_ICONS{0x700, 0x701
 inline constexpr std::array<std::uint16_t, 16> quickIconDirectionalStatuses{0, 1, 16, 0, 64, 128, 32, 0, 4, 2, 8, 0, 0x4828, 0x544c, 0x7361, 0x466b};
 inline constexpr std::array<std::uint32_t, 2> QUICK_ICON_FIRST_SOUND{0x900abU, 0x15abU}, QUICK_ICON_SECOND_SOUND{0xa00abU, 0x115abU};
 
-#pragma pack(push, 1)
-struct LegacyIconSprite {
-    float x;
-    float y;
-    float scaleX;
-    float scaleY;
-    float depth;
-    std::uint16_t flags;
-    std::uint16_t reserved16;
-    std::uint32_t rotation;
-    std::uint16_t icon;
-    std::int16_t width;
-    std::int16_t height;
-    std::uint8_t alignment;
-    std::array<std::byte, 1> reserved23;
-};
-#pragma pack(pop)
-static_assert(sizeof(LegacyIconSprite) == 0x24);
-static_assert(offsetof(LegacyIconSprite, flags) == 0x14);
-static_assert(offsetof(LegacyIconSprite, rotation) == 0x18);
-static_assert(offsetof(LegacyIconSprite, width) == 0x1e);
-static_assert(offsetof(LegacyIconSprite, alignment) == 0x22);
+
+
+
+
 
 struct BigKanjiGlyph {
     std::uint32_t texture;
@@ -832,12 +815,20 @@ std::int32_t SetupControlSpeakAndUI(std::int16_t *choices, std::int32_t timeout,
 std::int64_t SetupControlSpeakAndUI_Internal(std::int16_t *choices, std::int32_t timeout, std::int16_t defaultChoice, std::uint16_t mode, std::int32_t style);
 std::uint32_t shenGetCtrlSpeakIconFlag();
 void speakSetFlagTo(std::uint16_t timeout);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsCtrlSpeakIconInactive();
+#else
 bool IsCtrlSpeakIconInactive();
+#endif
 void HelpWidgetResetRuns();
 void HelpWidgetParseLine(std::string_view line);
 void HelpWidgetAddButtonIcon(std::int32_t code);
 void FormatColoursForHelpTopic(std::uint8_t topic);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t IsSpeakIconCancellable();
+#else
 bool IsSpeakIconCancellable();
+#endif
 std::int64_t CloseSpeakIcon(std::int32_t force);
 HLib::Task *InitSpeakIcon(HLib::Task *parent, std::uint8_t nextFunctionIndex);
 void ResetMainIconState();

@@ -1,7 +1,24 @@
 #include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
-
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/date_time.hpp"
+#include "s2/camera_state_query_dc.hpp"
+#include "s2/character_model_dc.hpp"
+#include "s2/character_yaw_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/help_icon_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/ui_state_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#include "s2/time_hud_dc.hpp"
+#include "s2/character_draw_tasks_dc.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/model_render_dc.hpp"
+#else
+#include "enhancements/misc_mods.hpp"
 #include "s2/date_time.hpp"
 #include "s2/time_program.hpp"
 
@@ -41,92 +58,627 @@
 #include <bit>
 #include <cmath>
 #include <cstdio>
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 DateTime g_currentDateTime{};
+
 std::int32_t g_freezeGameTime{};
 
 float g_gameTimeMilliseconds = 0.0f;
+
 namespace {
 
-constexpr std::int32_t monthStartDays[12]{
-    0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
-constexpr std::int8_t daysInMonth[16]{
-    31, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0, 0, 0};
+constexpr std::int32_t monthStartDays[12]{0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+
+constexpr std::int8_t daysInMonth[16]{31, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 0, 0, 0};
 
 DateTime currentTime{};
-DateTime nextDateTime{};
-std::uint8_t currentCalendarReservedByte{};
-std::uint16_t currentCalendarReservedWord{}, savedCalendarReservedWord{}, nextCalendarReservedWord{};
-float realSecondsToGameMinute = 1.0f / 3.0f;
-float realTimeScale = -1.0f;
-float secondsPerGameMinute = 3.0f;
-float defaultSecondsPerGameMinute = 3.0f;
-float secondAccumulator = 0.0f;
-std::int32_t temporaryDay = 0;
-std::int32_t temporaryHour = 0;
-std::int32_t temporaryMinute = 0;
-std::uint8_t gameClockUpdateFlag{1};
-std::uint8_t timeUpdateAllowed{1};
-std::uint8_t timeUpdateBlocked{};
-std::uint8_t timeFrozen{};
-std::uint8_t canTickForFrame{};
-std::uint8_t framesPerSecond{30};
-std::uint8_t incrementedYear{};
-std::uint8_t incrementedMonth{};
-std::uint8_t incrementedDay{};
-std::uint8_t incrementedMinutes{};
-std::uint8_t incrementedSeconds{};
-std::uint8_t incrementedUnused{};
-std::uint8_t previousItemState{};
-std::uint8_t clockAndCompassSuppressed{};
-std::int32_t timeProgramWait{5};
-std::int32_t minuteHand{};
-std::int32_t hourHand{};
-std::int32_t compassRotation{};
-std::int32_t timeHudVariant{};
-Vector3 timeHudPosition{};
-TimeCompassContext timeCompass{};
-std::array<LegacyIconSprite, 3> timeWatchSprites{};
-LegacyIconSprite timeCompassSprite{};
-LegacyIconSprite timePeriodSprite{.x = 0, .y = 0, .scaleX = 1, .scaleY = 1, .depth = 4.5f, .flags = 0x400,
-    .reserved16 = 0, .rotation = 0, .icon = 1545, .width = 32, .height = 16, .alignment = 5, .reserved23 = {}};
 
+DateTime nextDateTime{};
+
+std::uint8_t currentCalendarReservedByte{};
+
+std::uint16_t currentCalendarReservedWord{}, savedCalendarReservedWord{}, nextCalendarReservedWord{};
+
+float realSecondsToGameMinute = 1.0f / 3.0f;
+
+float realTimeScale = -1.0f;
+
+float secondsPerGameMinute = 3.0f;
+
+float defaultSecondsPerGameMinute = 3.0f;
+
+float secondAccumulator = 0.0f;
+
+std::int32_t temporaryDay = 0;
+
+std::int32_t temporaryHour = 0;
+
+std::int32_t temporaryMinute = 0;
+
+std::uint8_t gameClockUpdateFlag{1};
+
+std::uint8_t timeUpdateAllowed{1};
+
+std::uint8_t timeUpdateBlocked{};
+
+std::uint8_t timeFrozen{};
+
+std::uint8_t canTickForFrame{};
+
+std::uint8_t framesPerSecond{30};
+
+std::uint8_t incrementedYear{};
+
+std::uint8_t incrementedMonth{};
+
+std::uint8_t incrementedDay{};
+
+std::uint8_t incrementedMinutes{};
+
+std::uint8_t incrementedSeconds{};
+
+std::uint8_t incrementedUnused{};
+
+std::uint8_t previousItemState{};
+
+std::uint8_t clockAndCompassSuppressed{};
+
+std::int32_t timeProgramWait{5};
+
+std::int32_t minuteHand{};
+
+std::int32_t hourHand{};
+
+std::int32_t compassRotation{};
+
+std::int32_t timeHudVariant{};
+
+Vector3 timeHudPosition{};
+
+TimeCompassContext timeCompass{};
+
+std::array<LegacyIconSprite, 3> timeWatchSprites{};
+
+LegacyIconSprite timeCompassSprite{};
+
+LegacyIconSprite timePeriodSprite{.x = 0,
+    .y = 0,
+    .scaleX = 1,
+    .scaleY = 1,
+    .depth = 4.5f,
+    .flags = 0x400,
+    .reserved16 = 0,
+    .rotation = 0,
+    .icon = 1545,
+    .width = 32,
+    .height = 16,
+    .alignment = 5,
+    .reserved23 = {}};
 
 HandWatchControl handWatch{};
+
 MT7Model handWatchModel{};
-std::byte* handWatchSource{};
+
+std::byte *handWatchSource{};
+
 bool handWatchPlacementRegistered{};
 
+constexpr std::uint32_t guilinForest1 = SHEN_NAME(KMZ1);
 
-void UpdateWatchHandAngles(MT7Node* root) {
-    MT7Node* const minute = GetChildObjectByIndex(handWatchModel, root, 151);
-    MT7Node* const hour = GetChildObjectByIndex(handWatchModel, root, 150);
-    if (minute) minute->rotation.y = static_cast<std::uint16_t>(-18 * g_currentDateTime.second - 1092 * g_currentDateTime.minute);
-    if (hour) hour->rotation.y = static_cast<std::uint16_t>(-91 * g_currentDateTime.minute - 5461 * g_currentDateTime.hour - g_currentDateTime.second);
+constexpr std::uint32_t guilinForest2 = SHEN_NAME(KMZ2);
+
+constexpr std::uint32_t guilinForest3 = SHEN_NAME(KMZ3);
+
+constexpr std::uint32_t guilinForest4 = SHEN_NAME(KMZ4);
+
+constexpr std::uint32_t kowloonRoute2 = SHEN_NAME(KRK2);
+
+constexpr std::uint32_t kowloonRoute4 = SHEN_NAME(KRK4);
+
+constexpr std::uint32_t kowloonRoute6 = SHEN_NAME(KRK6);
+
+constexpr std::uint32_t kowloonUnderground0 = SHEN_NAME(QUG0);
+
+constexpr std::uint32_t bigOxBuilding = SHEN_NAME(QKBT);
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+namespace {
+
+void UpdateWatchHandAngles(MT7Node *root);
+bool LoadRyoTimeArm();
+bool SetupHandWatchCamera();
+void TimeX_ConstructMatrices(void *);
+void ResetTimeHudRuntime();
+void UpdateTimeProgramWaitTime();
+
+} // namespace
+
+void ComputeDayOfWeek(DateTime &dateTime);
+DateComparisonResult CompareDates(const DateTime &first, const DateTime &second);
+void FormatLoadingScreenDate(std::span<char> output, std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags);
+std::string FormatLoadingScreenDate(std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags);
+std::uint32_t SetTimeHudVariant(std::int32_t variant);
+void shenSetClockAndCompassRenderTo(std::int32_t suppressed) noexcept;
+void tmx_CtrlHandWatch(std::uint8_t nextFunctionIndex);
+bool IsWristwatchOpenable();
+bool OpenWristwatch();
+void RequestWristwatchFromHeldInput();
+void CloseWristwatch(std::int32_t immediate);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+void CloseWristwatch(std::int32_t immediate);
+
+std::int8_t IsWristwatchOpenable();
+
+namespace {
+
+HandWatchControl handWatch = {};
+
+HandWatchControl *currentHandWatch = &handWatch;
+
+} // namespace
+
+LegacyIconSprite g_timeWatchSprites[3];
+std::uint8_t g_clockAndCompassSuppressed;
+std::uint32_t g_timeHudVariant;
+TimeCompassContext g_timeCompass;
+std::int32_t g_timeCompassAlpha;
+LegacyIconSprite g_timeCompassSprite;
+
+LegacyIconSprite g_timePeriodSprite = {SHEN_FIELD(x) 0.0f, SHEN_FIELD(y) 0.0f, SHEN_FIELD(scaleX) 1.0f, SHEN_FIELD(scaleY) 1.0f, SHEN_FIELD(depth) 4.5f,
+    SHEN_FIELD(flags) 0x400, SHEN_FIELD(reserved16) 0, SHEN_FIELD(rotation) 0, SHEN_FIELD(icon) 1545, SHEN_FIELD(width) 32, SHEN_FIELD(height) 16,
+    SHEN_FIELD(alignment) 5, SHEN_FIELD(reserved23){}};
+
+Vector3 g_timeHudPosition = {};
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+namespace {
+
+void ResetHandWatch(HandWatchControl *control);
+bool LoadRyoTimeArm();
+void UpdateWatchHandAngles(MT7Node *root);
+void SetHandWatchLight(MT7Node *root, std::int32_t enabled);
+bool SetupHandWatchCamera();
+void ReleaseHandWatchArm();
+void TimeX_ConstructMatrices(void *);
+void HandWatch_Callback(void *);
+
+} // namespace
+
+void tmx_CtrlHandWatch(std::int8_t queue);
+void ResetTimeHudRuntime();
+void UpdateTimeProgramWaitTime();
+bool OpenWristwatch(std::int32_t mode);
+void RequestWristwatchFromHeldInput();
+void CloseWristwatch(std::int32_t immediate);
+void CloseWristwatchImmediate();
+std::int32_t IsHandWatchActive();
+void SetCtrlHandWatchFlags(std::int32_t enabled);
+std::int32_t SetWristwatchCloseEnabled(std::int32_t enabled);
+void CloseWristwatchImmediate2();
+std::int8_t IsWristwatchOpenable();
+void shenSetClockAndCompassRenderTo(std::uint8_t suppressed);
+std::uint32_t SetTimeHudVariant(std::uint32_t variant);
+#else
+namespace {
+
+bool LoadRyoTimeArm();
+void UpdateWatchHandAngles(MT7Node *root);
+bool SetupHandWatchCamera();
+std::int32_t TimeX_LegacyDrawNoop();
+void TimeX_ConstructMatrices(void *);
+void tmx_CtrlHandWatch_Callback(void *);
+bool UsesFastGameClock(std::uint32_t map);
+bool UsesSlowGameClock(std::uint32_t map);
+bool IsGuilinNavigationMap(std::uint32_t map);
+std::int32_t CurrentCompassHeading();
+std::int32_t UpdateCompassAdmission(TimeCompassContext &context);
+void TimeProgramHudCallback(void *parameter);
+void ResetTimeHudRuntime();
+void UpdateTimeProgramWaitTime();
+bool IsGameTimeUpdateBlocked();
+void UpdateGameTime(DateTime &dateTime);
+void CtrlTimeProgram_Callback(void *);
+void InitTimeProgram_Callback(void *);
+std::int32_t DateSeconds(const DateTime &dateTime);
+
+} // namespace
+
+void tmx_CtrlHandWatch(std::uint8_t nextFunctionIndex);
+void shenGetCurrentDateTime(DateTime &dateTime);
+void CopyCurrentCalendarRecord(std::span<std::byte, CALENDAR_RECORD_SIZE> output);
+void IncrementDateTimeInPlace(DateTime &current, const DateTime &increment);
+void ComputeDayOfWeek(DateTime &dateTime);
+std::int64_t AddDaysAndCalculateWeekday(DateTime &dateTime, std::int16_t days);
+std::int64_t AddDaysAndCalculateWeekdayFromCurrentDate(std::uint16_t days);
+void shenGetDayInMonth(const DateTime &input, DateTime &output);
+DateComparisonResult CompareDates(const DateTime &first, const DateTime &second);
+void SetCurrentDateTimeTo(DateTime &dateTime);
+std::int64_t shenAdjustCurrentTimeByMinutes(std::int16_t minutes);
+std::int64_t shenUpdateCurrentDateTime();
+void FormatLoadingScreenDate(std::span<char> output, std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags);
+std::string FormatLoadingScreenDate(std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags);
+void initTimeProgram();
+std::string FormatLoadingScreenTime(std::int32_t hour, std::int32_t minute, std::int32_t meridiem);
+std::int32_t ComputeSecondsSince1980(const DateTime &dateTime, std::int32_t *output);
+void IncrementDateTimeBySeconds(std::uint32_t seconds, DateTime &dateTime);
+void DateTime_AddMinutesInPlace(DateTime &dateTime, std::int32_t minutes);
+std::int32_t CompareDateTimeSeconds(const DateTime &first, const DateTime &second);
+std::int32_t DiffMinutes(const DateTime &first, const DateTime &second);
+void InitCalendar();
+void InitializeNewGameCalendar();
+std::uint64_t shenSetTimeSimulationTo(std::uint32_t state);
+bool IsTimeSimulationEnabled();
+bool OpenWristwatch();
+void RequestWristwatchFromHeldInput();
+void CloseWristwatch(std::int32_t immediate);
+void SetCtrlHandWatchFlags(std::int32_t enabled);
+std::int32_t GetHandWatchState();
+void SetHandWatchState(std::int32_t state);
+bool IsWristwatchOpenable();
+void shenSetClockAndCompassRenderTo(std::int32_t suppressed) noexcept;
+bool shenIsClockAndCompassSuppressed() noexcept;
+std::uint32_t UpdateTempHourMinTimeScale(std::int32_t hour, std::int32_t minute, float scale);
+std::int32_t IsCurrentTimeRange(std::uint16_t start, std::uint16_t end);
+std::uint32_t SetTimeHudVariant(std::int32_t variant);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void tmx_CtrlHandWatch(std::int8_t queue) {
+    ResetHandWatch(currentHandWatch);
+    currentHandWatch->task = HLib::EnqueueTaskWithoutParameter(HandWatch_Callback, queue, 0, SHEN_NAME4('T', 'M', 'E', 'X'));
+    if (currentHandWatch->task)
+        HLib::SetupTimedTask(currentHandWatch->task, 0);
 }
 
-// LoadRyoTimeArm requests no region headroom.
-// Keep NPC-load suspension, free-talk pruning and the extra 32-byte heap guard.
+#else
+
+void tmx_CtrlHandWatch(std::uint8_t nextFunctionIndex) {
+    handWatch.state = 0;
+    handWatch.armPosition.x = 0.0f;
+    handWatch.armPosition.y = 0.0f;
+    handWatch.armPosition.z = 0.0f;
+    handWatch.armRotation = {};
+    handWatch.task = nullptr;
+    handWatch.flags = 0;
+    handWatch.root = nullptr;
+    handWatch.reader = nullptr;
+    handWatch.task = HLib::EnqueueTaskWithoutParameter(tmx_CtrlHandWatch_Callback, nextFunctionIndex, 0, static_cast<std::int32_t>(TASK_TMEX.name));
+    if (handWatch.task)
+        HLib::SetupTimedTask(handWatch.task, 0);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+bool OpenWristwatch(std::int32_t) {
+    if (IsHandWatchActive() == 1)
+        return false;
+    if (!currentHandWatch->task)
+        return false;
+    HLib::ResolveDeferredCallback(currentHandWatch->task);
+    currentHandWatch->flags |= 9U;
+    currentHandWatch->state = 1;
+    icsToggleIconState(1, 1);
+    return true;
+}
+
+#else
+
+bool OpenWristwatch() {
+    if (handWatch.state != 0 || !handWatch.task)
+        return false;
+    HLib::ResolveDeferredCallback(handWatch.task);
+    handWatch.flags |= 9U;
+    handWatch.state = 1;
+    icsToggleIconState(1, 1);
+    ShowElementByIndex(UIElement::WristwatchOverlay);
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void RequestWristwatchFromHeldInput() {
+    if (!GetShouldRenderIcons(ItemSelect) && OpenWristwatch(0))
+        currentHandWatch->flags |= 2U;
+}
+
+#else
+
+// @verified - p
+void RequestWristwatchFromHeldInput() {
+    if (GetShouldRenderIcons(RenderIconSlot::ItemSelect) || handWatch.state != 0 || !handWatch.task)
+        return;
+    HLib::ResolveDeferredCallback(handWatch.task);
+    handWatch.flags |= 9U;
+    handWatch.state = 1;
+    icsToggleIconState(1, 1);
+    ShowElementByIndex(UIElement::WristwatchOverlay);
+    handWatch.flags |= 2U;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void CloseWristwatch(std::int32_t immediate) {
+    if (immediate) {
+        ReleaseHandWatchArm();
+        if (currentHandWatch->flags & 0x20U) {
+            Character *const player = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->ryo;
+            camCtrlSetTargetPosition(currentHandWatch->savedCameraTarget);
+            camCtrlSetNextPosition(currentHandWatch->savedCameraPosition);
+            camCtrlSetPerspective(static_cast<std::int16_t>(currentHandWatch->savedPerspective));
+            camCtrlSetFov(static_cast<std::int16_t>(currentHandWatch->savedFov));
+            camCtrlSetState(currentHandWatch->savedCameraState);
+            if (player) {
+                EV_SetCharDisplay(player, static_cast<CharaVisibilityMode>(3), currentHandWatch->savedPlayerDisplay);
+                charaSetVisibilityFlagTo(player, currentHandWatch->savedPlayerVisibility);
+            }
+            if (currentHandWatch->savedHelpMode)
+                SetHelpIconMenuFlags(currentHandWatch->savedHelpVisible, static_cast<std::uint8_t>(currentHandWatch->savedHelpSelected));
+            else
+                ResetHelpIconsToItemPrompt();
+        }
+        if (currentHandWatch->task)
+            HLib::SetupTimedTask(currentHandWatch->task, 0);
+        currentHandWatch->flags = 0;
+        currentHandWatch->state = 0;
+        icsToggleIconState(1, 0);
+    } else if (currentHandWatch->state) {
+        currentHandWatch->state = 3;
+    }
+}
+
+void CloseWristwatchImmediate() {
+    CloseWristwatch(1);
+}
+
+std::int32_t IsHandWatchActive() {
+    if (currentHandWatch->state != 0)
+        return 1;
+    return 0;
+}
+
+#else
+
+void CloseWristwatch(std::int32_t immediate) {
+    if (immediate) {
+        if (handWatch.reader) {
+            if (handWatchPlacementRegistered)
+                d3t::RetireObjectPlacement(handWatch.root);
+            ReleaseModelFormat7(*handWatch.reader);
+            HLib::FreeTaskData(handWatchSource);
+            handWatchSource = nullptr;
+            handWatchPlacementRegistered = false;
+        }
+        handWatch.reader = nullptr;
+        handWatch.root = nullptr;
+        if (handWatch.flags & 0x20U) {
+            MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            Character *const player = control ? static_cast<Character *>(control->ryo) : nullptr;
+            camCtrlSetTargetPosition(handWatch.savedCameraTarget);
+            camCtrlSetNextPosition(handWatch.savedCameraPosition);
+            camCtrlSetPerspective(static_cast<std::uint16_t>(handWatch.savedPerspective));
+            camCtrlSetFov(static_cast<std::int16_t>(handWatch.savedFov));
+            camCtrlSetState(handWatch.savedCameraState);
+            if (player) {
+                if (handWatch.savedPlayerDisplay)
+                    player->renderFlags |= CRF_DisplayEnabled;
+                else
+                    player->renderFlags &= static_cast<std::uint8_t>(~4U);
+                if (handWatch.savedPlayerVisibility)
+                    player->flags |= 0x10U;
+                else
+                    player->flags &= ~0x10U;
+            }
+            if (handWatch.savedHelpMode)
+                SetHelpIconMenuFlags(handWatch.savedHelpVisible);
+            else
+                ResetHelpIconsToItemPrompt();
+        }
+        if (handWatch.task)
+            HLib::SetupTimedTask(handWatch.task, 0);
+        handWatch.flags = 0;
+        handWatch.state = 0;
+        icsToggleIconState(1, 0);
+    } else if (handWatch.state) {
+        handWatch.state = 3;
+    }
+    DestroyElementByIndex(UIElement::WristwatchOverlay);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetCtrlHandWatchFlags(std::int32_t enabled) {
+    if (enabled)
+        currentHandWatch->flags |= 4U;
+    else
+        currentHandWatch->flags &= ~4U;
+}
+
+std::int32_t SetWristwatchCloseEnabled(std::int32_t enabled) {
+    const std::uint32_t closeLocked = currentHandWatch->flags & 0x10U;
+    const std::int32_t wasEnabled = closeLocked == 0;
+    if (enabled)
+        currentHandWatch->flags &= ~0x10U;
+    else
+        currentHandWatch->flags |= 0x10U;
+    return wasEnabled;
+}
+
+#else
+
+void SetCtrlHandWatchFlags(std::int32_t enabled) {
+    if (enabled)
+        handWatch.flags |= 4U;
+    else
+        handWatch.flags &= ~4U;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::int32_t GetHandWatchState() {
+    return handWatch.state;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetHandWatchState(std::int32_t state) {
+    handWatch.state = state;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+void HandWatch_Callback(void *) {
+    const std::uint16_t held = GetPadControlData(0);
+    std::uint16_t pressed = GetPadControlData(1);
+    if (currentHandWatch->flags & 0x10U) {
+        pressed &= ~0x200U;
+        if (currentHandWatch->state == 3)
+            currentHandWatch->state = 2;
+    }
+    switch (currentHandWatch->state) {
+    case 0:
+        break;
+    case 1:
+        if (LoadRyoTimeArm() && SetupHandWatchCamera()) {
+            handWatch.savedHelpMode = static_cast<std::uint16_t>(GetUiFlag(2));
+            handWatch.savedHelpVisible = static_cast<std::uint16_t>(GetUiFlag(0));
+            handWatch.savedHelpSelected = static_cast<std::uint16_t>(GetUiFlag(1));
+            if (handWatch.savedHelpMode)
+                SetHelpIconMenuFlags(3);
+            else
+                AddHelpIconMenuFlags(3);
+            handWatch.state = 2;
+            currentHandWatch->flags |= 0x20U;
+            break;
+        }
+        CloseWristwatch(1);
+        return;
+    case 2:
+        UpdateWatchHandAngles(currentHandWatch->root);
+        if (pressed & 0x200U) {
+            currentHandWatch->state = 3;
+        } else {
+            const std::uint32_t forced = currentHandWatch->flags & 4U;
+            std::int32_t light = forced != 0;
+            if (held & 0x400U)
+                light = 1;
+            SetHandWatchLight(currentHandWatch->root, light);
+        }
+        break;
+    case 3:
+        CloseWristwatch(1);
+        break;
+    }
+    HLib::ExecuteCallbackNow(TimeX_ConstructMatrices, 0);
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+void ResetHandWatch(HandWatchControl *control) {
+    control->state = 0;
+    control->armRotation.x = control->armRotation.y = control->armRotation.z = 0;
+    control->armPosition.x = control->armPosition.y = control->armPosition.z = 0.0f;
+    control->task = 0;
+    currentHandWatch->flags &= ~14U;
+    control->root = 0;
+    control->reader = 0;
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+bool LoadRyoTimeArm() {
+    std::int16_t ids[3] = {150, 151, 162};
+    void *const source = SafeTryLoadFile("model/item", "YKBT2U2G.MT7", WATCH_MODEL_DATA, 0);
+    if (!source)
+        return false;
+    handWatch.reader = InitializeMT7Model(source);
+    if (!handWatch.reader) {
+        HLib::FreeTaskData(source);
+        return false;
+    }
+    handWatch.root = handWatch.reader->root;
+    for (std::int32_t index = 0; index < 3; ++index)
+        if (!FindMT7Node(handWatch.root, ids[index]))
+            return false;
+    return true;
+}
+
+} // namespace
+
+#else
+
+namespace {
+
+// LoadRyoTimeArm's SafeTryLoad call has zero region-headroom requirement. Retain
+// its NPC-load suspension, free-talk pruning and heap's extra 32-byte guard.
 bool LoadRyoTimeArm() {
     constexpr char path[] = "model/item/YKBT2U2G.MT7";
     const std::uint32_t previousLoadState = static_cast<std::uint32_t>(GetNpcNewLoadState());
     EV_NPC_NewLoadSw(0);
     EV_ResetFreeTalkFlags();
     const std::int64_t fileSize = static_cast<std::int32_t>(ArchiveData_GetFileSize(path));
-    std::byte* source = nullptr;
+    std::byte *source = nullptr;
     if (fileSize != 0 && !HLib::WouldAllocationFail(0, fileSize)) {
-        source = static_cast<std::byte*>(HLib::AllocateTaskData(fileSize, WATCH_MODEL_DATA));
+        source = static_cast<std::byte *>(HLib::AllocateTaskData(fileSize, WATCH_MODEL_DATA));
         if (source && !ArchiveData_Read(path, 0, source, fileSize)) {
             HLib::FreeTaskData(source);
             source = nullptr;
         }
     }
     EV_NPC_NewLoadSw(previousLoadState);
-    if (!source) return false;
-    if (!ReadModelFormat7({source, static_cast<std::size_t>(fileSize)},
-                         path, handWatchModel, 2)) {
+    if (!source)
+        return false;
+    if (!ReadModelFormat7({source, static_cast<std::size_t>(fileSize)}, path, handWatchModel, 2)) {
         HLib::FreeTaskData(source);
         return false;
     }
@@ -134,22 +686,81 @@ bool LoadRyoTimeArm() {
     handWatch.reader = &handWatchModel;
     handWatch.root = handWatchModel.nodes.empty() ? nullptr : handWatchModel.nodes.data();
     return GetChildObjectByIndex(handWatchModel, handWatch.root, 150) && GetChildObjectByIndex(handWatchModel, handWatch.root, 151) &&
-           GetChildObjectByIndex(handWatchModel, handWatch.root, 162);
+        GetChildObjectByIndex(handWatchModel, handWatch.root, 162);
 }
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+bool SetupHandWatchCamera() {
+    MapControlData *const map = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    Character *const player = map->ryo;
+    if (!player)
+        return false;
+    handWatch.savedPlayerDisplay = IsOfThisVisibilityType(player, static_cast<CharaVisibilityMode>(3));
+    handWatch.savedPlayerVisibility = IsCharacterCollisionCallbackEnabled(player);
+    EV_SetCharDisplay(player, static_cast<CharaVisibilityMode>(3), 0);
+    charaSetVisibilityFlagTo(player, 0);
+    MT7Node *const hour = FindMT7Node(handWatch.root, 150);
+    MT7Node *const minute = FindMT7Node(handWatch.root, 151);
+    MT7Node *const light = FindMT7Node(handWatch.root, 162);
+    camCtrlGetNextCamPos(&handWatch.savedCameraPosition);
+    camCtrlGetTargetPosition(&handWatch.savedCameraTarget);
+    handWatch.savedFov = camCtrlGetFov();
+    handWatch.savedPerspective = camCtrlGetPerspective();
+    handWatch.savedCameraState = camCtrlGetState();
+    light->scale.x = light->scale.y = light->scale.z = 0.0f;
+    light->position.y = -0.001f;
+    Vector3 position, target, camera, hip;
+    GetCharacterWorldPosition(player, &position);
+    charaGetMotWorldPos(player, 5, &camera);
+    camera.y += 0.12f;
+    camera.x = position.x;
+    camera.z = position.z;
+    camCtrlSetState(9);
+    camCtrlSetNextPosition(camera);
+    const std::int32_t inverseYaw = -GetCharacterWorldYaw(player);
+    charaGetMotWorldPos(player, 1, &hip);
+    handWatch.armPosition.y = hip.y;
+    handWatch.armPosition.x = CalculateFixedSine(inverseYaw) * 0.2f + position.x;
+    handWatch.armPosition.z = CalculateFixedCosine(inverseYaw) * -0.2f + position.z;
+    handWatch.armRotation.x = 0;
+    handWatch.armRotation.y = -inverseYaw;
+    handWatch.armRotation.z = 0;
+    hour->rotation.y = (-5461 * g_currentDateTime.hour + -91 * g_currentDateTime.minute - g_currentDateTime.second) & 0xffff;
+    minute->rotation.y = (-1092 * g_currentDateTime.minute + -18 * g_currentDateTime.second) & 0xffff;
+    handWatch.root->rotation.y = 0x8000;
+    target = handWatch.armPosition;
+    camCtrlSetTargetPosition(target);
+    camCtrlSetPerspective(1274);
+    return true;
+}
+
+} // namespace
+
+#else
+
+namespace {
 
 bool SetupHandWatchCamera() {
     using enum CameraState;
-    MapControlData* const control = static_cast<MapControlData*>(HLib::GetTaskParameter(g_mapControlTask));
-    Character* const player = control
-        ? static_cast<Character*>(control->ryo) : nullptr;
-    if (!player) return false;
+    MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    Character *const player = control ? static_cast<Character *>(control->ryo) : nullptr;
+    if (!player)
+        return false;
     handWatch.savedPlayerDisplay = IsOfThisVisibilityType(player, 3);
     handWatch.savedPlayerVisibility = (player->flags & 0x10U) != 0;
     player->renderFlags &= static_cast<std::uint8_t>(~4U);
     player->flags &= ~0x10U;
-    MT7Node* const hour = GetChildObjectByIndex(handWatchModel, handWatch.root, 150);
-    MT7Node* const minute = GetChildObjectByIndex(handWatchModel, handWatch.root, 151);
-    MT7Node* const light = GetChildObjectByIndex(handWatchModel, handWatch.root, 162);
+    MT7Node *const hour = GetChildObjectByIndex(handWatchModel, handWatch.root, 150);
+    MT7Node *const minute = GetChildObjectByIndex(handWatchModel, handWatch.root, 151);
+    MT7Node *const light = GetChildObjectByIndex(handWatchModel, handWatch.root, 162);
     camCtrlGetNextCamPos(&handWatch.savedCameraPosition);
     camCtrlGetTargetPosition(&handWatch.savedCameraTarget);
     handWatch.savedFov = static_cast<std::int16_t>(camCtrlGetFov());
@@ -168,11 +779,8 @@ bool SetupHandWatchCamera() {
     const std::int32_t inverseYaw = -GetAllAngYForNode(&player->entity.node);
     Vector3 hip{};
     charaGetMotWorldPos(player, 1, &hip);
-    handWatch.armPosition = {
-        sin_fixed16(static_cast<std::int16_t>(inverseYaw)) * 0.2f + position.x,
-        hip.y,
-        sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(
-            static_cast<std::uint16_t>(inverseYaw)))) * -0.2f + position.z};
+    handWatch.armPosition = {sin_fixed16(static_cast<std::int16_t>(inverseYaw)) * 0.2f + position.x, hip.y,
+        sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(inverseYaw)))) * -0.2f + position.z};
     handWatch.armRotation = {0, -inverseYaw, 0};
     hour->rotation.y = static_cast<std::uint16_t>(-91 * g_currentDateTime.minute - 5461 * g_currentDateTime.hour - g_currentDateTime.second);
     minute->rotation.y = static_cast<std::uint16_t>(-18 * g_currentDateTime.second - 1092 * g_currentDateTime.minute);
@@ -182,29 +790,137 @@ bool SetupHandWatchCamera() {
     return true;
 }
 
-// @verified - p
-std::int32_t TimeX_LegacyDrawNoop() { return 0; }
+} // namespace
 
-void TimeX_ConstructMatrices(void*) {
-    if (!handWatch.root) return;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+// @verified - p
+std::int32_t TimeX_LegacyDrawNoop() {
+    return 0;
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+void ReleaseHandWatchArm() {
+    if (currentHandWatch->reader)
+        ReleaseMT7Model(currentHandWatch->reader);
+    currentHandWatch->reader = 0;
+    currentHandWatch->root = 0;
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+void UpdateWatchHandAngles(MT7Node *root) {
+    MT7Node *const minute = FindMT7Node(root, 151);
+    MT7Node *const hour = FindMT7Node(root, 150);
+    if (minute)
+        minute->rotation.y = (-1092 * g_currentDateTime.minute + -18 * g_currentDateTime.second) & 0xffff;
+    if (hour)
+        hour->rotation.y = (-5461 * g_currentDateTime.hour + -91 * g_currentDateTime.minute - g_currentDateTime.second) & 0xffff;
+}
+
+} // namespace
+
+#else
+
+namespace {
+
+void UpdateWatchHandAngles(MT7Node *root) {
+    MT7Node *const minute = GetChildObjectByIndex(handWatchModel, root, 151);
+    MT7Node *const hour = GetChildObjectByIndex(handWatchModel, root, 150);
+    if (minute)
+        minute->rotation.y = static_cast<std::uint16_t>(-18 * g_currentDateTime.second - 1092 * g_currentDateTime.minute);
+    if (hour)
+        hour->rotation.y = static_cast<std::uint16_t>(-91 * g_currentDateTime.minute - 5461 * g_currentDateTime.hour - g_currentDateTime.second);
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+void SetHandWatchLight(MT7Node *root, std::int32_t enabled) {
+    MT7Node *const light = FindMT7Node(root, 162);
+    if (light) {
+        if (enabled) {
+            light->scale.x = light->scale.y = light->scale.z = 1.0f;
+            light->position.y = 0.0f;
+        } else {
+            light->scale.x = light->scale.y = light->scale.z = 0.0f;
+            light->position.y = -0.001f;
+        }
+    }
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+namespace {
+
+// @verified - d
+void TimeX_ConstructMatrices(void *) {
+    if (!currentHandWatch->root || (currentHandWatch->flags & 1U) == 0)
+        return;
+    matrix_stack::Matrix4x4_Push(0);
+    dc::sdk::PushGraphicsWorkspace();
+    Matrix4x4::preTranslate(handWatch.armPosition.x, handWatch.armPosition.y, handWatch.armPosition.z);
+    Matrix4x4::RotateAroundY_Wrapper(handWatch.armRotation.y);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    DrawCharacterModelBranch(handWatch.root);
+#else
+    reinterpret_cast<void (*)(MT7Node *)>(DrawCharacterModelBranch)(handWatch.root);
+#endif
+    PopCurrentMatrix(1);
+    dc::sdk::PopGraphicsWorkspace();
+}
+
+} // namespace
+
+#else
+
+namespace {
+
+void TimeX_ConstructMatrices(void *) {
+    if (!handWatch.root)
+        return;
     Matrix4x4_PushActiveTransform();
-    Matrix4x4::preTranslate(handWatch.armPosition.x,
-                          handWatch.armPosition.y, handWatch.armPosition.z);
-    Matrix4x4::RotateAroundY_Wrapper(
-        static_cast<std::uint16_t>(handWatch.armRotation.y));
+    Matrix4x4::preTranslate(handWatch.armPosition.x, handWatch.armPosition.y, handWatch.armPosition.z);
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(handWatch.armRotation.y));
     const std::uint32_t projection = GetLegacyPerspectiveProjection();
     if (projection == 0 && !handWatchPlacementRegistered)
-        handWatchPlacementRegistered = d3t::RegisterObjectPlacement(
-            GetMT7ReaderData(&handWatchModel), handWatch.root, 0);
+        handWatchPlacementRegistered = d3t::RegisterObjectPlacement(GetMT7ReaderData(&handWatchModel), handWatch.root, 0);
     const bool hashed = d3t::HashModel(handWatch.root, projection);
     Matrix4x4::Pop(1);
     if (!hashed) {
         Matrix4x4_Push();
         TimeX_LegacyDrawNoop();
-        Matrix4x4::preTranslate(handWatch.armPosition.x,
-                              handWatch.armPosition.y, handWatch.armPosition.z);
-        Matrix4x4::RotateAroundY_Wrapper(
-            static_cast<std::uint16_t>(handWatch.armRotation.y));
+        Matrix4x4::preTranslate(handWatch.armPosition.x, handWatch.armPosition.y, handWatch.armPosition.z);
+        Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(handWatch.armRotation.y));
         DrawMT7Model(handWatchModel);
         Matrix4x4::Pop(1);
         TimeX_LegacyDrawNoop();
@@ -213,12 +929,21 @@ void TimeX_ConstructMatrices(void*) {
     }
 }
 
-void tmx_CtrlHandWatch_Callback(void*) {
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void tmx_CtrlHandWatch_Callback(void *) {
     const std::uint16_t held = GetPadControlData(0);
     std::uint16_t pressed = GetPadControlData(1);
     if (handWatch.flags & 0x10U) {
         pressed &= ~0x200U;
-        if (handWatch.state == 3) handWatch.state = 2;
+        if (handWatch.state == 3)
+            handWatch.state = 2;
     }
     if (handWatch.state == 1) {
         camCtrlUpdate();
@@ -238,7 +963,7 @@ void tmx_CtrlHandWatch_Callback(void*) {
             set_icon_select_flags_to((handWatch.flags & 0x10U) ? 1024 : 1536);
         if (pressed & 0x200U) {
             handWatch.state = 3;
-        } else if (MT7Node* const light = GetChildObjectByIndex(handWatchModel, handWatch.root, 162)) {
+        } else if (MT7Node *const light = GetChildObjectByIndex(handWatchModel, handWatch.root, 162)) {
             const bool lit = (handWatch.flags & 4U) || (held & 0x400U);
             if (lit) {
                 light->position.y = 0.0f;
@@ -254,24 +979,13 @@ void tmx_CtrlHandWatch_Callback(void*) {
     HLib::ExecuteCallbackNow(TimeX_ConstructMatrices, nullptr);
 }
 
-constexpr std::uint32_t guilinForest1 =
-    SHEN_NAME(KMZ1);
-constexpr std::uint32_t guilinForest2 =
-    SHEN_NAME(KMZ2);
-constexpr std::uint32_t guilinForest3 =
-    SHEN_NAME(KMZ3);
-constexpr std::uint32_t guilinForest4 =
-    SHEN_NAME(KMZ4);
-constexpr std::uint32_t kowloonRoute2 =
-    SHEN_NAME(KRK2);
-constexpr std::uint32_t kowloonRoute4 =
-    SHEN_NAME(KRK4);
-constexpr std::uint32_t kowloonRoute6 =
-    SHEN_NAME(KRK6);
-constexpr std::uint32_t kowloonUnderground0 =
-    SHEN_NAME(QUG0);
-constexpr std::uint32_t bigOxBuilding =
-    SHEN_NAME(QKBT);
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool UsesFastGameClock(std::uint32_t map) {
     switch (map) {
@@ -288,22 +1002,53 @@ bool UsesFastGameClock(std::uint32_t map) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 bool UsesSlowGameClock(std::uint32_t map) {
-    return (map & 0xffffU) == 0x4651U ||
-           map == kowloonUnderground0 || map == bigOxBuilding;
+    return (map & 0xffffU) == 0x4651U || map == kowloonUnderground0 || map == bigOxBuilding;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool IsGuilinNavigationMap(std::uint32_t map) {
     return ((map - guilinForest1) & 0xfcffffffU) == 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::int32_t CurrentCompassHeading() {
     const std::int16_t cameraYaw = static_cast<std::int16_t>(-camCtrlGetNextRotY());
-    const MapControlData* const control = static_cast<const MapControlData*>(HLib::GetTaskParameter(g_mapControlTask));
+    const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return cameraYaw + static_cast<std::int16_t>(control->sunLocation);
 }
 
-std::int32_t UpdateCompassAdmission(TimeCompassContext& context) {
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+std::int32_t UpdateCompassAdmission(TimeCompassContext &context) {
     using enum CameraState;
     constexpr float epsilon = 0.00000011920929f;
     Vector3 position;
@@ -319,11 +1064,15 @@ std::int32_t UpdateCompassAdmission(TimeCompassContext& context) {
             if (context.previousSearch == 0) {
                 const std::int32_t distance = std::bit_cast<std::int32_t>(frame - context.previousFrame);
                 const std::int32_t magnitude = distance >= 0 ? distance : std::bit_cast<std::int32_t>(context.previousFrame - frame);
-                if (magnitude > 2 && counter > 22) counter = 22;
+                if (magnitude > 2 && counter > 22)
+                    counter = 22;
             }
-            if (position.x < epsilon) position.x = 0.0f;
-            if (position.y < epsilon) position.y = 0.0f;
-            if (position.z < epsilon) position.z = 0.0f;
+            if (position.x < epsilon)
+                position.x = 0.0f;
+            if (position.y < epsilon)
+                position.y = 0.0f;
+            if (position.z < epsilon)
+                position.z = 0.0f;
             if (state == Event || state == InterpolationFollow || authGetLoaded() || std::fabs(position.x - context.previousCameraPosition.x) > epsilon ||
                 std::fabs(position.y - context.previousCameraPosition.y) > epsilon || std::fabs(position.z - context.previousCameraPosition.z) > epsilon)
                 --counter;
@@ -341,12 +1090,20 @@ std::int32_t UpdateCompassAdmission(TimeCompassContext& context) {
     return context.enabled | static_cast<std::int32_t>(movesUiVisible) | static_cast<std::int32_t>(clockAndCompassSuppressed != 0);
 }
 
-void TimeProgramHudCallback(void* parameter) {
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void TimeProgramHudCallback(void *parameter) {
     if (timeProgramWait >= 0) {
         timeCompass.heading = CurrentCompassHeading();
         return;
     }
-    const Vector3& position = *static_cast<const Vector3*>(parameter);
+    const Vector3 &position = *static_cast<const Vector3 *>(parameter);
     timeWatchSprites[0].x = position.x;
     timeWatchSprites[0].y = position.y;
     timeWatchSprites[0].scaleX = position.z;
@@ -368,12 +1125,14 @@ void TimeProgramHudCallback(void* parameter) {
     }
     timePeriodSprite.x = position.x + 22.0f;
     timePeriodSprite.y = position.y + 44.0f;
-    if (!GetDebugForceUIEnabled(UIElement::GameWatch)) PrepareDrawWithMode(timePeriodSprite, ScreenMode::Stretched);
+    if (!GetDebugForceUIEnabled(UIElement::GameWatch))
+        PrepareDrawWithMode(timePeriodSprite, ScreenMode::Stretched);
     std::int32_t imageEnabled = 0;
     if (!GetDebugForceUIEnabled(UIElement::GameWatch)) {
         imageEnabled = UpdateCompassAdmission(timeCompass);
         if (imageEnabled) {
-            if (compassRotation < 100) compassRotation += 8;
+            if (compassRotation < 100)
+                compassRotation += 8;
         } else if (compassRotation > 0) {
             imageEnabled = 1;
             compassRotation -= 8;
@@ -428,6 +1187,77 @@ void TimeProgramHudCallback(void* parameter) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+void CloseWristwatchImmediate2() {
+    CloseWristwatch(1);
+}
+
+std::int8_t IsWristwatchOpenable() {
+    return static_cast<std::int8_t>(IsHandWatchActive());
+}
+
+#else
+
+bool IsWristwatchOpenable() {
+    return handWatch.state != 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ResetTimeHudRuntime() {
+    g_clockAndCompassSuppressed = 0;
+    for (std::int32_t index = 0; index < 3; ++index) {
+        if (index == 0)
+            g_timeWatchSprites[0].icon = 0x802;
+        else
+            g_timeWatchSprites[index].icon = 0x611;
+        g_timeWatchSprites[index].alignment = timeWatchAlignments[index];
+        g_timeWatchSprites[index].x = 581.6f;
+        g_timeWatchSprites[index].y = 96.0f;
+        g_timeWatchSprites[index].width = timeWatchDimensions[index];
+        g_timeWatchSprites[index].height = timeWatchDimensions[index];
+        g_timeWatchSprites[index].scaleX = timeWatchScaleX[index];
+        g_timeWatchSprites[index].scaleY = timeWatchScaleY[index];
+        g_timeWatchSprites[index].flags = 0;
+        g_timeWatchSprites[index].depth = timeWatchDepths[index];
+        g_timeWatchSprites[index].rotation = 0;
+    }
+    g_timeHudVariant = 0;
+    g_timeCompassSprite.icon = 0x803;
+    g_timeCompassSprite.alignment = 5;
+    g_timeCompassSprite.x = 581.6f;
+    g_timeCompassSprite.y = 96.0f;
+    g_timeCompassSprite.width = 64;
+    g_timeCompassSprite.height = 64;
+    g_timeCompassSprite.scaleX = 1.2f;
+    g_timeCompassSprite.scaleY = 1.2f;
+    g_timeCompassSprite.flags = 0;
+    g_timeCompassSprite.depth = 7.0f;
+    g_timeCompassSprite.rotation = 0;
+    g_timeCompass.heading = 0;
+    g_timeCompass.direction = 0;
+    g_timeCompass.enabled = 0;
+    g_timeCompass.counter = 45;
+    g_timeCompass.previousCameraPosition.x = 0.0f;
+    g_timeCompass.previousCameraPosition.y = 0.0f;
+    g_timeCompass.previousCameraPosition.z = 0.0f;
+    g_timeCompass.previousFrame = 0;
+    g_timeCompass.previousSearch = 0;
+    g_timeCompassAlpha = 0;
+}
+
+#else
+
+namespace {
+
 void ResetTimeHudRuntime() {
     timeProgramWait = 5;
     clockAndCompassSuppressed = 0;
@@ -438,7 +1268,7 @@ void ResetTimeHudRuntime() {
     timeWatchSprites[2].scaleY = 1.6f;
     timeWatchSprites[2].depth = 5.0f;
     for (std::uint32_t index = 0; index != 3; ++index) {
-        LegacyIconSprite& sprite = timeWatchSprites[index];
+        LegacyIconSprite &sprite = timeWatchSprites[index];
         sprite.x = 578.6f;
         sprite.y = 96.0f;
         sprite.flags = 0;
@@ -460,98 +1290,118 @@ void ResetTimeHudRuntime() {
     timeCompassSprite.icon = 2051;
     timeCompassSprite.width = timeCompassSprite.height = 64;
     timeCompassSprite.alignment = 5;
-    timeCompass = {.enabled = 0, .heading = 0, .direction = 0, .counter = 45, .previousCameraPosition = {},
-        .previousFrame = 0, .previousSearch = 0};
+    timeCompass = {.enabled = 0, .heading = 0, .direction = 0, .counter = 45, .previousCameraPosition = {}, .previousFrame = 0, .previousSearch = 0};
     compassRotation = 0;
 }
 
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
 void UpdateTimeProgramWaitTime() {
-    const std::int32_t minuteTerm =
-        -18 * g_currentDateTime.second -
-        1092 * g_currentDateTime.minute;
-    const std::int32_t hourTerm =
-        -91 * g_currentDateTime.minute -
-        5461 * g_currentDateTime.hour -
-        g_currentDateTime.second;
-    minuteHand = -static_cast<std::int32_t>(
-            static_cast<std::uint16_t>(minuteTerm));
-    hourHand = -static_cast<std::int32_t>(
-            static_cast<std::uint16_t>(hourTerm));
+    g_timeWatchSprites[2].rotation = 0U - ((-1092 * g_currentDateTime.minute + -18 * g_currentDateTime.second) & 0xffffU);
+    g_timeWatchSprites[1].rotation = 0U - ((-5461 * g_currentDateTime.hour + -91 * g_currentDateTime.minute - g_currentDateTime.second) & 0xffffU);
+    g_timePeriodSprite.icon = TIME_HUD_PERIOD_ICONS[g_currentDateTime.hour / 12];
+    const std::uint32_t variant = g_timeHudVariant;
+    const Vector2 &position = TIME_HUD_POSITIONS[variant];
+    const float scale = TIME_HUD_SCALES[variant];
+    g_timeHudPosition.x = position.x;
+    g_timeHudPosition.y = position.y;
+    g_timeHudPosition.z = scale;
+    HLib::ExecuteCallbackNow(TimeProgramHudCallback, &g_timeHudPosition);
+}
+
+#else
+
+namespace {
+
+void UpdateTimeProgramWaitTime() {
+    const std::int32_t minuteTerm = -18 * g_currentDateTime.second - 1092 * g_currentDateTime.minute;
+    const std::int32_t hourTerm = -91 * g_currentDateTime.minute - 5461 * g_currentDateTime.hour - g_currentDateTime.second;
+    minuteHand = -static_cast<std::int32_t>(static_cast<std::uint16_t>(minuteTerm));
+    hourHand = -static_cast<std::int32_t>(static_cast<std::uint16_t>(hourTerm));
     timePeriodSprite.icon = TIME_HUD_PERIOD_ICONS[static_cast<std::size_t>(g_currentDateTime.hour / 12)];
     const std::size_t variant = static_cast<std::size_t>(timeHudVariant);
     timeHudPosition.x = TIME_HUD_POSITIONS[variant].x;
     timeHudPosition.y = TIME_HUD_POSITIONS[variant].y;
     timeHudPosition.z = TIME_HUD_SCALES[variant];
 
-    bool resetWait =
-        GetItemState(2) == 0 || clockAndCompassSuppressed != 0 ||
-        EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1012) != 0;
+    bool resetWait = GetItemState(2) == 0 || clockAndCompassSuppressed != 0 || EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1012) != 0;
     if (!resetWait && !IsItemSelectable() && !IsAnyItemSelectActive()) {
-        const MapControlData* const control = static_cast<const MapControlData*>(HLib::GetTaskParameter(g_mapControlTask));
-        resetWait =
-            !IsScreenFilmNotShowing(control->screenFilmTask) ||
-            authGetLoaded() || GetIsLoadScreenActive() ||
-            g_moveUiClockAndNavigationHold != 0 ||
-            g_fightUiActive != 0 || IsFightHealthUIActive() ||
-            EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1021) != 0;
+        const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        resetWait = !IsScreenFilmNotShowing(control->screenFilmTask) || authGetLoaded() || GetIsLoadScreenActive() || g_moveUiClockAndNavigationHold != 0 ||
+            g_fightUiActive != 0 || IsFightHealthUIActive() || EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1021) != 0;
     }
-    if (resetWait) timeProgramWait = 5;
-    else --timeProgramWait;
+    if (resetWait)
+        timeProgramWait = 5;
+    else
+        --timeProgramWait;
     HLib::ExecuteCallbackNow(TimeProgramHudCallback, &timeHudPosition);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 bool IsGameTimeUpdateBlocked() {
-    return GetParentMenu() == 0 || IsItemSelectable() ||
-           IsEasyOptionActive() || IsSaveAllowed() != 0 ||
-           IsAnyItemSelectActive() || IsWristwatchOpenable() ||
-           IsWazamakiInactive() != 0 ||
-           EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1021) != 0 ||
-           (GetSleepActionIconFlags() & 1U) != 0 ||
-           (IsNaviActive() &&
-            IsGuilinNavigationMap(g_currentMap.name));
+    return GetParentMenu() == 0 || IsItemSelectable() || IsEasyOptionActive() || IsSaveAllowed() != 0 || IsAnyItemSelectActive() || IsWristwatchOpenable() ||
+        IsWazamakiInactive() != 0 || EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1021) != 0 || (GetSleepActionIconFlags() & 1U) != 0 ||
+        (IsNaviActive() && IsGuilinNavigationMap(g_currentMap.name));
 }
 
-void UpdateGameTime(DateTime& dateTime) {
-    if (IsGameTimeUpdateBlocked()) return;
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void UpdateGameTime(DateTime &dateTime) {
+    if (IsGameTimeUpdateBlocked())
+        return;
 
     float accumulated = secondAccumulator;
-    if (realTimeScale > 0.0f &&
-        temporaryDay == dateTime.day &&
-        (temporaryHour > dateTime.hour ||
-         (temporaryHour == dateTime.hour &&
-          temporaryMinute > dateTime.minute))) {
+    if (realTimeScale > 0.0f && temporaryDay == dateTime.day &&
+        (temporaryHour > dateTime.hour || (temporaryHour == dateTime.hour && temporaryMinute > dateTime.minute))) {
         accumulated += realTimeScale;
     } else {
-        if (realTimeScale > 0.0f) realTimeScale = -1.0f;
+        if (realTimeScale > 0.0f)
+            realTimeScale = -1.0f;
         float speed = g_gameTimeMultiplier;
 #if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_TIME
         speed *= mods::Enabled(mods::Id::FreezeTime) ? 0.0f : mods::Get(mods::Id::TimeSpeed) / 100.0f;
 #endif
-        if (!g_freezeGameTime) accumulated += shenGetScaledDeltaTickTime(speed * realSecondsToGameMinute);
+        if (!g_freezeGameTime)
+            accumulated += shenGetScaledDeltaTickTime(speed * realSecondsToGameMinute);
     }
     secondAccumulator = accumulated;
     while (accumulated >= 60.0f) {
         incrementedSeconds = true;
         ++dateTime.minute;
-        accumulated =
-            static_cast<float>(static_cast<double>(accumulated) - 60.0);
+        accumulated = static_cast<float>(static_cast<double>(accumulated) - 60.0);
         if (dateTime.minute > 59) {
             dateTime.minute = 0;
             incrementedMinutes = true;
             if (++dateTime.hour > 23) {
                 dateTime.hour = 0;
                 incrementedDay = true;
-                const std::int8_t lastDay =
-                    (dateTime.year & 3) == 0 && dateTime.month == 2
-                    ? 29 : daysInMonth[
-                        static_cast<std::uint8_t>(dateTime.month)];
+                const std::int8_t lastDay = (dateTime.year & 3) == 0 && dateTime.month == 2 ? 29 : daysInMonth[static_cast<std::uint8_t>(dateTime.month)];
                 if (++dateTime.day > lastDay) {
                     dateTime.day = 1;
                     incrementedMonth = true;
                     if (++dateTime.month > 12) {
                         dateTime.month = 1;
                         incrementedYear = true;
-                        if (++dateTime.year > 99) dateTime.year = 0;
+                        if (++dateTime.year > 99)
+                            dateTime.year = 0;
                     }
                 }
                 ComputeDayOfWeek(dateTime);
@@ -563,8 +1413,17 @@ void UpdateGameTime(DateTime& dateTime) {
     g_gameTimeMilliseconds = static_cast<float>(std::fmod(static_cast<double>(accumulated), 1.0) * 1000.0);
 }
 
-void CtrlTimeProgram_Callback(void*) {
-    if (timeUpdateBlocked) return;
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void CtrlTimeProgram_Callback(void *) {
+    if (timeUpdateBlocked)
+        return;
     if (timeFrozen != 1) {
         incrementedYear = false;
         incrementedMonth = false;
@@ -572,31 +1431,44 @@ void CtrlTimeProgram_Callback(void*) {
         incrementedMinutes = false;
         incrementedSeconds = false;
         incrementedUnused = 0;
-        if (gameClockUpdateFlag == 1 &&
-            EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1011) == 0) {
+        if (gameClockUpdateFlag == 1 && EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1011) == 0) {
             UpdateGameTime(g_currentDateTime);
-            if (CompareDates(g_currentDateTime, nextDateTime) !=
-                DateComparisonResult::LessThan) {
+            if (CompareDates(g_currentDateTime, nextDateTime) != DateComparisonResult::LessThan) {
                 gameClockUpdateFlag = 2;
             }
         }
     }
-    previousItemState =
-        static_cast<std::uint8_t>(GetItemState(2));
+    previousItemState = static_cast<std::uint8_t>(GetItemState(2));
     if (!canTickForFrame && previousItemState != 0)
         UpdateTimeProgramWaitTime();
 }
 
-void InitTimeProgram_Callback(void*) {
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void InitTimeProgram_Callback(void *) {
     HLib::SetCurrentTaskTo(CtrlTimeProgram_Callback);
 }
 
 } // namespace
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
-void shenGetCurrentDateTime(DateTime& dateTime) {
+void shenGetCurrentDateTime(DateTime &dateTime) {
     dateTime = g_currentDateTime;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void CopyCurrentCalendarRecord(std::span<std::byte, CALENDAR_RECORD_SIZE> output) {
@@ -605,8 +1477,12 @@ void CopyCurrentCalendarRecord(std::span<std::byte, CALENDAR_RECORD_SIZE> output
     std::memcpy(output.data() + 8, &currentCalendarReservedWord, sizeof(currentCalendarReservedWord));
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
-void IncrementDateTimeInPlace(DateTime& current, const DateTime& increment) {
+void IncrementDateTimeInPlace(DateTime &current, const DateTime &increment) {
     current.second = static_cast<std::int8_t>(current.second + increment.second);
     if (current.second > 59) {
         ++current.minute;
@@ -635,15 +1511,32 @@ void IncrementDateTimeInPlace(DateTime& current, const DateTime& increment) {
         current.month = 1;
     }
     current.year = static_cast<std::int8_t>(current.year + increment.year);
-    if (current.year > 99) current.year = 0;
+    if (current.year > 99)
+        current.year = 0;
     ComputeDayOfWeek(current);
 }
 
-// @verified - p
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
-std::int64_t AddDaysAndCalculateWeekday(DateTime& dateTime, std::int16_t days) {
+void ComputeDayOfWeek(DateTime &dateTime) {
+    std::int16_t year = static_cast<std::int16_t>(dateTime.year + 1900);
+    std::int8_t month = dateTime.month;
+    if (month < 3) {
+        year = static_cast<std::int16_t>(dateTime.year + 1899);
+        month = static_cast<std::int8_t>(month + 12);
+    }
+    dateTime.week = static_cast<std::uint8_t>((year / 400 + (13 * month + 8) / 5 - year / 100 + year + year / 4 + dateTime.day) % 7);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::int64_t AddDaysAndCalculateWeekday(DateTime &dateTime, std::int16_t days) {
     if (days > 0) {
         std::int8_t day = dateTime.day;
         for (std::int16_t remaining = days; remaining != 0; --remaining) {
@@ -656,7 +1549,8 @@ std::int64_t AddDaysAndCalculateWeekday(DateTime& dateTime, std::int16_t days) {
                 if (dateTime.month > 12) {
                     dateTime.month = 1;
                     dateTime.year = static_cast<std::int8_t>(year + 1);
-                    if (dateTime.year > 99) dateTime.year = 0;
+                    if (dateTime.year > 99)
+                        dateTime.year = 0;
                 }
             }
         }
@@ -674,42 +1568,62 @@ std::int64_t AddDaysAndCalculateWeekday(DateTime& dateTime, std::int16_t days) {
     return static_cast<std::uint32_t>(wholeWeeks);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::int64_t AddDaysAndCalculateWeekdayFromCurrentDate(std::uint16_t days) {
     return AddDaysAndCalculateWeekday(g_currentDateTime, static_cast<std::int16_t>(days));
 }
 
+#endif
 
-void shenGetDayInMonth(const DateTime& input, DateTime& output) {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// Native shenGetDayInMonth: the previous calendar day; `input` and `output` may alias.
+void shenGetDayInMonth(const DateTime &input, DateTime &output) {
     output.day = input.day;
     output.month = input.month;
     const std::int8_t year = input.year;
     const bool wrapped = --output.day < 1;
     output.year = year;
-    if (!wrapped) return;
+    if (!wrapped)
+        return;
     if (--output.month < 1) {
         const bool underflow = --output.year < 0;
         output.month = 12;
-        if (underflow) output.year = 99;
+        if (underflow)
+            output.year = 99;
     }
     output.day = (output.year & 3) != 0 || output.month != 2 ? daysInMonth[static_cast<std::uint8_t>(output.month)] : 29;
 }
 
-// @verified - p
-DateComparisonResult CompareDates(const DateTime& first, const DateTime& second) {
-    const std::int32_t dateA = first.day + 64 * (first.month + 64 * first.year);
-    const std::int32_t dateB = second.day + 64 * (second.month + 64 * second.year);
-    if (dateA < dateB) return DateComparisonResult::LessThan;
-    if (dateA > dateB) return DateComparisonResult::GreaterThan;
-    const std::int32_t timeA = first.second + 64 * (first.minute + 64 * first.hour);
-    const std::int32_t timeB = second.second + 64 * (second.minute + 64 * second.hour);
-    if (timeA < timeB) return DateComparisonResult::LessThan;
-    return timeA > timeB ? DateComparisonResult::GreaterThan
-                         : DateComparisonResult::Equal;
-}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
-void SetCurrentDateTimeTo(DateTime& dateTime) {
+DateComparisonResult CompareDates(const DateTime &first, const DateTime &second) {
+    const std::int32_t dateA = first.day + 64 * (first.month + 64 * first.year);
+    const std::int32_t dateB = second.day + 64 * (second.month + 64 * second.year);
+    if (dateA < dateB)
+        return DateComparisonResult::LessThan;
+    if (dateA > dateB)
+        return DateComparisonResult::GreaterThan;
+    const std::int32_t timeA = first.second + 64 * (first.minute + 64 * first.hour);
+    const std::int32_t timeB = second.second + 64 * (second.minute + 64 * second.hour);
+    if (timeA < timeB)
+        return DateComparisonResult::LessThan;
+    return timeA > timeB ? DateComparisonResult::GreaterThan : DateComparisonResult::Equal;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetCurrentDateTimeTo(DateTime &dateTime) {
     if (dateTime.second > 59) {
         ++dateTime.minute;
         dateTime.second = 0;
@@ -726,8 +1640,7 @@ void SetCurrentDateTimeTo(DateTime& dateTime) {
     std::int8_t month = dateTime.month;
     std::int8_t lastDay = 29;
     if ((dateTime.year & 3) != 0 || month != 2) {
-        lastDay = static_cast<std::uint8_t>(month) >= 13U
-                      ? 30 : daysInMonth[static_cast<std::uint8_t>(month)];
+        lastDay = static_cast<std::uint8_t>(month) >= 13U ? 30 : daysInMonth[static_cast<std::uint8_t>(month)];
     }
     if (dateTime.day > lastDay) {
         dateTime.day = 1;
@@ -737,12 +1650,17 @@ void SetCurrentDateTimeTo(DateTime& dateTime) {
         dateTime.month = 1;
         dateTime.year = static_cast<std::int8_t>(year + 1);
     }
-    if (dateTime.year > 99) dateTime.year = 0;
+    if (dateTime.year > 99)
+        dateTime.year = 0;
     ComputeDayOfWeek(dateTime);
     g_currentDateTime = dateTime;
     g_gameTimeMilliseconds = 0.0f;
     ComputeDayOfWeek(g_currentDateTime);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::int64_t shenAdjustCurrentTimeByMinutes(std::int16_t minutes) {
@@ -774,14 +1692,20 @@ std::int64_t shenAdjustCurrentTimeByMinutes(std::int16_t minutes) {
     }
     g_currentDateTime.minute = static_cast<std::int8_t>(minute);
     g_currentDateTime.hour = static_cast<std::int8_t>(hour);
-    if (days != 0) return AddDaysAndCalculateWeekday(g_currentDateTime, static_cast<std::int16_t>(days));
+    if (days != 0)
+        return AddDaysAndCalculateWeekday(g_currentDateTime, static_cast<std::int16_t>(days));
     return result;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int64_t shenUpdateCurrentDateTime() {
     DateTime dateTime;
     shenGetCurrentDateTime(dateTime);
-    if (dateTime.hour >= 8) ++dateTime.day;
+    if (dateTime.hour >= 8)
+        ++dateTime.day;
     dateTime.hour = 8;
     dateTime.minute = 0;
     dateTime.second = 0;
@@ -800,56 +1724,66 @@ std::int64_t shenUpdateCurrentDateTime() {
     return EV_setHoldStatesFlags(2);
 }
 
-void FormatLoadingScreenDate(std::span<char> output, std::int32_t year, std::int32_t month,
-                            std::uint32_t day, std::int32_t week, std::uint8_t flags) {
-    if (output.empty()) return;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void FormatLoadingScreenDate(std::span<char> output, std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags) {
+    if (output.empty())
+        return;
     // ResetLoadingFlags admits English text only when no language table has
     // been selected yet. Subsequent calls use the canonical loaded language.
-    if (g_sceneTextLanguage < 0) LoadLocalizedSceneText(0);
-    constexpr const char* months[]{
-        "UILOADMN00", "UILOADMN01", "UILOADMN02", "UILOADMN03", // @text UILOADMN00 EN: "Jan" | JA: "１月" ; UILOADMN01 EN: "Feb" | JA: "２月" ; UILOADMN02 EN: "Mar" | JA: "３月" ; UILOADMN03 EN: "Apr" | JA: "４月"
-        "UILOADMN04", "UILOADMN05", "UILOADMN06", "UILOADMN07", // @text UILOADMN04 EN: "May" | JA: "５月" ; UILOADMN05 EN: "Jun" | JA: "６月" ; UILOADMN06 EN: "Jul" | JA: "７月" ; UILOADMN07 EN: "Aug" | JA: "８月"
-        "UILOADMN08", "UILOADMN09", "UILOADMN10", "UILOADMN11"}; // @text UILOADMN08 EN: "Sep" | JA: "９月" ; UILOADMN09 EN: "Oct" | JA: "１０月" ; UILOADMN10 EN: "Nov" | JA: "１１月" ; UILOADMN11 EN: "Dec" | JA: "１２月"
-    constexpr const char* weekdays[]{
-        "UILOADSUN0", "UILOADMON0", "UILOADTUE0", "UILOADWED0", // @text UILOADSUN0 EN: "Sun." | JA: "日" ; UILOADMON0 EN: "Mon." | JA: "月" ; UILOADTUE0 EN: "Tue." | JA: "火" ; UILOADWED0 EN: "Wed." | JA: "水"
-        "UILOADTHU0", "UILOADFRI0", "UILOADSAT0"}; // @text UILOADTHU0 EN: "Thu." | JA: "木" ; UILOADFRI0 EN: "Fri." | JA: "金" ; UILOADSAT0 EN: "Sat." | JA: "土"
+    if (g_sceneTextLanguage < 0)
+        LoadLocalizedSceneText(0);
+    constexpr const char *months[]{"UILOADMN00", "UILOADMN01", "UILOADMN02",
+        "UILOADMN03", // @text UILOADMN00 EN: "Jan" | JA: "１月" ; UILOADMN01 EN: "Feb" | JA: "２月" ; UILOADMN02 EN: "Mar" | JA: "３月" ; UILOADMN03 EN: "Apr" | JA: "４月"
+        "UILOADMN04", "UILOADMN05", "UILOADMN06",
+        "UILOADMN07", // @text UILOADMN04 EN: "May" | JA: "５月" ; UILOADMN05 EN: "Jun" | JA: "６月" ; UILOADMN06 EN: "Jul" | JA: "７月" ; UILOADMN07 EN: "Aug" | JA: "８月"
+        "UILOADMN08", "UILOADMN09", "UILOADMN10",
+        "UILOADMN11"}; // @text UILOADMN08 EN: "Sep" | JA: "９月" ; UILOADMN09 EN: "Oct" | JA: "１０月" ; UILOADMN10 EN: "Nov" | JA: "１１月" ; UILOADMN11 EN: "Dec" | JA: "１２月"
+    constexpr const char *weekdays[]{"UILOADSUN0", "UILOADMON0", "UILOADTUE0",
+        "UILOADWED0", // @text UILOADSUN0 EN: "Sun." | JA: "日" ; UILOADMON0 EN: "Mon." | JA: "月" ; UILOADTUE0 EN: "Tue." | JA: "火" ; UILOADWED0 EN: "Wed." | JA: "水"
+        "UILOADTHU0", "UILOADFRI0",
+        "UILOADSAT0"}; // @text UILOADTHU0 EN: "Thu." | JA: "木" ; UILOADFRI0 EN: "Fri." | JA: "金" ; UILOADSAT0 EN: "Sat." | JA: "土"
     const std::int32_t shortYear = year > 1900 ? year - 1900 : year;
-    const auto displayYear = static_cast<std::uint32_t>(
-        shortYear + ((flags & 4U) != 0 ? 0 : 1900));
+    const auto displayYear = static_cast<std::uint32_t>(shortYear + ((flags & 4U) != 0 ? 0 : 1900));
     const std::int32_t language = g_sceneTextLanguage;
     output[0] = 0;
     if (language == 1 || (language >= 4 && language <= 6)) {
-        std::snprintf(output.data(), output.size(), "%u/%02u/%02u",
-            displayYear, static_cast<std::uint32_t>(month), day);
+        std::snprintf(output.data(), output.size(), "%u/%02u/%02u", displayYear, static_cast<std::uint32_t>(month), day);
     } else if ((flags & 1U) != 0) {
         const std::string_view monthText = GetLocalizedSceneText(months[month - 1]);
         if (language == 2 || language == 3) {
-            std::snprintf(output.data(), output.size(),
-                language == 2 ? "%02u %.*s %u" : "%02u. %.*s %u",
-                day, static_cast<int>(monthText.size()), monthText.data(), displayYear);
+            std::snprintf(output.data(), output.size(), language == 2 ? "%02u %.*s %u" : "%02u. %.*s %u", day, static_cast<int>(monthText.size()),
+                monthText.data(), displayYear);
         } else {
-            std::snprintf(output.data(), output.size(), "%.*s. %02u, %u",
-                static_cast<int>(monthText.size()), monthText.data(), day, displayYear);
+            std::snprintf(output.data(), output.size(), "%.*s. %02u, %u", static_cast<int>(monthText.size()), monthText.data(), day, displayYear);
         }
     } else {
-        std::snprintf(output.data(), output.size(), "%02u/%02u/%u",
-            day, static_cast<std::uint32_t>(month), displayYear);
+        std::snprintf(output.data(), output.size(), "%02u/%02u/%u", day, static_cast<std::uint32_t>(month), displayYear);
     }
     if ((flags & 2U) != 0 && week >= 0) {
         const auto written = std::strlen(output.data());
         const auto weekday = GetLocalizedSceneText(weekdays[week]);
-        std::snprintf(output.data() + written, output.size() - written, "%s(%.*s)",
-            language >= 4 && language <= 6 ? "" : " ",
-            static_cast<int>(weekday.size()), weekday.data());
+        std::snprintf(output.data() + written, output.size() - written, "%s(%.*s)", language >= 4 && language <= 6 ? "" : " ", static_cast<int>(weekday.size()),
+            weekday.data());
     }
 }
-std::string FormatLoadingScreenDate(std::int32_t year, std::int32_t month,
-                                    std::uint32_t day, std::int32_t week,
-                                    std::uint8_t flags) {
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::string FormatLoadingScreenDate(std::int32_t year, std::int32_t month, std::uint32_t day, std::int32_t week, std::uint8_t flags) {
     std::array<char, 512> output{};
     FormatLoadingScreenDate(output, year, month, day, week, flags);
     return output.data();
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void initTimeProgram() {
     HLib::EnqueueTaskWithoutParameter(InitTimeProgram_Callback, 7, 0, static_cast<std::int32_t>(TASK_TIME.name));
 
@@ -875,11 +1809,7 @@ void initTimeProgram() {
     if (g_actNumber == 0) {
         update = 0;
         timeUpdateAllowed = false;
-    } else if (g_actNumber == 1 &&
-               (g_currentMap.name ==
-                    SHEN_NAME(1000) ||
-                g_currentMap.name ==
-                    SHEN_NAME(2000))) {
+    } else if (g_actNumber == 1 && (g_currentMap.name == SHEN_NAME(1000) || g_currentMap.name == SHEN_NAME(2000))) {
         timeUpdateBlocked = true;
         update = 0;
         timeUpdateAllowed = false;
@@ -900,50 +1830,63 @@ void initTimeProgram() {
     ResetTimeHudRuntime();
 }
 
-std::string FormatLoadingScreenTime(std::int32_t hour, std::int32_t minute,
-                                    std::int32_t meridiem) {
-    if (g_sceneTextLanguage < 0) LoadLocalizedSceneText(0);
-    const std::uint32_t clockHour = static_cast<std::uint32_t>(
-        hour > 12 ? hour - 12 : hour);
-    const std::string_view period = GetLocalizedSceneText(
-        meridiem == 1 ? "UILOADPM00" : "UILOADAM00"); // @text UILOADPM00 EN: "pm" | JA: "午後" ; UILOADAM00 EN: "am" | JA: "午前"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::string FormatLoadingScreenTime(std::int32_t hour, std::int32_t minute, std::int32_t meridiem) {
+    if (g_sceneTextLanguage < 0)
+        LoadLocalizedSceneText(0);
+    const std::uint32_t clockHour = static_cast<std::uint32_t>(hour > 12 ? hour - 12 : hour);
+    const std::string_view period =
+        GetLocalizedSceneText(meridiem == 1 ? "UILOADPM00" : "UILOADAM00"); // @text UILOADPM00 EN: "pm" | JA: "午後" ; UILOADAM00 EN: "am" | JA: "午前"
     char output[512]{};
     if (g_sceneTextLanguage == 1) {
-        std::snprintf(output, sizeof(output), "%.*s %2u:%02u",
-            static_cast<int>(period.size()), period.data(), clockHour,
-            static_cast<std::uint32_t>(minute));
+        std::snprintf(output, sizeof(output), "%.*s %2u:%02u", static_cast<int>(period.size()), period.data(), clockHour, static_cast<std::uint32_t>(minute));
     } else {
-        std::snprintf(output, sizeof(output), "%2u:%02u %.*s",
-            clockHour, static_cast<std::uint32_t>(minute),
-            static_cast<int>(period.size()), period.data());
+        std::snprintf(output, sizeof(output), "%2u:%02u %.*s", clockHour, static_cast<std::uint32_t>(minute), static_cast<int>(period.size()), period.data());
     }
     return output;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 namespace {
 
-std::int32_t DateSeconds(const DateTime& dateTime) {
+std::int32_t DateSeconds(const DateTime &dateTime) {
     std::int32_t leapDays = (dateTime.year - 80) / 4;
     if ((((dateTime.year - 80) % 4) == 0) && dateTime.month <= 2) {
         --leapDays;
     }
     const std::int32_t days = leapDays + monthStartDays[dateTime.month - 1] + dateTime.day + 365 * (dateTime.year - 80);
-    const std::uint32_t seconds = 60U * (static_cast<std::uint32_t>(dateTime.minute) +
-        60U * (static_cast<std::uint32_t>(dateTime.hour) + 24U * static_cast<std::uint32_t>(days))) + static_cast<std::uint32_t>(dateTime.second);
+    const std::uint32_t seconds =
+        60U * (static_cast<std::uint32_t>(dateTime.minute) + 60U * (static_cast<std::uint32_t>(dateTime.hour) + 24U * static_cast<std::uint32_t>(days))) +
+        static_cast<std::uint32_t>(dateTime.second);
     return std::bit_cast<std::int32_t>(seconds);
 }
 
 } // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
-std::int32_t ComputeSecondsSince1980(const DateTime& dateTime, std::int32_t* output) {
+std::int32_t ComputeSecondsSince1980(const DateTime &dateTime, std::int32_t *output) {
     const std::int32_t seconds = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(DateSeconds(dateTime)) - 86400U);
-    if (output) *output = seconds;
+    if (output)
+        *output = seconds;
     return seconds;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
-void IncrementDateTimeBySeconds(std::uint32_t seconds, DateTime& dateTime) {
+void IncrementDateTimeBySeconds(std::uint32_t seconds, DateTime &dateTime) {
     const std::uint32_t hours = seconds / 3600U;
     dateTime.second = static_cast<std::int8_t>(seconds % 60U);
     dateTime.minute = static_cast<std::int8_t>((seconds / 60U) % 60U);
@@ -955,7 +1898,8 @@ void IncrementDateTimeBySeconds(std::uint32_t seconds, DateTime& dateTime) {
     if (leapDays > yearDay) {
         dateTime.year = static_cast<std::int8_t>(years + 79U);
         dayOfYear = 365 - leapDays + yearDay;
-        if ((dateTime.year % 4) == 0) ++dayOfYear;
+        if ((dateTime.year % 4) == 0)
+            ++dayOfYear;
     } else {
         dayOfYear = yearDay - leapDays;
         dateTime.year = static_cast<std::int8_t>(years + 80U);
@@ -963,38 +1907,57 @@ void IncrementDateTimeBySeconds(std::uint32_t seconds, DateTime& dateTime) {
     std::int32_t month = 1;
     const std::int32_t yearRemainder = dateTime.year % 4;
     if (yearRemainder != 0) {
-        while (month < 12 && dayOfYear >= monthStartDays[month]) ++month;
+        while (month < 12 && dayOfYear >= monthStartDays[month])
+            ++month;
     } else if (dayOfYear >= monthStartDays[1]) {
         for (month = 2; month < 12; ++month) {
-            if (dayOfYear < monthStartDays[month] + 1) break;
+            if (dayOfYear < monthStartDays[month] + 1)
+                break;
         }
     }
     dateTime.month = static_cast<std::int8_t>(month);
-    dateTime.day = static_cast<std::int8_t>(
-        dayOfYear - monthStartDays[month - 1] + 1);
-    if (yearRemainder == 0 && month > 2) --dateTime.day;
+    dateTime.day = static_cast<std::int8_t>(dayOfYear - monthStartDays[month - 1] + 1);
+    if (yearRemainder == 0 && month > 2)
+        --dateTime.day;
     ComputeDayOfWeek(dateTime);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
-void DateTime_AddMinutesInPlace(DateTime& dateTime, std::int32_t minutes) {
+void DateTime_AddMinutesInPlace(DateTime &dateTime, std::int32_t minutes) {
     const std::uint32_t seconds = static_cast<std::uint32_t>(DateSeconds(dateTime)) + 60U * static_cast<std::uint32_t>(minutes) - 86400U;
     IncrementDateTimeBySeconds(seconds, dateTime);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
-std::int32_t CompareDateTimeSeconds(const DateTime& first, const DateTime& second) {
+std::int32_t CompareDateTimeSeconds(const DateTime &first, const DateTime &second) {
     const std::uint32_t firstSeconds = static_cast<std::uint32_t>(DateSeconds(first)) - 86400U;
     const std::uint32_t secondSeconds = static_cast<std::uint32_t>(DateSeconds(second)) - 86400U;
-    if (firstSeconds >= secondSeconds) return firstSeconds > secondSeconds;
+    if (firstSeconds >= secondSeconds)
+        return firstSeconds > secondSeconds;
     return -1;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
-std::int32_t DiffMinutes(const DateTime& first, const DateTime& second) {
+std::int32_t DiffMinutes(const DateTime &first, const DateTime &second) {
     const std::int32_t seconds = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(DateSeconds(first)) - static_cast<std::uint32_t>(DateSeconds(second)));
     return seconds / 60;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void InitCalendar() {
     EV_SetScenarioTaskFlags(5);
@@ -1020,22 +1983,106 @@ void InitCalendar() {
     InitST_TitleFunc();
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void InitializeNewGameCalendar() {
     EV_SetScenarioTaskFlags(4);
     InitCalendar();
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::uint64_t shenSetTimeSimulationTo(std::uint32_t state) {
     const std::uint8_t value = static_cast<std::uint8_t>(state);
-    if (timeUpdateAllowed) gameClockUpdateFlag = value;
+    if (timeUpdateAllowed)
+        gameClockUpdateFlag = value;
     return value;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool IsTimeSimulationEnabled() {
     return gameClockUpdateFlag == 1;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void shenSetClockAndCompassRenderTo(std::uint8_t suppressed) {
+    g_clockAndCompassSuppressed = suppressed;
+}
+
+#else
+
+void shenSetClockAndCompassRenderTo(std::int32_t suppressed) noexcept {
+    clockAndCompassSuppressed = static_cast<std::uint8_t>(suppressed);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool shenIsClockAndCompassSuppressed() noexcept {
+    return clockAndCompassSuppressed != 0;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t UpdateTempHourMinTimeScale(std::int32_t hour, std::int32_t minute, float scale) {
+    temporaryDay = g_currentDateTime.day;
+    temporaryHour = hour;
+    temporaryMinute = minute;
+    realTimeScale = scale / 30.0f;
+    return static_cast<std::uint32_t>(g_currentDateTime.day);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::int32_t IsCurrentTimeRange(std::uint16_t start, std::uint16_t end) {
+    DateTime dateTime{};
+    shenGetCurrentDateTime(dateTime);
+    std::int8_t hour = dateTime.hour;
+    if (hour < 7)
+        hour = static_cast<std::int8_t>(hour + 24);
+    const std::uint16_t current = static_cast<std::uint16_t>(
+        static_cast<std::uint16_t>(static_cast<std::int16_t>(dateTime.minute)) | (static_cast<std::uint16_t>(static_cast<std::int16_t>(hour)) << 8U));
+    if (end >= start) {
+        if (end < current || current < start)
+            return 0;
+    } else if (current < end || start < current) {
+        return 0;
+    }
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::uint32_t SetTimeHudVariant(std::uint32_t variant) {
+    const std::uint32_t previous = g_timeHudVariant;
+    if (variant < 2)
+        g_timeHudVariant = variant;
+    return previous;
+}
+
+#else
 
 // @verified - p
 std::uint32_t SetTimeHudVariant(std::int32_t variant) {
@@ -1044,151 +2091,8 @@ std::uint32_t SetTimeHudVariant(std::int32_t variant) {
         timeHudVariant = variant;
     return previous;
 }
-void shenSetClockAndCompassRenderTo(std::int32_t suppressed) noexcept {
-    clockAndCompassSuppressed = static_cast<std::uint8_t>(suppressed);
-}
 
-bool shenIsClockAndCompassSuppressed() noexcept {
-    return clockAndCompassSuppressed != 0;
-}
+#endif
 
-std::uint32_t UpdateTempHourMinTimeScale(std::int32_t hour,
-                                         std::int32_t minute,
-                                         float scale) {
-    temporaryDay = g_currentDateTime.day;
-    temporaryHour = hour;
-    temporaryMinute = minute;
-    realTimeScale = scale / 30.0f;
-    return static_cast<std::uint32_t>(g_currentDateTime.day);
-}
-
-// @verified - p
-std::int32_t IsCurrentTimeRange(std::uint16_t start, std::uint16_t end) {
-    DateTime dateTime{};
-    shenGetCurrentDateTime(dateTime);
-    std::int8_t hour = dateTime.hour;
-    if (hour < 7) hour = static_cast<std::int8_t>(hour + 24);
-    const std::uint16_t current = static_cast<std::uint16_t>(
-        static_cast<std::uint16_t>(static_cast<std::int16_t>(dateTime.minute)) |
-        (static_cast<std::uint16_t>(static_cast<std::int16_t>(hour)) << 8U));
-    if (end >= start) {
-        if (end < current || current < start) return 0;
-    } else if (current < end || start < current) {
-        return 0;
-    }
-    return 1;
-}
-
-void tmx_CtrlHandWatch(std::uint8_t nextFunctionIndex) {
-    handWatch.state = 0;
-    handWatch.armPosition.x = 0.0f;
-    handWatch.armPosition.y = 0.0f;
-    handWatch.armPosition.z = 0.0f;
-    handWatch.armRotation = {};
-    handWatch.task = nullptr;
-    handWatch.flags = 0;
-    handWatch.root = nullptr;
-    handWatch.reader = nullptr;
-    handWatch.task = HLib::EnqueueTaskWithoutParameter(
-        tmx_CtrlHandWatch_Callback, nextFunctionIndex, 0,
-        static_cast<std::int32_t>(TASK_TMEX.name));
-    if (handWatch.task) HLib::SetupTimedTask(handWatch.task, 0);
-}
-
-bool IsWristwatchOpenable() {
-    return handWatch.state != 0;
-}
-
-bool OpenWristwatch() {
-    if (handWatch.state != 0 || !handWatch.task) return false;
-    HLib::ResolveDeferredCallback(handWatch.task);
-    handWatch.flags |= 9U;
-    handWatch.state = 1;
-    icsToggleIconState(1, 1);
-    ShowElementByIndex(UIElement::WristwatchOverlay);
-    return true;
-}
-
-// @verified - p
-void RequestWristwatchFromHeldInput() {
-    if (GetShouldRenderIcons(RenderIconSlot::ItemSelect) || handWatch.state != 0 || !handWatch.task) return;
-    HLib::ResolveDeferredCallback(handWatch.task);
-    handWatch.flags |= 9U;
-    handWatch.state = 1;
-    icsToggleIconState(1, 1);
-    ShowElementByIndex(UIElement::WristwatchOverlay);
-    handWatch.flags |= 2U;
-}
-
-void CloseWristwatch(std::int32_t immediate) {
-    if (immediate) {
-        if (handWatch.reader) {
-            if (handWatchPlacementRegistered)
-                d3t::RetireObjectPlacement(handWatch.root);
-            ReleaseModelFormat7(*handWatch.reader);
-            HLib::FreeTaskData(handWatchSource);
-            handWatchSource = nullptr;
-            handWatchPlacementRegistered = false;
-        }
-        handWatch.reader = nullptr;
-        handWatch.root = nullptr;
-        if (handWatch.flags & 0x20U) {
-            MapControlData* const control = static_cast<MapControlData*>(HLib::GetTaskParameter(g_mapControlTask));
-            Character* const player = control
-                ? static_cast<Character*>(control->ryo) : nullptr;
-            camCtrlSetTargetPosition(handWatch.savedCameraTarget);
-            camCtrlSetNextPosition(handWatch.savedCameraPosition);
-            camCtrlSetPerspective(static_cast<std::uint16_t>(handWatch.savedPerspective));
-            camCtrlSetFov(static_cast<std::int16_t>(handWatch.savedFov));
-            camCtrlSetState(handWatch.savedCameraState);
-            if (player) {
-                if (handWatch.savedPlayerDisplay)
-                    player->renderFlags |= CRF_DisplayEnabled;
-                else player->renderFlags &= static_cast<std::uint8_t>(~4U);
-                if (handWatch.savedPlayerVisibility) player->flags |= 0x10U;
-                else player->flags &= ~0x10U;
-            }
-            if (handWatch.savedHelpMode)
-                SetHelpIconMenuFlags(handWatch.savedHelpVisible);
-            else
-                ResetHelpIconsToItemPrompt();
-        }
-        if (handWatch.task) HLib::SetupTimedTask(handWatch.task, 0);
-        handWatch.flags = 0;
-        handWatch.state = 0;
-        icsToggleIconState(1, 0);
-    } else if (handWatch.state) {
-        handWatch.state = 3;
-    }
-    DestroyElementByIndex(UIElement::WristwatchOverlay);
-}
-
-void SetCtrlHandWatchFlags(std::int32_t enabled) {
-    if (enabled) handWatch.flags |= 4U;
-    else handWatch.flags &= ~4U;
-}
-
-std::int32_t GetHandWatchState() {
-    return handWatch.state;
-}
-
-void SetHandWatchState(std::int32_t state) {
-    handWatch.state = state;
-}
-
-} // namespace shenmue::s2
-
-
-namespace shenmue { namespace s2 {
-// @verified - pd
-void ComputeDayOfWeek(DateTime &dateTime) {
-    std::int16_t year = static_cast<std::int16_t>(dateTime.year + 1900);
-    std::int8_t month = dateTime.month;
-    if (month < 3) {
-        year = static_cast<std::int16_t>(dateTime.year + 1899);
-        month = static_cast<std::int8_t>(month + 12);
-    }
-    dateTime.week = static_cast<std::uint8_t>((year / 400 + (13 * month + 8) / 5 - year / 100 + year + year / 4 + dateTime.day) % 7);
-}
-
-} } // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

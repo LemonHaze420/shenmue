@@ -1,3 +1,16 @@
+#include "shenmue.h"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/npc_data_dc.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/pak_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include "s2/texture_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/npc_package_internal.hpp"
 #include "s2/npc_package.hpp"
 
@@ -11,12 +24,34 @@
 #include "s2/field_collision.hpp"
 #include "s2/frame_pacing.hpp"
 #include "s2/game_runtime.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/hlib.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/npc_area_route.hpp"
+#include "s2/character_control_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/motion_registry_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/motion_ground_dc.hpp"
+#include "s2/door_control_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/hand.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s2/load_title.hpp"
 #include "s2/map_control.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/math.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/matrix_stack.hpp"
 #include "s2/model_component.hpp"
 #include "s2/pak.hpp"
@@ -33,16 +68,255 @@
 #include <array>
 #include <bit>
 #include <cctype>
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cmath>
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include "s2/character_placement_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstdint>
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstdio>
 #include <cstring>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <limits>
 #include <memory>
 #include <string>
 #include <vector>
+#endif
 
-namespace shenmue::s2 {
+
+namespace shenmue {
+namespace s2 {
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void RestartNpcAreaRouteContext(Character *character, NpcRouteStateContextPrefix *context);
+
+bool RequestNpcRouteMotion(Character *character, NpcRouteStateContextPrefix *context, std::int32_t explicitRequest);
+
+std::int32_t GetNpcRunCapability(Character *character);
+
+PakAfsPartition *npcHumansAfs = 0;
+
+std::int32_t npcHumansReady = 0;
+
+std::int32_t npcHumansInUse = 0, npcHasCachedPak = 0;
+
+std::size_t npcLargestSceneBlock;
+
+bool AttachScenarioFreeTalkCharacter(Character *character, const std::byte *source);
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+char npcHumanFilename[8] = {};
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+const char *GetNpcHumanFilename(shen_name name) {
+    std::memcpy(npcHumanFilename, &name, sizeof(name));
+    return npcHumanFilename;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+std::int32_t GetNpcHumanTextureSize(std::int32_t index) {
+    const std::int32_t *words = reinterpret_cast<const std::int32_t *>(npcHumanIndex);
+    const std::int32_t count = *words++;
+    return count > index ? words[count + index] + 0xc18 : 0;
+}
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void npcSetupHumans() {
+    char directory[32];
+    std::sprintf(directory, "scene/%02d/npc", static_cast<int>(g_loadedActNumber));
+    npcHumansAfs = MountPakAfs(directory, "HUMANS.afs");
+    SetupPakSpace(1024);
+    ClearNpcHumanSlots();
+    npcHumansReady = 1;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags) {
+    if (!npcHumansReady)
+        return 0;
+    const std::int32_t index = npcLoadFromPak(packageName);
+    if (index < 0)
+        return -1;
+    KMUINT32 totalTexture, scratch;
+    switch (npcHumanSlots[index].state) {
+    case NpcHumanPakState::Empty:
+        npcHumanSlots[index].state = NpcHumanPakState::Requested;
+    case NpcHumanPakState::Requested: {
+        if (PakLoadWait())
+            return 0;
+        const std::int32_t size = GetNpcHumanTextureSize(index);
+        if (!size) {
+            npcHumanSlots[index].state = NpcHumanPakState::Empty;
+            return -2;
+        }
+        QueryFreeTextureMemory(&totalTexture, &scratch);
+        if (size > static_cast<std::int32_t>(totalTexture)) {
+            npcHumanSlots[index].state = NpcHumanPakState::Empty;
+            return -4;
+        }
+        if (!npcHumansInUse || !npcHasCachedPak) {
+            HLib::AnalyzeFreeList(reinterpret_cast<std::size_t *>(&scratch), &npcLargestSceneBlock, reinterpret_cast<std::size_t *>(&scratch));
+            npcLargestSceneBlock -= 0xc800U;
+            npcHasCachedPak = 1;
+        }
+        if (size > static_cast<std::int32_t>(npcLargestSceneBlock)) {
+            npcHumanSlots[index].state = NpcHumanPakState::Empty;
+            return -3;
+        }
+        if (flags)
+            npcHumanSlots[index].pak = RequestPakFromAfsWithAllocation(npcHumansAfs, index * 2, index * 2 + 1);
+        else
+            npcHumanSlots[index].pak = RequestPakFromAfs(npcHumansAfs, index * 2, index * 2 + 1);
+        if (npcHumanSlots[index].pak) {
+            npcHumanSlots[index].state = NpcHumanPakState::Ready;
+            npcHasCachedPak = 0;
+        }
+        return 0;
+    }
+    case NpcHumanPakState::Ready: {
+        scratch = GetPakReadiness(npcHumanSlots[index].pak);
+        if (static_cast<std::int32_t>(scratch) < 0) {
+            CancelPakSlot(npcHumanSlots[index].pak);
+            npcHumanSlots[index].pak = 0;
+            npcHumanSlots[index].state = NpcHumanPakState::Empty;
+            return -6;
+        }
+        if (!scratch)
+            return 0;
+        MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        Character *const character = scenFindChara(control->scenarioTask, characterName);
+        if (!character) {
+            CancelPakSlot(npcHumanSlots[index].pak);
+            npcHumanSlots[index].pak = 0;
+            npcHumanSlots[index].state = NpcHumanPakState::Empty;
+            return -5;
+        }
+        PakGlobalData *const package = npcHumanSlots[index].pak;
+        const char *const filename = GetNpcHumanFilename(characterName);
+        const std::byte *const source = reinterpret_cast<const std::byte *>(FileLoader(package, filename, PACKAGE_BINARY_EXTENSION));
+        AttachScenarioFreeTalkCharacter(character, source);
+        npcHumanSlots[index].state = NpcHumanPakState::Attached;
+        return 1;
+    }
+    case NpcHumanPakState::Attached:
+        return 1;
+    }
+    return 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+PakGlobalData *npcGetHumanPak(std::int32_t index) {
+    if (index >= 0 && npcHumanSlots[index].state == NpcHumanPakState::Attached)
+        return npcHumanSlots[index].pak;
+    return 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+NpcTimedMotionSlotPrefix npcTimedMotionSlots[2] = {};
+
+std::int32_t npcTimedMotionCount = 0;
+
+bool mtwkSetDrawOverrideData(MotionWork *work, const Matrix4x4 *frame);
+
+void RestartNpcAreaRouteContext(Character *character, NpcRouteStateContextPrefix *context);
+
+bool RequestNpcRouteMotion(Character *character, NpcRouteStateContextPrefix *context, std::int32_t explicitRequest);
+
+std::int32_t TickNpcRouteStair(Character *character, NpcRouteStateContextPrefix *context);
+
+std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState *state, NpcRouteLiveEntry *entry);
+
+void ApplyNpcAreaMotion(NpcRouteLiveEntry *entry, std::uint16_t motion);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+bool AllocateNpcTimedMotion(NpcRouteLiveEntry *entry) {
+    if (npcTimedMotionCount != 2) {
+        for (std::int32_t index = 0; index < 2; ++index) {
+            NpcTimedMotionSlotPrefix &slot = npcTimedMotionSlots[index];
+            if (slot.occupied != 1) {
+                slot.occupied = 1;
+                entry->timedMotionHandle = &slot;
+                slot.character = 0;
+                ++npcTimedMotionCount;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t AcquireNpcTimedMotionSlot(NpcRouteLiveEntry *entry);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry) {
+    if (!entry->timedMotionHandle) {
+        if (!AcquireNpcTimedMotionSlot(entry))
+            return false;
+    }
+    if (entry->timedMotionHandle->motion) {
+        MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        entry->timedMotionHandle->character = scenFindChara(control->scenarioTask, entry->timedMotionHandle->name);
+        Character *const character = entry->timedMotionHandle->character;
+        if (!character)
+            goto fail;
+        EV_SetCharDisplay(character, static_cast<CharaVisibilityMode>(3), 1);
+        Vector3 offset = entry->timedMotionHandle->offset;
+        matrix_stack::PushUnitMatrix();
+        Matrix4x4::SetViewMatrixFromEuler(0, entry->rotation.y, 0);
+        Matrix4x4::TransformPoint(offset, offset);
+        PopCurrentMatrix(1);
+        am2Vector3AddInPlace(&offset, &entry->worldPosition);
+        offset.x -= npcRouteOrigin.x;
+        offset.z -= npcRouteOrigin.z;
+        SetCharacterWorldPosition(entry->timedMotionHandle->character, &offset);
+        charaSetWorldRot(entry->timedMotionHandle->character, entry->rotation);
+        InitializeTimedNodeMotion(&entry->timedMotionHandle->animation, entry->timedMotionHandle->character->model,
+            reinterpret_cast<const TimedNodeMotionHeader *>(MOTN_GetDataForAnimId(entry->timedMotionHandle->motion)));
+    }
+    return true;
+fail:
+    return false;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void NpcRouteCollisionNullsub(void *) {
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 using namespace npc_package_detail;
 
 Vector3 npcPlayerPosition{};
@@ -50,8 +324,10 @@ float npcPlayerRadius{};
 float npcHourWeatherForecast{};
 std::int32_t g_usingCustomAuthorCharacterList{};
 std::int32_t npcPoolTarget{34};
-namespace npc_package_detail {
+#endif
 
+namespace npc_package_detail {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr std::uint32_t afsSignature = make_shen_name('A', 'F', 'S', '\0');
 constexpr std::size_t npcPackageCapacity = 64;
 
@@ -71,7 +347,9 @@ bool npcSceneCheckEnabled{};
 std::size_t npcAuthoredEntryCount{};
 constexpr std::array<std::byte, 0x38> npcScriptRecord{
     std::byte{'M'}, std::byte{'O'}, std::byte{'V'}, std::byte{'E'}, std::byte{0}, std::byte{20}, std::byte{1}, std::byte{1}};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 NpcRouteLiveEntry *FindActiveNpcEntry(shen_name name) {
     if (!npcIsNpcTaskActive())
@@ -81,6 +359,9 @@ NpcRouteLiveEntry *FindActiveNpcEntry(shen_name name) {
             return &entry;
     return nullptr;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float npcCrowdDensityScale{};
 float npcEndOfDayWeatherForecast{};
 std::uint32_t npcWaitFrames{};
@@ -111,7 +392,7 @@ std::uint32_t npcColdResetMode{1};
 NpcRouteResetGroupHeader npcEmptyRouteResetGroup{};
 NpcRouteResetGroupHeader *npcRouteResetGroup{&npcEmptyRouteResetGroup};
 std::array<NpcTransitionRuntimeSlot, 4> npcTransitionRuntimeSlots{};
-
+// The native cache is four inline 0x30-byte TMNM records, not allocated pointers.
 std::array<TimedNodeMotion, 4> npcTransitionMotionCaches{};
 bool npcDrawActive{};
 shen_name npcInterpolatingCharacter{};
@@ -121,8 +402,8 @@ HLib::Task *areaNpcLoadStartupTask{};
 std::int32_t areaNpcLoadPhase{};
 std::int32_t areaNpcLoadCharactersVisible{1};
 std::int32_t areaNpcLoadLowQualityHands{1};
-
-
+// The common event loader and compiled loader have
+// distinct native storage and may retain independent continuations.
 const shen_name *genericNpcLoadCharacters{};
 HLib::Task *genericNpcLoadStartupTask{};
 std::int32_t genericNpcLoadPhase{};
@@ -159,82 +440,30 @@ std::int32_t npcTimedMotionCount{};
 std::vector<NpcRouteRuntimeRecord> npcRouteRuntimeRecords;
 
 constexpr std::array<std::uint8_t, 59> npcOpcodeSizeDwords{
-    1,
-    2,
-    2,
-    2,
-    3,
-    2,
-    2,
-    5,
-    6,
-    4,
-    3,
-    5,
-    3,
-    2,
-    2,
-    3,
-    7,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    6,
-    2,
-    3,
-    2,
-    4,
-    5,
-    3,
-    2,
-    2,
-    5,
-    5,
-    2,
-    3,
-    4,
-    3,
-    9,
-    2,
-    4,
-    5,
-    3,
-    3,
-    2,
-    2,
-    3,
-    2,
-    2,
-    2,
-    2,
-    2,
-    2,
-    3,
-    3,
-    3,
-    2,
+#define NPC_OPCODE(value, name, dwords) dwords,
+#include "s2/npc_opcodes.def"
+#undef NPC_OPCODE
 };
 std::int32_t npcPositionQueryMode;
 std::byte *npcHumanIndex;
 std::int32_t npcHumanCount;
 NpcHumanPakSlot *npcHumanSlots;
-
+// Native g_pHumansAFS: the HUMANS.afs descriptor npcSetupHumans mounts.
 PakAfsPartition *npcHumansAfs;
 std::int32_t npcLastHumanLoadResult;
 std::int32_t npcHumansInUse;
 bool npcHasCachedPak;
 std::uint64_t npcLargestSceneBlock;
 std::uint64_t npcLargestDynamicBlock;
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool Contains(std::span<const std::byte> bytes, std::uint64_t offset, std::uint64_t size) {
     return offset <= bytes.size() && size <= bytes.size() - offset;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool AllocateNpcTimedMotion(NpcRouteLiveEntry &entry) {
     if (npcTimedMotionCount == 2)
         return false;
@@ -249,7 +478,9 @@ bool AllocateNpcTimedMotion(NpcRouteLiveEntry &entry) {
     }
     return false;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseNpcTimedMotion(NpcRouteLiveEntry &entry) {
     auto *const slot = static_cast<NpcTimedMotionSlot *>(entry.timedMotionHandle);
     if (!slot)
@@ -262,6 +493,9 @@ void ReleaseNpcTimedMotion(NpcRouteLiveEntry &entry) {
     slot->occupied = 0;
     entry.timedMotionHandle = nullptr;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr std::size_t npcAttachFlagsOffset = 0x310;
 constexpr std::size_t npcCurrentMotionOffset = 0x346;
 constexpr std::size_t npcClipOverrideOffset = 0x34c;
@@ -275,7 +509,9 @@ static_assert(offsetof(NpcGlobalBranchTrigger, packedCondition) == 0x04);
 static_assert(offsetof(NpcGlobalBranchTrigger, commandOffset) == 0x0e);
 std::array<NpcGlobalBranchTrigger, 16> npcGlobalBranchTriggers{};
 static_assert(npcWorldPositionOffset + sizeof(Vector3) <= sizeof(NpcRouteLiveEntry));
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 NpcRouteRuntimeRecord *GetNpcRuntimeRecord(NpcRouteLiveEntry &entry) {
     if (npcRouteEntries.empty() || npcRouteRuntimeRecords.size() != npcRouteEntries.size()) {
         return nullptr;
@@ -290,7 +526,9 @@ NpcRouteRuntimeRecord *GetNpcRuntimeRecord(NpcRouteLiveEntry &entry) {
     const std::size_t index = delta / sizeof(NpcRouteLiveEntry);
     return index < npcRouteRuntimeRecords.size() ? &npcRouteRuntimeRecords[index] : nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool NpcRecordContains(const NpcRouteRuntimeRecord &runtime, const std::byte *cursor, std::size_t size) {
     if (!runtime.begin || !runtime.end || !cursor)
         return false;
@@ -299,16 +537,17 @@ bool NpcRecordContains(const NpcRouteRuntimeRecord &runtime, const std::byte *cu
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(cursor);
     return begin <= address && address <= end && size <= end - address;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float ReadF32(const std::byte *source) {
     float value{};
     std::memcpy(&value, source, sizeof(value));
     return value;
 }
+#endif
 
-} // namespace
-
-namespace npc_package_detail {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 static_assert(sizeof(NpcAvoidanceCandidate) == 0x40);
 std::array<NpcAvoidanceCandidate, 5> npcAvoidanceCandidates{};
 NpcAvoidanceCandidate *npcAvoidanceFirst{};
@@ -318,7 +557,9 @@ float npcAvoidanceHigh{};
 float npcAvoidanceLateral{};
 float npcAvoidanceRadius{};
 float npcAvoidanceDistance{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ReadArchiveFile(const char *path, std::vector<std::byte> &bytes) {
     const std::uint64_t size = ArchiveData_GetFileSize(path);
     if (!size || size > static_cast<std::uint64_t>((std::numeric_limits<std::size_t>::max)())) {
@@ -327,7 +568,9 @@ bool ReadArchiveFile(const char *path, std::vector<std::byte> &bytes) {
     bytes.resize(static_cast<std::size_t>(size));
     return ArchiveData_Read(path, 0, bytes.data(), bytes.size());
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ReadCString(std::span<const std::byte> bytes, std::uint32_t offset, std::string &value) {
     value.clear();
     if (!offset || !Contains(bytes, offset, 1))
@@ -340,11 +583,9 @@ bool ReadCString(std::span<const std::byte> bytes, std::uint32_t offset, std::st
     }
     return false;
 }
+#endif
 
-} // namespace
-
-namespace npc_package_detail {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ReadArchiveRange(const char *path, const AfsEntry &entry, std::vector<std::byte> &bytes) {
     if (!entry.size || entry.size > static_cast<std::uint64_t>((std::numeric_limits<std::size_t>::max)())) {
         return false;
@@ -352,7 +593,9 @@ bool ReadArchiveRange(const char *path, const AfsEntry &entry, std::vector<std::
     bytes.resize(entry.size);
     return ArchiveData_Read(path, entry.offset, bytes.data(), bytes.size());
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ExtensionEquals(const PakContainerEntry &entry, const char *extension) {
     for (std::size_t index = 0; index < entry.extension.size(); ++index) {
         const auto left = static_cast<unsigned char>(entry.extension[index]);
@@ -362,7 +605,9 @@ bool ExtensionEquals(const PakContainerEntry &entry, const char *extension) {
     }
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<const std::byte> EntryBytes(const PakContainerView &container, const PakContainerEntry &entry) {
     const std::uint64_t offset = static_cast<std::uint64_t>(container.ipacOffset) + entry.relativeOffset;
     if (offset > container.bytes.size() || entry.size > container.bytes.size() - offset) {
@@ -370,7 +615,9 @@ std::span<const std::byte> EntryBytes(const PakContainerView &container, const P
     }
     return container.bytes.subspan(static_cast<std::size_t>(offset), entry.size);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void CopyEntryName(const PakContainerEntry &entry, std::array<char, 14> &output) {
     std::size_t cursor = 0;
     for (const char value : entry.stem) {
@@ -387,11 +634,12 @@ void CopyEntryName(const PakContainerEntry &entry, std::array<char, 14> &output)
     }
     output[cursor] = '\0';
 }
+#endif
 
-} // namespace
-
-
-
+} // namespace npc_package_detail
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native npcInitData, from SetSceneFolders before the scene heap is partitioned, so the act tables sit outside it. The
+// heap was reset for the new act, so the previous act's pointers are dropped, not freed.
 void npcInitData() {
     npcLoadedArea = {};
     npcWaitBypassActive = false;
@@ -412,7 +660,9 @@ void npcInitData() {
     npcScheduleFilename = {};
     ResetNpcScheduleSeeds();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int64_t InitializeNpcFlags() {
     npcColdResetMode = 1;
@@ -433,7 +683,9 @@ std::int64_t InitializeNpcFlags() {
     ResetNpcScheduleSeeds();
     return 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<NpcRouteLiveEntry> CreateNpcRouteLiveEntries(std::span<const NpcRouteRecordSource> records) {
     for (auto &trigger : npcGlobalBranchTriggers)
         trigger.packedCondition = 0xffffffffU;
@@ -501,11 +753,15 @@ std::span<NpcRouteLiveEntry> CreateNpcRouteLiveEntries(std::span<const NpcRouteR
     }
     return npcRouteEntries;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<NpcRouteLiveEntry> GetNpcRouteLiveEntries() {
     return npcRouteEntries;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeNpcRouteLiveEntries() {
     // Invalidate readers before retiring Character/MTWK and package owners.
     UnpublishNpcRouteLiveEntries();
@@ -531,7 +787,9 @@ void FreeNpcRouteLiveEntries() {
     npcActiveStreamCost = 0;
     npcPlayerPresent = false;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int64_t RegisterNpcFlags(shen_name character, std::uint32_t flags, std::int32_t operation) {
     if (!npcRegistryTask.current)
         return 0;
@@ -548,14 +806,18 @@ std::int64_t RegisterNpcFlags(shen_name character, std::uint32_t flags, std::int
     }
     return 0;
 }
+#endif
 
 namespace npc_package_detail {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 static_assert(sizeof(ConditionalNpcLoadWork) == 0x30);
 static_assert(offsetof(ConditionalNpcLoadWork, admitted) == 0x0c);
 std::array<ConditionalNpcLoadSlot, 8> conditionalNpcLoadSlots{};
 std::int32_t conditionalNpcLoadsReady{};
-}
+#endif
 
+} // namespace npc_package_detail
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const LoadedNpcPackage *LoadNpcPackage(shen_name name, const char *scene) {
     for (LoadedNpcPackage &package : loadedNpcPackages) {
         if (package.references && package.name.name == name.name) {
@@ -657,7 +919,9 @@ const LoadedNpcPackage *LoadNpcPackage(shen_name name, const char *scene) {
     ++loadedNpcPackageCount;
     return &*freeSlot;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseNpcPackage(const LoadedNpcPackage *package) {
     if (!package)
         return;
@@ -689,7 +953,9 @@ void ReleaseNpcPackage(const LoadedNpcPackage *package) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeNpcPackages() {
     // Route entries retire their Character/MTWK owners before any package
     // allocation backing their model spans is released.
@@ -704,7 +970,9 @@ void FreeNpcPackages() {
     }
     loadedNpcPackageCount = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int64_t EV_NPC_NewLoadSw(std::uint32_t state) {
     const bool starting = state == 1 && npcNewLoadState == 0;
@@ -716,5 +984,15 @@ std::int64_t EV_NPC_NewLoadSw(std::uint32_t state) {
     }
     return state;
 }
+#endif
 
-} // namespace shenmue::s2
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetNpcMotionTransition(
+    shenmue::s2::NpcRouteStateContextPrefix *context, std::uint32_t name, std::int32_t operation) {
+    shenmue::s2::SetNpcRouteMotionState(context, shenmue::shen_name(name), operation);
+}
+#endif

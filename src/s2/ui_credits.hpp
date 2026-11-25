@@ -1,4 +1,29 @@
 #pragma once
+#include "shenmue.h"
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hlib.hpp"
+#include "s2/legacy_sprite_dc.hpp"
+namespace shenmue { namespace s2 {
+struct StaffRollState {
+    std::byte *begin, *cursor, *initial, *end;
+    std::int32_t phase, finished;
+    HLib::Task *film;
+    std::int32_t killPages;
+    std::byte *resource;
+    std::int32_t signatureTexture;
+};
+struct StaffRollPage {
+    std::int32_t texture, x, y, width, height;
+    LegacySpritePacket packet;
+    float alpha;
+    std::int32_t remaining;
+};
+typedef char StaffRollStateSizeCheck[sizeof(StaffRollState) == 0x28 ? 1 : -1];
+typedef char StaffRollPageSizeCheck[sizeof(StaffRollPage) == 0x74 ? 1 : -1];
+void StaffRoll(void *data);
+} }
+#else
+#pragma once
 
 #include "d3t/ui_runtime.hpp"
 #include "d3t/model.hpp"
@@ -80,3 +105,5 @@ std::int64_t UpdateEndingCredits();
 std::int64_t ReleaseEndingCredits();
 } // namespace ui_detail
 } // namespace shenmue::s2
+
+#endif

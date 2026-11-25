@@ -5,7 +5,7 @@ set_property(CACHE SHENMUE_DC_EVENT_TARGET PROPERTY STRINGS S2_JP_1001 S2_JP_GAM
 if(NOT SHENMUE_DC_EVENT_TARGET MATCHES "^(S2_JP_1001|S2_JP_GAMEJAM|S2_US|S2_EU)$")
   message(FATAL_ERROR "Unknown Dreamcast event build: ${SHENMUE_DC_EVENT_TARGET}")
 endif()
-if(NOT SHENMUE_DC_EVENT_OVERLAYS)
+if(NOT SHENMUE_DC_EVENT_OVERLAYS AND NOT SHENMUE_BUILD_S2_DC_COMPILER)
   return()
 endif()
 if(SHENMUE_DC_EVENT_REFERENCE_DIR)
@@ -80,6 +80,14 @@ function(_shenmue_event_gcc_project name)
       DEPENDEES patch
       DEPENDERS configure
       DEPENDS "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-math-errno.patch")
+    if(SHENMUE_BUILD_S2_DC_COMPILER)
+      ExternalProject_Add_Step(${name} insn_order
+        COMMAND "${SHENMUE_EVENT_PATCH}" -p1 -i "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-final-shuid.patch"
+        WORKING_DIRECTORY <SOURCE_DIR>
+        DEPENDEES math_options
+        DEPENDERS configure
+        DEPENDS "${PROJECT_SOURCE_DIR}/cmake/patches/gcc-2.95.2-final-shuid.patch")
+    endif()
   endif()
 endfunction()
 
@@ -140,6 +148,10 @@ set(_event_gcc_build "${BINARY_DIR}/gcc")
 _shenmue_event_newlib_project(shenmue_event_newlib)
 ExternalProject_Get_Property(shenmue_event_newlib SOURCE_DIR)
 set(_event_newlib_source "${SOURCE_DIR}/newlib/libc")
+endif()
+
+if(SHENMUE_BUILD_S2_DC_COMPILER)
+  return()
 endif()
 
 if(SHENMUE_DC_EVENT_TARGET MATCHES "^S2_(US|EU)$")
@@ -847,7 +859,7 @@ if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_GAMEJAM")
     ${_event_library} ${_event_utility_v1} s2/areas/area_loop_dc.c
     DEFINES SHENMUE_EVENT_LIBRARY_REVISION=10 SHENMUE_AREA_LOOP_HAND_POSE_TABLE=1
     RUNTIME memset strcat strcpy movstr_i4 sdivsi3_i4 OPTIONS -fno-math-errno
-    # Reproduce the native branch choice despite GCC 2.95.2's uninitialized delay-sequence ordering entry.
+    # GCC 2.95.2 delay-sequence ordering requires the native branch choice.
     COMPILER_ENVIRONMENT MALLOC_PERTURB_=128
     COMMON_ORDER cwonPackIndex:4 cwonWaveTask:4 cwonSpringTask:4 cwonPack:4 cwonDynamixTask:4 cwonPackState:4)
   shenmue_add_event_overlay(EVENT_SMBL C TYPE EV3 REFERENCE EVENT/SMBL.EV3 ENTRY s2/areas/area_smbl.cpp

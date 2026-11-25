@@ -1,6 +1,186 @@
 #include "shenmue.h"
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/ui_credits.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/texture_dc.hpp"
+#include "s2/conversation_dc.hpp"
+#include "s2/conversation_playback_dc.hpp"
+#include "s2/screen_film.hpp"
+#include "s2/save_screen_state_dc.hpp"
+#include "s2/title_dc.hpp"
+#include "s2/system_modules_dc.hpp"
+#include "s2/frame_dc.hpp"
+#include <string.h>
 
+namespace shenmue {
+namespace s2 {
 
+void ReleaseNamedTexture_Wrapper(std::int32_t index);
+
+// @verified - d
+static void DrawStaffRollPage(void *data) {
+    StaffRollPage *page = static_cast<StaffRollPage *>(data);
+    const std::uint32_t colour = (static_cast<std::uint32_t>(page->alpha * 255.0f) << 24) + 0xffffffU;
+    LegacySpritePacket *const packet = &page->packet;
+    packet->colour = colour;
+    DrawLegacySpritePacket(*packet, page->texture, -5.0f);
+}
+
+// @verified - d
+static void UpdateStaffRollPage(void *data) {
+    StaffRollPage *page = static_cast<StaffRollPage *>(data);
+    StaffRollState *state = static_cast<StaffRollState *>(HLib::GetTaskParameter(HLib::GetCurrentParentTask()));
+    if (!state->finished || page->y > 0 || page->y < -2)
+        page->y -= 2;
+    else
+        page->y = 0;
+    if (page->y <= -512 || state->killPages) {
+        ReleaseNamedTexture_Wrapper(page->texture);
+        HLib::DestroyCurrentTask();
+    } else {
+        AdjustScreenAspectRatio(page->packet.quad, static_cast<ScreenAlignment>(0), page->x, page->y, page->width, page->height);
+        HLib::ExecuteCallbackNow(DrawStaffRollPage, page);
+    }
+}
+
+// @verified - d
+static void UpdateStaffRollSignature(void *data) {
+    StaffRollPage *page = static_cast<StaffRollPage *>(data);
+    if (--page->remaining > 0)
+        HLib::ExecuteCallbackNow(DrawStaffRollPage, page);
+}
+
+// @verified - d
+static void FinishStaffRoll(void *) {
+    ChangeSystemModule(static_cast<SystemModule>(4), 0);
+}
+
+// @verified - d
+static void WaitForStaffRollSave(void *data) {
+    StaffRollState *state = static_cast<StaffRollState *>(data);
+    if (!IsSaveAllowed()) {
+        WaitForNextTask_0(state->film, 1, 30);
+        HLib::SetCurrentTaskTo(FinishStaffRoll);
+        HLib::SetupTaskDelay(32);
+    }
+}
+
+// @verified - d
+static void SaveStaffRoll(void *) {
+    StartShowScreenOfId(6);
+    HLib::SetCurrentTaskTo(WaitForStaffRollSave);
+}
+
+// @verified - d
+static void FadeInStaffRollSave(void *data) {
+    StaffRollState *state = static_cast<StaffRollState *>(data);
+    WaitForNextTask_0(state->film, 0, 30);
+    HLib::SetCurrentTaskTo(SaveStaffRoll);
+    HLib::SetupTaskDelay(30);
+}
+
+// @verified - d
+static void FadeOutStaffRollSignature(void *data) {
+    StaffRollState *state = static_cast<StaffRollState *>(data);
+    WaitForNextTask_0(state->film, 1, 30);
+    HLib::SetCurrentTaskTo(FadeInStaffRollSave);
+    HLib::SetupTaskDelay(30);
+}
+
+static void ShowStaffRollSignature(void *data) {
+    StaffRollState *state = static_cast<StaffRollState *>(data);
+    state->killPages = 1;
+    dc::sdk::njSetBackColor(0xff000000U, 0xff000000U, 0xff000000U);
+    WaitForNextTask_0(state->film, 0, 30);
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(UpdateStaffRollSignature, 9, 0, sizeof(StaffRollPage), shen_name(SHEN_NAME4('S', 'E', 'G', 'A')));
+    StaffRollPage *page = static_cast<StaffRollPage *>(HLib::GetTaskParameter(task));
+    std::size_t pageSize = sizeof(*page);
+    ::memset(page, 0, pageSize);
+    page->texture = state->signatureTexture;
+    page->remaining = 122;
+    LegacySpritePacket *packet = &page->packet;
+    INIT_LEGACY_SPRITE_PACKET(*packet);
+    page->packet.quad.flags |= 0x400;
+    page->alpha = 1.0f;
+    AdjustScreenAspectRatio(page->packet.quad, static_cast<ScreenAlignment>(10), 752, 456, 512, 64);
+    HLib::SetCurrentTaskTo(FadeOutStaffRollSignature);
+    HLib::SetupTaskDelay(90);
+}
+
+// @verified - d
+static void FinishStaffRollPages(void *data) {
+    StaffRollState *state = static_cast<StaffRollState *>(data);
+    WaitForNextTask_0(state->film, 1, 30);
+    HLib::SetCurrentTaskTo(ShowStaffRollSignature);
+    HLib::SetupTaskDelay(32);
+}
+
+static void EnqueueStaffRollPage(void *data) {
+    StaffRollState *state = static_cast<StaffRollState *>(data);
+    if (state->phase < 2 && state->cursor < state->end) {
+        HLib::Task *task = HLib::EnqueueTaskWithParameter(UpdateStaffRollPage, 9, 0, sizeof(StaffRollPage), shen_name(SHEN_NAME4('S', 'T', 'A', 'F')));
+        StaffRollPage *page = static_cast<StaffRollPage *>(HLib::GetTaskParameter(task));
+        std::size_t pageSize = sizeof(*page);
+        ::memset(page, 0, pageSize);
+        page->texture = LoadAndFindTEXN_Wrapper(reinterpret_cast<TextureChunk *>(state->cursor));
+        LegacySpritePacket *packet = &page->packet;
+        INIT_LEGACY_SPRITE_PACKET(*packet);
+        page->packet.quad.flags |= 0x400;
+        page->x = 64;
+        page->y = 480 - state->phase;
+        page->width = 512;
+        page->height = 512;
+        page->alpha = 1.0f;
+        state->cursor += reinterpret_cast<const TextureChunk *>(state->cursor)->size;
+        if (state->cursor >= state->end) {
+            state->finished = 1;
+            HLib::SetCurrentTaskTo(FinishStaffRollPages);
+            HLib::SetupTaskDelay(406);
+        }
+    }
+    state->phase = (state->phase + 2) & 511;
+}
+
+// @verified - d
+static void StaffRollNoOp(void *) {
+}
+
+// @verified - d
+void StaffRoll(void *) {
+    InitSceneEffects();
+    HLib::Task *film = Queue_SCF_Callback_ScreenFilmTaskEntry(8);
+    WaitForNextTask_0(film, 0, 30);
+    dc::sdk::njSetBackColor(0xff080820U, 0xff080820U, 0xff080820U);
+    g_developerDisplayEnabled = 0;
+    HLib::SetCurrentTaskTo(StaffRollNoOp);
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(EnqueueStaffRollPage, 8, 0, sizeof(StaffRollState), shen_name(SHEN_NAME4('S', 'T', 'A', 'F')));
+    StaffRollState *state = static_cast<StaffRollState *>(HLib::GetTaskParameter(task));
+    state->begin = 0;
+    state->cursor = 0;
+    state->initial = 0;
+    state->end = 0;
+    state->phase = 0;
+    state->finished = 0;
+    state->film = 0;
+    state->killPages = 0;
+    state->resource = 0;
+    state->signatureTexture = 0;
+    state->resource = static_cast<std::byte *>(shenLoadCompressedFile("sprite", "STAFF_S.GZ", shen_name(SHEN_NAME4('S', 'T', 'A', 'F'))));
+    state->signatureTexture = LoadAndFindTEXN_Wrapper(reinterpret_cast<TextureChunk *>(state->resource));
+    state->cursor = state->begin = state->initial = state->resource + reinterpret_cast<TextureChunk *>(state->resource)->size;
+    const std::uint32_t bytes = HLib::GetTaskDataSize(state->resource);
+    state->end = state->cursor + (bytes - (state->initial - state->resource + 32));
+    state->phase = 0;
+    state->film = film;
+    CVS_CtrlConversTask_Enqueue(1);
+    shenPlayAudioWithFlags("stuffroll", 1);
+    SM_Init_Enqueue(1);
+    HLib::SetupTimedTask(task, 90);
+}
+
+} // namespace s2
+} // namespace shenmue
+#else
 #include "s2/ui_credits.hpp"
 #include "s2/ui_internal.hpp"
 #include "s2/renderer_scratch.hpp"
@@ -598,3 +778,4 @@ void InitializeEndingCreditsElement(UIElementState &element) {
 }
 } // namespace shenmue::s2::ui_detail
 
+#endif

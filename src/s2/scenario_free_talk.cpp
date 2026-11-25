@@ -433,7 +433,11 @@ void ReleaseFreeTalk() {
 }
 } // namespace event_runtime_detail
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t ScenarioCharacterIsRyo(shen_name name) {
+#else
 bool ScenarioCharacterIsRyo(shen_name name) {
+#endif
     // scenCheckIsRyo rejects the zero token, but accepts the
     // literal four-character token "null". Pointer aliases precede names.
     if (!name.name)
@@ -458,7 +462,11 @@ bool IsScenarioCharacterForcedVisible(shen_name character) {
     return false;
 }
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t HasScenarioCharacterControl() {
+#else
 bool HasScenarioCharacterControl() {
+#endif
     const ScenarioEventRuntime *const scenario = activeScenarioEventRuntime;
     if (!scenario)
         return false;
@@ -470,7 +478,11 @@ bool HasScenarioCharacterControl() {
 
 
 // @verified - p
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t scenCheckActiveRecordBusy() {
+#else
 bool scenCheckActiveRecordBusy() {
+#endif
     const ScenarioEventRuntime *const scenario = activeScenarioEventRuntime;
     return FindMutableScenarioFreeTalkRecord(scenario->activeCharacter) && !(scenario->flags & 0x20U);
 }
@@ -481,8 +493,12 @@ void ResetScenarioFreeTalkResumeFlags() {
         control.flags = (control.flags & ~0xeU) | 4U;
 }
 
-
+// Native scenIsBusyFlag: a talk or a conversation stream is running.
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsScenarioBusy() {
+#else
 bool IsScenarioBusy() {
+#endif
     return (activeScenarioEventRuntime && (activeScenarioEventRuntime->flags & ScenarioEventFlagFreeState)) || cvsGet();
 }
 

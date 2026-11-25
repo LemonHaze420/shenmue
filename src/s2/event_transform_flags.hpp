@@ -2,7 +2,7 @@
 #include <cstdint>
 
 namespace shenmue { namespace s2 { namespace EventTransformFlags {
-    enum Value : std::uint32_t {
+enum Value {
     Local = 0,
     World = 0x40000000U,
     Relative = 0x80000000U,

@@ -1,5 +1,1480 @@
 #include "shenmue.h"
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#include "s2/motion_rig.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/motion_stream_dc.hpp"
+#include "s2/hand_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include "common/native_sqrt.hpp"
+#include "platform/dc/sdk.hpp"
+#include "platform/dc/mt7.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/math.hpp"
+#if SHENMUE_S2_GCC295
+#include <float.h>
+#include <cmath>
+#include <cstring>
+#else
+#include <bit>
+#include <limits>
+#endif
+
+#if SHENMUE_S2_GCC295
+#define SHENMUE_RIG_FMA(x, y, z) ((x) * (y) + (z))
+#define SHENMUE_RIG_SQRT dc::sdk::njSqrt
+#define SHENMUE_RIG_NULL 0
+#define SHENMUE_RIG_INITIALIZER =
+#define SHENMUE_RIG_LAYOUT_NAME_(line) ShenmueRigLayoutCheck##line
+#define SHENMUE_RIG_LAYOUT_NAME(line) SHENMUE_RIG_LAYOUT_NAME_(line)
+#define SHENMUE_RIG_LAYOUT(condition) typedef char SHENMUE_RIG_LAYOUT_NAME(__LINE__)[(condition) ? 1 : -1]
+namespace shenmue {
+namespace s2 {
+namespace {
+std::int16_t MotionSignedAngle(std::uint16_t bits) {
+    std::int16_t value;
+    std::memcpy(&value, &bits, sizeof(value));
+    return value;
+}
+} // namespace
+#define SHENMUE_RIG_SIGNED_ANGLE MotionSignedAngle
+#else
+#define SHENMUE_RIG_FMA __builtin_fmaf
+#define SHENMUE_RIG_SQRT __builtin_sqrtf
+#define SHENMUE_RIG_NULL nullptr
+#define SHENMUE_RIG_INITIALIZER
+#define SHENMUE_RIG_LAYOUT(condition) static_assert(condition)
+#define SHENMUE_RIG_SIGNED_ANGLE std::bit_cast<std::int16_t>
+namespace shenmue::s2 {
+#endif
+
+MotionOverride *g_customMotionOverride = SHENMUE_RIG_NULL;
+
+// @verified - d
+void SetCustomMotionOverride(MotionOverride *override) {
+    g_customMotionOverride = override;
+}
+
+SHENMUE_RIG_LAYOUT(offsetof(MotionBaseRig, pelvisRotation) == 0x168);
+SHENMUE_RIG_LAYOUT(offsetof(MotionBaseRig, pelvisPositionCallback) == 0x298);
+SHENMUE_RIG_LAYOUT(offsetof(MotionBaseRig, pelvisTransform) == 0x40);
+
+// @verified - d
+void BuildChannelTransformAtTime(MotionBaseRig &base, Matrix4x4 *output, float time, std::uint32_t interpolationMode) {
+    g_motionInterpolationType = interpolationMode;
+    g_motionCurrentAnimTime = time * 0.033333335f;
+    g_motionMaximumAnimTime = base.clock.authored.maxTime * 0.033333335f;
+    if (base.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = base.clock.current.maxTime * 0.033333335f;
+    matrix_stack::PushUnitMatrix();
+    const float x = SampleMotionRigChannelAdvance(base.pelvisPosition[0].channel);
+    const float y = SampleMotionRigChannelAdvance(base.pelvisPosition[1].channel);
+    const float z = SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
+    Matrix4x4::preTranslate(x, y, z);
+    float radians = SampleMotionRigChannelAdvance(base.pelvisRotation[0].channel);
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+    radians = SampleMotionRigChannelAdvance(base.pelvisRotation[1].channel);
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+    radians = SampleMotionRigChannelAdvance(base.pelvisRotation[2].channel);
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+    matrix_stack::GetMatrix(output);
+    PopCurrentMatrix(1);
+}
+
+// @verified - d
+void TranslatePelvisFromChannels(MotionBaseRig &base, std::uint32_t interpolationMode) {
+    g_motionInterpolationType = interpolationMode;
+    g_motionCurrentAnimTime = base.clock.current.ticksTime * 0.033333335f;
+    g_motionMaximumAnimTime = base.clock.authored.maxTime * 0.033333335f;
+    if (base.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = base.clock.current.maxTime * 0.033333335f;
+    matrix_stack::PushUnitMatrix();
+    Vector3 offset;
+    if (base.pelvisPositionCallback.evaluate) {
+        *static_cast<Vector3 **>(base.pelvisPositionCallback.parameters) = &offset;
+        base.pelvisPositionCallback.evaluate(base.pelvisPositionCallback.parameters);
+    } else {
+        offset.x = SampleMotionRigChannelAdvance(base.pelvisPosition[0].channel);
+        offset.z = SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
+    }
+    Matrix4x4::preTranslate(-offset.x, 0.0f, -offset.z);
+    hmtStoreXmtrx(&base.pelvisTransform);
+    PopCurrentMatrix(1);
+}
+
+// @verified - d
+float AimBasisAtTarget(const Vector3 &target) {
+    Matrix4x4 transform;
+    matrix_stack::GetMatrix(&transform);
+    const float x = target.x - transform.rows[3].x, y = target.y - transform.rows[3].y, z = target.z - transform.rows[3].z;
+    const float localX = SHENMUE_RIG_FMA(x, transform.rows[0].x, y * transform.rows[0].y) + z * transform.rows[0].z;
+    const float localY = SHENMUE_RIG_FMA(x, transform.rows[1].x, y * transform.rows[1].y) + z * transform.rows[1].z;
+    const float localZ = SHENMUE_RIG_FMA(x, transform.rows[2].x, y * transform.rows[2].y) + z * transform.rows[2].z;
+    const float xSquared = localX * localX, ySquared = localY * localY, zSquared = localZ * localZ;
+    const float planarSquared = xSquared + ySquared;
+    float planar;
+    planar = NativeSqrt(planarSquared);
+    const float planarInverse = 1.0f / planar;
+    matrix_stack::RotateZSinCos(localY * planarInverse, localX * planarInverse);
+    const float distance = NativeSqrt(planarSquared + zSquared), inverse = 1.0f / distance;
+    matrix_stack::RotateYSinCos(-(localZ * inverse), planar * inverse);
+    return distance;
+}
+
+// @verified - d
+float AlignFrameToTarget_Vector(const Vector3 &direction) {
+    const float x = direction.x, y = direction.y, z = direction.z;
+    const float xSquared = x * x, ySquared = y * y, zSquared = z * z;
+    const float planarSquared = xSquared + ySquared;
+    float planar;
+    planar = NativeSqrt(planarSquared);
+    const float planarInverse = 1.0f / planar;
+    matrix_stack::RotateZSinCos(y * planarInverse, x * planarInverse);
+    const float distance = NativeSqrt(planarSquared + zSquared), inverse = 1.0f / distance;
+    matrix_stack::RotateYSinCos(-(z * inverse), planar * inverse);
+    return distance;
+}
+
+// @verified - d
+void SolveJointAngle(float adjacent, float other, float opposite, std::int32_t positiveSine, float &sine, float &cosine) {
+#if SHENMUE_S2_GCC295
+    const float adjacentSquared = adjacent * adjacent, otherSquared = other * other, oppositeSquared = opposite * opposite;
+    float value = adjacentSquared + otherSquared - oppositeSquared;
+#else
+    float value = SHENMUE_RIG_FMA(adjacent, adjacent, other * other) - opposite * opposite;
+#endif
+    const float product = adjacent * other;
+    value = value / (product + product);
+    if (value > 1.0f)
+        value = 1.0f;
+    else if (-1.0f > value)
+        value = -1.0f;
+    sine = __builtin_sqrtf(1.0f - value * value);
+    cosine = value;
+    if (!positiveSine)
+        sine = -sine;
+}
+
+void AxisAngleToBasisSlerp(MotionRotationBasis &basis) {
+    Vector3 solvedAxis, tangent, binormal;
+    Matrix4x4 rotation;
+    Vector3 axis;
+    const float time = g_motionCurrentAnimTime / g_motionMaximumAnimTime;
+    float dot = basis.sourceAxis.x * basis.targetAxis.x + basis.sourceAxis.y * basis.targetAxis.y;
+    dot += basis.sourceAxis.z * basis.targetAxis.z;
+    axis.x = basis.sourceAxis.y * basis.targetAxis.z - basis.sourceAxis.z * basis.targetAxis.y;
+    axis.y = basis.sourceAxis.z * basis.targetAxis.x - basis.sourceAxis.x * basis.targetAxis.z;
+    axis.z = basis.sourceAxis.x * basis.targetAxis.y - basis.sourceAxis.y * basis.targetAxis.x;
+    float length = NativeSqrt(SHENMUE_RIG_FMA(axis.z, axis.z, SHENMUE_RIG_FMA(axis.x, axis.x, axis.y * axis.y)));
+#if SHENMUE_S2_GCC295
+    const float minimum = FLT_MIN;
+#else
+    constexpr float minimum = std::numeric_limits<float>::min();
+#endif
+    std::int16_t angle;
+    if (minimum > __builtin_fabsf(axis.x) && minimum > __builtin_fabsf(axis.y) && minimum > __builtin_fabsf(axis.z)) {
+        axis.x = (basis.targetTangent.x + basis.sourceTangent.x) * 0.5f;
+        axis.y = (basis.targetTangent.y + basis.sourceTangent.y) * 0.5f;
+        axis.z = (basis.targetTangent.z + basis.sourceTangent.z) * 0.5f;
+        if (dot > 0.0f)
+            angle = 0;
+        else
+            angle = static_cast<std::int16_t>(static_cast<std::int32_t>(32768.0f * time));
+    } else
+        angle = static_cast<std::int16_t>(static_cast<std::int32_t>(static_cast<float>(static_cast<std::int32_t>(dc::sdk::ArcTan2Fixed(length, dot))) * time));
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4_ApplyAngleRotationToVector(axis, angle);
+    axis.x = basis.sourceAxis.x;
+    axis.y = basis.sourceAxis.y;
+    axis.z = basis.sourceAxis.z;
+    Matrix4x4::Transform(axis, solvedAxis);
+    PopCurrentMatrix(1);
+    am2Vector3NormalizeInPlace(&solvedAxis);
+    rotation.rows[0].x = solvedAxis.x;
+    rotation.rows[1].x = solvedAxis.y;
+    rotation.rows[2].x = solvedAxis.z;
+    tangent.x = SHENMUE_RIG_FMA(time, basis.targetTangent.x, (1.0f - time) * basis.sourceTangent.x);
+    tangent.y = SHENMUE_RIG_FMA(time, basis.targetTangent.y, basis.sourceTangent.y * (1.0f - time));
+    tangent.z = SHENMUE_RIG_FMA(time, basis.targetTangent.z, (1.0f - time) * basis.sourceTangent.z);
+    am2Vector3Cross(&solvedAxis, &tangent, &binormal);
+    am2Vector3Cross(&binormal, &solvedAxis, &tangent);
+    am2Vector3NormalizeInPlace(&tangent);
+    rotation.rows[0].y = tangent.x;
+    rotation.rows[1].y = tangent.y;
+    rotation.rows[2].y = tangent.z;
+    am2Vector3NormalizeInPlace(&binormal);
+    rotation.rows[0].z = binormal.x;
+    rotation.rows[1].z = binormal.y;
+    rotation.rows[2].z = binormal.z;
+    rotation.rows[0].w = rotation.rows[1].w = rotation.rows[2].w = 0.0f;
+    rotation.rows[3].x = rotation.rows[3].y = rotation.rows[3].z = 0.0f;
+    rotation.rows[3].w = 1.0f;
+    Matrix4x4::MultiplyWithPrePassMatrix(&rotation);
+}
+
+std::uint32_t g_motionRigBoneId = 0;
+float g_motionGaitSplitFraction = 0.5f;
+float g_motionGaitLeadLimitFraction = 0.42f;
+
+// @verified - d
+void SwizzledBasis3x4IntoActiveFrom(const Vector4 *rows) {
+    if (!rows)
+        return;
+    Matrix4x4 current;
+    matrix_stack::GetMatrix(&current);
+#if SHENMUE_S2_GCC295
+    for (std::uint32_t row = 0; row < 3; ++row) {
+        const Vector4 basis = {rows[row].x, rows[row].y, rows[row].z, 0.0f};
+        current.rows[row] = basis;
+    }
+#else
+    for (std::uint32_t row = 0; row < 3; ++row)
+        current.rows[row] = {rows[row].x, rows[row].y, rows[row].z, 0.0f};
+#endif
+    matrix_stack::LoadMatrix(&current);
+}
+
+namespace {
+
+void EvaluateJointRotation(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::uint32_t poseMode) {
+    if (callback.evaluate) {
+        callback.evaluate(callback.parameters);
+    } else if (poseMode == MP_FromChannels) {
+        float radians = SampleMotionRigChannelAdvance(axes[0].channel);
+        Matrix4x4::RotateAroundZ_Wrapper(TruncateToInt32((radians * 57.29578f) * 182.04443f));
+        radians = SampleMotionRigChannelAdvance(axes[1].channel);
+        Matrix4x4::RotateAroundY_Wrapper(TruncateToInt32((radians * 57.29578f) * 182.04443f));
+        radians = SampleMotionRigChannelAdvance(axes[2].channel);
+        Matrix4x4::RotateAroundX_Wrapper(TruncateToInt32((radians * 57.29578f) * 182.04443f));
+    } else if (poseMode == MP_FromAxisAngle) {
+        AxisAngleToBasisSlerp(basis);
+    }
+}
+
+void EvaluateTargetCallback(MotionCallback &callback, Vector3 &output) {
+    *static_cast<Vector3 **>(callback.parameters) = &output;
+    callback.evaluate(callback.parameters);
+}
+
+void SampleTargetChannels(MotionRigTarget &target, Vector3 &point) {
+    point.x = SampleMotionRigChannelAdvance(target.axes[0].channel);
+    point.y = SampleMotionRigChannelAdvance(target.axes[1].channel);
+    point.z = SampleMotionRigChannelAdvance(target.axes[2].channel);
+}
+
+void StoreTargetOutput(MotionRigTarget &target, const Vector3 &point) {
+    target.axes[2].dimensions[0] = point.x;
+    target.outputY = point.y;
+    target.outputZ = point.z;
+}
+
+} // namespace
+
+#define SHENMUE_RIG_EVALUATE_JOINT(axes, basis, callback, poseMode)                                                                                            \
+    {                                                                                                                                                          \
+        void (*const evaluate)(void *) = (callback).evaluate;                                                                                                  \
+        if (evaluate) {                                                                                                                                        \
+            evaluate((callback).parameters);                                                                                                                   \
+        } else {                                                                                                                                               \
+            switch (poseMode) {                                                                                                                                \
+            case MP_FromChannels:                                                                                                                              \
+                Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance((axes)[0].channel) * 57.29578f) * 182.04443f));      \
+                Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance((axes)[1].channel) * 57.29578f) * 182.04443f));      \
+                Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance((axes)[2].channel) * 57.29578f) * 182.04443f));      \
+                break;                                                                                                                                         \
+            case MP_FromAxisAngle:                                                                                                                             \
+                AxisAngleToBasisSlerp(basis);                                                                                                                  \
+                break;                                                                                                                                         \
+            }                                                                                                                                                  \
+        }                                                                                                                                                      \
+    }
+#define SHENMUE_RIG_EVALUATE_TOE(node, poseMode)                                                                                                               \
+    {                                                                                                                                                          \
+        void (*const evaluate)(void *) = (node).callback.evaluate;                                                                                             \
+        if (evaluate) {                                                                                                                                        \
+            evaluate((node).callback.parameters);                                                                                                              \
+        } else {                                                                                                                                               \
+            switch (poseMode) {                                                                                                                                \
+            case MP_FromChannels:                                                                                                                              \
+                Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance((node).axes[0].channel) * 57.29578f) * 182.04443f)); \
+                Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance((node).axes[1].channel) * 57.29578f) * 182.04443f)); \
+                break;                                                                                                                                         \
+            case MP_FromAxisAngle:                                                                                                                             \
+                AxisAngleToBasisSlerp((node).basis);                                                                                                           \
+                break;                                                                                                                                         \
+            }                                                                                                                                                  \
+        }                                                                                                                                                      \
+    }
+#define SHENMUE_RIG_CLAMP_REACH(point, joint, reach)                                                                                                           \
+    {                                                                                                                                                          \
+        const float distance = am2Vector3Distance(&(point), reinterpret_cast<const Vector3 *>(&(joint).rows[3]));                                              \
+        if (distance > (reach)) {                                                                                                                              \
+            const float excess = distance - (reach);                                                                                                           \
+            (point).x = (((joint).rows[3].x - (point).x) * excess) / distance + (point).x;                                                                     \
+            (point).y = (((joint).rows[3].y - (point).y) * excess) / distance + (point).y;                                                                     \
+            (point).z = (excess * ((joint).rows[3].z - (point).z)) / distance + (point).z;                                                                     \
+        }                                                                                                                                                      \
+    }
+
+// @verified - d
+void SolveBase(MotionBaseRig &base, std::uint32_t interpolationMode) {
+    const float (*const dims)[6] = g_motionConstData.dimensions;
+    const float reach = dims[g_motionRigBoneId][4] - 0.001f;
+    Matrix4x4 saved;
+    Vector3 offset;
+    Vector3 leftTarget, rightTarget, pelvisTarget;
+    float sine, cosine;
+    float time, left, right;
+    g_motionInterpolationType = interpolationMode;
+    g_motionMaximumAnimTime = base.clock.authored.maxTime * 0.033333335f;
+    if (base.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = base.clock.current.maxTime * 0.033333335f;
+    time = base.clock.current.ticksTime * 0.033333335f;
+    switch (base.poseMode) {
+    case MP_FromChannels:
+    default:
+        left = time;
+        right = left;
+        break;
+    case MP_FromAxisAngle:
+        if (base.motionFlags & motionInitSplitWindow) {
+            const float inverse = 1.0f / g_motionGaitSplitFraction;
+            left = time * inverse < g_motionMaximumAnimTime ? time * inverse : g_motionMaximumAnimTime;
+            const float start = g_motionMaximumAnimTime * (1.0f - g_motionGaitSplitFraction);
+            right = start > time ? 0.0f : (time - g_motionMaximumAnimTime * (1.0f - g_motionGaitSplitFraction)) * (1.0f / g_motionGaitSplitFraction);
+            right = g_motionMaximumAnimTime > right ? right : g_motionMaximumAnimTime;
+            left =
+                left - time > g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction ? time + g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction : left;
+            right =
+                time - right > g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction ? time - g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction : right;
+            if (base.motionFlags & motionInitSwapLeadFoot) {
+                const float swap = left;
+                left = right;
+                right = swap;
+            }
+        } else {
+            left = time;
+            right = left;
+        }
+        break;
+    }
+    matrix_stack::GetMatrix(&saved);
+    g_motionCurrentAnimTime = left;
+    if (base.leftFoot.callback.evaluate) {
+        *static_cast<Vector3 **>(base.leftFoot.callback.parameters) = &leftTarget;
+        base.leftFoot.callback.evaluate(base.leftFoot.callback.parameters);
+        Matrix4x4::TransformPoint(leftTarget, leftTarget);
+    } else {
+        leftTarget.x = SampleMotionRigChannelAdvance(base.leftFoot.axes[0].channel);
+        leftTarget.y = SampleMotionRigChannelAdvance(base.leftFoot.axes[1].channel);
+        leftTarget.z = SampleMotionRigChannelAdvance(base.leftFoot.axes[2].channel);
+        Matrix4x4::TransformPoint(leftTarget, leftTarget);
+    }
+    g_motionCurrentAnimTime = right;
+    if (base.rightFoot.callback.evaluate) {
+        *static_cast<Vector3 **>(base.rightFoot.callback.parameters) = &rightTarget;
+        base.rightFoot.callback.evaluate(base.rightFoot.callback.parameters);
+        Matrix4x4::TransformPoint(rightTarget, rightTarget);
+    } else {
+        rightTarget.x = SampleMotionRigChannelAdvance(base.rightFoot.axes[0].channel);
+        rightTarget.y = SampleMotionRigChannelAdvance(base.rightFoot.axes[1].channel);
+        rightTarget.z = SampleMotionRigChannelAdvance(base.rightFoot.axes[2].channel);
+        Matrix4x4::TransformPoint(rightTarget, rightTarget);
+    }
+    g_motionCurrentAnimTime = time;
+    if (g_motionUseOverride) {
+        if (base.overridePelvisTarget->callback.evaluate) {
+            *static_cast<Vector3 **>(base.overridePelvisTarget->callback.parameters) = &pelvisTarget;
+            base.overridePelvisTarget->callback.evaluate(base.overridePelvisTarget->callback.parameters);
+        } else {
+            pelvisTarget.x = SampleMotionRigChannelAdvance(base.overridePelvisTarget->axes[0].channel);
+            pelvisTarget.y = SampleMotionRigChannelAdvance(base.overridePelvisTarget->axes[1].channel);
+            pelvisTarget.z = SampleMotionRigChannelAdvance(base.overridePelvisTarget->axes[2].channel);
+        }
+        Matrix4x4::TransformPoint(pelvisTarget, pelvisTarget);
+    }
+    if (base.pelvisPositionCallback.evaluate) {
+        *static_cast<Vector3 **>(base.pelvisPositionCallback.parameters) = &offset;
+        base.pelvisPositionCallback.evaluate(base.pelvisPositionCallback.parameters);
+        Matrix4x4::preTranslate(offset.x, offset.y, offset.z);
+    } else {
+        offset.x = SampleMotionRigChannelAdvance(base.pelvisPosition[0].channel);
+        offset.y = SampleMotionRigChannelAdvance(base.pelvisPosition[1].channel);
+        offset.z = SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel);
+        Matrix4x4::preTranslate(offset.x, offset.y, offset.z);
+    }
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::preTranslate(-offset.x, 0.0f, -offset.z);
+    hmtStoreXmtrx(&base.pelvisTransform);
+    PopCurrentMatrix(1);
+    SHENMUE_RIG_EVALUATE_JOINT(base.pelvisRotation, base.pelvisBasis, base.pelvisRotationCallback, base.poseMode)
+    hmtStoreXmtrx(&base.pelvisWorld);
+    matrix_stack::Matrix4x4_Push();
+    if (!g_motionUseOverride) {
+        Matrix4x4::preTranslate(0.0f, base.hips.axes[1].dimensions[0], 0.0f);
+        SHENMUE_RIG_EVALUATE_JOINT(base.hips.axes, base.hips.basis, base.hips.callback, base.poseMode)
+        hmtStoreXmtrx(&base.hipsWorld);
+    } else {
+        Matrix4x4::preTranslate(0.0f, 0.0f, base.overrideHips->axes[2].dimensions[0]);
+        SHENMUE_RIG_EVALUATE_JOINT(base.overrideHips->axes, base.overrideHips->basis, base.overrideHips->callback, base.poseMode)
+        *reinterpret_cast<Vector3 *>(base.overridePelvisTarget->axes[2].dimensions) = pelvisTarget;
+        AimBasisAtTarget(pelvisTarget);
+        hmtStoreXmtrx(&base.hipsWorld);
+        Matrix4x4::preTranslate(base.overridePelvisTarget->axes[0].dimensions[0], 0.0f, 0.0f);
+    }
+    g_motionCurrentAnimTime = left;
+    matrix_stack::Matrix4x4_Push();
+    if (g_motionUseOverride) {
+        Matrix4x4::preTranslate(base.leftHipNode->axes[0].dimensions[0], base.leftHipNode->axes[1].dimensions[0], base.leftHipNode->axes[2].dimensions[0]);
+        SHENMUE_RIG_EVALUATE_JOINT(base.leftHipNode->axes, base.leftHipNode->basis, base.leftHipNode->callback, base.poseMode)
+        hmtStoreXmtrx(base.leftHipWorld);
+    }
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(0.0f, base.leftThigh.axes[1].dimensions[0], base.leftThigh.axes[2].dimensions[0]);
+    else
+        Matrix4x4::preTranslate(base.leftThigh.axes[0].dimensions[0], base.leftThigh.axes[1].dimensions[0], 0.0f);
+    SHENMUE_RIG_EVALUATE_JOINT(base.leftThigh.axes, base.leftThigh.basis, base.leftThigh.callback, base.poseMode)
+    if (base.poseMode == MP_FromAxisAngle && (base.motionFlags & motionInitSplitWindow)) {
+        hmtStoreXmtrx(&base.leftThighWorld);
+        SHENMUE_RIG_CLAMP_REACH(leftTarget, base.leftThighWorld, reach)
+    }
+    *reinterpret_cast<Vector3 *>(base.leftFoot.axes[2].dimensions) = leftTarget;
+    float distance = AimBasisAtTarget(leftTarget);
+    SolveJointAngle(base.leftFoot.axes[1].dimensions[0], distance, base.leftFoot.axes[0].dimensions[0], 1, sine, cosine);
+    matrix_stack::RotateZSinCos(sine, cosine);
+    hmtStoreXmtrx(&base.leftThighWorld);
+    Matrix4x4::preTranslate(base.leftFoot.axes[1].dimensions[0], 0.0f, 0.0f);
+    SolveJointAngle(base.leftFoot.axes[1].dimensions[0], base.leftFoot.axes[0].dimensions[0], distance, 0, sine, cosine);
+    matrix_stack::RotateZSinCos(sine, -cosine);
+    hmtStoreXmtrx(&base.leftShinWorld);
+    Matrix4x4::preTranslate(base.leftFoot.axes[0].dimensions[0], 0.0f, 0.0f);
+    SwizzledBasis3x4IntoActiveFrom(saved.rows);
+    SHENMUE_RIG_EVALUATE_JOINT(base.leftAnkleRotation, base.leftAnkleBasis, base.leftAnkleCallback, base.poseMode)
+    hmtStoreXmtrx(&base.leftAnkleWorld);
+    if (!g_motionUseOverride) {
+        Matrix4x4::preTranslate(0.0f, base.leftFootRotation[1].dimensions[0], base.leftFootRotation[2].dimensions[0]);
+        hmtStoreXmtrx(&base.leftFootWorld);
+    }
+    PopCurrentMatrix(1);
+    g_motionCurrentAnimTime = right;
+    if (g_motionUseOverride) {
+        matrix_stack::Matrix4x4_Push();
+        Matrix4x4::preTranslate(base.rightHipNode->axes[0].dimensions[0], base.rightHipNode->axes[1].dimensions[0], base.rightHipNode->axes[2].dimensions[0]);
+        SHENMUE_RIG_EVALUATE_JOINT(base.rightHipNode->axes, base.rightHipNode->basis, base.rightHipNode->callback, base.poseMode)
+        hmtStoreXmtrx(base.rightHipWorld);
+    }
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(0.0f, base.rightThigh.axes[1].dimensions[0], base.rightThigh.axes[2].dimensions[0]);
+    else
+        Matrix4x4::preTranslate(base.rightThigh.axes[0].dimensions[0], base.rightThigh.axes[1].dimensions[0], 0.0f);
+    SHENMUE_RIG_EVALUATE_JOINT(base.rightThigh.axes, base.rightThigh.basis, base.rightThigh.callback, base.poseMode)
+    if (base.poseMode == MP_FromAxisAngle && (base.motionFlags & motionInitSplitWindow)) {
+        hmtStoreXmtrx(&base.rightThighWorld);
+        SHENMUE_RIG_CLAMP_REACH(rightTarget, base.rightThighWorld, reach)
+    }
+    *reinterpret_cast<Vector3 *>(base.rightFoot.axes[2].dimensions) = rightTarget;
+    distance = AimBasisAtTarget(rightTarget);
+    SolveJointAngle(base.rightFoot.axes[1].dimensions[0], distance, base.rightFoot.axes[0].dimensions[0], 1, sine, cosine);
+    matrix_stack::RotateZSinCos(sine, cosine);
+    hmtStoreXmtrx(&base.rightThighWorld);
+    Matrix4x4::preTranslate(base.rightFoot.axes[1].dimensions[0], 0.0f, 0.0f);
+    SolveJointAngle(base.rightFoot.axes[1].dimensions[0], base.rightFoot.axes[0].dimensions[0], distance, 0, sine, cosine);
+    matrix_stack::RotateZSinCos(sine, -cosine);
+    hmtStoreXmtrx(&base.rightShinWorld);
+    Matrix4x4::preTranslate(base.rightFoot.axes[0].dimensions[0], 0.0f, 0.0f);
+    SwizzledBasis3x4IntoActiveFrom(saved.rows);
+    SHENMUE_RIG_EVALUATE_JOINT(base.rightAnkleRotation, base.rightAnkleBasis, base.rightAnkleCallback, base.poseMode)
+    hmtStoreXmtrx(&base.rightAnkleWorld);
+    if (!g_motionUseOverride) {
+        Matrix4x4::preTranslate(0.0f, base.rightFootRotation[1].dimensions[0], base.rightFootRotation[2].dimensions[0]);
+        hmtStoreXmtrx(&base.rightFootWorld);
+    }
+    if (g_motionUseOverride) {
+        PopCurrentMatrix(1);
+        Matrix4x4::preTranslate(base.rightToe1Node->axes[0].dimensions[0], base.rightToe1Node->axes[1].dimensions[0], 0.0f);
+        SHENMUE_RIG_EVALUATE_TOE(*base.rightToe1Node, base.poseMode)
+        hmtStoreXmtrx(base.rightToe1World);
+        Matrix4x4::preTranslate(base.rightToe2Node->axes[0].dimensions[0], base.rightToe2Node->axes[1].dimensions[0], 0.0f);
+        SHENMUE_RIG_EVALUATE_TOE(*base.rightToe2Node, base.poseMode)
+        hmtStoreXmtrx(base.rightToe2World);
+        Matrix4x4::preTranslate(base.rightToe3Node->axes[0].dimensions[0], base.rightToe3Node->axes[1].dimensions[0], 0.0f);
+        SHENMUE_RIG_EVALUATE_TOE(*base.rightToe3Node, base.poseMode)
+        hmtStoreXmtrx(base.rightToe3World);
+    }
+    PopCurrentMatrix(1);
+}
+
+#undef SHENMUE_RIG_CLAMP_REACH
+#undef SHENMUE_RIG_EVALUATE_TOE
+
+namespace {
+
+std::uint16_t RigAngle(float radians) {
+    return static_cast<std::uint16_t>(TruncateToInt32((radians * 57.29578f) * 182.04443f));
+}
+
+void ApplyChannelRotationZYX(MotionRigAxis *axes) {
+    Matrix4x4::RotateAroundZ_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[0].channel)));
+    Matrix4x4::RotateAroundY_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[1].channel)));
+    Matrix4x4::RotateAroundX_Wrapper(RigAngle(SampleMotionRigChannelAdvance(axes[2].channel)));
+}
+
+} // namespace
+
+// @verified - d
+void SolveChestLookAt(MotionChestRig &chest, std::uint32_t interpolationMode) {
+    g_motionInterpolationType = interpolationMode;
+    g_motionCurrentAnimTime = chest.clock.current.ticksTime * 0.033333335f;
+    g_motionMaximumAnimTime = chest.clock.authored.maxTime * 0.033333335f;
+    if (chest.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = chest.clock.current.maxTime * 0.033333335f;
+    Vector3 local;
+    Vector3 target;
+    Matrix4x4 saved;
+    if (g_motionUseOverride) {
+        matrix_stack::GetMatrix(&saved);
+        PopCurrentMatrix(1);
+        if (chest.target.callback.evaluate) {
+            *static_cast<Vector3 **>(chest.target.callback.parameters) = &target;
+            chest.target.callback.evaluate(chest.target.callback.parameters);
+        } else {
+            target.x = SampleMotionRigChannelAdvance(chest.target.axes[0].channel);
+            target.y = SampleMotionRigChannelAdvance(chest.target.axes[1].channel);
+            target.z = SampleMotionRigChannelAdvance(chest.target.axes[2].channel);
+        }
+        Matrix4x4::TransformPoint(target, target);
+        matrix_stack::Matrix4x4_Push();
+        matrix_stack::LoadMatrix(&saved);
+    }
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(0.0f, chest.rotation.axes[1].dimensions[0], 0.0f);
+    else
+        Matrix4x4::preTranslate(0.0f, 0.0f, chest.rotation.axes[2].dimensions[0]);
+    SHENMUE_RIG_EVALUATE_JOINT(chest.rotation.axes, chest.rotation.basis, chest.rotation.callback, chest.poseMode)
+    if (!g_motionUseOverride) {
+        if (chest.target.callback.evaluate) {
+            *static_cast<Vector3 **>(chest.target.callback.parameters) = &local;
+            chest.target.callback.evaluate(chest.target.callback.parameters);
+        } else {
+            local.x = SampleMotionRigChannelAdvance(chest.target.axes[0].channel);
+            local.y = SampleMotionRigChannelAdvance(chest.target.axes[1].channel);
+            local.z = SampleMotionRigChannelAdvance(chest.target.axes[2].channel);
+        }
+        Matrix4x4::TransformPoint(local, *reinterpret_cast<Vector3 *>(chest.target.axes[2].dimensions));
+        AlignFrameToTarget_Vector(local);
+        hmtStoreXmtrx(&chest.chestWorld);
+        Matrix4x4::preTranslate(chest.target.axes[0].dimensions[0] + chest.upperRotation.axes[0].dimensions[0], 0.0f, 0.0f);
+        SHENMUE_RIG_EVALUATE_JOINT(chest.upperRotation.axes, chest.upperRotation.basis, chest.upperRotation.callback, chest.poseMode)
+        hmtStoreXmtrx(&chest.upperChestWorld);
+    } else {
+        *reinterpret_cast<Vector3 *>(chest.target.axes[2].dimensions) = target;
+        AimBasisAtTarget(target);
+        hmtStoreXmtrx(&chest.upperChestWorld);
+        Matrix4x4::preTranslate(chest.target.axes[0].dimensions[0], 0.0f, 0.0f);
+    }
+}
+
+// @verified - d
+void SolveHeadLookAt(MotionHeadRig &head, std::uint32_t interpolationMode) {
+    g_motionInterpolationType = interpolationMode;
+    g_motionCurrentAnimTime = head.clock.current.ticksTime * 0.033333335f;
+    g_motionMaximumAnimTime = head.clock.authored.maxTime * 0.033333335f;
+    if (head.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = head.clock.current.maxTime * 0.033333335f;
+    Vector3 local;
+    Vector3 aimTarget;
+    Matrix4x4 saved;
+    if (g_motionUseOverride) {
+        matrix_stack::GetMatrix(&saved);
+        PopCurrentMatrix(2);
+        if (head.aimTargetNode->callback.evaluate) {
+            *static_cast<Vector3 **>(head.aimTargetNode->callback.parameters) = &aimTarget;
+            head.aimTargetNode->callback.evaluate(head.aimTargetNode->callback.parameters);
+        } else {
+            aimTarget.x = SampleMotionRigChannelAdvance(head.aimTargetNode->axes[0].channel);
+            aimTarget.y = SampleMotionRigChannelAdvance(head.aimTargetNode->axes[1].channel);
+            aimTarget.z = SampleMotionRigChannelAdvance(head.aimTargetNode->axes[2].channel);
+        }
+        Matrix4x4::TransformPoint(aimTarget, aimTarget);
+        matrix_stack::Matrix4x4_Push();
+        matrix_stack::LoadMatrix(&saved);
+        matrix_stack::Matrix4x4_Push();
+    }
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(head.baseRotation.axes[0].dimensions[0], 0.0f, 0.0f);
+    else
+        Matrix4x4::preTranslate(0.0f, head.baseRotation.axes[1].dimensions[0], 0.0f);
+    SHENMUE_RIG_EVALUATE_JOINT(head.baseRotation.axes, head.baseRotation.basis, head.baseRotation.callback, head.poseMode)
+    hmtStoreXmtrx(&head.neckWorld);
+    if (g_motionUseOverride) {
+        Matrix4x4::preTranslate(head.aimSourceNode->axes[0].dimensions[0], head.aimSourceNode->axes[1].dimensions[0], 0.0f);
+        SHENMUE_RIG_EVALUATE_JOINT(head.aimSourceNode->axes, head.aimSourceNode->basis, head.aimSourceNode->callback, head.poseMode)
+        *reinterpret_cast<Vector3 *>(head.aimTargetNode->axes[2].dimensions) = aimTarget;
+        AimBasisAtTarget(aimTarget);
+        hmtStoreXmtrx(head.aimSourceWorld);
+        Matrix4x4::preTranslate(head.aimTargetNode->axes[0].dimensions[0], 0.0f, 0.0f);
+    }
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(head.midRotation.axes[0].dimensions[0], 0.0f, 0.0f);
+    else
+        Matrix4x4::preTranslate(head.midRotation.axes[0].dimensions[0], head.midRotation.axes[1].dimensions[0], 0.0f);
+    SHENMUE_RIG_EVALUATE_JOINT(head.midRotation.axes, head.midRotation.basis, head.midRotation.callback, head.poseMode)
+    if (head.target.callback.evaluate) {
+        *static_cast<Vector3 **>(head.target.callback.parameters) = &local;
+        head.target.callback.evaluate(head.target.callback.parameters);
+    } else {
+        local.x = SampleMotionRigChannelAdvance(head.target.axes[0].channel);
+        local.y = SampleMotionRigChannelAdvance(head.target.axes[1].channel);
+        local.z = SampleMotionRigChannelAdvance(head.target.axes[2].channel);
+    }
+    head.lookTarget = local;
+    Matrix4x4::TransformPoint(local, *reinterpret_cast<Vector3 *>(head.target.axes[2].dimensions));
+    AlignFrameToTarget_Vector(local);
+    hmtStoreXmtrx(&head.headWorld);
+    if (!g_motionUseOverride)
+        return;
+    Matrix4x4::preTranslate(head.target.axes[0].dimensions[0], 0.0f, 0.0f);
+    matrix_stack::Matrix4x4_Push();
+    Matrix4x4::preTranslate(0.0f, head.nodeA->axes[1].dimensions[0], head.nodeA->axes[2].dimensions[0]);
+    SHENMUE_RIG_EVALUATE_JOINT(head.nodeA->axes, head.nodeA->basis, head.nodeA->callback, head.poseMode)
+    hmtStoreXmtrx(head.nodeAWorld);
+    PopCurrentMatrix(1);
+    matrix_stack::Matrix4x4_Push();
+    Matrix4x4::preTranslate(0.0f, head.nodeB->axes[1].dimensions[0], head.nodeB->axes[2].dimensions[0]);
+    SHENMUE_RIG_EVALUATE_JOINT(head.nodeB->axes, head.nodeB->basis, head.nodeB->callback, head.poseMode)
+    hmtStoreXmtrx(head.nodeBWorld);
+    PopCurrentMatrix(1);
+    Matrix4x4::preTranslate(head.nodeC->axes[0].dimensions[0], 0.0f, head.nodeC->axes[2].dimensions[0]);
+    SHENMUE_RIG_EVALUATE_JOINT(head.nodeC->axes, head.nodeC->basis, head.nodeC->callback, head.poseMode)
+    hmtStoreXmtrx(head.nodeCWorld);
+}
+
+// @verified - d
+void SolveArmIK2Bone_FKBlend(MotionArmRig &arm, std::uint32_t interpolationMode) {
+    g_motionInterpolationType = interpolationMode;
+    g_motionCurrentAnimTime = arm.clock.current.ticksTime * 0.033333335f;
+    g_motionMaximumAnimTime = arm.clock.authored.maxTime * 0.033333335f;
+    if (arm.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = arm.clock.current.maxTime * 0.033333335f;
+    Vector3 local;
+    Vector3 target;
+    Matrix4x4 root;
+    Matrix4x4 saved;
+    float sine, cosine;
+    if (g_motionUseOverride) {
+        matrix_stack::GetMatrix(&saved);
+        PopCurrentMatrix(2);
+        if (arm.target.callback.evaluate) {
+            *static_cast<Vector3 **>(arm.target.callback.parameters) = &target;
+            arm.target.callback.evaluate(arm.target.callback.parameters);
+        } else {
+            target.x = SampleMotionRigChannelAdvance(arm.target.axes[0].channel);
+            target.y = SampleMotionRigChannelAdvance(arm.target.axes[1].channel);
+            target.z = SampleMotionRigChannelAdvance(arm.target.axes[2].channel);
+        }
+        Matrix4x4::TransformPoint(target, target);
+        matrix_stack::GetMatrix(&root);
+        matrix_stack::Matrix4x4_Push();
+        matrix_stack::LoadMatrix(&saved);
+        matrix_stack::Matrix4x4_Push();
+    }
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(arm.shoulder.axes[0].dimensions[0], 0.0f, arm.shoulder.axes[2].dimensions[0]);
+    else
+        Matrix4x4::preTranslate(arm.shoulder.axes[0].dimensions[0], arm.shoulder.axes[1].dimensions[0], arm.shoulder.axes[2].dimensions[0]);
+    SHENMUE_RIG_EVALUATE_JOINT(arm.shoulder.axes, arm.shoulder.basis, arm.shoulder.callback, arm.poseMode)
+    hmtStoreXmtrx(&arm.shoulderWorld);
+    if (!g_motionUseOverride)
+        Matrix4x4::preTranslate(0.0f, 0.0f, arm.elbow.axes[2].dimensions[0]);
+    else
+        Matrix4x4::preTranslate(arm.elbow.axes[0].dimensions[0], arm.elbow.axes[1].dimensions[0], arm.elbow.axes[2].dimensions[0]);
+    SHENMUE_RIG_EVALUATE_JOINT(arm.elbow.axes, arm.elbow.basis, arm.elbow.callback, arm.poseMode)
+    float distance;
+    if (!g_motionUseOverride) {
+        if (arm.target.callback.evaluate) {
+            *static_cast<Vector3 **>(arm.target.callback.parameters) = &local;
+            arm.target.callback.evaluate(arm.target.callback.parameters);
+        } else {
+            local.x = SampleMotionRigChannelAdvance(arm.target.axes[0].channel);
+            local.y = SampleMotionRigChannelAdvance(arm.target.axes[1].channel);
+            local.z = SampleMotionRigChannelAdvance(arm.target.axes[2].channel);
+        }
+        Matrix4x4::TransformPoint(local, *reinterpret_cast<Vector3 *>(arm.target.axes[2].dimensions));
+        distance = AlignFrameToTarget_Vector(local);
+    } else {
+        *reinterpret_cast<Vector3 *>(arm.target.axes[2].dimensions) = target;
+        distance = AimBasisAtTarget(target);
+    }
+    SolveJointAngle(arm.target.axes[1].dimensions[0], distance, arm.target.axes[0].dimensions[0], 0, sine, cosine);
+    if (g_motionUseOverride)
+        sine = -sine;
+    matrix_stack::RotateZSinCos(sine, cosine);
+    hmtStoreXmtrx(&arm.upperArmWorld);
+    Matrix4x4::preTranslate(arm.target.axes[1].dimensions[0], 0.0f, 0.0f);
+    SolveJointAngle(arm.target.axes[1].dimensions[0], arm.target.axes[0].dimensions[0], distance, 1, sine, cosine);
+    if (g_motionUseOverride)
+        sine = -sine;
+    matrix_stack::RotateZSinCos(sine, -cosine);
+    hmtStoreXmtrx(&arm.forearmWorld);
+    if (!g_motionUseOverride) {
+        Matrix4x4::preTranslate(arm.wristRotation[1].dimensions[0], 0.0f, 0.0f);
+        {
+            void (*const evaluate)(void *) = arm.forearmCallback.evaluate;
+            if (evaluate) {
+                evaluate(arm.forearmCallback.parameters);
+            } else {
+                switch (arm.poseMode) {
+                case MP_FromChannels:
+                    Matrix4x4::RotateAroundX_Wrapper(
+                        static_cast<std::int32_t>((SampleMotionRigChannelAdvance(arm.wristRotation[0].channel) * 57.29578f) * 182.04443f));
+                    break;
+                case MP_FromAxisAngle:
+                    AxisAngleToBasisSlerp(arm.forearmBasis);
+                    break;
+                }
+            }
+        }
+        hmtStoreXmtrx(&arm.wristWorld);
+        Matrix4x4::preTranslate(arm.wristRotation[0].dimensions[0], 0.0f, 0.0f);
+        {
+            void (*const evaluate)(void *) = arm.wristCallback.evaluate;
+            if (evaluate) {
+                evaluate(arm.wristCallback.parameters);
+            } else {
+                switch (arm.poseMode) {
+                case MP_FromChannels:
+                    Matrix4x4::RotateAroundZ_Wrapper(
+                        static_cast<std::int32_t>((SampleMotionRigChannelAdvance(arm.wristRotation[1].channel) * 57.29578f) * 182.04443f));
+                    Matrix4x4::RotateAroundY_Wrapper(
+                        static_cast<std::int32_t>((SampleMotionRigChannelAdvance(arm.wristRotation[2].channel) * 57.29578f) * 182.04443f));
+                    break;
+                case MP_FromAxisAngle:
+                    AxisAngleToBasisSlerp(arm.wristBasis);
+                    break;
+                }
+            }
+        }
+    } else {
+        Matrix4x4::preTranslate(arm.target.axes[0].dimensions[0], 0.0f, 0.0f);
+        SwizzledBasis3x4IntoActiveFrom(root.rows);
+        SHENMUE_RIG_EVALUATE_JOINT(arm.wristRotation, arm.wristBasis, arm.wristCallback, arm.poseMode)
+    }
+    hmtStoreXmtrx(&arm.handWorld);
+}
+
+#undef SHENMUE_RIG_EVALUATE_JOINT
+
+// @verified - d
+void IK_BuildAndSolve(IKRig &rig, std::uint32_t interpolationMode) {
+    g_motionRigBoneId = rig.boneId;
+    g_motionUseOverride = static_cast<std::int32_t>(rig.useOverride);
+    matrix_stack::Matrix4x4_Push();
+    if (interpolationMode & MI_Hermite)
+        hmtStoreXmtrx(&rig.lowerBody.rootPrepassTransform);
+    else
+        hmtLoadXmtrxPairs(&rig.lowerBody.rootPrepassTransform);
+    dc::sdk::MultiplyMT7ProjectionRows(&rig.lowerBody.pelvisTransform);
+    if (g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push();
+    SolveBase(rig.lowerBody, interpolationMode);
+    SolveChestLookAt(rig.chest, interpolationMode);
+
+    matrix_stack::Matrix4x4_Push();
+    SolveHeadLookAt(rig.head, interpolationMode);
+    PopCurrentMatrix(1);
+
+    matrix_stack::Matrix4x4_Push();
+    if (g_customMotionOverride && (g_customMotionOverride->flags & 1U))
+        g_customMotionOverride->evaluate(1, static_cast<std::int32_t>(interpolationMode));
+    else
+        SolveArmIK2Bone_FKBlend(rig.rightArm, interpolationMode);
+    PopCurrentMatrix(1);
+    if (!g_motionUseOverride) {
+        if (g_customMotionOverride && (g_customMotionOverride->flags & 2U))
+            g_customMotionOverride->evaluate(2, static_cast<std::int32_t>(interpolationMode));
+        else
+            SolveArmIK2Bone_FKBlend(rig.leftArm, interpolationMode);
+    } else {
+        matrix_stack::Matrix4x4_Push();
+        SolveArmIK2Bone_FKBlend(rig.leftArm, interpolationMode);
+        PopCurrentMatrix(2);
+    }
+    PopCurrentMatrix(1);
+    g_customMotionOverride = SHENMUE_RIG_NULL;
+}
+
+// @verified - d
+void SetOverrideBlendTime(float time) {
+    if (time < 0.1f)
+        g_motionOverrideBlendTime = 0.1f;
+    else
+        g_motionOverrideBlendTime = time;
+}
+
+// @verified - d
+void SetGaitSplitFraction(float fraction) {
+    if (fraction < 0.1f)
+        g_motionGaitSplitFraction = 0.1f;
+    else if (fraction > 1.0f)
+        g_motionGaitSplitFraction = 1.0f;
+    else
+        g_motionGaitSplitFraction = fraction;
+}
+
+void SetGaitLeadLimitFraction(float fraction) {
+    if (fraction < 0.1f)
+        g_motionGaitLeadLimitFraction = 0.1f;
+    else if (fraction > 1.0f)
+        g_motionGaitLeadLimitFraction = 1.0f;
+    else
+        g_motionGaitLeadLimitFraction = fraction;
+}
+
+std::int8_t g_motionGraphFrames = 0;
+float g_motionRigVersion = 1.2f;
+float g_motionOverrideBlendTime = -1.0f;
+Matrix4x4 g_motionOverrideRootTransform = {}, g_motionOverrideBakeTransform = {};
+
+namespace {
+static const float motionFrameSeconds = 0.033333335f;
+
+void CaptureSourceColumns(MotionRotationBasis &basis) {
+    Matrix4x4 work;
+    matrix_stack::GetMatrix(&work);
+    const Vector3 sourceAxis = {work.rows[0].x, work.rows[1].x, work.rows[2].x};
+    basis.sourceAxis = sourceAxis;
+    const Vector3 sourceTangent = {work.rows[0].y, work.rows[1].y, work.rows[2].y};
+    basis.sourceTangent = sourceTangent;
+}
+
+void CaptureTargetColumns(MotionRotationBasis &basis) {
+    Matrix4x4 work;
+    matrix_stack::GetMatrix(&work);
+    const Vector3 targetAxis = {work.rows[0].x, work.rows[1].x, work.rows[2].x};
+    basis.targetAxis = targetAxis;
+    const Vector3 targetTangent = {work.rows[0].y, work.rows[1].y, work.rows[2].y};
+    basis.targetTangent = targetTangent;
+}
+
+Vector3 TransformWorkPoint(const Vector3 &point) {
+    Vector3 output;
+    Matrix4x4::TransformPoint(point, output);
+    return output;
+}
+
+// @verified - d
+void InitBaseRig(MotionBaseRig &base) {
+    g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
+    if (base.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = base.clock.current.maxTime * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = base.poseMode;
+    matrix_stack::Matrix4x4_Push(0);
+    matrix_stack::InvertMatrix(0);
+    dc::sdk::MultiplyMT7ProjectionRows(&base.rootPrepassTransform);
+    dc::sdk::MultiplyMT7ProjectionRows(&base.pelvisTransform);
+    const float time = base.clock.current.ticksTime * motionFrameSeconds;
+    float left, right;
+    switch (base.poseMode) {
+    case MP_FromChannels:
+    default:
+        left = time;
+        right = time;
+        break;
+    case MP_FromAxisAngle:
+        if (base.motionFlags & motionInitSplitWindow) {
+            const float inverse = 1.0f / g_motionGaitSplitFraction;
+            left = time * inverse < g_motionMaximumAnimTime ? time * inverse : g_motionMaximumAnimTime;
+            const float start = g_motionMaximumAnimTime * (1.0f - g_motionGaitSplitFraction);
+            right = start > time ? 0.0f : (time - g_motionMaximumAnimTime * (1.0f - g_motionGaitSplitFraction)) * (1.0f / g_motionGaitSplitFraction);
+            right = g_motionMaximumAnimTime > right ? right : g_motionMaximumAnimTime;
+            left =
+                left - time > g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction ? time + g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction : left;
+            right =
+                time - right > g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction ? time - g_motionMaximumAnimTime * g_motionGaitLeadLimitFraction : right;
+            if (base.motionFlags & motionInitSwapLeadFoot) {
+                const float swap = left;
+                left = right;
+                right = swap;
+            }
+        } else {
+            left = time;
+            right = time;
+        }
+        break;
+    }
+    g_motionCurrentAnimTime = left;
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.leftHipNode->axes, base.leftHipNode->basis, base.leftHipNode->callback, 3);
+        PopCurrentMatrix(1);
+    }
+    matrix_stack::PushUnitMatrix();
+    CaptureChannelsToSourcePose(base.leftThigh.axes, base.leftThigh.basis, base.leftThigh.callback, 4);
+    PopCurrentMatrix(1);
+    EvaluateObjectMotionAndTransform(base.leftFoot.axes, base.leftFoot.pva, base.leftFoot.callback);
+    matrix_stack::Matrix4x4_Push(0);
+    CaptureChannelsToSourcePose(base.leftAnkleRotation, base.leftAnkleBasis, base.leftAnkleCallback, 5);
+    PopCurrentMatrix(1);
+    g_motionCurrentAnimTime = right;
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.rightHipNode->axes, base.rightHipNode->basis, base.rightHipNode->callback, 6);
+        PopCurrentMatrix(1);
+    }
+    matrix_stack::PushUnitMatrix();
+    CaptureChannelsToSourcePose(base.rightThigh.axes, base.rightThigh.basis, base.rightThigh.callback, 7);
+    PopCurrentMatrix(1);
+    EvaluateObjectMotionAndTransform(base.rightFoot.axes, base.rightFoot.pva, base.rightFoot.callback);
+    matrix_stack::Matrix4x4_Push(0);
+    CaptureChannelsToSourcePose(base.rightAnkleRotation, base.rightAnkleBasis, base.rightAnkleCallback, 8);
+    PopCurrentMatrix(1);
+    g_motionCurrentAnimTime = time;
+    EvaluateObjectMotionAndTransform(base.pelvisPosition, base.pelvisPva, base.pelvisPositionCallback);
+    matrix_stack::Matrix4x4_Push(0);
+    CaptureChannelsToSourcePose(base.pelvisRotation, base.pelvisBasis, base.pelvisRotationCallback, 0);
+    PopCurrentMatrix(1);
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.hips.axes, base.hips.basis, base.hips.callback, 1);
+        PopCurrentMatrix(1);
+    } else {
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.overrideHips->axes, base.overrideHips->basis, base.overrideHips->callback, 2);
+        PopCurrentMatrix(1);
+        MotionRigTarget &target = *base.overridePelvisTarget;
+        EvaluateObjectMotionAndTransform(target.axes, target.pva, target.callback);
+    }
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.rightToe1Node->axes, base.rightToe1Node->basis, base.rightToe1Node->callback, 9);
+        PopCurrentMatrix(1);
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.rightToe2Node->axes, base.rightToe2Node->basis, base.rightToe2Node->callback, 10);
+        PopCurrentMatrix(1);
+        matrix_stack::PushUnitMatrix();
+        CaptureChannelsToSourcePose(base.rightToe3Node->axes, base.rightToe3Node->basis, base.rightToe3Node->callback, 11);
+        PopCurrentMatrix(1);
+    }
+    PopCurrentMatrix(1);
+}
+
+float InterpolateAnimationFrame(MotionBaseRig &base, float sourceTime) {
+    const float savedTime = g_motionCurrentAnimTime;
+    MotionRigAxis *axes;
+    int axis;
+    float anchor[3];
+    for (axis = 0, axes = base.pelvisPosition; axis < 3; ++axis) {
+        ReadMotionKeyBlock(axes[axis].channel);
+        anchor[axis] = 0.0f;
+    }
+    if (sourceTime >= 0.0f) {
+        g_motionCurrentAnimTime = motionFrameSeconds * sourceTime;
+        for (axis = 0; axis < 3; ++axis)
+            anchor[axis] = SampleMotionRigChannelAdvance(axes[axis].channel);
+    }
+    g_motionCurrentAnimTime = savedTime;
+    float position[3], tangentIn[3], tangentOut[3];
+    for (axis = 0; axis < 3; ++axis)
+        SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
+    g_motionPreviousAnimTime = g_motionCurrentAnimTime;
+    float rotation[3];
+    for (axis = 0, axes = base.pelvisRotation; axis < 3; ++axis) {
+        ReadMotionKeyBlock(axes[axis].channel);
+        rotation[axis] = SampleMotionRigChannelAdvance(axes[axis].channel);
+    }
+    Matrix4x4::preTranslate(-anchor[0], 0.0f, -anchor[2]);
+    if (g_motionInitFlags & motionInitTranslation)
+        Matrix4x4::preTranslate(anchor[0] - position[0], 0.0f, anchor[2] - position[2]);
+    MotionRotationBasis &basis = base.pelvisBasis;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundZ_Wrapper(rotation[0] * 57.29578f * 182.04443f);
+    Matrix4x4::RotateAroundY_Wrapper(rotation[1] * 57.29578f * 182.04443f);
+    Matrix4x4::RotateAroundX_Wrapper(rotation[2] * 57.29578f * 182.04443f);
+    Matrix4x4 work;
+    matrix_stack::GetMatrix(&work);
+    basis.targetAxis.x = work.rows[0].x;
+    basis.targetAxis.y = work.rows[1].x;
+    basis.targetAxis.z = work.rows[2].x;
+    basis.targetTangent.x = work.rows[0].y;
+    basis.targetTangent.y = work.rows[1].y;
+    basis.targetTangent.z = work.rows[2].y;
+    PopCurrentMatrix(1);
+    if (g_motionUseOverride)
+        hmtStoreXmtrx(&g_motionOverrideBakeTransform);
+    Matrix4x4::TransformPoint(*reinterpret_cast<Vector3 *>(position), *reinterpret_cast<Vector3 *>(position));
+    Matrix4x4::Transform(*reinterpret_cast<Vector3 *>(tangentIn), *reinterpret_cast<Vector3 *>(tangentIn));
+    Matrix4x4::Transform(*reinterpret_cast<Vector3 *>(tangentOut), *reinterpret_cast<Vector3 *>(tangentOut));
+    axes = base.pelvisPosition;
+    Vector4 *pva = base.pelvisPva;
+    for (axis = 0; axis < 3; ++axis) {
+        axes[axis].channel.current.value = pva[axis].w;
+        axes[axis].channel.current.tangentIn = pva[axis].y;
+        axes[axis].channel.current.tangentOut = pva[axis].z;
+        axes[axis].channel.next.value = position[axis];
+        axes[axis].channel.next.tangentIn = tangentIn[axis];
+        axes[axis].channel.next.tangentOut = tangentOut[axis];
+    }
+    float frames;
+    if (g_motionGraphFrames < 0) {
+        Vector3 travel;
+        travel.x = axes[0].channel.next.value - axes[0].channel.current.value;
+        travel.y = axes[1].channel.next.value - axes[1].channel.current.value;
+        travel.z = axes[2].channel.next.value - axes[2].channel.current.value;
+        am2Vector3Length(&travel);
+        frames = 20.0f;
+    } else {
+        frames = g_motionGraphFrames;
+    }
+    for (axis = 0, axes = base.pelvisPosition; axis < 3; ++axis) {
+        axes[axis].channel.current.timeSeconds = 0.0f;
+        axes[axis].channel.next.timeSeconds = (frames - 1.0f) * motionFrameSeconds;
+        axes[axis].channel.inverseDuration = 1.0f / axes[axis].channel.next.timeSeconds;
+        axes[axis].channel.keysRemaining = 0;
+        axes[axis].channel.frameCursor = 0;
+    }
+    return frames;
+}
+
+inline void BakeRightLeg(MotionBaseRig &base) {
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        ChannelsToPoseColumns(base.rightHipNode->axes, base.rightHipNode->basis, base.rightHipNode->callback, 6);
+        PopCurrentMatrix(1);
+    }
+    matrix_stack::PushUnitMatrix();
+    ChannelsToPoseColumns(base.rightThigh.axes, base.rightThigh.basis, base.rightThigh.callback, 7);
+    PopCurrentMatrix(1);
+    ChannelsToWorld_PVA(base.rightFoot.axes, base.rightFoot.pva, base.rightFoot.callback, 3);
+    matrix_stack::Matrix4x4_Push(0);
+    ChannelsToPoseColumns(base.rightAnkleRotation, base.rightAnkleBasis, base.rightAnkleCallback, 8);
+    PopCurrentMatrix(1);
+}
+
+// @verified - d
+void BakeBaseChannelsToPose(MotionBaseRig &base, float sourceTime, float time, float frameCount, std::uint32_t poseMode) {
+    float frames[8];
+    g_motionPreviousAnimTime = base.clock.authored.splitTimeFrames * motionFrameSeconds;
+    g_motionCurrentAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = poseMode;
+    g_motionInitFlags |= motionInitBaking;
+    matrix_stack::PushUnitMatrix();
+    frames[0] = InterpolateAnimationFrame(base, sourceTime);
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        frames[1] = ChannelsToPoseColumns(base.hips.axes, base.hips.basis, base.hips.callback, 1);
+        PopCurrentMatrix(1);
+    } else {
+        matrix_stack::PushUnitMatrix();
+        frames[1] = ChannelsToPoseColumns(base.overrideHips->axes, base.overrideHips->basis, base.overrideHips->callback, 2);
+        PopCurrentMatrix(1);
+        MotionRigTarget &target = *base.overridePelvisTarget;
+        ChannelsToWorld_PVA(target.axes, target.pva, target.callback, 1);
+    }
+    if (g_motionInitFlags & motionInitMirror) {
+        if (g_motionUseOverride) {
+            matrix_stack::PushUnitMatrix();
+            ChannelsToPoseColumns(base.rightHipNode->axes, base.rightHipNode->basis, base.rightHipNode->callback, 6);
+            PopCurrentMatrix(1);
+        }
+        matrix_stack::PushUnitMatrix();
+        frames[5] = ChannelsToPoseColumns(base.rightThigh.axes, base.rightThigh.basis, base.rightThigh.callback, 7);
+        PopCurrentMatrix(1);
+        frames[6] = ChannelsToWorld_PVA(base.rightFoot.axes, base.rightFoot.pva, base.rightFoot.callback, 3);
+        matrix_stack::Matrix4x4_Push(0);
+        frames[7] = ChannelsToPoseColumns(base.rightAnkleRotation, base.rightAnkleBasis, base.rightAnkleCallback, 8);
+        PopCurrentMatrix(1);
+    }
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        ChannelsToPoseColumns(base.leftHipNode->axes, base.leftHipNode->basis, base.leftHipNode->callback, 3);
+        PopCurrentMatrix(1);
+    }
+    matrix_stack::PushUnitMatrix();
+    frames[2] = ChannelsToPoseColumns(base.leftThigh.axes, base.leftThigh.basis, base.leftThigh.callback, 4);
+    PopCurrentMatrix(1);
+    frames[3] = ChannelsToWorld_PVA(base.leftFoot.axes, base.leftFoot.pva, base.leftFoot.callback, 2);
+    matrix_stack::Matrix4x4_Push(0);
+    frames[4] = ChannelsToPoseColumns(base.leftAnkleRotation, base.leftAnkleBasis, base.leftAnkleCallback, 5);
+    PopCurrentMatrix(1);
+    if (!(g_motionInitFlags & motionInitMirror)) {
+        if (g_motionUseOverride) {
+            matrix_stack::PushUnitMatrix();
+            ChannelsToPoseColumns(base.rightHipNode->axes, base.rightHipNode->basis, base.rightHipNode->callback, 6);
+            PopCurrentMatrix(1);
+        }
+        matrix_stack::PushUnitMatrix();
+        frames[5] = ChannelsToPoseColumns(base.rightThigh.axes, base.rightThigh.basis, base.rightThigh.callback, 7);
+        PopCurrentMatrix(1);
+        frames[6] = ChannelsToWorld_PVA(base.rightFoot.axes, base.rightFoot.pva, base.rightFoot.callback, 3);
+        matrix_stack::Matrix4x4_Push(0);
+        frames[7] = ChannelsToPoseColumns(base.rightAnkleRotation, base.rightAnkleBasis, base.rightAnkleCallback, 8);
+        PopCurrentMatrix(1);
+    }
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        ChannelsToPoseColumns(base.rightToe1Node->axes, base.rightToe1Node->basis, base.rightToe1Node->callback, 9);
+        PopCurrentMatrix(1);
+        matrix_stack::PushUnitMatrix();
+        ChannelsToPoseColumns(base.rightToe2Node->axes, base.rightToe2Node->basis, base.rightToe2Node->callback, 10);
+        PopCurrentMatrix(1);
+        matrix_stack::PushUnitMatrix();
+        ChannelsToPoseColumns(base.rightToe3Node->axes, base.rightToe3Node->basis, base.rightToe3Node->callback, 11);
+        PopCurrentMatrix(1);
+    }
+    PopCurrentMatrix(1);
+    if (g_motionGraphFrames < 0)
+        g_motionGraphFrames = 20;
+    base.poseMode = MP_FromAxisAngle;
+    base.clock.current.splitTimeFrames = base.clock.current.ticksTime = 0.0f;
+    base.clock.current.maxTime = static_cast<float>(g_motionGraphFrames - 1);
+    g_motionInitFlags &= ~motionInitBaking;
+}
+
+void EvaluateChest(MotionChestRig &chest) {
+    g_motionCurrentAnimTime = chest.clock.current.ticksTime * motionFrameSeconds;
+    g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
+    if (chest.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = chest.clock.current.maxTime * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = chest.poseMode;
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+    } else {
+        matrix_stack::Matrix4x4_Push(0);
+        hmtLoadXmtrxPairs(&g_motionOverrideRootTransform);
+    }
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    CaptureChannelsToSourcePose(chest.rotation.axes, chest.rotation.basis, chest.rotation.callback, 12);
+    PopCurrentMatrix(1);
+    EvaluateObjectMotionAndTransform(chest.target.axes, chest.target.pva, chest.target.callback);
+    if (!g_motionUseOverride) {
+        matrix_stack::Matrix4x4_Push(0);
+        CaptureChannelsToSourcePose(chest.upperRotation.axes, chest.upperRotation.basis, chest.upperRotation.callback, 13);
+        PopCurrentMatrix(1);
+    }
+    PopCurrentMatrix(1);
+}
+
+void FinishBake(std::uint32_t &poseMode, MotionRigClock &clock) {
+    std::int8_t frames = g_motionGraphFrames;
+    if (frames < 0)
+        frames = 20;
+    poseMode = MP_FromAxisAngle;
+    clock.current.splitTimeFrames = 0.0f;
+    clock.current.ticksTime = 0.0f;
+    g_motionGraphFrames = frames;
+    clock.current.maxTime = static_cast<float>(frames - 1);
+    g_motionInitFlags &= ~motionInitBaking;
+}
+
+void BeginBake(float time, float frameCount, std::uint32_t poseMode) {
+    g_motionInitFlags |= motionInitBaking;
+    g_motionCurrentAnimTime = time * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPreviousAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
+    g_motionPoseMode = poseMode;
+    if (g_motionUseOverride) {
+        matrix_stack::Matrix4x4_Push(0);
+        matrix_stack::LoadMatrix(&g_motionOverrideBakeTransform);
+        matrix_stack::PushUnitMatrix();
+    } else {
+        matrix_stack::PushUnitMatrix();
+        matrix_stack::Matrix4x4_Push(0);
+    }
+}
+
+// @verified - d
+void BakeChestChannelsToPose(MotionChestRig &chest, float time, float frameCount, std::uint32_t poseMode) {
+    float frames[3];
+    g_motionPreviousAnimTime = g_motionCurrentAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = poseMode;
+    g_motionInitFlags |= motionInitBaking;
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+    } else {
+        matrix_stack::Matrix4x4_Push(0);
+        hmtLoadXmtrxPairs(&g_motionOverrideBakeTransform);
+    }
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    frames[0] = ChannelsToPoseColumns(chest.rotation.axes, chest.rotation.basis, chest.rotation.callback, 12);
+    PopCurrentMatrix(1);
+    frames[1] = ChannelsToWorld_PVA(chest.target.axes, chest.target.pva, chest.target.callback, 5);
+    if (!g_motionUseOverride) {
+        matrix_stack::Matrix4x4_Push(0);
+        frames[2] = ChannelsToPoseColumns(chest.upperRotation.axes, chest.upperRotation.basis, chest.upperRotation.callback, 13);
+        PopCurrentMatrix(1);
+    }
+    PopCurrentMatrix(1);
+    if (g_motionGraphFrames < 0)
+        g_motionGraphFrames = 20;
+    chest.poseMode = MP_FromAxisAngle;
+    chest.clock.current.splitTimeFrames = chest.clock.current.ticksTime = 0.0f;
+    chest.clock.current.maxTime = static_cast<float>(g_motionGraphFrames - 1);
+    g_motionInitFlags &= ~motionInitBaking;
+}
+
+// @verified - d
+void SolveHead(MotionHeadRig &head) {
+    g_motionCurrentAnimTime = head.clock.current.ticksTime * motionFrameSeconds;
+    g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
+    if (head.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = head.clock.current.maxTime * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = head.poseMode;
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+    } else {
+        matrix_stack::Matrix4x4_Push(0);
+        hmtLoadXmtrxPairs(&g_motionOverrideRootTransform);
+    }
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    CaptureChannelsToSourcePose(head.baseRotation.axes, head.baseRotation.basis, head.baseRotation.callback, 14);
+    PopCurrentMatrix(1);
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        MotionRigRotation &source = *head.aimSourceNode;
+        CaptureChannelsToSourcePose(source.axes, source.basis, source.callback, 15);
+        PopCurrentMatrix(1);
+        MotionRigTarget &target = *head.aimTargetNode;
+        EvaluateObjectMotionAndTransform(target.axes, target.pva, target.callback);
+    }
+    if (g_motionUseOverride)
+        matrix_stack::UnitCurrentMatrix();
+    matrix_stack::Matrix4x4_Push(0);
+    CaptureChannelsToSourcePose(head.midRotation.axes, head.midRotation.basis, head.midRotation.callback, 16);
+    PopCurrentMatrix(1);
+    EvaluateObjectMotionAndTransform(head.target.axes, head.target.pva, head.target.callback);
+    if (g_motionUseOverride) {
+        matrix_stack::Matrix4x4_Push(0);
+        CaptureChannelsToSourcePose(head.nodeA->axes, head.nodeA->basis, head.nodeA->callback, 17);
+        PopCurrentMatrix(1);
+        matrix_stack::Matrix4x4_Push(0);
+        CaptureChannelsToSourcePose(head.nodeB->axes, head.nodeB->basis, head.nodeB->callback, 18);
+        PopCurrentMatrix(1);
+        matrix_stack::Matrix4x4_Push(0);
+        CaptureChannelsToSourcePose(head.nodeC->axes, head.nodeC->basis, head.nodeC->callback, 19);
+        PopCurrentMatrix(1);
+    }
+    PopCurrentMatrix(1);
+}
+
+void BakeHeadChannelsToPose(MotionHeadRig &head, float time, float frameCount, std::uint32_t poseMode) {
+    float frames[3];
+    g_motionPreviousAnimTime = g_motionCurrentAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = poseMode;
+    g_motionInitFlags |= motionInitBaking;
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+    } else {
+        matrix_stack::Matrix4x4_Push(0);
+        hmtLoadXmtrxPairs(&g_motionOverrideBakeTransform);
+    }
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    frames[0] = ChannelsToPoseColumns(head.baseRotation.axes, head.baseRotation.basis, head.baseRotation.callback, 14);
+    PopCurrentMatrix(1);
+    if (g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+        MotionRigRotation &source = *head.aimSourceNode;
+        ChannelsToPoseColumns(source.axes, source.basis, source.callback, 15);
+        PopCurrentMatrix(1);
+        MotionRigTarget &target = *head.aimTargetNode;
+        ChannelsToWorld_PVA(target.axes, target.pva, target.callback, 6);
+    }
+    if (g_motionUseOverride)
+        matrix_stack::UnitCurrentMatrix();
+    matrix_stack::Matrix4x4_Push(0);
+    frames[1] = ChannelsToPoseColumns(head.midRotation.axes, head.midRotation.basis, head.midRotation.callback, 16);
+    PopCurrentMatrix(1);
+    frames[2] = ChannelsToWorld_PVA(head.target.axes, head.target.pva, head.target.callback, 7);
+    if (g_motionUseOverride) {
+        matrix_stack::Matrix4x4_Push(0);
+        ChannelsToPoseColumns(head.nodeA->axes, head.nodeA->basis, head.nodeA->callback, 17);
+        PopCurrentMatrix(1);
+        matrix_stack::Matrix4x4_Push(0);
+        ChannelsToPoseColumns(head.nodeB->axes, head.nodeB->basis, head.nodeB->callback, 18);
+        PopCurrentMatrix(1);
+        matrix_stack::Matrix4x4_Push(0);
+        ChannelsToPoseColumns(head.nodeC->axes, head.nodeC->basis, head.nodeC->callback, 19);
+        PopCurrentMatrix(1);
+    }
+    PopCurrentMatrix(1);
+    if (g_motionGraphFrames < 0)
+        g_motionGraphFrames = 20;
+    head.poseMode = MP_FromAxisAngle;
+    head.clock.current.splitTimeFrames = head.clock.current.ticksTime = 0.0f;
+    head.clock.current.maxTime = static_cast<float>(g_motionGraphFrames - 1);
+    g_motionInitFlags &= ~motionInitBaking;
+}
+
+void Arm_ChannelsToBasis_Prepass(MotionArmRig &arm) {
+    g_motionCurrentAnimTime = arm.clock.current.ticksTime * motionFrameSeconds;
+    g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
+    if (arm.poseMode == MP_FromAxisAngle)
+        g_motionMaximumAnimTime = arm.clock.current.maxTime * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = arm.poseMode;
+    if (!g_motionUseOverride)
+        matrix_stack::PushUnitMatrix();
+    else {
+        matrix_stack::Matrix4x4_Push(0);
+        hmtLoadXmtrxPairs(&g_motionOverrideRootTransform);
+    }
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    CaptureChannelsToSourcePose(arm.shoulder.axes, arm.shoulder.basis, arm.shoulder.callback, 20);
+    PopCurrentMatrix(1);
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    CaptureChannelsToSourcePose(arm.elbow.axes, arm.elbow.basis, arm.elbow.callback, 21);
+    PopCurrentMatrix(1);
+    EvaluateObjectMotionAndTransform(arm.target.axes, arm.target.pva, arm.target.callback);
+    matrix_stack::Matrix4x4_Push(0);
+    if (!g_motionUseOverride) {
+        CaptureChannelsToSourcePose(arm.wristRotation, arm.forearmBasis, arm.forearmCallback, 22);
+        PopCurrentMatrix(1);
+        matrix_stack::Matrix4x4_Push(0);
+        CaptureChannelsToSourcePose(arm.wristRotation, arm.wristBasis, arm.wristCallback, 23);
+    } else
+        CaptureChannelsToSourcePose(arm.wristRotation, arm.wristBasis, arm.wristCallback, 24);
+    PopCurrentMatrix(2);
+}
+
+// @verified - d
+void Arm_ChannelsToTransforms(MotionArmRig &arm, float time, float frameCount, std::uint32_t poseMode) {
+    float frames[5];
+    g_motionPreviousAnimTime = g_motionCurrentAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = (frameCount - 1.0f) * motionFrameSeconds;
+    g_motionInterpolationType = MI_HermiteAuto;
+    g_motionPoseMode = poseMode;
+    g_motionInitFlags |= motionInitBaking;
+    if (!g_motionUseOverride) {
+        matrix_stack::PushUnitMatrix();
+    } else {
+        matrix_stack::Matrix4x4_Push(0);
+        hmtLoadXmtrxPairs(&g_motionOverrideBakeTransform);
+    }
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    frames[0] = ChannelsToPoseColumns(arm.shoulder.axes, arm.shoulder.basis, arm.shoulder.callback, 20);
+    PopCurrentMatrix(1);
+    if (!g_motionUseOverride)
+        matrix_stack::Matrix4x4_Push(0);
+    else
+        matrix_stack::PushUnitMatrix();
+    frames[1] = ChannelsToPoseColumns(arm.elbow.axes, arm.elbow.basis, arm.elbow.callback, 21);
+    PopCurrentMatrix(1);
+    frames[2] = ChannelsToWorld_PVA(arm.target.axes, arm.target.pva, arm.target.callback, 8);
+    matrix_stack::Matrix4x4_Push(0);
+    if (!g_motionUseOverride) {
+        frames[3] = ChannelsToPoseColumns(arm.wristRotation, arm.forearmBasis, arm.forearmCallback, 22);
+        PopCurrentMatrix(1);
+        matrix_stack::Matrix4x4_Push(0);
+        frames[4] = ChannelsToPoseColumns(arm.wristRotation, arm.wristBasis, arm.wristCallback, 23);
+    } else
+        frames[4] = ChannelsToPoseColumns(arm.wristRotation, arm.wristBasis, arm.wristCallback, 24);
+    PopCurrentMatrix(2);
+    if (g_motionGraphFrames < 0)
+        g_motionGraphFrames = 20;
+    arm.poseMode = MP_FromAxisAngle;
+    arm.clock.current.splitTimeFrames = arm.clock.current.ticksTime = 0.0f;
+    arm.clock.current.maxTime = static_cast<float>(g_motionGraphFrames - 1);
+    g_motionInitFlags &= ~motionInitBaking;
+}
+
+void SetRegionStreams(const MotionStreamContext *context, std::size_t region) {
+    if (g_motionAnimFlags & motionWideKeyCounts)
+        g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[region].keyCounts);
+    else
+        g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[region].keyCounts);
+    g_motionKeyData = context->regions[region].keyData;
+}
+
+float RegionScale(const IKRig &rig, std::size_t column) {
+    const std::uint8_t sourceRig = static_cast<std::uint8_t>(g_motionAnimFlags);
+    const std::int32_t boneId = static_cast<std::int32_t>(rig.boneId);
+    if (boneId == sourceRig)
+        return 1.0f;
+    const std::size_t index = g_motionUseOverride ? 0 : column;
+    return g_motionConstData.dimensions[boneId][index] / g_motionConstData.dimensions[sourceRig][index];
+}
+
+} // namespace
+
+// @verified - d
+std::int32_t mtwkRigEvaluateControllers(
+    MotionWork *work, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags, MotionRegion region) {
+    std::int32_t result = 0;
+    g_motionUseOverride = static_cast<std::int32_t>(reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride);
+    if (region == LowerBody) {
+        if (reinterpret_cast<MotionWorkBindings *>(work)->rig.useOverride) {
+            matrix_stack::Matrix4x4_Push(0);
+            matrix_stack::InvertMatrix(0);
+            dc::sdk::MultiplyMT7ProjectionRows(&reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.rootPrepassTransform);
+            dc::sdk::MultiplyMT7ProjectionRows(&reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody.pelvisTransform);
+            hmtStoreXmtrx(&g_motionOverrideRootTransform);
+            PopCurrentMatrix(1);
+        }
+        result = ReadMotionBase(
+            reinterpret_cast<MotionWorkBindings *>(work)->rig, reinterpret_cast<MotionWorkBindings *>(work)->rig.lowerBody, context, sourceTime, time, flags);
+    } else if (region == Chest) {
+        result =
+            ReadMotionChest(reinterpret_cast<MotionWorkBindings *>(work)->rig, reinterpret_cast<MotionWorkBindings *>(work)->rig.chest, context, time, flags);
+    } else if (region == Head) {
+        result =
+            ReadMotionHead(reinterpret_cast<MotionWorkBindings *>(work)->rig, reinterpret_cast<MotionWorkBindings *>(work)->rig.head, context, time, flags);
+    } else if (region == RightArm) {
+        result =
+            ReadMotionArm(reinterpret_cast<MotionWorkBindings *>(work)->rig, reinterpret_cast<MotionWorkBindings *>(work)->rig.rightArm, context, time, flags);
+    } else if (region == LeftArm) {
+        result = ReadMotionArm(reinterpret_cast<MotionWorkBindings *>(work)->rig, reinterpret_cast<MotionWorkBindings *>(work)->rig.leftArm, context, time,
+            flags | motionInitLeftArm);
+    }
+    g_motionOverrideBlendTime = -1.0f;
+    return result;
+}
+
+#if SHENMUE_S2_GCC295
+}
+#endif
+} // namespace shenmue::s2
+#undef SHENMUE_RIG_SQRT
+#undef SHENMUE_RIG_FMA
+#undef SHENMUE_RIG_NULL
+#undef SHENMUE_RIG_INITIALIZER
+#undef SHENMUE_RIG_LAYOUT_NAME_
+#undef SHENMUE_RIG_LAYOUT_NAME
+#undef SHENMUE_RIG_LAYOUT
+#undef SHENMUE_RIG_SIGNED_ANGLE
+
+#else
 
 #include "s2/motion_rig.hpp"
 
@@ -15,7 +1490,7 @@ namespace shenmue::s2 {
 
 namespace {
 
-
+// PC v1.07 g_anim_data_ptr: six per-rig dimensions (body, chest, head, arm, leg reach, foot).
 constexpr float motionRigDimensionTable[17][6]{
     {0.81f, 0.3977f, 0.1806f, 0.4686f, 0.7225f, 0.09f},
     {0.936f, 0.3237f, 0.178f, 0.4831f, 0.8455f, 0.09f},
@@ -38,7 +1513,7 @@ constexpr float motionRigDimensionTable[17][6]{
 
 constexpr float motionFrameSeconds = 0.033333335f;
 
-
+// Channel radians to the fixed angle native converts with CVTTSS2SI.
 std::uint16_t RigAngle(float radians) {
     return FloatToShort((radians * 57.29578f) * 182.04443f);
 }
@@ -107,7 +1582,7 @@ void StoreTargetOutput(MotionRigTarget &target, const Vector3 &point) {
     target.outputZ = point.z;
 }
 
-
+// The native cosine-rule clamp: COMISS/JBE then MAXSS keeps an unordered quotient.
 float ClampCosine(float cosine) {
     if (cosine > 1.0f)
         return 1.0f;
@@ -300,15 +1775,6 @@ float SampleMotionRigChannelAdvance(MotionRigChannel &channel) {
     return channel.next.value;
 }
 
-// Channel_InterpPVA_Scalar: value and half tangents at the current time.
-
-
-// @verified - p
-
-
-// @verified - p
-
-
 // @verified - p
 void SetOverrideBlendTime(float time) {
     g_motionOverrideBlendTime = std::fmax(0.1f, time);
@@ -449,28 +1915,6 @@ void SwizzledBasis3x4IntoActiveFrom(const Vector4 (&rows)[3]) {
     work.rows[1].w = 0.0f;
     work.rows[2].w = 0.0f;
 }
-
-// ChannelsToPoseColumns: reads a joint's key blocks for a new motion and captures its
-// first frame as the blend target. Joints 9-11 are the two-channel toes, 22 the forearm
-// twist and 23 the wrist pair.
-// @verified - p
-
-
-// ChannelsToPoseColumns_0: evaluates a joint's current pose and captures it as the blend
-// source. Joints 9-11 rotate Z/Y/X from the first two channels, 22 X only and 23 Z/Y
-// from the second and third.
-// @verified - p
-
-
-// ChannelsToWorld_PVA: reads three position channels for a new motion and replaces them
-// with one Hermite segment from the previous PVA to the new first frame, in this frame.
-// @verified - p
-
-
-// EvaluateObjectMotionAndTransform: the current target position, value and half tangents
-// transformed into this frame, published as the PVA a following transition starts from.
-// @verified - p
-
 
 namespace {
 
@@ -613,10 +2057,6 @@ void InitBaseRig(MotionBaseRig &base) {
 
 } // namespace
 
-// EvaluateBase: a positive override blend time scales the new motion's channels toward
-// the rig's rest pose; returns 0 when that blend is already applied.
-
-
 namespace {
 
 // InterpolateAnimationFrame: reads the pelvis channels of a new motion and replaces its
@@ -746,9 +2186,6 @@ void BakeBaseChannelsToPose(MotionBaseRig &base, float sourceTime, float time, f
 }
 
 } // namespace
-
-// @verified - p
-
 
 // @verified - p
 void TranslatePelvisFromChannels(MotionBaseRig &base, std::uint32_t interpolationMode) {
@@ -946,9 +2383,6 @@ void SolveBase(MotionBaseRig &base, std::uint32_t interpolationMode) {
     Matrix4x4::Pop(1);
 }
 
-// EvaluateChestBlend: the chest counterpart of EvaluateBase.
-
-
 namespace {
 
 // EvaluateChest: captures the chest's current pose as the blend source.
@@ -1024,9 +2458,6 @@ void BakeChestChannelsToPose(MotionChestRig &chest, float time, float frameCount
 
 } // namespace
 
-// EvaluateHead: the head counterpart of EvaluateBase.
-
-
 namespace {
 
 // SolveHead: captures the head's current pose as the blend source.
@@ -1074,7 +2505,7 @@ void SolveHead(MotionHeadRig &head) {
     Matrix4x4::Pop(1);
 }
 
-
+// Bakes the head's first pose of a new motion.
 void BakeHeadChannelsToPose(MotionHeadRig &head, float time, float frameCount) {
     std::int32_t useOverride = g_motionUseOverride;
     BeginBake(time, frameCount);
@@ -1108,9 +2539,6 @@ void BakeHeadChannelsToPose(MotionHeadRig &head, float time, float frameCount) {
 }
 
 } // namespace
-
-// EvaluateArm: the arm counterpart of EvaluateBase.
-
 
 namespace {
 
@@ -1200,15 +2628,6 @@ float RegionScale(const IKRig &rig, std::size_t column) {
 }
 
 } // namespace
-
-// @verified - p
-
-
-// @verified - p
-
-
-// @verified - p
-
 
 // @verified - p
 void SolveChestLookAt(MotionChestRig &chest, std::uint32_t interpolationMode) {
@@ -1488,21 +2907,31 @@ void Matrix4x4_PushMatrixAndTranslate(const MotionHeadRig &head, Matrix4x4 *outp
 
 } // namespace shenmue::s2
 
+#endif
 
-namespace shenmue { namespace s2 {
+namespace shenmue {
+namespace s2 {
 
 // @verified - pd
 float mtwkGetScaleFactorFor(std::uint32_t targetRig, std::uint32_t sourceRig, std::uint32_t region) {
     if (targetRig == sourceRig)
         return 1.0f;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    return g_motionConstData.dimensions[static_cast<std::int32_t>(targetRig)][static_cast<std::int32_t>(region)] /
+        g_motionConstData.dimensions[static_cast<std::int32_t>(sourceRig)][static_cast<std::int32_t>(region)];
+#else
     return g_motionRigDimensions[static_cast<std::int32_t>(targetRig)][static_cast<std::int32_t>(region)] /
         g_motionRigDimensions[static_cast<std::int32_t>(sourceRig)][static_cast<std::int32_t>(region)];
+#endif
 }
 
-} } // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue
 
-namespace shenmue { namespace s2 {
+namespace shenmue {
+namespace s2 {
 
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 namespace {
 void ReadRightLegChannels(MotionBaseRig &base, std::int32_t useOverride) {
     if (useOverride)
@@ -1516,8 +2945,78 @@ void ReadRightLegChannels(MotionBaseRig &base, std::int32_t useOverride) {
         ReadMotionKeyBlock(base.rightAnkleRotation[axis].channel);
 }
 } // namespace
+#endif
 
-// @verified - pd
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+namespace motion_detail {
+float F16ToF32(std::int16_t raw);
+} // namespace motion_detail
+
+// @verified - d
+void UpdatePointersForCurrentFrame(MotionStreamContext *context, const std::uint16_t *header, void **armTrack, void **regionTrack) {
+    context->version = motion_detail::F16ToF32(static_cast<std::int16_t>(header[0]));
+    context->flags = header[1];
+    context->frameCount = header[2];
+    const std::int16_t keyData = static_cast<std::int16_t>(header[3]);
+    const bool overrideRig = (context->flags & 0xffU) == 16U;
+    if (context->flags & motionWideKeyCounts)
+        g_motionWideKeyCounts = header + 4;
+    else
+        g_motionKeyCounts = reinterpret_cast<const std::uint8_t *>(header + 4);
+    g_motionKeyData = reinterpret_cast<const std::uint16_t *>(reinterpret_cast<const std::byte *>(header) + keyData);
+    context->regions[0].keyCounts =
+        !(context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionKeyCounts) : static_cast<const void *>(g_motionWideKeyCounts);
+    context->regions[0].keyData = g_motionKeyData;
+    if (!overrideRig)
+        SetMotionStreamFlags(27, motionInitStream, static_cast<std::int16_t>(context->flags));
+    else
+        SetMotionStreamFlags(42, motionInitStream, static_cast<std::int16_t>(context->flags));
+    context->regions[1].keyCounts =
+        !(context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionKeyCounts) : static_cast<const void *>(g_motionWideKeyCounts);
+    context->regions[1].keyData = g_motionKeyData;
+    if (!overrideRig)
+        SetMotionStreamFlags(9, motionInitStream, static_cast<std::int16_t>(context->flags));
+    else
+        SetMotionStreamFlags(6, motionInitStream, static_cast<std::int16_t>(context->flags));
+    context->regions[2].keyCounts =
+        !(context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionKeyCounts) : static_cast<const void *>(g_motionWideKeyCounts);
+    context->regions[2].keyData = g_motionKeyData;
+    if (!overrideRig)
+        SetMotionStreamFlags(9, motionInitStream, static_cast<std::int16_t>(context->flags));
+    else
+        SetMotionStreamFlags(24, motionInitStream, static_cast<std::int16_t>(context->flags));
+    context->regions[3].keyCounts =
+        !(context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionKeyCounts) : static_cast<const void *>(g_motionWideKeyCounts);
+    context->regions[3].keyData = g_motionKeyData;
+    SetMotionStreamFlags(12, motionInitStream, static_cast<std::int16_t>(context->flags));
+    context->regions[4].keyCounts =
+        !(context->flags & motionWideKeyCounts) ? static_cast<const void *>(g_motionKeyCounts) : static_cast<const void *>(g_motionWideKeyCounts);
+    context->regions[4].keyData = g_motionKeyData;
+    if (static_cast<std::int16_t>(context->flags) & 0xc000) {
+        SetMotionStreamFlags(12, motionInitStream, static_cast<std::int16_t>(context->flags));
+        if (context->flags & 0x4000U) {
+            std::uint16_t *const arm = const_cast<std::uint16_t *>(g_motionKeyData);
+            if (armTrack)
+                *armTrack = arm;
+            if (static_cast<std::int16_t>(context->flags) & 0x8000)
+                *regionTrack = arm + (arm[0] + arm[1 + arm[0] * 2]) * 2 + 2;
+            else
+                *regionTrack = 0;
+        } else {
+            if (!(static_cast<std::int16_t>(context->flags) & 0x8000))
+                return;
+            if (armTrack)
+                *armTrack = 0;
+            *regionTrack = const_cast<std::uint16_t *>(g_motionKeyData);
+        }
+    } else {
+        if (armTrack)
+            *armTrack = 0;
+        *regionTrack = 0;
+    }
+}
+#else
+// @verified - p
 void UpdatePointersForCurrentFrame(MotionStreamContext *context, const std::uint16_t *header, void **armTrack, void **regionTrack) {
     context->version = DecodeMotnFloat(header[0]);
     const std::uint16_t flags = header[1];
@@ -1565,7 +3064,76 @@ void UpdatePointersForCurrentFrame(MotionStreamContext *context, const std::uint
         *armTrack = 0;
     *regionTrack = const_cast<std::uint16_t *>(g_motionKeyData);
 }
+#endif
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
+    Matrix4x4 work;
+    if (callback.evaluate) {
+        switch (joint) {
+        case 9:
+        case 10:
+        case 11:
+            ReadMotionKeyBlock(axes[0].channel);
+            ReadMotionKeyBlock(axes[1].channel);
+            break;
+        case 22:
+            ReadMotionKeyBlock(axes[0].channel);
+            break;
+        case 23:
+            ReadMotionKeyBlock(axes[1].channel);
+            ReadMotionKeyBlock(axes[2].channel);
+            break;
+        default:
+            ReadMotionKeyBlock(axes[0].channel);
+            ReadMotionKeyBlock(axes[1].channel);
+            ReadMotionKeyBlock(axes[2].channel);
+            break;
+        }
+        callback.evaluate(callback.parameters);
+    } else if (g_motionPoseMode == MP_FromChannels) {
+        int axis = 0;
+        switch (joint) {
+        case 9:
+        case 10:
+        case 11:
+            ReadMotionKeyBlock(axes[0].channel);
+            ReadMotionKeyBlock(axes[1].channel);
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[0].channel) * 57.29578f) * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[1].channel) * 57.29578f) * 182.04443f));
+            break;
+        case 22:
+            ReadMotionKeyBlock(axes[0].channel);
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[0].channel) * 57.29578f) * 182.04443f));
+            break;
+        case 23:
+            ReadMotionKeyBlock(axes[1].channel);
+            ReadMotionKeyBlock(axes[2].channel);
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[1].channel) * 57.29578f) * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[2].channel) * 57.29578f) * 182.04443f));
+            break;
+        default:
+            for (; axis < 3; ++axis)
+                ReadMotionKeyBlock(axes[axis].channel);
+            Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[0].channel) * 57.29578f) * 182.04443f));
+            Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[1].channel) * 57.29578f) * 182.04443f));
+            Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>((SampleMotionRigChannelAdvance(axes[2].channel) * 57.29578f) * 182.04443f));
+            break;
+        }
+    }
+    matrix_stack::GetMatrix(&work);
+    basis.targetAxis.x = work.rows[0].x;
+    basis.targetAxis.y = work.rows[1].x;
+    basis.targetAxis.z = work.rows[2].x;
+    basis.targetTangent.x = work.rows[0].y;
+    basis.targetTangent.y = work.rows[1].y;
+    basis.targetTangent.z = work.rows[2].y;
+    if (g_motionGraphFrames >= 0)
+        return g_motionGraphFrames;
+    am2Vector3Dot(&basis.targetAxis, &basis.sourceAxis);
+    return 20.0f;
+}
+#else
 void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
     if (callback.evaluate) {
         if (joint >= 9 && joint <= 11) {
@@ -1602,7 +3170,60 @@ void ChannelsToPoseColumns(MotionRigAxis *axes, MotionRotationBasis &basis, Moti
     }
     CaptureTargetColumns(basis);
 }
+#endif
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
+    Matrix4x4 work;
+    float radians;
+    if (callback.evaluate)
+        callback.evaluate(callback.parameters);
+    else {
+        switch (g_motionPoseMode) {
+        case MP_FromChannels:
+            switch (joint) {
+            case 9:
+            case 10:
+            case 11:
+                radians = SampleMotionRigChannelAdvance(axes[0].channel);
+                Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                radians = SampleMotionRigChannelAdvance(axes[1].channel);
+                Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+            case 22:
+                radians = SampleMotionRigChannelAdvance(axes[0].channel);
+                Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                break;
+            case 23:
+                radians = SampleMotionRigChannelAdvance(axes[1].channel);
+                Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                radians = SampleMotionRigChannelAdvance(axes[2].channel);
+                Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                break;
+            default:
+                radians = SampleMotionRigChannelAdvance(axes[0].channel);
+                Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                radians = SampleMotionRigChannelAdvance(axes[1].channel);
+                Matrix4x4::RotateAroundY_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                radians = SampleMotionRigChannelAdvance(axes[2].channel);
+                Matrix4x4::RotateAroundX_Wrapper(static_cast<std::int32_t>((radians * 57.29578f) * 182.04443f));
+                break;
+            }
+            break;
+        case MP_FromAxisAngle:
+            AxisAngleToBasisSlerp(basis);
+            break;
+        }
+    }
+    matrix_stack::GetMatrix(&work);
+    basis.sourceAxis.x = work.rows[0].x;
+    basis.sourceAxis.y = work.rows[1].x;
+    basis.sourceAxis.z = work.rows[2].x;
+    basis.sourceTangent.x = work.rows[0].y;
+    basis.sourceTangent.y = work.rows[1].y;
+    basis.sourceTangent.z = work.rows[2].y;
+}
+#else
 void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis, MotionCallback &callback, std::int32_t joint) {
     if (callback.evaluate) {
         callback.evaluate(callback.parameters);
@@ -1624,14 +3245,71 @@ void CaptureChannelsToSourcePose(MotionRigAxis *axes, MotionRotationBasis &basis
     }
     CaptureSourceColumns(basis);
 }
+#endif
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback, std::int32_t joint) {
+    Vector3 position, tangentIn, tangentOut;
+    std::int32_t axis;
+    if (callback.evaluate) {
+        for (axis = 0; axis < 3; ++axis)
+            ReadMotionKeyBlock(axes[axis].channel);
+        *static_cast<Vector3 **>(callback.parameters) = &position;
+        callback.evaluate(callback.parameters);
+        Matrix4x4::TransformPoint(position, position);
+        tangentIn.x = tangentOut.x = 0.0f;
+        tangentIn.y = tangentOut.y = 0.0f;
+        tangentIn.z = tangentOut.z = 0.0f;
+    } else if (g_motionPoseMode == MP_FromChannels) {
+        for (axis = 0; axis < 3; ++axis) {
+            ReadMotionKeyBlock(axes[axis].channel);
+            SampleMotionRigChannelPVA(axes[axis].channel, &(&position.x)[axis], &(&tangentIn.x)[axis], &(&tangentOut.x)[axis]);
+        }
+        Matrix4x4::TransformPoint(position, position);
+        Matrix4x4::Transform(tangentIn, tangentIn);
+        Matrix4x4::Transform(tangentOut, tangentOut);
+    }
+    for (axis = 0; axis < 3; ++axis) {
+        axes[axis].channel.current.value = pva[axis].w;
+        axes[axis].channel.current.tangentIn = pva[axis].y;
+        axes[axis].channel.current.tangentOut = pva[axis].z;
+        axes[axis].channel.next.value = (&position.x)[axis];
+        const float *in = &tangentIn.x, *out = &tangentOut.x;
+        axes[axis].channel.next.tangentIn = in[axis];
+        axes[axis].channel.next.tangentOut = out[axis];
+    }
+    float frames;
+    if (g_motionGraphFrames < 0) {
+        Vector3 travel;
+        travel.x = axes[0].channel.next.value - axes[0].channel.current.value;
+        travel.y = axes[1].channel.next.value - axes[1].channel.current.value;
+        travel.z = axes[2].channel.next.value - axes[2].channel.current.value;
+        am2Vector3Length(&travel);
+        frames = 20.0f;
+    } else {
+        frames = g_motionGraphFrames;
+    }
+    for (axis = 0; axis < 3; ++axis) {
+        axes[axis].channel.current.timeSeconds = 0.0f;
+        axes[axis].channel.next.timeSeconds = (frames - 1.0f) * motionFrameSeconds;
+        axes[axis].channel.inverseDuration = 1.0f / axes[axis].channel.next.timeSeconds;
+        axes[axis].channel.keysRemaining = 0;
+        axes[axis].channel.frameCursor = 0;
+    }
+    return frames;
+}
+#else
 void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCallback &callback) {
     Vector3 position = {}, tangentIn = {}, tangentOut = {};
     Vector3 world = {}, worldIn = {}, worldOut = {};
     if (callback.evaluate) {
         for (std::size_t axis = 0; axis < 3; ++axis)
             ReadMotionKeyBlock(axes[axis].channel);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EvaluateTargetCallback(callback, position);
+#else
         EvaluateTargetCallback(callback, &position);
+#endif
         world = TransformWorkPoint(position);
     } else if (g_motionPoseMode == MP_FromChannels) {
         for (std::size_t axis = 0; axis < 3; ++axis) {
@@ -1655,12 +3333,48 @@ void ChannelsToWorld_PVA(MotionRigAxis *axes, const Vector4 (&pva)[3], MotionCal
         channel.inverseDuration = 1.0f / duration;
     }
 }
+#endif
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], MotionCallback &callback) {
+    float position[3], tangentIn[3], tangentOut[3];
+    std::int32_t axis;
+    if (callback.evaluate) {
+        *static_cast<float **>(callback.parameters) = position;
+        callback.evaluate(callback.parameters);
+        Matrix4x4::TransformPoint(*reinterpret_cast<Vector3 *>(position), *reinterpret_cast<Vector3 *>(position));
+        tangentIn[0] = tangentOut[0] = 0.0f;
+        tangentIn[1] = tangentOut[1] = 0.0f;
+        tangentIn[2] = tangentOut[2] = 0.0f;
+    } else {
+        switch (static_cast<std::int32_t>(g_motionPoseMode)) {
+        case MP_FromChannels:
+        case MP_FromAxisAngle:
+            for (axis = 0; axis < 3; ++axis)
+                SampleMotionRigChannelPVA(axes[axis].channel, &position[axis], &tangentIn[axis], &tangentOut[axis]);
+            Matrix4x4::TransformPoint(*reinterpret_cast<Vector3 *>(position), *reinterpret_cast<Vector3 *>(position));
+            Matrix4x4::Transform(*reinterpret_cast<Vector3 *>(tangentIn), *reinterpret_cast<Vector3 *>(tangentIn));
+            Matrix4x4::Transform(*reinterpret_cast<Vector3 *>(tangentOut), *reinterpret_cast<Vector3 *>(tangentOut));
+            break;
+        }
+    }
+    for (axis = 0; axis < 3; ++axis) {
+        pva[axis].w = position[axis];
+        pva[axis].y = tangentIn[axis];
+        pva[axis].z = tangentOut[axis];
+    }
+}
+#else
 void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], MotionCallback &callback) {
     Vector3 position = {}, tangentIn = {}, tangentOut = {};
     Vector3 world = {}, worldIn = {}, worldOut = {};
     if (callback.evaluate) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+        EvaluateTargetCallback(callback, position);
+#else
         EvaluateTargetCallback(callback, &position);
+#endif
         world = TransformWorkPoint(position);
     } else if (g_motionPoseMode <= MP_FromAxisAngle) {
         for (std::size_t axis = 0; axis < 3; ++axis)
@@ -1675,7 +3389,73 @@ void EvaluateObjectMotionAndTransform(MotionRigAxis *axes, Vector4 (&pva)[3], Mo
         pva[axis].z = worldOut[axis];
     }
 }
+#endif
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t EvaluateBase(MotionBaseRig &base, std::int32_t sourceRig, float scale, float blend) {
+    const float (*dims)[6] = g_motionConstData.dimensions;
+    if (std::fabs(blend - base.pelvisRotation[2].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float height = dims[sourceRig][0];
+    const float foot = dims[sourceRig][5];
+    UpdateAnimRate(base.pelvisPosition[1].channel, scale * blend, scale * (1.0f - blend) * height);
+    UpdateAnimRate(base.pelvisPosition[2].channel, scale * blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(base.pelvisRotation[0].channel, -blend, 0.0f);
+        UpdateAnimRate(base.pelvisRotation[1].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(base.pelvisRotation[0].channel, blend, 0.0f);
+        UpdateAnimRate(base.pelvisRotation[1].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(base.pelvisRotation[2].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(base.hips.axes[0].channel, -blend, 0.0f);
+        UpdateAnimRate(base.hips.axes[1].channel, -blend, (blend + 1.0f) * 1.5707964f);
+        UpdateAnimRate(base.hips.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(base.hips.axes[0].channel, blend, 0.0f);
+        UpdateAnimRate(base.hips.axes[1].channel, blend, (1.0f - blend) * 1.5707964f);
+        UpdateAnimRate(base.hips.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(base.leftThigh.axes[0].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(base.leftThigh.axes[1].channel, -blend, 0.0f);
+        UpdateAnimRate(base.leftThigh.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(base.leftThigh.axes[1].channel, blend, 0.0f);
+        UpdateAnimRate(base.leftThigh.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(base.leftFoot.axes[1].channel, scale * blend, scale * (1.0f - blend) * foot);
+    UpdateAnimRate(base.leftFoot.axes[2].channel, scale * blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(base.leftAnkleRotation[0].channel, -blend, 0.0f);
+        UpdateAnimRate(base.leftAnkleRotation[1].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(base.leftAnkleRotation[0].channel, blend, 0.0f);
+        UpdateAnimRate(base.leftAnkleRotation[1].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(base.leftAnkleRotation[2].channel, blend, 0.0f);
+    UpdateAnimRate(base.rightThigh.axes[0].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(base.rightThigh.axes[1].channel, -blend, 0.0f);
+        UpdateAnimRate(base.rightThigh.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(base.rightThigh.axes[1].channel, blend, 0.0f);
+        UpdateAnimRate(base.rightThigh.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(base.rightFoot.axes[1].channel, scale * blend, scale * (1.0f - blend) * foot);
+    UpdateAnimRate(base.rightFoot.axes[2].channel, scale * blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(base.rightAnkleRotation[0].channel, -blend, 0.0f);
+        UpdateAnimRate(base.rightAnkleRotation[1].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(base.rightAnkleRotation[0].channel, blend, 0.0f);
+        UpdateAnimRate(base.rightAnkleRotation[1].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(base.rightAnkleRotation[2].channel, blend, 0.0f);
+    return 1;
+}
+#else
 // @verified - pd
 std::int32_t EvaluateBase(MotionBaseRig &base, std::uint8_t sourceRig, float scale, float blend) {
     if (std::fabs(blend - base.pelvisRotation[2].channel.scale) < 1.1754944e-38f)
@@ -1725,7 +3505,258 @@ std::int32_t EvaluateBase(MotionBaseRig &base, std::uint8_t sourceRig, float sca
     UpdateAnimRate(base.rightAnkleRotation[2].channel, blend, 0.0f);
     return 1;
 }
+#endif
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags) {
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(g_motionRigVersion - context->version) > 0.01f)
+            MotionRigVersionError(2);
+        base.clock.authored.splitTimeFrames = 0.0f;
+        base.clock.authored.maxTime = base.clock.authored.ticksTime = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+    }
+    if ((g_motionInitFlags & motionInitStream) == 0 && (g_motionInitFlags & motionInitGraphFrames))
+        MotionRigVersionError(3);
+    if (!(g_motionInitFlags & motionInitChannels))
+        MotionRigVersionError(3);
+    if (g_motionInitFlags & motionInitStream) {
+        if ((g_motionGraphFrames = static_cast<std::int8_t>((g_motionInitFlags & motionInitGraphFrames) >> 8)) != 0 ||
+            (g_motionInitFlags & motionInitCallbacks))
+            InitBaseRig(base);
+        base.motionFlags = g_motionInitFlags;
+        const float scale = mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 0);
+        if (g_motionInitFlags & motionInitMirror)
+            UpdateAnimRate(base.pelvisPosition[0].channel, -scale, 0.0f);
+        else
+            UpdateAnimRate(base.pelvisPosition[0].channel, scale, 0.0f);
+        UpdateAnimRate(base.pelvisPosition[1].channel, scale, 0.0f);
+        UpdateAnimRate(base.pelvisPosition[2].channel, scale, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(base.pelvisRotation[0].channel, -1.0f, 0.0f);
+            UpdateAnimRate(base.pelvisRotation[1].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(base.pelvisRotation[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.pelvisRotation[1].channel, 1.0f, 0.0f);
+        }
+        UpdateAnimRate(base.pelvisRotation[2].channel, 1.0f, 0.0f);
+        if (!g_motionUseOverride) {
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(base.hips.axes[0].channel, -1.0f, 0.0f);
+                UpdateAnimRate(base.hips.axes[1].channel, -1.0f, 3.1415927f);
+                UpdateAnimRate(base.hips.axes[2].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(base.hips.axes[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(base.hips.axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(base.hips.axes[2].channel, 1.0f, 0.0f);
+            }
+        } else {
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(base.overrideHips->axes[0].channel, -1.0f, 0.0f);
+                UpdateAnimRate(base.overrideHips->axes[1].channel, -1.0f, -3.1415927f);
+                UpdateAnimRate(base.overrideHips->axes[2].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(base.overrideHips->axes[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(base.overrideHips->axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(base.overrideHips->axes[2].channel, 1.0f, 0.0f);
+            }
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(base.overridePelvisTarget->axes[0].channel, -scale, 0.0f);
+            else
+                UpdateAnimRate(base.overridePelvisTarget->axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(base.overridePelvisTarget->axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(base.overridePelvisTarget->axes[2].channel, scale, 0.0f);
+        }
+        if (g_motionUseOverride) {
+            UpdateAnimRate(base.leftHipNode->axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(base.leftHipNode->axes[1].channel, -1.0f, 0.0f);
+                UpdateAnimRate(base.leftHipNode->axes[2].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(base.leftHipNode->axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(base.leftHipNode->axes[2].channel, 1.0f, 0.0f);
+            }
+        }
+        UpdateAnimRate(base.leftThigh.axes[0].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(base.leftThigh.axes[1].channel, -1.0f, 0.0f);
+            UpdateAnimRate(base.leftThigh.axes[2].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(base.leftThigh.axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.leftThigh.axes[2].channel, 1.0f, 0.0f);
+        }
+        if (g_motionInitFlags & motionInitMirror)
+            UpdateAnimRate(base.leftFoot.axes[0].channel, -scale, 0.0f);
+        else
+            UpdateAnimRate(base.leftFoot.axes[0].channel, scale, 0.0f);
+        UpdateAnimRate(base.leftFoot.axes[1].channel, scale, 0.0f);
+        UpdateAnimRate(base.leftFoot.axes[2].channel, scale, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(base.leftAnkleRotation[0].channel, -1.0f, 0.0f);
+            UpdateAnimRate(base.leftAnkleRotation[1].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(base.leftAnkleRotation[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.leftAnkleRotation[1].channel, 1.0f, 0.0f);
+        }
+        UpdateAnimRate(base.leftAnkleRotation[2].channel, 1.0f, 0.0f);
+        if (g_motionUseOverride) {
+            UpdateAnimRate(base.rightHipNode->axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(base.rightHipNode->axes[1].channel, -1.0f, 0.0f);
+                UpdateAnimRate(base.rightHipNode->axes[2].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(base.rightHipNode->axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(base.rightHipNode->axes[2].channel, 1.0f, 0.0f);
+            }
+        }
+        UpdateAnimRate(base.rightThigh.axes[0].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(base.rightThigh.axes[1].channel, -1.0f, 0.0f);
+            UpdateAnimRate(base.rightThigh.axes[2].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(base.rightThigh.axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.rightThigh.axes[2].channel, 1.0f, 0.0f);
+        }
+        if (g_motionInitFlags & motionInitMirror)
+            UpdateAnimRate(base.rightFoot.axes[0].channel, -scale, 0.0f);
+        else
+            UpdateAnimRate(base.rightFoot.axes[0].channel, scale, 0.0f);
+        UpdateAnimRate(base.rightFoot.axes[1].channel, scale, 0.0f);
+        UpdateAnimRate(base.rightFoot.axes[2].channel, scale, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(base.rightAnkleRotation[0].channel, -1.0f, 0.0f);
+            UpdateAnimRate(base.rightAnkleRotation[1].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(base.rightAnkleRotation[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.rightAnkleRotation[1].channel, 1.0f, 0.0f);
+        }
+        UpdateAnimRate(base.rightAnkleRotation[2].channel, 1.0f, 0.0f);
+        if (g_motionUseOverride) {
+            UpdateAnimRate(base.rightToe1Node->axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(base.rightToe1Node->axes[1].channel, -1.0f, 0.0f);
+            else
+                UpdateAnimRate(base.rightToe1Node->axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.rightToe2Node->axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(base.rightToe2Node->axes[1].channel, -1.0f, 0.0f);
+            else
+                UpdateAnimRate(base.rightToe2Node->axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(base.rightToe3Node->axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(base.rightToe3Node->axes[1].channel, -1.0f, 0.0f);
+            else
+                UpdateAnimRate(base.rightToe3Node->axes[1].channel, 1.0f, 0.0f);
+        }
+        if (g_motionOverrideBlendTime > 0.0f) {
+            const std::uint32_t sourceRig = g_motionAnimFlags & 0xff;
+            EvaluateBase(base, sourceRig, scale, g_motionOverrideBlendTime);
+        }
+        if (g_motionAnimFlags & motionWideKeyCounts)
+            g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[0].keyCounts);
+        else
+            g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[0].keyCounts);
+        g_motionKeyData = context->regions[0].keyData;
+        base.clock.current.ticksTime = base.clock.authored.splitTimeFrames;
+    } else {
+        g_motionGraphFrames = 0;
+    }
+    hmtStoreXmtrx(&base.rootPrepassTransform);
+    g_motionGaitSplitFraction = 0.5f;
+    if (g_motionGraphFrames) {
+        BakeBaseChannelsToPose(base, sourceTime, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)), MP_FromChannels);
+        return 1;
+    }
+    base.poseMode = MP_FromChannels;
+    base.clock.current.splitTimeFrames = base.clock.authored.splitTimeFrames;
+    base.clock.current.maxTime = base.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = base.clock.current.splitTimeFrames * motionFrameSeconds;
+    g_motionMaximumAnimTime = base.clock.authored.maxTime * motionFrameSeconds;
+    ReadMotionKeyBlock(base.pelvisPosition[0].channel);
+    ReadMotionKeyBlock(base.pelvisPosition[1].channel);
+    ReadMotionKeyBlock(base.pelvisPosition[2].channel);
+    ReadMotionKeyBlock(base.pelvisRotation[0].channel);
+    ReadMotionKeyBlock(base.pelvisRotation[1].channel);
+    ReadMotionKeyBlock(base.pelvisRotation[2].channel);
+    if (!g_motionUseOverride) {
+        ReadMotionKeyBlock(base.hips.axes[0].channel);
+        ReadMotionKeyBlock(base.hips.axes[1].channel);
+        ReadMotionKeyBlock(base.hips.axes[2].channel);
+    } else {
+        ReadMotionKeyBlock(base.overrideHips->axes[0].channel);
+        ReadMotionKeyBlock(base.overrideHips->axes[1].channel);
+        ReadMotionKeyBlock(base.overrideHips->axes[2].channel);
+        ReadMotionKeyBlock(base.overridePelvisTarget->axes[0].channel);
+        ReadMotionKeyBlock(base.overridePelvisTarget->axes[1].channel);
+        ReadMotionKeyBlock(base.overridePelvisTarget->axes[2].channel);
+    }
+    if (g_motionInitFlags & motionInitMirror) {
+        if (g_motionUseOverride) {
+            ReadMotionKeyBlock(base.rightHipNode->axes[0].channel);
+            ReadMotionKeyBlock(base.rightHipNode->axes[1].channel);
+            ReadMotionKeyBlock(base.rightHipNode->axes[2].channel);
+        }
+        ReadMotionKeyBlock(base.rightThigh.axes[0].channel);
+        ReadMotionKeyBlock(base.rightThigh.axes[1].channel);
+        ReadMotionKeyBlock(base.rightThigh.axes[2].channel);
+        ReadMotionKeyBlock(base.rightFoot.axes[0].channel);
+        ReadMotionKeyBlock(base.rightFoot.axes[1].channel);
+        ReadMotionKeyBlock(base.rightFoot.axes[2].channel);
+        ReadMotionKeyBlock(base.rightAnkleRotation[0].channel);
+        ReadMotionKeyBlock(base.rightAnkleRotation[1].channel);
+        ReadMotionKeyBlock(base.rightAnkleRotation[2].channel);
+    }
+    if (g_motionUseOverride) {
+        ReadMotionKeyBlock(base.leftHipNode->axes[0].channel);
+        ReadMotionKeyBlock(base.leftHipNode->axes[1].channel);
+        ReadMotionKeyBlock(base.leftHipNode->axes[2].channel);
+    }
+    ReadMotionKeyBlock(base.leftThigh.axes[0].channel);
+    ReadMotionKeyBlock(base.leftThigh.axes[1].channel);
+    ReadMotionKeyBlock(base.leftThigh.axes[2].channel);
+    ReadMotionKeyBlock(base.leftFoot.axes[0].channel);
+    ReadMotionKeyBlock(base.leftFoot.axes[1].channel);
+    ReadMotionKeyBlock(base.leftFoot.axes[2].channel);
+    ReadMotionKeyBlock(base.leftAnkleRotation[0].channel);
+    ReadMotionKeyBlock(base.leftAnkleRotation[1].channel);
+    ReadMotionKeyBlock(base.leftAnkleRotation[2].channel);
+    if (!(g_motionInitFlags & motionInitMirror)) {
+        if (g_motionUseOverride) {
+            ReadMotionKeyBlock(base.rightHipNode->axes[0].channel);
+            ReadMotionKeyBlock(base.rightHipNode->axes[1].channel);
+            ReadMotionKeyBlock(base.rightHipNode->axes[2].channel);
+        }
+        ReadMotionKeyBlock(base.rightThigh.axes[0].channel);
+        ReadMotionKeyBlock(base.rightThigh.axes[1].channel);
+        ReadMotionKeyBlock(base.rightThigh.axes[2].channel);
+        ReadMotionKeyBlock(base.rightFoot.axes[0].channel);
+        ReadMotionKeyBlock(base.rightFoot.axes[1].channel);
+        ReadMotionKeyBlock(base.rightFoot.axes[2].channel);
+        ReadMotionKeyBlock(base.rightAnkleRotation[0].channel);
+        ReadMotionKeyBlock(base.rightAnkleRotation[1].channel);
+        ReadMotionKeyBlock(base.rightAnkleRotation[2].channel);
+    }
+    if (g_motionUseOverride) {
+        // Native rereads the first toe joint where the second belongs.
+        ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
+        ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
+        ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
+        ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
+        ReadMotionKeyBlock(base.rightToe3Node->axes[0].channel);
+        ReadMotionKeyBlock(base.rightToe3Node->axes[1].channel);
+    }
+    g_motionCurrentAnimTime = g_motionPreviousAnimTime;
+    g_motionInterpolationType = MI_HermiteAuto;
+    matrix_stack::PushUnitMatrix();
+    if (g_motionInitFlags & motionInitChannels)
+        Matrix4x4::preTranslate(
+            -SampleMotionRigChannelAdvance(base.pelvisPosition[0].channel), 0.0f, -SampleMotionRigChannelAdvance(base.pelvisPosition[2].channel));
+    hmtStoreXmtrx(&base.pelvisTransform);
+    PopCurrentMatrix(1);
+    return 1;
+}
+#else
 void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *context, float sourceTime, float time, std::uint32_t flags) {
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
@@ -1861,7 +3892,7 @@ void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *
     if (!(g_motionInitFlags & motionInitMirror))
         ReadRightLegChannels(base, useOverride);
     if (useOverride) {
-
+        // Native rereads the first toe joint where the second belongs.
         ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
         ReadMotionKeyBlock(base.rightToe1Node->axes[1].channel);
         ReadMotionKeyBlock(base.rightToe1Node->axes[0].channel);
@@ -1880,8 +3911,41 @@ void ReadMotionBase(IKRig &rig, MotionBaseRig &base, const MotionStreamContext *
     base.pelvisTransform = workTransformMatrix;
     Matrix4x4::Pop(1);
 }
+#endif
 
-// @verified - pd
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::int32_t sourceRig, float scale, float blend) {
+    const float (*const dims)[6] = g_motionConstData.dimensions;
+    if (std::fabs(blend - chest.upperRotation.axes[0].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float height = dims[sourceRig][1];
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(chest.rotation.axes[0].channel, -blend, 0.0f);
+        UpdateAnimRate(chest.rotation.axes[1].channel, -blend, (blend + 1.0f) * 1.5707964f);
+        UpdateAnimRate(chest.rotation.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(chest.rotation.axes[0].channel, blend, 0.0f);
+        UpdateAnimRate(chest.rotation.axes[1].channel, blend, (1.0f - blend) * 1.5707964f);
+        UpdateAnimRate(chest.rotation.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(chest.target.axes[0].channel, scale * blend, 0.0f);
+    UpdateAnimRate(chest.target.axes[1].channel, scale * blend, scale * (1.0f - blend) * height);
+    if (g_motionInitFlags & motionInitMirror)
+        UpdateAnimRate(chest.target.axes[2].channel, -scale * blend, 0.0f);
+    else
+        UpdateAnimRate(chest.target.axes[2].channel, scale * blend, 0.0f);
+    UpdateAnimRate(chest.upperRotation.axes[0].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(chest.upperRotation.axes[1].channel, -blend, 0.0f);
+        UpdateAnimRate(chest.upperRotation.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(chest.upperRotation.axes[1].channel, blend, 0.0f);
+        UpdateAnimRate(chest.upperRotation.axes[2].channel, blend, 0.0f);
+    }
+    return 1;
+}
+#else
+// @verified - p
 std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::uint8_t sourceRig, float scale, float blend) {
     if (std::fabs(blend - chest.upperRotation.axes[0].channel.scale) < 1.1754944e-38f)
         return 0;
@@ -1911,8 +3975,40 @@ std::int32_t EvaluateChestBlend(MotionChestRig &chest, std::uint8_t sourceRig, f
     upper[2].channel.scale = mirrored ? -blend : blend;
     return 1;
 }
+#endif
 
-// @verified - pd
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t EvaluateHead(MotionHeadRig &head, std::int32_t sourceRig, float scale, float blend) {
+    const float (*const dims)[6] = g_motionConstData.dimensions;
+    if (std::fabs(blend - head.baseRotation.axes[0].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float height = dims[sourceRig][2];
+    UpdateAnimRate(head.baseRotation.axes[0].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(head.baseRotation.axes[1].channel, -blend, 0.0f);
+        UpdateAnimRate(head.baseRotation.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(head.baseRotation.axes[1].channel, blend, 0.0f);
+        UpdateAnimRate(head.baseRotation.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(head.midRotation.axes[0].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(head.midRotation.axes[1].channel, -blend, -(blend + 1.0f) * 1.5707964f);
+        UpdateAnimRate(head.midRotation.axes[2].channel, -blend, (blend + 1.0f) * 3.1415927f);
+    } else {
+        UpdateAnimRate(head.midRotation.axes[1].channel, blend, -(1.0f - blend) * 1.5707964f);
+        UpdateAnimRate(head.midRotation.axes[2].channel, blend, (1.0f - blend) * 3.1415927f);
+    }
+    if (g_motionInitFlags & motionInitMirror)
+        UpdateAnimRate(head.target.axes[0].channel, -scale * blend, 0.0f);
+    else
+        UpdateAnimRate(head.target.axes[0].channel, scale * blend, 0.0f);
+    UpdateAnimRate(head.target.axes[1].channel, scale * blend, scale * (1.0f - blend) * height);
+    UpdateAnimRate(head.target.axes[2].channel, scale * blend, 0.0f);
+    return 1;
+}
+#else
+// @verified - p
 std::int32_t EvaluateHead(MotionHeadRig &head, std::uint8_t sourceRig, float scale, float blend) {
     if (std::fabs(blend - head.baseRotation.axes[0].channel.scale) < 1.1754944e-38f)
         return 0;
@@ -1951,9 +4047,52 @@ std::int32_t EvaluateHead(MotionHeadRig &head, std::uint8_t sourceRig, float sca
     target[2].channel.scale = positionScale;
     return 1;
 }
+#endif
 
 // @verified - pd
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t EvaluateArm(MotionArmRig &arm, std::uint32_t sourceRig, float scale, float blend) {
+#else
 std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale, float blend) {
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    const float (*const dimensions)[6] = g_motionConstData.dimensions;
+    if (std::fabs(blend - arm.shoulder.axes[0].channel.scale) < 1.1754944e-38f)
+        return 0;
+    const float length = -dimensions[sourceRig][3];
+    UpdateAnimRate(arm.shoulder.axes[0].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(arm.shoulder.axes[1].channel, -blend, 0.0f);
+        UpdateAnimRate(arm.shoulder.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(arm.shoulder.axes[1].channel, blend, 0.0f);
+        UpdateAnimRate(arm.shoulder.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(arm.elbow.axes[0].channel, blend, -(1.0f - blend) * 1.5707964f);
+    if (g_motionInitFlags & motionInitMirror) {
+        UpdateAnimRate(arm.elbow.axes[1].channel, -blend, 0.0f);
+        UpdateAnimRate(arm.elbow.axes[2].channel, -blend, 0.0f);
+    } else {
+        UpdateAnimRate(arm.elbow.axes[1].channel, blend, 0.0f);
+        UpdateAnimRate(arm.elbow.axes[2].channel, blend, 0.0f);
+    }
+    UpdateAnimRate(arm.target.axes[0].channel, scale * blend, 0.0f);
+    UpdateAnimRate(arm.target.axes[1].channel, scale * blend, scale * (1.0f - blend) * length);
+    if (g_motionInitFlags & motionInitMirror)
+        UpdateAnimRate(arm.target.axes[2].channel, -scale * blend, 0.0f);
+    else
+        UpdateAnimRate(arm.target.axes[2].channel, scale * blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror)
+        UpdateAnimRate(arm.wristRotation[0].channel, -blend, 0.0f);
+    else
+        UpdateAnimRate(arm.wristRotation[0].channel, blend, 0.0f);
+    UpdateAnimRate(arm.wristRotation[1].channel, blend, 0.0f);
+    if (g_motionInitFlags & motionInitMirror)
+        UpdateAnimRate(arm.wristRotation[2].channel, -blend, 0.0f);
+    else
+        UpdateAnimRate(arm.wristRotation[2].channel, blend, 0.0f);
+    return 1;
+#else
     if (std::fabs(blend - arm.shoulder.axes[0].channel.scale) < 1.1754944e-38f)
         return 0;
     const float length = -g_motionRigDimensions[sourceRig][3];
@@ -1987,9 +4126,94 @@ std::int32_t EvaluateArm(MotionArmRig &arm, std::uint8_t sourceRig, float scale,
     arm.wristRotation[2].channel.bias = 0.0f;
     arm.wristRotation[2].channel.scale = mirrored ? -blend : blend;
     return 1;
+#endif
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags) {
+#else
 void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContext *context, float time, std::uint32_t flags) {
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(g_motionRigVersion - context->version) > 0.01f)
+            MotionRigVersionError(2);
+        chest.clock.authored.splitTimeFrames = 0.0f;
+        chest.clock.authored.maxTime = chest.clock.authored.ticksTime = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+    }
+    if (g_motionInitFlags & motionInitStream) {
+        g_motionGraphFrames = (g_motionInitFlags & 0xff00) >> 8;
+        if (((g_motionInitFlags & 0xff00) >> 8) || (g_motionInitFlags & motionInitCallbacks))
+            EvaluateChest(chest);
+        const float scale = !g_motionUseOverride ? mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 1) :
+                                                   mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 0);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(chest.rotation.axes[0].channel, -1.0f, 0.0f);
+            UpdateAnimRate(chest.rotation.axes[1].channel, -1.0f, 3.1415927f);
+            UpdateAnimRate(chest.rotation.axes[2].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(chest.rotation.axes[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(chest.rotation.axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(chest.rotation.axes[2].channel, 1.0f, 0.0f);
+        }
+        if (!g_motionUseOverride) {
+            UpdateAnimRate(chest.target.axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[1].channel, scale, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(chest.target.axes[2].channel, -scale, 0.0f);
+            else
+                UpdateAnimRate(chest.target.axes[2].channel, scale, 0.0f);
+            UpdateAnimRate(chest.upperRotation.axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(chest.upperRotation.axes[1].channel, -1.0f, 0.0f);
+                UpdateAnimRate(chest.upperRotation.axes[2].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(chest.upperRotation.axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(chest.upperRotation.axes[2].channel, 1.0f, 0.0f);
+            }
+        } else {
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(chest.target.axes[0].channel, -scale, 0.0f);
+            else
+                UpdateAnimRate(chest.target.axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(chest.target.axes[2].channel, scale, 0.0f);
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateChestBlend(chest, g_motionAnimFlags & 0xff, scale, g_motionOverrideBlendTime);
+        if (g_motionAnimFlags & motionWideKeyCounts)
+            g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[1].keyCounts);
+        else
+            g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[1].keyCounts);
+        g_motionKeyData = context->regions[1].keyData;
+        chest.clock.current.ticksTime = chest.clock.authored.splitTimeFrames;
+    } else {
+        g_motionGraphFrames = 0;
+    }
+    if (g_motionGraphFrames) {
+        BakeChestChannelsToPose(chest, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)), MP_FromChannels);
+        return 1;
+    }
+    chest.poseMode = MP_FromChannels;
+    chest.clock.current.splitTimeFrames = chest.clock.authored.splitTimeFrames;
+    chest.clock.current.maxTime = chest.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = chest.clock.authored.maxTime * motionFrameSeconds;
+    ReadMotionKeyBlock(chest.rotation.axes[0].channel);
+    ReadMotionKeyBlock(chest.rotation.axes[1].channel);
+    ReadMotionKeyBlock(chest.rotation.axes[2].channel);
+    ReadMotionKeyBlock(chest.target.axes[0].channel);
+    ReadMotionKeyBlock(chest.target.axes[1].channel);
+    ReadMotionKeyBlock(chest.target.axes[2].channel);
+    if (!g_motionUseOverride) {
+        ReadMotionKeyBlock(chest.upperRotation.axes[0].channel);
+        ReadMotionKeyBlock(chest.upperRotation.axes[1].channel);
+        ReadMotionKeyBlock(chest.upperRotation.axes[2].channel);
+    }
+    return 1;
+#else
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
         g_motionAnimFlags = context->flags;
@@ -2049,9 +4273,148 @@ void ReadMotionChest(IKRig &rig, MotionChestRig &chest, const MotionStreamContex
     if (!useOverride)
         for (std::size_t axis = 0; axis < 3; ++axis)
             ReadMotionKeyBlock(chest.upperRotation.axes[axis].channel);
+#endif
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags) {
+#else
 void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *context, float time, std::uint32_t flags) {
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(g_motionRigVersion - context->version) > 0.01f)
+            MotionRigVersionError(2);
+        head.clock.authored.splitTimeFrames = 0.0f;
+        head.clock.authored.maxTime = head.clock.authored.ticksTime = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+    }
+    if (g_motionInitFlags & motionInitStream) {
+        g_motionGraphFrames = (g_motionInitFlags & 0xff00) >> 8;
+        if (((g_motionInitFlags & 0xff00) >> 8) || (g_motionInitFlags & motionInitCallbacks))
+            SolveHead(head);
+        const float scale = !g_motionUseOverride ? mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 2) :
+                                                   mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 0);
+        UpdateAnimRate(head.baseRotation.axes[0].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(head.baseRotation.axes[1].channel, -1.0f, 0.0f);
+            UpdateAnimRate(head.baseRotation.axes[2].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(head.baseRotation.axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(head.baseRotation.axes[2].channel, 1.0f, 0.0f);
+        }
+        if (g_motionUseOverride) {
+            UpdateAnimRate(head.aimSourceNode->axes[0].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(head.aimSourceNode->axes[1].channel, -1.0f, 0.0f);
+                UpdateAnimRate(head.aimSourceNode->axes[2].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(head.aimSourceNode->axes[1].channel, 1.0f, 0.0f);
+                UpdateAnimRate(head.aimSourceNode->axes[2].channel, 1.0f, 0.0f);
+            }
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(head.aimTargetNode->axes[0].channel, -scale, 0.0f);
+            else
+                UpdateAnimRate(head.aimTargetNode->axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(head.aimTargetNode->axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(head.aimTargetNode->axes[2].channel, scale, 0.0f);
+        }
+        UpdateAnimRate(head.midRotation.axes[0].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror)
+            UpdateAnimRate(head.midRotation.axes[1].channel, -1.0f, -3.1415927f);
+        else
+            UpdateAnimRate(head.midRotation.axes[1].channel, 1.0f, 0.0f);
+        UpdateAnimRate(head.midRotation.axes[2].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror)
+            UpdateAnimRate(head.target.axes[0].channel, -scale, 0.0f);
+        else
+            UpdateAnimRate(head.target.axes[0].channel, scale, 0.0f);
+        UpdateAnimRate(head.target.axes[1].channel, scale, 0.0f);
+        UpdateAnimRate(head.target.axes[2].channel, scale, 0.0f);
+        if (g_motionUseOverride) {
+            UpdateAnimRate(head.nodeA->axes[1].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(head.nodeA->axes[0].channel, -1.0f, 0.0f);
+                UpdateAnimRate(head.nodeA->axes[2].channel, -1.0f, 3.1415927f);
+            } else {
+                UpdateAnimRate(head.nodeA->axes[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(head.nodeA->axes[2].channel, 1.0f, 0.0f);
+            }
+            UpdateAnimRate(head.nodeB->axes[1].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(head.nodeB->axes[0].channel, -1.0f, 0.0f);
+                UpdateAnimRate(head.nodeB->axes[2].channel, -1.0f, 3.1415927f);
+            } else {
+                UpdateAnimRate(head.nodeB->axes[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(head.nodeB->axes[2].channel, 1.0f, 0.0f);
+            }
+            UpdateAnimRate(head.nodeC->axes[1].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(head.nodeC->axes[0].channel, -1.0f, 0.0f);
+                UpdateAnimRate(head.nodeC->axes[2].channel, -1.0f, 3.1415927f);
+            } else {
+                UpdateAnimRate(head.nodeC->axes[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(head.nodeC->axes[2].channel, 1.0f, 0.0f);
+            }
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateHead(head, g_motionAnimFlags & 0xff, scale, g_motionOverrideBlendTime);
+        if (g_motionAnimFlags & motionWideKeyCounts)
+            g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[2].keyCounts);
+        else
+            g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[2].keyCounts);
+        g_motionKeyData = context->regions[2].keyData;
+        head.clock.current.ticksTime = head.clock.authored.splitTimeFrames;
+    } else {
+        g_motionGraphFrames = 0;
+    }
+    if (g_motionGraphFrames) {
+        BakeHeadChannelsToPose(head, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)), MP_FromChannels);
+        return 1;
+    }
+    head.poseMode = MP_FromChannels;
+    head.clock.current.splitTimeFrames = head.clock.authored.splitTimeFrames;
+    head.clock.current.maxTime = head.clock.authored.ticksTime;
+    g_motionPreviousAnimTime = time * motionFrameSeconds;
+    g_motionMaximumAnimTime = head.clock.authored.maxTime * motionFrameSeconds;
+    ReadMotionKeyBlock(head.baseRotation.axes[0].channel);
+    ReadMotionKeyBlock(head.baseRotation.axes[1].channel);
+    ReadMotionKeyBlock(head.baseRotation.axes[2].channel);
+    if (g_motionUseOverride) {
+        ReadMotionKeyBlock(head.aimSourceNode->axes[0].channel);
+        ReadMotionKeyBlock(head.aimSourceNode->axes[1].channel);
+        ReadMotionKeyBlock(head.aimSourceNode->axes[2].channel);
+        ReadMotionKeyBlock(head.aimTargetNode->axes[0].channel);
+        ReadMotionKeyBlock(head.aimTargetNode->axes[1].channel);
+        ReadMotionKeyBlock(head.aimTargetNode->axes[2].channel);
+    }
+    ReadMotionKeyBlock(head.midRotation.axes[0].channel);
+    ReadMotionKeyBlock(head.midRotation.axes[1].channel);
+    ReadMotionKeyBlock(head.midRotation.axes[2].channel);
+    ReadMotionKeyBlock(head.target.axes[0].channel);
+    ReadMotionKeyBlock(head.target.axes[1].channel);
+    ReadMotionKeyBlock(head.target.axes[2].channel);
+    if (g_motionUseOverride) {
+        if (g_motionInitFlags & motionInitMirror) {
+            ReadMotionKeyBlock(head.nodeB->axes[0].channel);
+            ReadMotionKeyBlock(head.nodeB->axes[1].channel);
+            ReadMotionKeyBlock(head.nodeB->axes[2].channel);
+        }
+        ReadMotionKeyBlock(head.nodeA->axes[0].channel);
+        ReadMotionKeyBlock(head.nodeA->axes[1].channel);
+        ReadMotionKeyBlock(head.nodeA->axes[2].channel);
+        if (!(g_motionInitFlags & motionInitMirror)) {
+            ReadMotionKeyBlock(head.nodeB->axes[0].channel);
+            ReadMotionKeyBlock(head.nodeB->axes[1].channel);
+            ReadMotionKeyBlock(head.nodeB->axes[2].channel);
+        }
+        ReadMotionKeyBlock(head.nodeC->axes[0].channel);
+        ReadMotionKeyBlock(head.nodeC->axes[1].channel);
+        ReadMotionKeyBlock(head.nodeC->axes[2].channel);
+    }
+    return 1;
+#else
     g_motionInitFlags = flags;
     if (flags & motionInitStream) {
         g_motionAnimFlags = context->flags;
@@ -2142,9 +4505,122 @@ void ReadMotionHead(IKRig &rig, MotionHeadRig &head, const MotionStreamContext *
         for (std::size_t axis = 0; axis < 3; ++axis)
             ReadMotionKeyBlock(head.nodeC->axes[axis].channel);
     }
+#endif
 }
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags) {
+#else
 void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *context, float time, std::uint32_t flags) {
+#endif
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    g_motionInitFlags = flags;
+    if (flags & motionInitStream) {
+        g_motionAnimFlags = context->flags;
+        if (std::fabs(g_motionRigVersion - context->version) > 0.01f)
+            MotionRigVersionError(2);
+        arm.clock.authored.splitTimeFrames = 0.0f;
+        arm.clock.authored.maxTime = arm.clock.authored.ticksTime = static_cast<float>(static_cast<std::int16_t>(context->frameCount) - 1);
+    }
+    if (g_motionInitFlags & motionInitStream) {
+        g_motionGraphFrames = (g_motionInitFlags & 0xff00) >> 8;
+        if (((g_motionInitFlags & 0xff00) >> 8) || (g_motionInitFlags & motionInitCallbacks))
+            Arm_ChannelsToBasis_Prepass(arm);
+        const float scale = !g_motionUseOverride ? mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 3) :
+                                                   mtwkGetScaleFactorFor(rig.boneId, g_motionAnimFlags & 0xff, 0);
+        UpdateAnimRate(arm.shoulder.axes[0].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(arm.shoulder.axes[1].channel, -1.0f, 0.0f);
+            UpdateAnimRate(arm.shoulder.axes[2].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(arm.shoulder.axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(arm.shoulder.axes[2].channel, 1.0f, 0.0f);
+        }
+        UpdateAnimRate(arm.elbow.axes[0].channel, 1.0f, 0.0f);
+        if (g_motionInitFlags & motionInitMirror) {
+            UpdateAnimRate(arm.elbow.axes[1].channel, -1.0f, 0.0f);
+            UpdateAnimRate(arm.elbow.axes[2].channel, -1.0f, 0.0f);
+        } else {
+            UpdateAnimRate(arm.elbow.axes[1].channel, 1.0f, 0.0f);
+            UpdateAnimRate(arm.elbow.axes[2].channel, 1.0f, 0.0f);
+        }
+        if (!g_motionUseOverride) {
+            UpdateAnimRate(arm.target.axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[1].channel, scale, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(arm.target.axes[2].channel, -scale, 0.0f);
+            else
+                UpdateAnimRate(arm.target.axes[2].channel, scale, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(arm.wristRotation[0].channel, -1.0f, 0.0f);
+            else
+                UpdateAnimRate(arm.wristRotation[0].channel, 1.0f, 0.0f);
+            UpdateAnimRate(arm.wristRotation[1].channel, 1.0f, 0.0f);
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(arm.wristRotation[2].channel, -1.0f, 0.0f);
+            else
+                UpdateAnimRate(arm.wristRotation[2].channel, 1.0f, 0.0f);
+        } else {
+            if (g_motionInitFlags & motionInitMirror)
+                UpdateAnimRate(arm.target.axes[0].channel, -scale, 0.0f);
+            else
+                UpdateAnimRate(arm.target.axes[0].channel, scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[1].channel, scale, 0.0f);
+            UpdateAnimRate(arm.target.axes[2].channel, scale, 0.0f);
+            if (g_motionInitFlags & motionInitMirror) {
+                UpdateAnimRate(arm.wristRotation[0].channel, -1.0f, 0.0f);
+                UpdateAnimRate(arm.wristRotation[1].channel, -1.0f, 0.0f);
+            } else {
+                UpdateAnimRate(arm.wristRotation[0].channel, 1.0f, 0.0f);
+                UpdateAnimRate(arm.wristRotation[1].channel, 1.0f, 0.0f);
+            }
+            UpdateAnimRate(arm.wristRotation[2].channel, 1.0f, 0.0f);
+        }
+        if (g_motionOverrideBlendTime > 0.0f)
+            EvaluateArm(arm, g_motionAnimFlags & 0xff, scale, g_motionOverrideBlendTime);
+        std::uint32_t leftArm = g_motionInitFlags & motionInitLeftArm;
+        if (g_motionInitFlags & motionInitMirror)
+            leftArm = !leftArm;
+        if (leftArm) {
+            if (g_motionAnimFlags & motionWideKeyCounts)
+                g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[4].keyCounts);
+            else
+                g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[4].keyCounts);
+            g_motionKeyData = context->regions[4].keyData;
+        } else {
+            if (g_motionAnimFlags & motionWideKeyCounts)
+                g_motionWideKeyCounts = static_cast<const std::uint16_t *>(context->regions[3].keyCounts);
+            else
+                g_motionKeyCounts = static_cast<const std::uint8_t *>(context->regions[3].keyCounts);
+            g_motionKeyData = context->regions[3].keyData;
+        }
+        arm.clock.current.ticksTime = arm.clock.authored.splitTimeFrames;
+    } else {
+        g_motionGraphFrames = 0;
+    }
+    if (g_motionGraphFrames) {
+        Arm_ChannelsToTransforms(arm, time, static_cast<float>(static_cast<std::int16_t>(context->frameCount)), MI_HermiteAuto);
+    } else {
+        arm.poseMode = MP_FromChannels;
+        arm.clock.current.splitTimeFrames = arm.clock.authored.splitTimeFrames;
+        arm.clock.current.maxTime = arm.clock.authored.ticksTime;
+        g_motionPreviousAnimTime = time * motionFrameSeconds;
+        g_motionMaximumAnimTime = arm.clock.authored.maxTime * motionFrameSeconds;
+        ReadMotionKeyBlock(arm.shoulder.axes[0].channel);
+        ReadMotionKeyBlock(arm.shoulder.axes[1].channel);
+        ReadMotionKeyBlock(arm.shoulder.axes[2].channel);
+        ReadMotionKeyBlock(arm.elbow.axes[0].channel);
+        ReadMotionKeyBlock(arm.elbow.axes[1].channel);
+        ReadMotionKeyBlock(arm.elbow.axes[2].channel);
+        ReadMotionKeyBlock(arm.target.axes[0].channel);
+        ReadMotionKeyBlock(arm.target.axes[1].channel);
+        ReadMotionKeyBlock(arm.target.axes[2].channel);
+        ReadMotionKeyBlock(arm.wristRotation[0].channel);
+        ReadMotionKeyBlock(arm.wristRotation[1].channel);
+        ReadMotionKeyBlock(arm.wristRotation[2].channel);
+    }
+    return 1;
+#else
     g_motionInitFlags = flags;
     std::uint32_t graphFrames = 0;
     if (flags & motionInitStream) {
@@ -2213,12 +4689,95 @@ void ReadMotionArm(IKRig &rig, MotionArmRig &arm, const MotionStreamContext *con
         ReadMotionKeyBlock(arm.target.axes[axis].channel);
     for (std::size_t axis = 0; axis < 3; ++axis)
         ReadMotionKeyBlock(arm.wristRotation[axis].channel);
+#endif
 }
 
-} } // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue
 
-namespace shenmue { namespace s2 {
+namespace shenmue {
+namespace s2 {
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *tangentIn, float *tangentOut) {
+    if (g_motionCurrentAnimTime < channel.current.timeSeconds) {
+        *value = channel.current.value;
+        *tangentOut = 0.0f;
+        *tangentIn = 0.0f;
+    } else {
+        for (;;) {
+            if (g_motionCurrentAnimTime < channel.next.timeSeconds) {
+                if (g_motionInterpolationType & MI_Linear) {
+                    const float inverse = channel.inverseDuration;
+                    const float time = g_motionCurrentAnimTime - channel.current.timeSeconds;
+                    const float currentValue = channel.current.value;
+                    const float slope = (channel.next.value - currentValue) * inverse;
+                    *value = slope * time + currentValue;
+                    const float half = slope * 0.5f;
+                    *tangentOut = half;
+                    *tangentIn = half;
+                    return;
+                }
+                const float inverse = channel.inverseDuration;
+                const float time = g_motionCurrentAnimTime - channel.current.timeSeconds;
+                const float currentValue = channel.current.value;
+                const float inverseSquared = inverse * inverse;
+                const float currentTangent = channel.current.tangentOut;
+                const float timeSquared = time * time;
+                const float scaledSquared = timeSquared * inverse;
+                const float nextValue = channel.next.value;
+                const float cubic = (timeSquared * time) * inverseSquared;
+                const float nextTangent = channel.next.tangentIn;
+                const float twiceCubic = (cubic + cubic) * inverse, tripleSquared = (timeSquared * 3.0f) * inverseSquared;
+                const float acceleration = ((timeSquared * 6.0f) * inverseSquared) * inverse, sixfold = (time * 6.0f) * inverseSquared;
+                const float twiceScaled = (time + time) * inverse;
+                const float firstSlope = acceleration - sixfold, secondSlope = -acceleration + sixfold;
+                float tangent = currentValue * firstSlope + nextValue * secondSlope;
+                const float lastSlope = tripleSquared - twiceScaled, firstTangentSlope = (lastSlope - twiceScaled) + 1.0f;
+                tangent = currentTangent * firstTangentSlope + tangent;
+                tangent = nextTangent * lastSlope + tangent;
+                tangent = tangent * 0.5f;
+                *tangentOut = tangent;
+                *tangentIn = tangent;
+                const float firstWeight = (twiceCubic - tripleSquared) + 1.0f, secondWeight = -twiceCubic + tripleSquared;
+                float result = currentValue * firstWeight + nextValue * secondWeight;
+                const float lastTangentWeight = cubic - scaledSquared, firstTangentWeight = (lastTangentWeight - scaledSquared) + time;
+                result = currentTangent * firstTangentWeight + result;
+                result = nextTangent * lastTangentWeight + result;
+                *value = result;
+                return;
+            }
+            if (__builtin_fabsf(channel.next.timeSeconds - g_motionCurrentAnimTime) < 1.1754944e-38f) {
+                *value = channel.next.value;
+                *tangentIn = channel.next.tangentIn * 0.5f;
+                *tangentOut = channel.next.tangentOut * 0.5f;
+                return;
+            }
+            if (channel.keysRemaining) {
+                channel.current = channel.next;
+                const std::int16_t flags = *channel.frameCursor;
+                channel.next.value = DecodeMotnFloat(*channel.frameCursor++) * channel.scale + channel.bias;
+                channel.next.tangentIn = DecodeMotnFloat(*channel.frameCursor++) * channel.scale;
+                if (flags & 1)
+                    channel.next.tangentOut = DecodeMotnFloat(*channel.frameCursor++) * channel.scale;
+                else
+                    channel.next.tangentOut = channel.next.tangentIn;
+                if (--channel.keysRemaining)
+                    channel.next.timeSeconds = static_cast<float>(static_cast<std::int16_t>(*channel.frameCursor++)) * motionFrameSeconds;
+                else
+                    channel.next.timeSeconds = g_motionMaximumAnimTime;
+                channel.inverseDuration = 1.0f / (channel.next.timeSeconds - channel.current.timeSeconds);
+            } else {
+                *value = channel.next.value;
+                *tangentOut = 0.0f;
+                *tangentIn = 0.0f;
+                return;
+            }
+        }
+    }
+}
+#else
 // @verified - pd
 void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *tangentIn, float *tangentOut) {
     float now = g_motionCurrentAnimTime;
@@ -2291,5 +4850,7 @@ void SampleMotionRigChannelPVA(MotionRigChannel &channel, float *value, float *t
                  ((cubic - scaledSquared - scaledSquared) + elapsed) * currentTangent) +
         (cubic - scaledSquared) * nextTangent;
 }
+#endif
 
-} } // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

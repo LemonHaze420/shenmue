@@ -1,8 +1,15 @@
 #include "shenmue.h"
 
-
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/particle_effects.hpp"
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "platform/dc/am2_vector.hpp"
+#include "s2/ship_spray.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
 #include "s2/drop_particles.hpp"
@@ -10,14 +17,44 @@
 #include "s2/effect_texture.hpp"
 #include "s2/field_collision.hpp"
 #include "s2/hlib.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/hiki.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/event_character_state_dc.hpp"
+#include "s2/reflector_board_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/input_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/event_vector_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/lighting_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/input.hpp"
 #include "s2/legacy_draw.hpp"
 #include "s2/lighting.hpp"
 #include "s2/map_control.hpp"
 #include "s2/matrix_stack.hpp"
 #include "s2/motion_work.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/moves_scroll.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/mt7.hpp"
+#include <cstring>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/pak.hpp"
 #include "s2/ship_spray.hpp"
 #include "s2/daku_spray.hpp"
@@ -33,58 +70,306 @@
 #include <algorithm>
 #include <array>
 #include <bit>
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cmath>
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/party_companion.hpp"
+#include "s2/character_alpha_dc.hpp"
+#include "s2/character_yaw_dc.hpp"
+#include "s2/character_components_dc.hpp"
+#include "s2/character_control_dc.hpp"
+#include "s2/character_control_constructor_dc.hpp"
+#include "s2/camera_conversation_dc.hpp"
+#include "s2/door_control_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "s2/scenario_character_query_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include "s2/string_utility.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/npc_data_dc.hpp"
+#include "s2/math.hpp"
+#include "s2/maze_dc.hpp"
+#include "s2/qron_dc.hpp"
+#include "s2/player_ground_state_dc.hpp"
+#include "s2/field_query_dc.hpp"
+#include "s2/field_event_dc.hpp"
+#include <cfloat>
+#include "s2/conversation_fade_dc.hpp"
+#include "s2/conversation_dc.hpp"
+#include "s2/scenario_talk_dc.hpp"
+#include "s2/player_stats_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include <cri_adxt.h>
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/conversation_playback_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/startup_assets_dc.hpp"
+#include "s2/face_controller_dc.hpp"
+#include "s2/sound_table_dc.hpp"
+#include <sg_xpt.h>
+#include <cri_adxf.h>
+#include "s2/scenario_control_dc.hpp"
+#include "s2/scenario_actions_dc.hpp"
+#include "s2/frame_dc.hpp"
+#include "s2/scenario_scnt.hpp"
+#include "s2/model_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/scenario_flags_dc.hpp"
+#include "s2/player_control_state_dc.hpp"
+#include "s2/pad_control_dc.hpp"
+#include "s2/scene_assets_dc.hpp"
+#include "s2/story_state.hpp"
+#include "s2/date_time.hpp"
+#include "s2/ui_state_dc.hpp"
+#include "s2/author_control_state_dc.hpp"
+#include "s2/character_pose_dc.hpp"
+#include "s2/debug_screen_dc.hpp"
+#include "s2/event_character_model_dc.hpp"
+#include "s2/npc_area_route.hpp"
+#include "s2/player_movement_dc.hpp"
+#include "s2/player_readiness_dc.hpp"
+#include "s2/screen_film_dc.hpp"
+#include "s2/search_runtime_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/map_region_dc.hpp"
+#include "s2/game_system_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hand_dc.hpp"
+#include "s2/object_xforms.hpp"
+#include "s2/sound_program.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/calendar_dc.hpp"
+#include "s2/search_dc.hpp"
+#include "s2/help_icon_dc.hpp"
+#include "s2/map_event_character_dc.hpp"
+#include "s2/map_region_data_dc.hpp"
+#include "s2/door_state_dc.hpp"
+#include "platform/dc/runtime_arithmetic.hpp"
+#include "s2/player_config_dc.hpp"
+#include "s2/player_model_dc.hpp"
+#include "s2/button_mediation_dc.hpp"
+#include "s2/speak_icon_setup_dc.hpp"
+#include "s2/speak_icon_state_dc.hpp"
+#include "s2/search_commands_dc.hpp"
+#include "platform/dc/sdk.hpp"
+#include "s2/flag_data.hpp"
+#include "s2/inventory_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/flag_context_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/fight_blur_dc.hpp"
+#include "s2/game_save_area.hpp"
+#include "s2/hlib.hpp"
+#include "s2/system_modules_dc.hpp"
+#include "s2/screen_film.hpp"
+#include "s2/texture_dc.hpp"
+#include "s2/pak_dc.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/save_screen_state_dc.hpp"
+#include <cstdarg>
+#include <cstdio>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <new>
 #include <emmintrin.h>
+#endif
 
-#if defined(_WIN32)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) && defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <d3d11.h>
 #endif
 
-    namespace shenmue::s2 {
-    std::array<std::int32_t, 3> g_dakuSpraySlots{};
-    std::array<Vector3, 3> g_dakuSprayPositions{};
-    std::array<std::uint32_t, 3> g_dakuSprayColours{};
-    std::array<Vector2, 3> g_dakuSpraySizes{};
-    ShipSprayEmitter *g_shipSprayParameters{};
-    Vector3 g_shipSprayPosition{};
-    Vector3 g_shipSprayLocalPosition{};
-    std::int32_t g_shipSprayYaw{};
-    float g_shipSprayFadeRate{};
-    std::uint32_t g_shipSprayColour{};
-    float weatherRippleLifetimeScale = 0.5f;
-    float weatherRippleLifetimeStep = 0.025f;
-    std::array<WeatherClipSet, 2> weatherClipSets{};
 
-    namespace {
+namespace shenmue {
+namespace s2 {
 
-    struct ParticleRecord;
-    using ParticleCallback = void (*)(ParticleRecord &);
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+inline void RetireEffectParticle(dc::sdk::Particle *particle) {
+    particle->flags = 0;
+    particle->update = dc::sdk::SpawnInactiveParticle;
+}
+#endif
 
-    // BirthParticle copies this complete 96-byte template to every particle. Its
-    // callbacks at +0x20 run under the currently selected emitter, not a task.
-    struct ParticleRecord {
-        std::uint32_t flags;
-        Vector3 position;
-        Vector3 velocity;
-        std::uint32_t reserved1c;
-        ParticleCallback callback;
-        std::uint64_t phaseX;
-        std::uint64_t phaseY;
-        std::uint64_t phaseZ;
-        std::uint64_t stepX;
-        std::uint64_t stepY;
-        std::uint64_t stepZ;
-        std::uint32_t colour;
-        float scale;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ClearEffectRegistry(std::int32_t mode, std::int32_t index);
+void StartEffectRegistry(std::int32_t mode, std::int32_t index);
+void SuspendEffectRegistry(std::int32_t mode, std::int32_t index);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+inline void RotateEffectParticle(dc::sdk::Particle *particle) {
+    particle->phase1 = std::uint32_t(particle->phase1) + std::uint32_t(particle->phaseStep0);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void InitializeStationarySmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void InitializeRadialSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void FadeSpreadingSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void FadeWideSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void InitializeSpreadingSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void InitializeWideSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *);
+void SmokeControlCallback(void *data);
+void StationarySmokeControlCallback(void *data);
+void RadialSmokeControlCallback(void *data);
+void SpreadingSmokeControlCallback(void *data);
+void WideSmokeControlCallback(void *data);
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void EffectControlCallback(void *);
+std::int32_t AllocateParticleEffectSlot(std::int32_t type, std::int32_t textureSlot, HLib::TaskCallback callback, void *data, shen_name token);
+void ResetHikiTaskData();
+void ResetShipSprayParameters();
+void ResetDropParticleAdmission();
+
+SmokeEffect *g_smokeEffects[16] = {}, *g_splashEffects[16] = {}, *g_reservedParticleEffects[8] = {}, *g_fallingEffects[16] = {};
+FireEffect *g_fireEffects[8];
+SmokeTextureOwner *g_smokeTextures[2];
+dc::sdk::FftEffect *g_smokeFftData[2] = {};
+ParticleEffectSlot g_particleEffectSlots[16], g_smokeEffectSlots[2] = {}, g_fireEffectSlots[8] = {};
+FireFftPrefix *g_fireFftOwners[8];
+std::uint16_t *g_splashTemporaryPixels;
+float g_stationarySmokeAlpha;
+HLib::Task *g_particleControllerTask;
+std::uint32_t g_particleControllerRequests;
+std::int32_t g_particleEffectsSuspended;
+ParticleEmitterReference g_particleEmitterReferences[16];
+std::int32_t g_dropEmitterSlots[5];
+
+ShipSprayEmitter shipSprayDefault[6] = {
+    {SHEN_FIELD(position){SHEN_FIELD(x) 0.2f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.41f},
+        SHEN_FIELD(spawnVariance){SHEN_FIELD(x) 0.4f, SHEN_FIELD(y) 0.3f, SHEN_FIELD(z) 0.4f},
+        SHEN_FIELD(velocity){SHEN_FIELD(x) 0.2f, SHEN_FIELD(y) 0.06f, SHEN_FIELD(z) - 0.15f},
+        SHEN_FIELD(velocityVariance){SHEN_FIELD(x) 0.002f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.002f}, SHEN_FIELD(birthRate) 0.6f, SHEN_FIELD(width) 1.73f,
+        SHEN_FIELD(height) 1.65f, SHEN_FIELD(widthOffset) 0, SHEN_FIELD(slot) - 1, SHEN_FIELD(count) 100, SHEN_FIELD(particles) 0},
+    {SHEN_FIELD(position){SHEN_FIELD(x) - 0.5f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.41f},
+        SHEN_FIELD(spawnVariance){SHEN_FIELD(x) 0.4f, SHEN_FIELD(y) 0.3f, SHEN_FIELD(z) 0.4f},
+        SHEN_FIELD(velocity){SHEN_FIELD(x) - 0.2f, SHEN_FIELD(y) 0.06f, SHEN_FIELD(z) - 0.15f},
+        SHEN_FIELD(velocityVariance){SHEN_FIELD(x) 0.002f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.002f}, SHEN_FIELD(birthRate) 0.6f, SHEN_FIELD(width) 1.73f,
+        SHEN_FIELD(height) 1.65f, SHEN_FIELD(widthOffset) 0, SHEN_FIELD(slot) - 1, SHEN_FIELD(count) 100, SHEN_FIELD(particles) 0},
+    {SHEN_FIELD(position){SHEN_FIELD(x) 2.9f, SHEN_FIELD(y) 0, SHEN_FIELD(z) - 1.8f},
+        SHEN_FIELD(spawnVariance){SHEN_FIELD(x) 0.4f, SHEN_FIELD(y) 0.3f, SHEN_FIELD(z) 0.4f},
+        SHEN_FIELD(velocity){SHEN_FIELD(x) 0.15f, SHEN_FIELD(y) 0.03f, SHEN_FIELD(z) - 0.18f},
+        SHEN_FIELD(velocityVariance){SHEN_FIELD(x) 0.002f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.002f}, SHEN_FIELD(birthRate) 0.6f, SHEN_FIELD(width) 1.49f,
+        SHEN_FIELD(height) 1.02f, SHEN_FIELD(widthOffset) 0, SHEN_FIELD(slot) - 1, SHEN_FIELD(count) 75, SHEN_FIELD(particles) 0},
+    {SHEN_FIELD(position){SHEN_FIELD(x) - 3.4f, SHEN_FIELD(y) 0, SHEN_FIELD(z) - 1.8f},
+        SHEN_FIELD(spawnVariance){SHEN_FIELD(x) 0.4f, SHEN_FIELD(y) 0.3f, SHEN_FIELD(z) 0.4f},
+        SHEN_FIELD(velocity){SHEN_FIELD(x) - 0.15f, SHEN_FIELD(y) 0.03f, SHEN_FIELD(z) - 0.18f},
+        SHEN_FIELD(velocityVariance){SHEN_FIELD(x) 0.002f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.002f}, SHEN_FIELD(birthRate) 0.6f, SHEN_FIELD(width) 1.49f,
+        SHEN_FIELD(height) 1.02f, SHEN_FIELD(widthOffset) 0, SHEN_FIELD(slot) - 1, SHEN_FIELD(count) 75, SHEN_FIELD(particles) 0},
+    {SHEN_FIELD(position){SHEN_FIELD(x) 4.8f, SHEN_FIELD(y) 0, SHEN_FIELD(z) - 4.5f},
+        SHEN_FIELD(spawnVariance){SHEN_FIELD(x) 0.4f, SHEN_FIELD(y) 0.3f, SHEN_FIELD(z) 0.4f},
+        SHEN_FIELD(velocity){SHEN_FIELD(x) 0.09f, SHEN_FIELD(y) 0.03f, SHEN_FIELD(z) - 0.22f},
+        SHEN_FIELD(velocityVariance){SHEN_FIELD(x) 0.002f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.002f}, SHEN_FIELD(birthRate) 0.6f, SHEN_FIELD(width) 1.1f,
+        SHEN_FIELD(height) 0.86f, SHEN_FIELD(widthOffset) 0, SHEN_FIELD(slot) - 1, SHEN_FIELD(count) 50, SHEN_FIELD(particles) 0},
+    {SHEN_FIELD(position){SHEN_FIELD(x) - 5.5f, SHEN_FIELD(y) 0, SHEN_FIELD(z) - 4.5f},
+        SHEN_FIELD(spawnVariance){SHEN_FIELD(x) 0.4f, SHEN_FIELD(y) 0.3f, SHEN_FIELD(z) 0.4f},
+        SHEN_FIELD(velocity){SHEN_FIELD(x) - 0.09f, SHEN_FIELD(y) 0.03f, SHEN_FIELD(z) - 0.22f},
+        SHEN_FIELD(velocityVariance){SHEN_FIELD(x) 0.002f, SHEN_FIELD(y) 0.01f, SHEN_FIELD(z) 0.002f}, SHEN_FIELD(birthRate) 0.6f, SHEN_FIELD(width) 1.1f,
+        SHEN_FIELD(height) 0.86f, SHEN_FIELD(widthOffset) 0, SHEN_FIELD(slot) - 1, SHEN_FIELD(count) 50, SHEN_FIELD(particles) 0},
 };
 
+float g_smokeInitialScale0 = 0.0f, g_smokeInitialScale2 = 0.0f, g_smokeInitialScale3 = 0.0f, g_smokeInitialScale4 = 0.0f;
+float g_smokeRadialVelocity3, g_smokeRadialDecay3 = 0.0f, g_smokeRadialVelocity4 = 0.0f, g_smokeRadialDecay4 = 0.0f;
+#endif
 
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const shen_name TASK_DROP = 0x504f5244U;
+Vector3 dropParticlePosition, dropParticleLocalPosition = {};
+dc::sdk::Particle dropParticles0[30], dropParticles1[30] = {};
+dc::sdk::CompactParticle dropParticles2[30], dropParticles3[40] = {}, dropParticles4[25] = {};
+std::int32_t dropLightIndices[5] = {}, dropLightEnabled[4] = {};
+std::uint32_t dropLightKinds[4] = {};
+Vector3 dropLightPositions[4] = {}, dropLightDirections[4] = {};
+float dropLightRanges[4] = {}, dropLightConeCosines[4] = {};
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float g_smokeExpansion0, g_smokeExpansion2, g_smokeExpansion3, g_smokeExpansion4;
+float g_smokeFadeFactor0, g_smokeFadeFactor2, g_smokeFadeFactor3, g_smokeFadeFactor4;
+std::int32_t g_smokeAlphaStep3 = 0, g_smokeAlphaStep4 = 0;
+float g_smokeOpacityScale3, g_smokeOpacityScale4;
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t radialSmokeAngle = 0;
+#endif
+
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+std::array<std::int32_t, 3> g_dakuSpraySlots{};
+std::array<Vector3, 3> g_dakuSprayPositions{};
+std::array<std::uint32_t, 3> g_dakuSprayColours{};
+std::array<Vector2, 3> g_dakuSpraySizes{};
+ShipSprayEmitter *g_shipSprayParameters{};
+Vector3 g_shipSprayPosition{};
+Vector3 g_shipSprayLocalPosition{};
+std::int32_t g_shipSprayYaw{};
+float g_shipSprayFadeRate{};
+std::uint32_t g_shipSprayColour{};
+float weatherRippleLifetimeScale = 0.5f;
+float weatherRippleLifetimeStep = 0.025f;
+std::array<WeatherClipSet, 2> weatherClipSets{};
+#endif
+
+namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+struct ParticleRecord;
+using ParticleCallback = void (*)(ParticleRecord &);
+
+// BirthParticle copies this complete 96-byte template to every particle. Its
+// callbacks at +0x20 run under the currently selected emitter, not a task.
+struct ParticleRecord {
+    std::uint32_t flags;
+    Vector3 position;
+    Vector3 velocity;
+    std::uint32_t reserved1c;
+    ParticleCallback callback;
+    std::uint64_t phaseX;
+    std::uint64_t phaseY;
+    std::uint64_t phaseZ;
+    std::uint64_t stepX;
+    std::uint64_t stepY;
+    std::uint64_t stepZ;
+    std::uint32_t colour;
+    float scale;
+};
+
+// ParticleEmitter native 0x78-byte stride.
 struct ParticleEmitter {
     std::uint32_t flags;
     std::int32_t count;
@@ -106,8 +391,8 @@ struct ParticleEmitter {
     const std::byte *textureSource;
 };
 
-// Shared smoke state is 0x18 bytes. Callbacks increment the word at +0x14 and update the word at +0x16.
-
+// The shared allocation is 0x18 bytes, not an array of twelve dwords.
+// SmokeTextureOwner callbacks increment the WORD at +0x14 and modify the WORD at +0x16.
 struct SmokeTextureOwner {
     std::int32_t slot;
     std::uint32_t reserved04;
@@ -228,17 +513,17 @@ std::array<EffectSlot, 2> smokeSlots{};
 std::array<EffectSlot, 8> fireSlots{};
 std::array<ParticleEmitterReference, 16> emitterReferences{};
 std::array<std::int32_t, 5> dropEmitterSlots{};
-Vector3 dropParticlePosition{};
-Vector3 dropParticleLocalPosition{};
+Vector3 dropParticlePosition;
+Vector3 dropParticleLocalPosition;
 std::array<std::int32_t, 5> dropLightIndices{};
 std::array<std::int32_t, 5> dropLightEnabled{};
 std::array<std::uint32_t, 5> dropLightKinds{};
 std::array<Vector3, 5> dropLightPositions{}, dropLightDirections{};
 std::array<float, 5> dropLightRanges{}, dropLightConeCosines{};
-std::array<ParticleRecord, 30> dropParticles0{}, dropParticles1{};
-std::array<CompactParticleRecord, 30> dropParticles2{};
-std::array<CompactParticleRecord, 40> dropParticles3{};
-std::array<CompactParticleRecord, 25> dropParticles4{};
+std::array<ParticleRecord, 30> dropParticles0, dropParticles1;
+std::array<CompactParticleRecord, 30> dropParticles2;
+std::array<CompactParticleRecord, 40> dropParticles3;
+std::array<CompactParticleRecord, 25> dropParticles4;
 std::array<ShipSprayEmitter, 6> shipSprayK = kShipSprayK;
 std::array<ShipSprayEmitter, 6> shipSprayFive = kShipSprayFive;
 std::array<ShipSprayEmitter, 6> shipSprayDefault = kShipSprayDefault;
@@ -247,7 +532,7 @@ std::array<FireFftData *, 8> fireFft{};
 std::array<SmokeTextureOwner *, 2> smokeTextures{};
 std::array<SmokeEffect *, 16> smokeEffects{};
 std::array<SmokeEffect *, 16> splashEffects{};
-
+// Native initializes this eight-entry family but has no allocating owner.
 std::array<SmokeEffect *, 8> reservedParticleEffects{};
 std::array<SmokeEffect *, 16> fallingEffects{};
 std::array<FireEffect *, 8> fireEffects{};
@@ -269,8 +554,3182 @@ std::array<float, 5> smokeRadialDecay{};
 std::array<float, 5> smokeOpacityScale{};
 std::array<std::int32_t, 5> smokeAlphaStep{};
 float stationarySmokeAlpha{};
-float fallingParticleFloor{};
-std::array<Vector3, 3> fallingParticleOrigins{};
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+float fallingParticleFloor;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+ShipSprayAnchor *shipSprayNodes;
+std::uint16_t *shipSprayPixels;
+std::int32_t shipSprayFftSlot;
+Vector3 fallingParticleOrigins[3];
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::uint32_t g_shipSprayColour;
+Vector3 g_shipSprayPosition;
+std::int32_t g_shipSprayYaw;
+float g_shipSprayLocalX, g_shipSprayLocalY, g_shipSprayLocalZ;
+std::int32_t g_hikiTextureIndex;
+void *g_hikiAllocation0, *g_hikiAllocation1, *g_hikiRetainedView;
+std::int32_t g_hikiYaw, g_hikiYawReserved, g_hikiScrollU, g_hikiScrollV;
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+Vector3 hikiSegmentOrigin, hikiSegmentOffset;
+std::int32_t hikiSegmentYaw, hikiSegmentCount;
+float hikiSegmentSpacing;
+std::uint32_t sakuraColour = 0;
+
+struct SakuraEffectState {
+    std::int32_t active;
+    Vector3 wind;
+    float drift;
+    std::int32_t gustFrames;
+    float scale, fallRate, spread;
+    std::uint32_t *texture;
+    HLib::Task *task;
+};
+
+SakuraEffectState sakuraState;
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitEffectControlTaskData() {
+    dc::sdk::InitializeParticleChannels();
+    ResetFireFftChannels();
+    ResetReflectorBoardState();
+    ResetDropParticleAdmission();
+    ResetShipSprayParameters();
+    ResetHikiTaskData();
+    std::int32_t index;
+    g_particleControllerTask = 0;
+    for (index = 0; index < 16; ++index) {
+        g_particleEffectSlots[index].state = 0;
+        g_particleEffectSlots[index].link = -1;
+        g_particleEffectSlots[index].textureSlot = -1;
+        g_particleEffectSlots[index].callback = 0;
+        g_particleEffectSlots[index].data = 0;
+        g_particleEffectSlots[index].token = shen_name(0x20202020U);
+        g_particleEffectSlots[index].retained1c = 0;
+        g_particleEmitterReferences[index].active = 0;
+    }
+    for (index = 0; index < 2; ++index) {
+        g_smokeEffectSlots[index].state = 0;
+        g_smokeEffectSlots[index].link = -1;
+        g_smokeEffectSlots[index].textureSlot = -1;
+        g_smokeEffectSlots[index].callback = 0;
+        g_smokeEffectSlots[index].data = 0;
+        g_smokeEffectSlots[index].token = shen_name(0x20202020U);
+        g_smokeEffectSlots[index].retained1c = 0;
+    }
+    for (index = 0; index < 8; ++index) {
+        g_fireEffectSlots[index].state = 0;
+        g_fireEffectSlots[index].link = -1;
+        g_fireEffectSlots[index].textureSlot = -1;
+        g_fireEffectSlots[index].callback = 0;
+        g_fireEffectSlots[index].data = 0;
+        g_fireEffectSlots[index].token = shen_name(0x20202020U);
+        g_fireEffectSlots[index].retained1c = 0;
+    }
+    g_particleEffectsSuspended = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void EF_Callback_EffectCtrl_Enqueue() {
+    if (!g_particleControllerTask)
+        g_particleControllerTask = HLib::EnqueueTaskWithoutParameter(EffectControlCallback, 13, 8, EFFECT_CONTROLLER_TASK);
+    ++g_particleControllerRequests;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void EF_Callback_EffectCtrl_Dequeue() {
+    if (g_particleControllerTask) {
+        if (--g_particleControllerRequests == 0) {
+            HLib::DestroyTaskInternal(g_particleControllerTask);
+            g_particleControllerTask = 0;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t IsEffectControlTaskActive() {
+    if (!g_particleControllerTask)
+        return 0;
+    return 1;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitEffectPoints() {
+    for (std::int32_t index = 0; index < 16; ++index)
+        g_smokeEffects[index] = 0;
+    for (std::int32_t index = 0; index < 16; ++index)
+        g_splashEffects[index] = 0;
+    for (std::int32_t index = 0; index < 8; ++index)
+        g_reservedParticleEffects[index] = 0;
+    for (std::int32_t index = 0; index < 16; ++index)
+        g_fallingEffects[index] = 0;
+    for (std::int32_t index = 0; index < 8; ++index) {
+        g_fireEffects[index] = 0;
+        g_fireFftOwners[index] = 0;
+    }
+    for (std::int32_t index = 0; index < 2; ++index)
+        g_smokeTextures[index] = 0;
+    g_splashTemporaryPixels = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void FreeParticleEffect(std::int32_t type, std::uint32_t index) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        if (effect->particles)
+            HLib::FreeTaskData(effect->particles);
+        g_smokeEffects[index] = 0;
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (!fire)
+            break;
+        if (fire->pixels)
+            HLib::FreeTaskData(fire->pixels);
+        if (fire->trail)
+            HLib::FreeTaskData(fire->trail);
+        if (fire->instances)
+            HLib::FreeTaskData(fire->instances);
+        ClearEffectRegistry(2, fire->slot);
+        HLib::FreeTaskData(fire);
+        g_fireEffects[index] = 0;
+        break;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        if (effect->particles)
+            HLib::FreeTaskData(effect->particles);
+        g_splashEffects[index] = 0;
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        if (effect->particles)
+            HLib::FreeTaskData(effect->particles);
+        g_reservedParticleEffects[index] = 0;
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        if (effect->particles)
+            HLib::FreeTaskData(effect->particles);
+        g_fallingEffects[index] = 0;
+        break;
+    }
+    if (!effect)
+        return;
+    if (effect->texture && effect->profile < 5 && effect->profile >= 0) {
+        if (effect->texture->pixels)
+            dc::sdk::ReleaseParticleChannelTexture(effect->slot);
+        --effect->texture->references;
+        if (!effect->texture->references) {
+            ClearEffectRegistry(1, effect->texture->slot);
+            g_smokeTextures[(effect->flags >> 4U) & 15U] = 0;
+            if (effect->texture->pixels)
+                HLib::FreeTaskData(effect->texture->pixels);
+            if (effect->texture)
+                HLib::FreeTaskData(effect->texture);
+        }
+    }
+    ClearEffectRegistry(0, effect->slot);
+    HLib::FreeTaskData(effect);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ResumeParticleEffect(std::int32_t type, std::uint32_t index) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        StartEffectRegistry(0, effect->slot);
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (fire)
+            StartEffectRegistry(2, fire->slot);
+        break;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        StartEffectRegistry(0, effect->slot);
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        StartEffectRegistry(0, effect->slot);
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        StartEffectRegistry(0, effect->slot);
+        break;
+    }
+    if (effect) {
+        if (effect->texture && effect->profile <= 4 && effect->profile >= 0) {
+            StartEffectRegistry(1, effect->texture->slot);
+            effect->texture->activeEmitters |= 1 << effect->slot;
+        }
+        effect->flags |= 2;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SuspendParticleEffect(std::int32_t type, std::uint32_t index) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        if (effect)
+            SuspendEffectRegistry(0, effect->slot);
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (fire)
+            SuspendEffectRegistry(2, fire->slot);
+        break;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        if (effect)
+            SuspendEffectRegistry(0, effect->slot);
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        if (effect)
+            SuspendEffectRegistry(0, effect->slot);
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        if (effect)
+            SuspendEffectRegistry(0, effect->slot);
+        break;
+    }
+    if (effect) {
+        if (effect->texture && effect->profile <= 4 && effect->profile >= 0) {
+            effect->texture->activeEmitters &= ~(1 << effect->slot);
+            if (!effect->texture->activeEmitters)
+                SuspendEffectRegistry(1, effect->texture->slot);
+        }
+        effect->flags &= ~2;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t GetParticleEffectVisibility(std::int32_t type, std::uint32_t index) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (fire && (fire->drawFlags & 2))
+            return 1;
+        return fire ? 0 : -1;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return -1;
+    if (!(effect->flags & 2))
+        return 0;
+    return 1;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectPosition(std::int32_t type, std::uint32_t index, const Vector3 *position, const Vector3 *variance) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (fire && position)
+            fire->localPosition = *position;
+        return;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return;
+    effect->position = *position;
+    effect->spawnVariance = *variance;
+    dc::sdk::SetParticleChannelPositionRange(
+        effect->slot, effect->position.x, effect->position.y, effect->position.z, effect->spawnVariance.x, effect->spawnVariance.y, effect->spawnVariance.z);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectVelocity(std::int32_t type, std::uint32_t index, const Vector3 *velocity, const Vector3 *variance) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return;
+    effect->velocity = *velocity;
+    effect->velocityVariance = *variance;
+    dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+        effect->velocityVariance.y, effect->velocityVariance.z);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectBirthRate(std::int32_t type, std::uint32_t index, float fraction) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return;
+    effect->birthRate = fraction;
+    dc::sdk::SetParticleChannelSpawnProbability(effect->slot, fraction);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectUniformSize(std::int32_t type, std::uint32_t index, float size) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (!fire)
+            return;
+        fire->width = size;
+        fire->height = size;
+        SetFireFftSize(fire->slot, fire->width, fire->height);
+        return;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return;
+    effect->width = size;
+    effect->height = size;
+    dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectSize(std::int32_t type, std::uint32_t index, float width, float height) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 4: {
+        FireEffect *const fire = g_fireEffects[index];
+        if (!fire)
+            return;
+        fire->width = width;
+        fire->height = height;
+        SetFireFftSize(fire->slot, fire->width, height);
+        return;
+    }
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return;
+    effect->width = width;
+    effect->height = height;
+    dc::sdk::SetParticleChannelSize(effect->slot, effect->width, height);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectColour(std::int32_t type, std::uint32_t index, std::int32_t alpha, std::int32_t red, std::int32_t green, std::int32_t blue) {
+    SmokeEffect *effect;
+    std::int32_t particle;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        if (effect) {
+            dc::sdk::g_particleChannels[effect->slot].colour = (alpha << 24) | ((red & 0xff) << 16) | ((green << 8) & 0xff00U) | (blue & 0xffU);
+            for (particle = 0; particle < effect->count; ++particle)
+                effect->particles[particle].colour = dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        break;
+    case 1:
+        effect = g_splashEffects[index];
+        if (effect) {
+            dc::sdk::g_particleChannels[effect->slot].colour = (alpha << 24) | ((red & 0xff) << 16) | ((green << 8) & 0xff00U) | (blue & 0xffU);
+            for (particle = 0; particle < effect->count; ++particle)
+                effect->particles[particle].colour = dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        break;
+    case 2:
+    case 3:
+        break;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleEffectInitialScale(std::int32_t type, std::uint32_t index, float scale) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        switch (effect->profile) {
+        case 0:
+            g_smokeInitialScale0 = scale;
+            break;
+        case 1:
+            break;
+        case 2:
+            g_smokeInitialScale2 = scale;
+            break;
+        case 3:
+            g_smokeInitialScale3 = scale;
+            break;
+        case 4:
+            g_smokeInitialScale4 = scale;
+            break;
+        }
+        break;
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (effect)
+        effect->initialScale = scale;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void TranslateParticleEffectParticles(std::int32_t type, std::uint32_t index, const Vector3 *delta) {
+    SmokeEffect *effect = 0;
+    switch (type) {
+    case 0:
+        effect = g_smokeEffects[index];
+        break;
+    case 1:
+        effect = g_splashEffects[index];
+        break;
+    case 2:
+        effect = g_reservedParticleEffects[index];
+        break;
+    case 3:
+        effect = g_fallingEffects[index];
+        break;
+    }
+    if (!effect)
+        return;
+    for (std::int32_t index = 0; index < effect->count; ++index) {
+        effect->particles[index].position.x += delta->x;
+        effect->particles[index].position.y += delta->y;
+        effect->particles[index].position.z += delta->z;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetSmokeEffectFalloff(std::uint32_t index, std::int32_t value) {
+    const float setting = static_cast<float>(value);
+    SmokeEffect *const effect = g_smokeEffects[index];
+    if (effect) {
+        if (effect->texture) {
+            dc::sdk::FftEffect *const fft = g_smokeFftData[effect->texture->slot];
+            const float gain = (effect->fadeFactor - 0.7f) * 100.0f;
+            const float exponent = (setting * 10.0f) / 255.0f - 2.0f;
+            float table[64];
+            dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(gain, dc::sdk::BuildFftFalloff(exponent, table)));
+        }
+        switch (effect->profile) {
+        case 0:
+            effect->expansion = g_smokeExpansion0 = setting / 255.0f * 0.02f - 0.0039999997f;
+            break;
+        case 1:
+            effect->expansion = setting / 255.0f * 0.02f - 0.0039999997f;
+            break;
+        case 2:
+            effect->expansion = g_smokeExpansion2 = setting / 255.0f * 0.02f - 0.0039999997f;
+            break;
+        case 3:
+            effect->expansion = g_smokeExpansion3 = setting / 255.0f * 0.02f - 0.0039999997f;
+            break;
+        case 4:
+            effect->expansion = g_smokeExpansion4 = setting / 255.0f * 0.02f - 0.0039999997f;
+            break;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetSmokeEffectFadeFactor(std::uint32_t index, std::int32_t value) {
+    const float setting = static_cast<float>(value);
+    SmokeEffect *const effect = g_smokeEffects[index];
+    if (effect) {
+        if (effect->texture) {
+            dc::sdk::FftEffect *const fft = g_smokeFftData[effect->texture->slot];
+            const float gain = (setting * 100.0f) / 255.0f;
+            const float exponent = ((effect->expansion + 0.0039999997f) * 10.0f) / 0.02f - 2.0f;
+            float table[64];
+            dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(gain, dc::sdk::BuildFftFalloff(exponent, table)));
+        }
+        switch (effect->profile) {
+        case 0:
+            effect->fadeFactor = g_smokeFadeFactor0 = setting / 255.0f + 0.7f;
+            break;
+        case 1:
+            effect->fadeFactor = setting / 255.0f + 0.7f;
+            break;
+        case 2:
+            effect->fadeFactor = g_smokeFadeFactor2 = setting / 255.0f + 0.7f;
+            break;
+        case 3:
+            effect->fadeFactor = g_smokeFadeFactor3 = setting / 255.0f + 0.7f;
+            break;
+        case 4:
+            effect->fadeFactor = g_smokeFadeFactor4 = setting / 255.0f + 0.7f;
+            break;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetSmokeEffectPhaseRate(std::uint32_t index, float rate) {
+    const SmokeEffect *const effect = g_smokeEffects[index];
+    dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[effect->texture->slot], rate);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetSmokeEffectFalloffCurve(std::uint32_t index, float exponent, float scale) {
+    const SmokeEffect *const effect = g_smokeEffects[index];
+    dc::sdk::FftEffect *const fft = g_smokeFftData[effect->texture->slot];
+    float table[64];
+    dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(scale, dc::sdk::BuildFftFalloff(exponent, table)));
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetStationarySmokeAlpha(std::uint32_t index, std::int32_t alpha) {
+    const SmokeEffect *const effect = g_smokeEffects[index];
+    if (effect) {
+        switch (effect->profile) {
+        case 0:
+            break;
+        case 1:
+            g_stationarySmokeAlpha = static_cast<float>(alpha);
+            break;
+        case 2:
+            break;
+        case 3:
+            break;
+        case 4:
+            break;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetSmokeEffectRadialMotion(std::uint32_t index, float velocity, float decay) {
+    const SmokeEffect *const effect = g_smokeEffects[index];
+    if (!effect)
+        return;
+    switch (effect->profile) {
+    case 3:
+        g_smokeRadialVelocity3 = velocity;
+        g_smokeRadialDecay3 = decay;
+        break;
+    case 4:
+        g_smokeRadialVelocity4 = velocity;
+        g_smokeRadialDecay4 = decay;
+        break;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetSmokeEffectSpread(std::uint32_t index, float falloff, float opacity) {
+    const SmokeEffect *const effect = g_smokeEffects[index];
+    if (!effect)
+        return;
+    switch (effect->profile) {
+    case 3:
+        g_smokeAlphaStep3 = static_cast<std::int32_t>((falloff - 1.0f) * (13.888889f) + (3.0f));
+        if (g_smokeAlphaStep3 < 0)
+            g_smokeAlphaStep3 = 0;
+        g_smokeOpacityScale3 = opacity;
+        break;
+    case 4:
+        g_smokeAlphaStep4 = static_cast<std::int32_t>((falloff - 1.0f) * (13.888889f) + (3.0f));
+        if (g_smokeAlphaStep4 < 0)
+            g_smokeAlphaStep4 = 0;
+        g_smokeOpacityScale4 = opacity;
+        break;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t CreateSmokeEffect(
+    const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags, std::int32_t profile) {
+    Vector3 velocity, velocityVariance;
+    velocity.x = 0.0f;
+    velocity.y = 0.008f;
+    velocity.z = 0.0f;
+    velocityVariance.x = 0.013f;
+    velocityVariance.y = 0.004f;
+    velocityVariance.z = 0.013f;
+    float table[64];
+    std::int32_t index = 0;
+    HLib::TaskCallback control;
+    dc::sdk::ParticleUpdate initializer;
+    while (g_smokeEffects[index] && index < 16)
+        ++index;
+    if (index >= 16)
+        return -1;
+    SmokeEffect *effect;
+    g_smokeEffects[index] = effect = static_cast<SmokeEffect *>(HLib::AllocateTaskData(sizeof(SmokeEffect), PARTICLE_EFFECT_TASK));
+    effect->position = *position;
+    effect->spawnVariance = *spawnVolume;
+    effect->velocity = velocity;
+    effect->velocityVariance = velocityVariance;
+    effect->width = 3.0f;
+    effect->height = 3.0f;
+    effect->birthRate = birthRate;
+    effect->texture = 0;
+    effect->flags = shen_name(flags);
+    effect->count = count;
+    effect->profile = profile;
+    float falloff = 128.0f;
+    float fade = 128.0f;
+    switch (profile) {
+    case 0:
+        effect->expansion = g_smokeExpansion0 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor0 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale0 = 0.1f;
+        control = SmokeControlCallback;
+        initializer = InitializeSmoke;
+        break;
+    case 1:
+        falloff = 128.0f;
+        fade = 54.0f;
+        effect->expansion = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = fade / 255.0f + 0.7f;
+        effect->initialScale = 0.1f;
+        g_stationarySmokeAlpha = 32.0f;
+        control = StationarySmokeControlCallback;
+        initializer = InitializeStationarySmoke;
+        effect->velocity.x = effect->velocity.y = effect->velocity.z = 0.0f;
+        effect->velocityVariance.x = effect->velocityVariance.y = effect->velocityVariance.z = 0.0f;
+        effect->width = 8.0f;
+        effect->height = 1.0f;
+        break;
+    case 2:
+        effect->expansion = g_smokeExpansion2 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor2 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale2 = 0.1f;
+        control = RadialSmokeControlCallback;
+        initializer = InitializeRadialSmoke;
+        break;
+    case 3:
+        effect->expansion = g_smokeExpansion3 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor3 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale3 = 0.1f;
+        g_smokeRadialVelocity3 = 0.0f;
+        g_smokeRadialDecay3 = 0.0f;
+        g_smokeAlphaStep3 = 3;
+        g_smokeOpacityScale3 = 1.0f;
+        control = SpreadingSmokeControlCallback;
+        initializer = InitializeSpreadingSmoke;
+        break;
+    case 4:
+        effect->expansion = g_smokeExpansion4 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor4 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale4 = 0.1f;
+        g_smokeRadialVelocity4 = 0.0f;
+        g_smokeRadialDecay4 = 0.0f;
+        g_smokeAlphaStep4 = 3;
+        g_smokeOpacityScale4 = 1.0f;
+        control = WideSmokeControlCallback;
+        initializer = InitializeWideSmoke;
+        break;
+    }
+    effect->texture = g_smokeTextures[(effect->flags >> 4) & 15];
+    if (!effect->texture) {
+        effect->texture = static_cast<SmokeTextureOwner *>(HLib::AllocateTaskData(sizeof(SmokeTextureOwner), PARTICLE_EFFECT_TASK));
+        g_smokeTextures[(effect->flags >> 4) & 15] = effect->texture;
+        effect->texture->slot = AllocateParticleEffectSlot(1, -1, 0, 0, PARTICLE_EFFECT_TASK);
+        effect->texture->colour = 0xfff;
+        dc::sdk::SetFftEffectColour(g_smokeFftData[effect->texture->slot], effect->texture->colour);
+        effect->texture->pixels = static_cast<std::byte *>(HLib::AllocateTaskData(0x21f, PARTICLE_EFFECT_TASK));
+        std::memset(effect->texture->pixels, 0xff, 0x21f);
+        dc::sdk::SetFftEffectPixels(
+            g_smokeFftData[effect->texture->slot], reinterpret_cast<std::uint16_t *>((reinterpret_cast<std::uintptr_t>(effect->texture->pixels) + 31) & ~31U));
+        dc::sdk::FftEffect *const fft = g_smokeFftData[effect->texture->slot];
+        fade = fade * 100.0f / 255.0f;
+        dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(fade, dc::sdk::BuildFftFalloff(falloff * 10.0f / 255.0f - 2.0f, table)));
+        dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[effect->texture->slot], 0.5f);
+        effect->texture->references = 0;
+        effect->texture->activeEmitters = 0;
+    }
+    ++effect->texture->references;
+    effect->slot = AllocateParticleEffectSlot(0, effect->texture->slot, control, effect, PARTICLE_EFFECT_TASK);
+    effect->particles = static_cast<dc::sdk::Particle *>(HLib::AllocateTaskData(effect->count * sizeof(dc::sdk::Particle), PARTICLE_EFFECT_TASK));
+    dc::sdk::InitializeParticleChannelParticles(effect->slot, effect->count, 0, effect->particles);
+    dc::sdk::SetParticleChannelCallback(effect->slot, initializer);
+    dc::sdk::SetParticleChannelPositionRange(
+        effect->slot, effect->position.x, effect->position.y, effect->position.z, effect->spawnVariance.x, effect->spawnVariance.y, effect->spawnVariance.z);
+    dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+        effect->velocityVariance.y, effect->velocityVariance.z);
+    dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+    dc::sdk::SetParticleChannelTexture(
+        effect->slot, 16, 16, 0x102, reinterpret_cast<std::uint32_t *>((reinterpret_cast<std::uintptr_t>(effect->texture->pixels) + 31) & ~31U));
+    dc::sdk::SetParticleChannelBlendMode(effect->slot, 1);
+    dc::sdk::SetParticleChannelDepthMode(effect->slot, 1);
+    SuspendParticleEffect(0, index);
+    EF_Callback_EffectCtrl_Enqueue();
+    return index;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::uint32_t ConfigureSmokeEffect(
+    std::int32_t profile, std::uint32_t index, const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags) {
+    Vector3 velocity, velocityVariance;
+    velocity.x = 0.0f;
+    velocity.y = 0.008f;
+    velocity.z = 0.0f;
+    velocityVariance.x = 0.013f;
+    velocityVariance.y = 0.004f;
+    velocityVariance.z = 0.013f;
+    float table[64];
+    dc::sdk::ParticleUpdate initializer;
+    const std::uint32_t result = index;
+    SmokeEffect *const effect = g_smokeEffects[index];
+    effect->position = *position;
+    effect->spawnVariance = *spawnVolume;
+    effect->velocity = velocity;
+    effect->velocityVariance = velocityVariance;
+    effect->width = 3.0f;
+    effect->height = 3.0f;
+    effect->birthRate = birthRate;
+    effect->flags = shen_name(flags);
+    effect->count = count;
+    effect->profile = profile;
+    float falloff = 128.0f;
+    float fade = 128.0f;
+    switch (profile) {
+    case 0:
+        effect->expansion = g_smokeExpansion0 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor0 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale0 = 0.1f;
+        initializer = dc::sdk::SpawnInactiveParticle;
+        break;
+    case 1:
+        falloff = 128.0f;
+        fade = 54.0f;
+        effect->expansion = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = fade / 255.0f + 0.7f;
+        effect->initialScale = 0.1f;
+        g_stationarySmokeAlpha = 32.0f;
+        initializer = InitializeStationarySmoke;
+        effect->velocity.x = effect->velocity.y = effect->velocity.z = 0.0f;
+        effect->velocityVariance.x = effect->velocityVariance.y = effect->velocityVariance.z = 0.0f;
+        effect->width = 8.0f;
+        effect->height = 1.0f;
+        break;
+    case 2:
+        effect->expansion = g_smokeExpansion2 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor2 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale2 = 0.1f;
+        initializer = InitializeRadialSmoke;
+        break;
+    case 3:
+        effect->expansion = g_smokeExpansion3 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor3 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale3 = 0.1f;
+        g_smokeRadialVelocity3 = 0.0f;
+        g_smokeRadialDecay3 = 0.0f;
+        g_smokeAlphaStep3 = 3;
+        g_smokeOpacityScale3 = 1.0f;
+        initializer = InitializeSpreadingSmoke;
+        break;
+    case 4:
+        effect->expansion = g_smokeExpansion4 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor4 = fade / 255.0f + 0.7f;
+        effect->initialScale = g_smokeInitialScale4 = 0.1f;
+        g_smokeRadialVelocity4 = 0.0f;
+        g_smokeRadialDecay4 = 0.0f;
+        g_smokeAlphaStep4 = 3;
+        g_smokeOpacityScale4 = 1.0f;
+        initializer = InitializeWideSmoke;
+        break;
+    }
+    if (effect->texture) {
+        dc::sdk::FftEffect *const fft = g_smokeFftData[effect->texture->slot];
+        float scale = 5.0f;
+        dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(scale, dc::sdk::BuildFftFalloff(2.8f, table)));
+        dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[effect->texture->slot], 0.3f);
+    }
+    dc::sdk::SetParticleChannelCallback(effect->slot, initializer);
+    dc::sdk::SetParticleChannelPositionRange(
+        effect->slot, effect->position.x, effect->position.y, effect->position.z, effect->spawnVariance.x, effect->spawnVariance.y, effect->spawnVariance.z);
+    dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+        effect->velocityVariance.y, effect->velocityVariance.z);
+    dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+    dc::sdk::SetParticleChannelBlendMode(effect->slot, 1);
+    dc::sdk::SetParticleChannelDepthMode(effect->slot, 1);
+    return result;
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveFallingParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    RotateEffectParticle(particle);
+    particle->phase2 = std::uint32_t(particle->phase2) + std::uint32_t(particle->phaseStep1);
+    if (particle->position.y < fallingParticleFloor) {
+        RetireEffectParticle(particle);
+        return;
+    }
+    float vertical = dc::sdk::SinFixed(particle->phase1) * particle->velocity.y;
+    if (vertical > 0)
+        vertical = -vertical;
+    float horizontal = particle->velocity.x;
+    if (horizontal < 0)
+        horizontal = -horizontal;
+    if ((particle->velocity.z < 0 ? horizontal - particle->velocity.z : horizontal + particle->velocity.z) < 0.016000001f) {
+        if (vertical > -0.016000001f)
+            vertical = -0.016000001f;
+        particle->phase2 = std::uint32_t(particle->phase2) + (std::uint32_t(particle->phaseStep1) << 3);
+    }
+    particle->position.y += vertical;
+    particle->position.x = dc::sdk::SinFixed(particle->phase1) * particle->velocity.x + particle->position.x;
+    particle->position.z = dc::sdk::SinFixed(particle->phase1) * particle->velocity.z + particle->position.z;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void MoveDriftingParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    RotateEffectParticle(particle);
+    particle->phase2 = std::uint32_t(particle->phase2) + std::uint32_t(particle->phaseStep1);
+    if (particle->position.y < fallingParticleFloor) {
+        RetireEffectParticle(particle);
+        return;
+    }
+    particle->position.y += particle->velocity.y -
+        (dc::sdk::CosFixed(particle->phase1) * 0.015f < 0.0f ? -(dc::sdk::CosFixed(particle->phase1) * 0.015f) : dc::sdk::CosFixed(particle->phase1) * 0.015f) -
+        0.016000001f;
+    particle->position.x += particle->velocity.x + dc::sdk::SinFixed(particle->phase1) * 0.01f;
+    particle->position.z += particle->velocity.z + dc::sdk::SinFixed(particle->phase1) * 0.01f;
+    const float x = particle->position.x - fallingParticleOrigins[0].x;
+    const float z = particle->position.z - fallingParticleOrigins[0].z;
+    if (x * x + z * z > 64.0f)
+        RetireEffectParticle(particle);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const shen_name SHIP_SPRAY_EFFECT_TASK = 0x54434645U;
+const shen_name TASK_SIBU = 0x55424953U;
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayAnchorPosition(std::int32_t, const Vector3 *position) {
+    shipSprayNodes->position = *position;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayAnchorRotation(std::int32_t, std::int32_t x, std::int32_t y, std::int32_t z) {
+    shipSprayNodes->rotation.x = x;
+    shipSprayNodes->rotation.y = y;
+    shipSprayNodes->rotation.z = z;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ReleaseShipSprayNodes() {
+    ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes);
+    while (node) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            HLib::FreeTaskData(node);
+            break;
+        case 2:
+            ClearEffectRegistry(0, node->slot);
+            HLib::FreeTaskData(reinterpret_cast<void *>(node->retained10));
+            HLib::FreeTaskData(node);
+            break;
+        }
+        node = next;
+    }
+    shipSprayNodes = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ResumeShipSprayNodes() {
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            StartEffectRegistry(0, node->slot);
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SuspendShipSprayNodes() {
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            SuspendEffectRegistry(0, node->slot);
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayNodeColour(std::int32_t, std::uint32_t alpha, std::uint32_t red, std::uint32_t green, std::uint32_t blue) {
+    float table[64];
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2: {
+            node->colour = (alpha << 24) | ((red << 16) & 0xff0000U) | ((green & 0xffU) << 8) | (blue & 0xffU);
+            dc::sdk::g_particleChannels[node->slot].colour = node->colour;
+            shipSprayPixels = static_cast<std::uint16_t *>(HLib::AllocateTaskData(0x200, SHIP_SPRAY_EFFECT_TASK));
+            const std::int32_t slot = AllocateParticleEffectSlot(1, -1, 0, 0, SHIP_SPRAY_EFFECT_TASK);
+            dc::sdk::SetFftEffectColour(g_smokeFftData[slot], std::int16_t((((red & 0xffU) >> 4) << 8) | ((green & 0xf0U) | 0xf000U) | ((blue >> 4) & 15U)));
+            dc::sdk::SetFftEffectPixels(g_smokeFftData[slot], shipSprayPixels);
+            dc::sdk::SetFftEffectActive(g_smokeFftData[slot], 1);
+            dc::sdk::SetParticleChannelTexture(node->slot, 16, 16, 0x102, reinterpret_cast<std::uint32_t *>(shipSprayPixels));
+            dc::sdk::FftEffect *const fft = g_smokeFftData[slot];
+            dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(node->growth[0], dc::sdk::BuildFftFalloff(node->growth[1], table)));
+            dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[slot], node->growth[2]);
+            dc::sdk::UpdateFftEffect(g_smokeFftData[slot]);
+            dc::sdk::UpdateParticleChannel(node->slot);
+            dc::sdk::g_particleChannels[node->slot].user = node;
+            ClearEffectRegistry(1, slot);
+            HLib::FreeTaskData(shipSprayPixels);
+            break;
+        }
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayBirthRate(float birthRate) {
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            node->birthRate = birthRate;
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSpraySize(float width, float height) {
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            node->width = width;
+            node->height = height;
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayFadeDrift(float fade, float drift) {
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            node->fade = fade;
+            node->drift = drift;
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSpraySpread(float positionSpread, float velocitySpread) {
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            node->positionSpread = positionSpread;
+            node->velocitySpread = velocitySpread;
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayNodePosition(std::int32_t, std::int32_t index, const Vector3 *position) {
+    std::int32_t emitter = 0;
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            if (emitter == index)
+                node->position = *position;
+            ++emitter;
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayNodeVelocity(std::int32_t, std::int32_t index, const Vector3 *velocity) {
+    std::int32_t emitter = 0;
+    for (ShipSprayParameters *node = reinterpret_cast<ShipSprayParameters *>(shipSprayNodes); node;) {
+        ShipSprayParameters *const next = reinterpret_cast<ShipSprayParameters *>(node->flags);
+        switch (node->state) {
+        case 1:
+            break;
+        case 2:
+            if (emitter == index)
+                node->velocity = *velocity;
+            ++emitter;
+            break;
+        }
+        node = next;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeShipSprayAnchor(ShipSprayAnchor *anchor) {
+    anchor->position.x = 0.0f;
+    anchor->position.y = -100.0f;
+    anchor->position.z = 0.0f;
+    anchor->rotation.x = 0;
+    anchor->rotation.y = 0;
+    anchor->rotation.z = 0;
+    anchor->state = 1;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t SetShipSprayParameters(ShipSprayParameters *parameters, std::int32_t mode, std::int32_t side) {
+    parameters->position.x = 0.0f;
+    parameters->position.y = 2.0f;
+    parameters->position.z = -45.0f;
+    parameters->positionSpread = 0.001f;
+    parameters->velocity.x = 0.0f;
+    parameters->velocity.y = 0.0f;
+    parameters->velocity.z = 0.0f;
+    parameters->velocitySpread = 0.01f;
+    parameters->width = 1.12f;
+    parameters->height = 1.12f;
+    parameters->colour = 0x7fffffffU;
+    parameters->birthRate = 0.005f;
+    parameters->growth[0] = 2.31f;
+    parameters->growth[1] = 4.91f;
+    parameters->growth[2] = 0.47f;
+    parameters->drift = -0.001f;
+    parameters->lift = 0.01f;
+    parameters->fade = 0.04f;
+    parameters->frames = 600;
+    switch (mode) {
+    case 1:
+        if (side != 0)
+            return 1;
+        break;
+    case 2:
+        switch (side) {
+        case 0:
+            parameters->position.x = 22.66f;
+            parameters->position.y = -0.23f;
+            parameters->position.z = -16.27f;
+            parameters->velocity.x = 0.08f;
+            break;
+        case 1:
+            parameters->position.x = -22.66f;
+            parameters->position.y = -0.23f;
+            parameters->position.z = -16.27f;
+            parameters->velocity.x = -0.08f;
+            break;
+        default:
+            return 1;
+        }
+        break;
+    }
+    parameters->state = 2;
+    return 0;
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float shipSprayGrowth;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void MoveShipSprayParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x;
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z;
+    particle->scale += shipSprayGrowth;
+    *reinterpret_cast<float *>(&particle->attribute) += *reinterpret_cast<const float *>(&particle->phaseStep0);
+    if (*reinterpret_cast<const float *>(&particle->phaseStep1) > *reinterpret_cast<const float *>(&particle->attribute)) {
+        particle->flags &= 0x7fffffffU;
+        particle->update = dc::sdk::SpawnInactiveParticle;
+    }
+    particle->colour = (static_cast<std::uint32_t>(static_cast<std::int32_t>(*reinterpret_cast<const float *>(&particle->attribute) * 255.0f)) << 24) |
+        (particle->colour & 0xffffffU);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeShipSprayParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *channel) {
+    ShipSprayParameters *const parameters = static_cast<ShipSprayParameters *>(channel->user);
+    particle->flags |= 0x80000000U;
+    particle->update = MoveShipSprayParticle;
+    *reinterpret_cast<float *>(&particle->attribute) = static_cast<float>(particle->colour >> 24) / 255.0f;
+    *reinterpret_cast<float *>(&particle->phaseStep0) = parameters->drift;
+    *reinterpret_cast<float *>(&particle->phaseStep1) = parameters->lift;
+    shipSprayGrowth = parameters->fade;
+    particle->scale = 1.0f;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void UpdateShipSprayEmitter(void *data) {
+    ShipSprayParameters *const parameters = static_cast<ShipSprayParameters *>(data);
+    ShipSprayAnchor *const anchor = shipSprayNodes;
+    Vector3 local;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::preTranslate(anchor->position.x, anchor->position.y, anchor->position.z);
+    Matrix4x4::RotateAroundZ_Wrapper(anchor->rotation.z);
+    Matrix4x4::RotateAroundY_Wrapper(anchor->rotation.y);
+    Matrix4x4::RotateAroundX_Wrapper(anchor->rotation.x);
+    Matrix4x4::TransformPoint(parameters->position, local);
+    dc::sdk::SetParticleChannelPositionRange(
+        parameters->slot, local.x, local.y, local.z, parameters->positionSpread, parameters->positionSpread, parameters->positionSpread);
+    Matrix4x4::Transform(parameters->velocity, local);
+    dc::sdk::SetParticleChannelVelocityRange(
+        parameters->slot, local.x, local.y, local.z, parameters->velocitySpread, parameters->velocitySpread, parameters->velocitySpread);
+    dc::sdk::SetParticleChannelSpawnProbability(parameters->slot, parameters->birthRate);
+    dc::sdk::SetParticleChannelSize(parameters->slot, parameters->width, parameters->height);
+    dc::sdk::SetParticleChannelActive(parameters->slot, 1);
+    PopCurrentMatrix(1);
+}
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t CreateShipSprayEmitters(std::int32_t count, std::int32_t mode) {
+    float table[64];
+    shipSprayPixels = static_cast<std::uint16_t *>(HLib::AllocateTaskData(0x200, SHIP_SPRAY_EFFECT_TASK));
+    shipSprayFftSlot = AllocateParticleEffectSlot(1, -1, 0, 0, SHIP_SPRAY_EFFECT_TASK);
+    dc::sdk::SetFftEffectColour(g_smokeFftData[shipSprayFftSlot], -1);
+    dc::sdk::SetFftEffectPixels(g_smokeFftData[shipSprayFftSlot], shipSprayPixels);
+    dc::sdk::SetFftEffectActive(g_smokeFftData[shipSprayFftSlot], 1);
+    ShipSprayAnchor *const anchor = static_cast<ShipSprayAnchor *>(HLib::AllocateTaskData(32, SHIP_SPRAY_EFFECT_TASK));
+    shipSprayNodes = anchor;
+    InitializeShipSprayAnchor(anchor);
+    anchor->flags = 0;
+    ShipSprayParameters *parameters;
+    for (std::int32_t side = 0;
+        !SetShipSprayParameters(parameters = static_cast<ShipSprayParameters *>(HLib::AllocateTaskData(92, SHIP_SPRAY_EFFECT_TASK)), mode, side); ++side) {
+        parameters->frames = count;
+        parameters->retained10 = reinterpret_cast<std::uint32_t>(HLib::AllocateTaskData(count * 64, SHIP_SPRAY_EFFECT_TASK));
+        parameters->slot = AllocateParticleEffectSlot(0, -1, UpdateShipSprayEmitter, parameters, SHIP_SPRAY_EFFECT_TASK);
+        dc::sdk::InitializeParticleChannelSpawnParticles(parameters->slot, parameters->frames, 0, reinterpret_cast<void *>(parameters->retained10), 0);
+        dc::sdk::SetParticleChannelCallback(parameters->slot, InitializeShipSprayParticle);
+        dc::sdk::SetParticleChannelSpawnProbability(parameters->slot, parameters->birthRate);
+        dc::sdk::SetParticleChannelSize(parameters->slot, parameters->width, parameters->height);
+        dc::sdk::SetParticleChannelTexture(parameters->slot, 16, 16, 0x102, reinterpret_cast<std::uint32_t *>(shipSprayPixels));
+        dc::sdk::FftEffect *const fft = g_smokeFftData[shipSprayFftSlot];
+        dc::sdk::SetFftEffectFalloff(fft, dc::sdk::ScaleFftFalloff(parameters->growth[0], dc::sdk::BuildFftFalloff(parameters->growth[1], table)));
+        dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[shipSprayFftSlot], parameters->growth[2]);
+        dc::sdk::UpdateFftEffect(g_smokeFftData[shipSprayFftSlot]);
+        dc::sdk::UpdateParticleChannel(parameters->slot);
+        dc::sdk::g_particleChannels[parameters->slot].user = parameters;
+        dc::sdk::SetParticleChannelBlendMode(parameters->slot, 1);
+        dc::sdk::SetParticleChannelDepthMode(parameters->slot, 1);
+        dc::sdk::SetParticleChannelActive(parameters->slot, 0);
+        dc::sdk::g_particleChannels[parameters->slot].colour = parameters->colour;
+        parameters->flags = anchor->flags;
+        anchor->flags = reinterpret_cast<std::uint32_t>(parameters);
+    }
+    do {
+        HLib::FreeTaskData(parameters);
+    } while (0);
+    ClearEffectRegistry(1, shipSprayFftSlot);
+    HLib::FreeTaskData(shipSprayPixels);
+    return 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFirePalette(std::uint32_t index, const std::uint16_t *palette) {
+    SetFireFftPalette(g_fireEffects[index]->slot, palette);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetSmokePosition(const Vector3 *position) {
+    dropParticlePosition = *position;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetSmokeParameter(std::uint32_t parameter, std::uint32_t value) {
+    if (parameter < 4U)
+        dropLightIndices[parameter] = value;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFireFalloffScalar(std::uint32_t index, float scalar) {
+    SetFireFftScalar(g_fireEffects[index]->slot, scalar);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFireFalloff(std::uint32_t index, float radiusX, float radiusY, float gain) {
+    const std::int32_t slot = g_fireEffects[index]->slot;
+    float falloff[256];
+    SetFireFftFalloff(slot, ScaleFireFalloff(gain, GenerateFireFalloff(radiusX, radiusY, falloff)));
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFireAlpha(std::uint32_t index, float alpha) {
+    g_fireEffects[index]->alpha = alpha;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void AttachFireEffect(std::uint32_t index, shen_name name, std::int32_t bone, float offset) {
+    FireEffect *const effect = g_fireEffects[index];
+    effect->character = name ? ctrlGetScenarioChara(name) : 0;
+    effect->bone = bone;
+    effect->cameraOffset = offset;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+FireInstance *SetFirePosition(std::uint32_t index, std::int32_t instance, const Vector3 *position) {
+    FireEffect *const effect = g_fireEffects[index];
+    FireInstance *const *instancesPointer = &effect->instances;
+    const std::uintptr_t offset = static_cast<std::uintptr_t>(instance) * sizeof(FireInstance);
+    FireInstance *const instances = *instancesPointer;
+    FireInstance *const target = reinterpret_cast<FireInstance *>(offset + reinterpret_cast<std::uintptr_t>(instances));
+    if (position) {
+        target->localPosition = *position;
+        target->enabled = 1;
+    } else {
+        target->enabled = 0;
+    }
+    return instances;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFireInstanceAlpha(std::uint32_t index, std::int32_t instance, float alpha) {
+    FireInstance *const target = &g_fireEffects[index]->instances[instance];
+    target->alpha = alpha;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void AttachFireInstance(std::uint32_t index, std::int32_t instance, shen_name name, std::int32_t bone, float offset) {
+    FireInstance *const target = reinterpret_cast<FireInstance *>(
+        reinterpret_cast<std::uintptr_t>(g_fireEffects[index]->instances) + static_cast<std::uintptr_t>(instance) * sizeof(FireInstance));
+    target->character = name ? ctrlGetScenarioChara(name) : 0;
+    target->bone = bone;
+    target->cameraOffset = offset;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetSplashEffectFloor(std::uint32_t index, float floorHeight) {
+    SmokeEffect *const effect = g_splashEffects[index];
+    effect->floorHeight = floorHeight;
+    for (std::int32_t particle = 0; particle < effect->count; ++particle)
+        effect->particles[particle].attribute = reinterpret_cast<std::int32_t>(&effect->floorHeight);
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+inline void StepSplashParticle(dc::sdk::Particle *particle) {
+    const float floor = *reinterpret_cast<const float *>(particle->attribute);
+    if (floor > particle->position.y) {
+        RetireEffectParticle(particle);
+    } else {
+        particle->position.y += particle->velocity.y;
+        particle->position.x += particle->velocity.x;
+        particle->position.z += particle->velocity.z;
+        particle->velocity.y -= 0.0049999999f;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    StepSplashParticle(particle);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveShrinkingSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    StepSplashParticle(particle);
+    if (particle->scale > 0.001f) {
+        if (particle->scale > 0.1f)
+            particle->scale -= 0.0099999998f;
+        else
+            particle->scale -= 0.001f;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveWideSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    StepSplashParticle(particle);
+    if (particle->scale > 0.2f)
+        particle->scale -= 0.0049999999f;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveSplashParticle;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeShrinkingSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveShrinkingSplashParticle;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeRadialSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveShrinkingSplashParticle;
+    const std::uint32_t angle = dc::sdk::RandomInt() * 2;
+    const float cosine = dc::sdk::CosFixed(angle);
+    particle->position.x = cosine * particle->velocity.x + particle->position.x;
+    const float sine = dc::sdk::SinFixed(angle);
+    particle->position.z = sine * particle->velocity.x + particle->position.z;
+    particle->velocity.x = dc::sdk::CosFixed(angle) * particle->velocity.z;
+    particle->velocity.z = dc::sdk::SinFixed(angle) * particle->velocity.z;
+    particle->phaseStep1 = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeWideSplashParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveWideSplashParticle;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SplashControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        effect->velocity.x = float(g_inputBuffer[1].triggers[0]) / 255.0f * 0.2f - 0.1f;
+        effect->velocity.y = float(g_inputBuffer[1].triggers[1]) / 255.0f * 0.2f - 0.1f;
+        effect->velocity.z = float(g_inputBuffer[1].leftStickX) / 255.0f * 0.2f - 0.1f;
+        effect->velocityVariance.x = float(g_inputBuffer[2].leftStickY) / 255.0f * 0.2f - 0.1f;
+        effect->velocityVariance.y = float(g_inputBuffer[2].rightStickX) / 255.0f * 0.2f - 0.1f;
+        effect->velocityVariance.z = float(g_inputBuffer[2].rightStickY) / 255.0f * 0.2f - 0.1f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        if (g_inputBuffer[1].held & 0x800) {
+            effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.1f;
+            dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+        }
+        effect->height = effect->width = float(g_inputBuffer[1].rightStickX) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        const std::int8_t red = g_inputBuffer[2].triggers[0];
+        const std::uint8_t green = g_inputBuffer[2].triggers[1];
+        const std::int8_t blue = g_inputBuffer[2].leftStickX;
+        const std::int8_t alpha = g_inputBuffer[1].rightStickY;
+        dc::sdk::g_particleChannels[effect->slot].colour =
+            (alpha << 24) | (static_cast<std::uint8_t>(red) << 16) | (green << 8) | static_cast<std::uint8_t>(blue);
+        for (std::int32_t index = 0; index < effect->count; ++index)
+            effect->particles[index].colour = dc::sdk::g_particleChannels[effect->slot].colour;
+    }
+}
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFireInstanceSize(std::uint32_t index, std::int32_t instance, float width, float height) {
+    FireInstance &target = g_fireEffects[index]->instances[instance];
+    target.width = width;
+    target.height = height;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void UpdateFireOwner(FireEffect *effect) {
+    Matrix4x4 transform;
+    std::int32_t ages[10];
+    Matrix4x4 instanceTransform;
+    effect->worldPosition = effect->localPosition;
+    if (effect->character) {
+        if (HasCharacterMotionWork(effect->character)) {
+            matrix_stack::Matrix4x4_Push(0);
+            matrix_stack::LoadMatrix(mtwkGetBoneTransform(effect->character, effect->bone));
+        } else {
+            CopyCharacterSourceTransform(effect->character, effect->bone, &transform);
+            matrix_stack::Matrix4x4_Push(0);
+            matrix_stack::LoadMatrix(&transform);
+        }
+        Matrix4x4::preTranslate(effect->localPosition.x, effect->localPosition.y, effect->localPosition.z);
+        matrix_stack::GetTranslation(&effect->worldPosition);
+        PopCurrentMatrix(1);
+        SetFireAlpha(effect->slot, effect->character->alpha);
+    }
+    if (effect->trail) {
+        FireTrailEntry *const trail = effect->trail;
+        ages[0] = 7;
+        ages[1] = 20;
+        ages[2] = 18;
+        ages[3] = 10;
+        ages[4] = 12;
+        ages[5] = 5;
+        ages[6] = 3;
+        ages[7] = 1;
+        ages[8] = 4;
+        ages[9] = 7;
+        for (std::int32_t index = 511; index >= 0; --index) {
+            if (index > 10) {
+                trail[index].age = trail[index - 1].age;
+            } else if (index == 10) {
+                trail[10].age = static_cast<std::int16_t>(dc::sdk::RandomFloat() * 30.0f - 15.0f);
+                if (trail[10].age < 0)
+                    trail[10].age = static_cast<std::int16_t>(dc::sdk::RandomFloat() * 7.0f);
+            } else {
+                trail[index].age = ages[index];
+            }
+            trail[index].heightOffset = static_cast<std::int16_t>(dc::sdk::RandomFloat() * 400.0f - 350.0f);
+            Vector3 *const position = &trail[index].position;
+            if (index > 0)
+                *position = trail[index - 1].position;
+            else
+                *position = effect->worldPosition;
+        }
+    }
+    if (effect->instances) {
+        FireInstance *instance = effect->instances;
+        for (std::int32_t index = 0; index < 32; ++index, ++instance) {
+            if (!instance->enabled)
+                continue;
+            instance->worldPosition = instance->localPosition;
+            if (!instance->character)
+                continue;
+            if (HasCharacterMotionWork(instance->character)) {
+                matrix_stack::Matrix4x4_Push(0);
+                matrix_stack::LoadMatrix(mtwkGetBoneTransform(instance->character, instance->bone));
+            } else {
+                CopyCharacterSourceTransform(instance->character, instance->bone, &instanceTransform);
+                matrix_stack::Matrix4x4_Push(0);
+                matrix_stack::LoadMatrix(&instanceTransform);
+            }
+            Matrix4x4::preTranslate(instance->localPosition.x, instance->localPosition.y, instance->localPosition.z);
+            matrix_stack::GetTranslation(&instance->worldPosition);
+            PopCurrentMatrix(1);
+            SetFireInstanceAlpha(effect->slot, index, instance->character->alpha);
+        }
+    }
+    UpdateFireFft(effect->slot, static_cast<std::int16_t>(effect->flags));
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void QueueParticleEmitterDraws(void *) {
+    for (std::int32_t index = 0; index < 16; ++index) {
+        if (!g_particleEffectSlots[index].state || !g_worldDrawingEnabled)
+            continue;
+        if (g_particleEmitterReferences[index].active) {
+            matrix_stack::Matrix4x4_Push(0);
+            Matrix4x4::preTranslate(
+                g_particleEmitterReferences[index].position.x, g_particleEmitterReferences[index].position.y, g_particleEmitterReferences[index].position.z);
+            Matrix4x4::RotateAroundZ_Wrapper(g_particleEmitterReferences[index].rotation.z);
+            Matrix4x4::RotateAroundY_Wrapper(g_particleEmitterReferences[index].rotation.y);
+            Matrix4x4::RotateAroundX_Wrapper(g_particleEmitterReferences[index].rotation.x);
+            Matrix4x4::preTranslate(g_particleEmitterReferences[index].localPosition.x, g_particleEmitterReferences[index].localPosition.y,
+                g_particleEmitterReferences[index].localPosition.z);
+            dc::sdk::DrawParticleChannel(index);
+            PopCurrentMatrix(1);
+        } else {
+            dc::sdk::DrawParticleChannel(index);
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void EffectControlCallback(void *) {
+    std::int32_t index;
+    for (index = 0; index < 2; ++index) {
+        if (g_smokeEffectSlots[index].state == 2) {
+            if (!g_particleEffectsSuspended && g_smokeEffectSlots[index].callback)
+                (*g_smokeEffectSlots[index].callback)(g_smokeEffectSlots[index].data);
+            dc::sdk::UpdateFftEffect(g_smokeFftData[index]);
+        }
+    }
+    for (index = 0; index < 8; ++index) {
+        if (g_fireEffectSlots[index].state == 2) {
+            if (!g_particleEffectsSuspended && g_fireEffectSlots[index].data)
+                UpdateFireOwner(static_cast<FireEffect *>(g_fireEffectSlots[index].data));
+            if (g_fireEffectSlots[index].callback)
+                HLib::ExecuteCallbackNow(g_fireEffectSlots[index].callback, g_fireEffectSlots[index].data);
+        }
+    }
+    for (index = 0; index < 16; ++index) {
+        if (g_particleEffectSlots[index].state == 2) {
+            if (g_particleEffectSlots[index].callback)
+                (*g_particleEffectSlots[index].callback)(g_particleEffectSlots[index].data);
+            if (g_particleEffectSlots[index].textureSlot >= 0 && !g_particleEffectsSuspended)
+                dc::sdk::UpdateParticleChannel(index);
+        }
+    }
+    HLib::ExecuteCallbackNow(QueueParticleEmitterDraws, 0);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+std::int32_t AllocateParticleEffectSlot(std::int32_t type, std::int32_t textureSlot, HLib::TaskCallback callback, void *data, shen_name token) {
+    std::int32_t index;
+    std::int32_t result = -1;
+    switch (type) {
+    case 0:
+        for (index = 0; index < 16; ++index) {
+            if (!g_particleEffectSlots[index].state) {
+                result = index;
+                g_particleEffectSlots[result].state = 1;
+                g_particleEffectSlots[result].textureSlot = textureSlot;
+                g_particleEffectSlots[result].callback = callback;
+                g_particleEffectSlots[result].data = data;
+                g_particleEffectSlots[result].token = token;
+                break;
+            }
+        }
+        break;
+    case 1:
+        for (index = 0; index < 2; ++index) {
+            if (!g_smokeEffectSlots[index].state) {
+                result = index;
+                g_smokeEffectSlots[result].state = 1;
+                g_smokeEffectSlots[result].callback = callback;
+                g_smokeEffectSlots[result].data = data;
+                g_smokeEffectSlots[result].token = token;
+                dc::sdk::FftEffect *const effect = static_cast<dc::sdk::FftEffect *>(HLib::AllocateTaskData(0x1260, PARTICLE_FFT_TASK));
+                g_smokeFftData[result] = effect;
+                dc::sdk::InitializeFftEffect(effect);
+                break;
+            }
+        }
+        break;
+    case 2:
+        for (index = 0; index < 8; ++index) {
+            if (!g_fireEffectSlots[index].state) {
+                result = index;
+                g_fireEffectSlots[result].state = 1;
+                g_fireEffectSlots[result].callback = callback;
+                g_fireEffectSlots[result].data = data;
+                g_fireEffectSlots[result].token = token;
+                break;
+            }
+        }
+        break;
+    case 3:
+    case 4:
+        break;
+    }
+    return result;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void ResetHikiTaskData() {
+    g_hikiTextureIndex = -1;
+    g_hikiAllocation0 = 0;
+    g_hikiAllocation1 = 0;
+    g_hikiRetainedView = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ReleaseHikiTaskData() {
+    if (g_hikiTextureIndex < 0)
+        return;
+    SuspendEffectRegistry(0, g_hikiTextureIndex);
+    ClearEffectRegistry(4, g_hikiTextureIndex);
+    HLib::FreeTaskData(g_hikiAllocation0);
+    HLib::FreeTaskData(g_hikiAllocation1);
+    g_hikiTextureIndex = -1;
+    g_hikiAllocation0 = 0;
+    g_hikiAllocation1 = 0;
+    g_hikiRetainedView = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void AssignHikiTextureScroll(std::int32_t u, std::int32_t v) {
+    g_hikiScrollU = u;
+    g_hikiScrollV = v;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void AssignHikiYaw(std::int32_t yaw, std::int32_t reserved) {
+    g_hikiYaw = yaw;
+    g_hikiYawReserved = reserved;
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void ClearEffectRegistry(std::int32_t mode, std::int32_t index) {
+    switch (mode) {
+    case 0:
+        dc::sdk::SetParticleChannelActive(index, 0);
+        g_particleEffectSlots[index].state = 0;
+        g_particleEffectSlots[index].link = -1;
+        g_particleEffectSlots[index].textureSlot = -1;
+        g_particleEffectSlots[index].callback = 0;
+        g_particleEffectSlots[index].data = 0;
+        g_particleEffectSlots[index].token = shen_name(0x20202020U);
+        g_particleEffectSlots[index].retained1c = 0;
+        break;
+    case 1:
+        dc::sdk::SetFftEffectActive(g_smokeFftData[index], 0);
+        g_smokeEffectSlots[index].state = 0;
+        g_smokeEffectSlots[index].link = -1;
+        g_smokeEffectSlots[index].textureSlot = -1;
+        g_smokeEffectSlots[index].callback = 0;
+        g_smokeEffectSlots[index].data = 0;
+        g_smokeEffectSlots[index].token = shen_name(0x20202020U);
+        g_smokeEffectSlots[index].retained1c = 0;
+        HLib::FreeTaskData(g_smokeFftData[index]);
+        break;
+    case 2:
+        g_fireEffectSlots[index].state = 0;
+        g_fireEffectSlots[index].link = -1;
+        g_fireEffectSlots[index].textureSlot = -1;
+        g_fireEffectSlots[index].callback = 0;
+        g_fireEffectSlots[index].data = 0;
+        g_fireEffectSlots[index].token = shen_name(0x20202020U);
+        g_fireEffectSlots[index].retained1c = 0;
+        break;
+    case 3:
+    case 4:
+        break;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void StartEffectRegistry(std::int32_t mode, std::int32_t index) {
+    switch (mode) {
+    case 0:
+        if (g_particleEffectSlots[index].state == 1) {
+            g_particleEffectSlots[index].state = 2;
+            dc::sdk::SetParticleChannelActive(index, 1);
+        }
+        break;
+    case 1:
+        if (g_smokeEffectSlots[index].state == 1) {
+            g_smokeEffectSlots[index].state = 2;
+            dc::sdk::SetFftEffectActive(g_smokeFftData[index], static_cast<std::int32_t>(0x80000000U));
+        }
+        break;
+    case 2:
+        if (g_fireEffectSlots[index].state == 1) {
+            g_fireEffectSlots[index].state = 2;
+            SetFireFftActive(index, static_cast<std::int32_t>(0x80000000U));
+        }
+        break;
+    case 3:
+    case 4:
+        break;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SuspendEffectRegistry(std::int32_t mode, std::int32_t index) {
+    switch (mode) {
+    case 0:
+        if (g_particleEffectSlots[index].state == 2) {
+            g_particleEffectSlots[index].state = 1;
+            dc::sdk::SetParticleChannelActive(index, 0);
+        }
+        break;
+    case 1:
+        if (g_smokeEffectSlots[index].state == 2) {
+            g_smokeEffectSlots[index].state = 1;
+            dc::sdk::SetFftEffectActive(g_smokeFftData[index], 0);
+        }
+        break;
+    case 2:
+        if (g_fireEffectSlots[index].state == 2) {
+            g_fireEffectSlots[index].state = 1;
+            SetFireFftActive(index, 0);
+        }
+        break;
+    case 3:
+    case 4:
+        break;
+    }
+}
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void CacheCurrentParticleEffects(std::int32_t suspended) {
+    std::int32_t index;
+    if (suspended) {
+        for (index = 0; index < 16; ++index)
+            dc::sdk::SetParticleChannelEnabled(index, 0);
+        g_particleEffectsSuspended = 1;
+    } else {
+        for (index = 0; index < 16; ++index)
+            dc::sdk::SetParticleChannelEnabled(index, 1);
+        g_particleEffectsSuspended = 0;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t AreParticleEffectsSuspended() {
+    return g_particleEffectsSuspended;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void FireControlCallback(void *data) {
+    FireEffect *const effect = static_cast<FireEffect *>(data);
+    float offsetX, offsetZ;
+    offsetX = -dc::sdk::SinFixed(-camCtrlGetNextRotY());
+    offsetZ = dc::sdk::CosFixed(-camCtrlGetNextRotY());
+    const bool draw = IsWazamakiInactive() == 0;
+    if (!effect)
+        return;
+    if (effect->drawFlags & 1) {
+        effect->height = float(g_inputBuffer[2].leftStickY) / 255.0f * 10.0f;
+        effect->width = float(g_inputBuffer[2].rightStickX) / 255.0f * 10.0f;
+        SetFireFftSize(effect->slot, effect->width, effect->height);
+        float falloff[256];
+        const std::int32_t slot = effect->slot;
+        const float gain = float(g_inputBuffer[1].leftStickX) / 255.0f * 10.0f;
+        SetFireFftFalloff(slot,
+            ScaleFireFalloff(gain,
+                GenerateFireFalloff(float(g_inputBuffer[1].triggers[0]) / 255.0f * 10.0f, float(g_inputBuffer[1].triggers[1]) / 255.0f * 10.0f, falloff)));
+        SetFireFftScalar(effect->slot, float(g_inputBuffer[1].leftStickY) / 255.0f * -0.5f);
+    }
+    if (effect->trail) {
+        const float width = g_fireFftData[effect->slot]->width;
+        const float height = g_fireFftData[effect->slot]->height;
+        FireTrailEntry *entry = effect->trail;
+        for (std::int32_t index = 0; index < 512; ++index, ++entry) {
+            const std::int32_t age = entry->age;
+            const float widthScale = float(age + 22) / 42.0f;
+            const float heightScale = float(age + 1) / 21.0f;
+            if (age < 0)
+                continue;
+            SetFireFftSize(effect->slot, width * widthScale, height * heightScale);
+            matrix_stack::Matrix4x4_Push(0);
+            Matrix4x4::preTranslate(entry->position.x, entry->position.y + float(entry->heightOffset) * 0.000099999997f, entry->position.z);
+            if (draw)
+                DrawFireFft(effect->slot, effect->alpha);
+            PopCurrentMatrix(1);
+        }
+        SetFireFftSize(effect->slot, width, height);
+    } else {
+        matrix_stack::Matrix4x4_Push(0);
+        Matrix4x4::preTranslate(effect->worldPosition.x, effect->worldPosition.y, effect->worldPosition.z);
+        if (effect->character)
+            Matrix4x4::preTranslate(effect->cameraOffset * offsetX, 0, effect->cameraOffset * offsetZ);
+        if (draw)
+            DrawFireFft(effect->slot, effect->alpha);
+        PopCurrentMatrix(1);
+    }
+    if (effect->instances) {
+        const float width = g_fireFftData[effect->slot]->width;
+        const float height = g_fireFftData[effect->slot]->height;
+        FireInstance *instance = effect->instances;
+        for (std::int32_t index = 0; index < 32; ++index, ++instance) {
+            if (!instance->enabled)
+                continue;
+            SetFireFftSize(effect->slot, instance->width, instance->height);
+            matrix_stack::Matrix4x4_Push(0);
+            Matrix4x4::preTranslate(instance->worldPosition.x, instance->worldPosition.y, instance->worldPosition.z);
+            if (instance->character)
+                Matrix4x4::preTranslate(instance->cameraOffset * offsetX, 0, instance->cameraOffset * offsetZ);
+            if (draw)
+                DrawFireFft(effect->slot, instance->alpha);
+            PopCurrentMatrix(1);
+        }
+        SetFireFftSize(effect->slot, width, height);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t CreateFireEffect(const Vector3 *position, float width, float height, std::int32_t drawMode, std::int32_t flags) {
+    std::int32_t index = 0;
+    while (g_fireEffects[index] && index < 8)
+        ++index;
+    if (index >= 8)
+        return -1;
+    EF_Callback_EffectCtrl_Enqueue();
+    FireEffect *effect;
+    g_fireEffects[index] = effect = static_cast<FireEffect *>(HLib::AllocateTaskData(0x48, PARTICLE_EFFECT_TASK));
+    if (effect) {
+        std::int32_t effectSize = 0x48;
+        std::memset(effect, 0, effectSize);
+    }
+    if (!g_fireFftOwners[index]) {
+        FireFftPrefix *fft;
+        g_fireFftOwners[index] = fft = static_cast<FireFftPrefix *>(HLib::AllocateTaskData(0x4710, FIRE_EFFECT_TASK));
+        if (fft) {
+            std::memset(fft, 0, 0x4710);
+            InitializeFireFft(index, g_fireFftOwners[index]);
+        }
+    }
+    if (!g_fireEffects[index] || !g_fireFftOwners[index])
+        return -1;
+    if (flags & 1) {
+        FireTrailEntry *trail;
+        trail = effect->trail = static_cast<FireTrailEntry *>(HLib::AllocateTaskData(0x2000, FIRE_TRAIL_TASK));
+        if (trail) {
+            std::memset(trail, 0, 0x2000);
+            for (std::int32_t entry = 0; entry < 512; ++entry) {
+                trail->age = -1;
+                trail->position = *position;
+                ++trail;
+            }
+        }
+    }
+    if (flags & 4) {
+        FireInstance *instance;
+        instance = effect->instances = static_cast<FireInstance *>(HLib::AllocateTaskData(0x600, FIRE_INSTANCE_TASK));
+        if (instance) {
+            std::memset(instance, 0, 0x600);
+            for (std::int32_t entry = 0; entry < 32; ++entry) {
+                instance->alpha = 1.0f;
+                instance->localPosition = *position;
+                instance->width = width;
+                instance->height = height;
+                ++instance;
+            }
+        }
+    }
+    effect->localPosition = effect->worldPosition = *position;
+    effect->width = width;
+    effect->height = height;
+    effect->drawFlags = static_cast<std::uint32_t>(drawMode);
+    effect->flags = flags;
+    effect->alpha = 1.0f;
+    effect->slot = AllocateParticleEffectSlot(2, -1, FireControlCallback, effect, PARTICLE_EFFECT_TASK);
+    effect->pixels = static_cast<std::byte *>(HLib::AllocateTaskData(0x81f, PARTICLE_EFFECT_TASK));
+    if (effect->pixels)
+        SetFireFftOutput(effect->slot, reinterpret_cast<std::uint16_t *>((reinterpret_cast<std::uintptr_t>(effect->pixels) + 31U) & ~std::uintptr_t(31U)));
+    float falloff[256];
+    SetFireFftFalloff(effect->slot, ScaleFireFalloff(0.78431374f, GenerateFireFalloff(3.137255f, 4.9411764f, falloff)));
+    SetFireFftScalar(effect->slot, -0.15294118f);
+    SetFireFftSize(effect->slot, effect->width, effect->height);
+    SuspendParticleEffect(4, index);
+    return index;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t CreateSplashEffect(const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags,
+    float floorHeight, const char *textureArchive, const char *textureName) {
+    Vector3 velocity, velocityVariance;
+    velocity.x = 0.001f;
+    velocity.y = 0.1f;
+    velocity.z = 0.001f;
+    velocityVariance.x = 0.001f;
+    velocityVariance.y = 0.001f;
+    velocityVariance.z = 0.001f;
+    std::int32_t index = 0;
+    while (g_splashEffects[index] && index < 16)
+        ++index;
+    if (index >= 16)
+        return -1;
+    EF_Callback_EffectCtrl_Enqueue();
+    SmokeEffect *effect;
+    g_splashEffects[index] = effect = static_cast<SmokeEffect *>(HLib::AllocateTaskData(sizeof(SmokeEffect), PARTICLE_EFFECT_TASK));
+    effect->slot = AllocateParticleEffectSlot(0, -1, SplashControlCallback, effect, PARTICLE_EFFECT_TASK);
+    effect->count = count;
+    effect->particles = static_cast<dc::sdk::Particle *>(HLib::AllocateTaskData(count * sizeof(dc::sdk::Particle), PARTICLE_EFFECT_TASK));
+    effect->position = *position;
+    effect->spawnVariance = *spawnVolume;
+    effect->velocity = velocity;
+    effect->velocityVariance = velocityVariance;
+    effect->width = 0.02f;
+    effect->height = 0.02f;
+    effect->birthRate = birthRate;
+    effect->texture = 0;
+    effect->flags = shen_name(flags);
+    effect->expansion = 0.0f;
+    effect->fadeFactor = 1.0f;
+    effect->initialScale = 1.0f;
+    effect->profile = 0;
+    effect->floorHeight = floorHeight;
+    dc::sdk::InitializeParticleChannelParticles(effect->slot, effect->count, 0, effect->particles);
+    switch ((effect->flags >> 8) & 15) {
+    case 0:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeSplashParticle);
+        break;
+    case 1:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeShrinkingSplashParticle);
+        break;
+    case 2:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeRadialSplashParticle);
+        break;
+    case 3:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeWideSplashParticle);
+        break;
+    }
+    dc::sdk::SetParticleChannelPositionRange(
+        effect->slot, effect->position.x, effect->position.y, effect->position.z, effect->spawnVariance.x, effect->spawnVariance.y, effect->spawnVariance.z);
+    dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+        effect->velocityVariance.y, effect->velocityVariance.z);
+    dc::sdk::SetParticleChannelBlendMode(effect->slot, 1);
+    dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+    dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    if (textureArchive && textureName) {
+        std::uint32_t *const image = static_cast<std::uint32_t *>(shenLoadFile(textureArchive, textureName, PARTICLE_EFFECT_TASK));
+        dc::sdk::SetParticleChannelTexture(effect->slot, 32, 32, 0xd02, image + 7);
+        HLib::FreeTaskData(image);
+    } else {
+        if (!g_splashTemporaryPixels) {
+            g_splashTemporaryPixels = static_cast<std::uint16_t *>(HLib::AllocateTaskData(0x200, PARTICLE_EFFECT_TASK));
+            for (std::int32_t pixel = 0; pixel < 256; ++pixel)
+                g_splashTemporaryPixels[pixel] = 0x7fff;
+        }
+        dc::sdk::SetParticleChannelTexture(effect->slot, 16, 16, 0x902, reinterpret_cast<std::uint32_t *>(g_splashTemporaryPixels));
+        HLib::FreeTaskData(g_splashTemporaryPixels);
+        g_splashTemporaryPixels = 0;
+    }
+    SuspendParticleEffect(1, index);
+    for (std::int32_t particle = 0; particle < effect->count; ++particle)
+        effect->particles[particle].attribute = reinterpret_cast<std::int32_t>(&effect->floorHeight);
+    return index;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void UpdateSakuraParticleTuning() {
+    g_reservedParticleEffects[0]->birthRate = float(g_inputBuffer[1].triggers[0]) / 255.0f;
+    g_reservedParticleEffects[1]->birthRate = float(g_inputBuffer[1].triggers[1]) / 255.0f;
+    g_reservedParticleEffects[2]->birthRate = float(g_inputBuffer[1].leftStickX) / 255.0f;
+    g_reservedParticleEffects[3]->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f;
+    g_reservedParticleEffects[4]->birthRate = float(g_inputBuffer[1].rightStickX) / 255.0f;
+    g_reservedParticleEffects[5]->birthRate = float(g_inputBuffer[1].rightStickY) / 255.0f;
+    g_reservedParticleEffects[6]->birthRate = float(g_inputBuffer[3].triggers[0]) / 255.0f;
+    g_reservedParticleEffects[7]->birthRate = float(g_inputBuffer[3].triggers[1]) / 255.0f;
+    sakuraState.fallRate = float(g_inputBuffer[3].leftStickX) * 0.001f / 255.0f;
+    for (std::int32_t index = 0; index < 8; ++index)
+        dc::sdk::SetParticleChannelSpawnProbability(g_reservedParticleEffects[index]->slot, float(g_inputBuffer[3].leftStickY) * 0.005f / 255.0f);
+    sakuraState.wind.z = float(std::int32_t(g_inputBuffer[3].rightStickX) - 128) * 0.0005f / 255.0f;
+    sakuraState.gustFrames = std::int32_t(float(std::int32_t(g_inputBuffer[3].rightStickY) * 10) / 255.0f);
+    if (g_developerDisplayEnabled) {
+        SetDebugScreenTextPosition(1, 5);
+        shenmue_s2_event_DebugLogToScreen("%d %d %d %d %d %d\n", g_inputBuffer[1].triggers[0], g_inputBuffer[1].triggers[1], g_inputBuffer[1].leftStickX,
+            g_inputBuffer[1].leftStickY, g_inputBuffer[1].rightStickX, g_inputBuffer[1].rightStickY);
+        shenmue_s2_event_DebugLogToScreen("%d %d %d %d %d %d\n", g_inputBuffer[3].triggers[0], g_inputBuffer[3].triggers[1], g_inputBuffer[3].leftStickX,
+            g_inputBuffer[3].leftStickY, g_inputBuffer[3].rightStickX, g_inputBuffer[3].rightStickY);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static void SakuraControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        effect->width = float(g_inputBuffer[3].triggers[0]) / 255.0f * 2.0f;
+        effect->height = float(g_inputBuffer[3].triggers[1]) / 255.0f * 2.0f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        effect->velocity.x = float(std::int32_t(g_inputBuffer[3].leftStickX) - 128) / 255.0f * 0.04f;
+        effect->velocity.y = float(std::int32_t(g_inputBuffer[3].leftStickY) - 128) / 255.0f * 0.04f;
+        effect->velocity.z = float(std::int32_t(g_inputBuffer[3].rightStickX) - 128) / 255.0f * 0.04f;
+        effect->velocityVariance.x = float(std::int32_t(g_inputBuffer[1].triggers[0]) - 128) / 255.0f * 0.04f;
+        effect->velocityVariance.y = float(std::int32_t(g_inputBuffer[1].triggers[1]) - 128) / 255.0f * 0.04f;
+        effect->velocityVariance.z = float(std::int32_t(g_inputBuffer[1].leftStickX) - 128) / 255.0f * 0.04f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        effect->initialScale = float(g_inputBuffer[3].rightStickY) / 255.0f;
+        effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.001f;
+        dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    }
+    Vector4 colour;
+    GetSelectedLightColour(0, &colour);
+    const float intensity = GetSelectedLightSceneIntensity(0);
+    colour.y *= intensity;
+    colour.z *= intensity;
+    colour.w = intensity * colour.w;
+    sakuraColour = (std::uint32_t(std::int32_t(colour.x * 255.0f)) << 24) | (std::uint32_t(std::int32_t(colour.y * 255.0f)) << 16) |
+        (std::uint32_t(std::int32_t(colour.z * 255.0f)) << 8) | std::uint32_t(std::int32_t(colour.w * 255.0f));
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static void SettleSakuraParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    if (++particle->attribute > 180) {
+        particle->flags = 0;
+        particle->update = dc::sdk::SpawnInactiveParticle;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static void MoveSakuraParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->phase1 = std::uint32_t(particle->phase1) + std::uint32_t(particle->phaseStep0);
+    particle->phase2 = std::uint32_t(particle->phase2) + std::uint32_t(particle->phaseStep1);
+    if (0.005f > particle->position.y) {
+        particle->velocity.x = 0.0f;
+        particle->velocity.y = 0.0f;
+        particle->velocity.z = 0.0f;
+        particle->attribute = 0;
+        particle->position.y = 0.001f;
+        particle->phase0 = 0x4000;
+        particle->phase1 = 0;
+        particle->update = SettleSakuraParticle;
+        return;
+    }
+    particle->position.x += particle->velocity.x;
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z;
+    particle->velocity.x += sakuraState.wind.y;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static void InitializeSakuraParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveSakuraParticle;
+    particle->phase0 = std::int32_t(dc::sdk::RandomInt() << 1);
+    particle->phase1 = std::int32_t(dc::sdk::RandomInt() << 1);
+    particle->phase2 = std::int32_t(dc::sdk::RandomInt() << 1);
+    particle->attribute = 0x200;
+    particle->phaseStep0 = 0x200;
+    particle->phaseStep1 = 0x200;
+    particle->colour = sakuraColour;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t CreateSakuraEffect(const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags) {
+    Vector3 velocity;
+    velocity.x = 0.0f;
+    velocity.y = -0.008f;
+    velocity.z = 0.0f;
+    Vector3 velocityVariance;
+    velocityVariance.x = 0.002f;
+    velocityVariance.y = 0.001f;
+    velocityVariance.z = 0.002f;
+    std::int32_t index = 0;
+    while (g_reservedParticleEffects[index] && index < 8)
+        ++index;
+    if (index > 7)
+        return -1;
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(HLib::AllocateTaskData(sizeof(SmokeEffect), PARTICLE_EFFECT_TASK));
+    g_reservedParticleEffects[index] = effect;
+    effect->count = count;
+    dc::sdk::Particle *const particles =
+        static_cast<dc::sdk::Particle *>(HLib::AllocateTaskData(count * sizeof(dc::sdk::Particle), shen_name(SHEN_NAME(TRCR))));
+    effect->particles = particles;
+    const std::int32_t slot = AllocateParticleEffectSlot(0, -1, SakuraControlCallback, effect, shen_name(SHEN_NAME(TRCR)));
+    effect->slot = slot;
+    effect->position = *position;
+    effect->spawnVariance = *spawnVolume;
+    effect->velocity = velocity;
+    effect->velocityVariance = velocityVariance;
+    effect->width = 0.03f;
+    effect->height = 0.04f;
+    effect->birthRate = birthRate;
+    effect->texture = 0;
+    effect->flags = shen_name(flags);
+    effect->expansion = 0.0f;
+    effect->fadeFactor = 0.0f;
+    effect->initialScale = 1.0f;
+    dc::sdk::InitializeParticleChannelParticles(slot, count, 0, particles);
+    dc::sdk::SetParticleChannelCallback(slot, InitializeSakuraParticle);
+    dc::sdk::SetParticleChannelSize(slot, effect->width, effect->height);
+    dc::sdk::SetParticleChannelPositionRange(
+        slot, effect->position.x, effect->position.y, effect->position.z, effect->spawnVariance.x, effect->spawnVariance.y, effect->spawnVariance.z);
+    dc::sdk::SetParticleChannelVelocityRange(
+        slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x, effect->velocityVariance.y, effect->velocityVariance.z);
+    dc::sdk::SetParticleChannelSpawnProbability(slot, effect->birthRate);
+    dc::sdk::SetParticleChannelBlendMode(slot, 1);
+    dc::sdk::SetParticleChannelTexture(slot, 32, 32, 0x100, sakuraState.texture);
+    dc::sdk::SetParticleChannelActive(slot, 1);
+    EF_Callback_EffectCtrl_Enqueue();
+    dc::sdk::g_particleChannels[slot].flags |= 0x8000000U;
+    SuspendParticleEffect(2, slot);
+    return index;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeSakuraEffects() {
+    sakuraState.active = 0;
+    sakuraState.wind.x = 0.0f;
+    sakuraState.wind.y = 0.0f;
+    sakuraState.wind.z = 0.0f;
+    sakuraState.drift = (1.0f - fast_expf_approx(-0.0016666667f)) * 0.002724f / 0.1f;
+    sakuraState.gustFrames = 0;
+    sakuraState.scale = 1.0f;
+    sakuraState.fallRate = 0.0001f;
+    sakuraState.spread = 2.0f;
+    sakuraState.texture = static_cast<std::uint32_t *>(shenLoadFile("model/object", "sakura.pvr", shen_name(SHEN_NAME(TAKI)))) + 7;
+    for (std::int32_t index = 0; index < 8; ++index)
+        g_reservedParticleEffects[index] = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SakuraWindCallback(void *) {
+    sakuraState.wind.x = 0.0f;
+    for (std::int32_t index = 0; index <= 7; ++index)
+        sakuraState.wind.x += dc::sdk::SinFixed(static_cast<std::int32_t>(
+            static_cast<float>(std::uint32_t(sakuraState.active << sakuraState.gustFrames) * 0xffffU) * g_reservedParticleEffects[index]->birthRate / 60.0f));
+    sakuraState.wind.y = sakuraState.fallRate * sakuraState.wind.x + sakuraState.wind.z;
+    UpdateSakuraParticleTuning();
+    ++sakuraState.active;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void StartSakuraScene() {
+    Vector3 positions[7] = {{2.9285f, 8.2785f, -2.24f}, {0.0485f, 6.9385f, -3.24f}, {-3.1115f, 4.6785f, -1.24f}, {-1.6515f, 4.9585f, 0.74f},
+        {1.4685f, 4.9385f, 2.68f}, {3.1285f, 4.3185f, 3.02f}, {4.3285f, 6.5985f, -0.06f}};
+    Vector3 volume;
+    volume.x = 0.7f;
+    volume.y = 0.7f;
+    volume.z = 0.7f;
+    InitializeSakuraEffects();
+    for (std::int32_t index = 0; index <= 6; ++index)
+        ResumeParticleEffect(2, CreateSakuraEffect(&positions[index], &volume, 2000, 0.0f, 0));
+    sakuraState.task = HLib::EnqueueTaskWithoutParameter(SakuraWindCallback, 8, 8, shen_name(SHEN_NAME(TKEX)));
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+inline void SetEffectParticleAlpha(dc::sdk::Particle *particle, float alpha) {
+    particle->colour = (static_cast<std::int32_t>(alpha) << 24) | (particle->colour & 0xffffffU);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+inline void AssignFloatVector(Vector3 *destination, const Vector3 *source) {
+    destination->x = source->x;
+    destination->y = source->y;
+    destination->z = source->z;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+inline void IntegrateEffectParticle(dc::sdk::Particle *particle) {
+    particle->position.x += particle->velocity.x;
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void FadeSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    IntegrateEffectParticle(particle);
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion0;
+    const float alpha = 1.0f - g_smokeFadeFactor0 * particle->scale;
+    if (alpha < 0.0f)
+        RetireEffectParticle(particle);
+    SetEffectParticleAlpha(particle, alpha * 128.0f);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void GrowSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    IntegrateEffectParticle(particle);
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion0;
+    std::int32_t alpha = particle->colour >> 24;
+    alpha += 6;
+    const float maximum = 1.0f - g_smokeFadeFactor0 * particle->scale;
+    if (alpha >= maximum * 128.0f) {
+        particle->colour = (std::int32_t(maximum * 128.0f) << 24) | (particle->colour & 0xffffffU);
+        particle->update = FadeSmoke;
+    } else {
+        particle->colour = (alpha << 24) | (particle->colour & 0xffffffU);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = GrowSmoke;
+    particle->scale = g_smokeInitialScale0;
+    particle->phase1 = dc::sdk::RandomInt();
+    particle->phaseStep0 = 80;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveStationarySmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    IntegrateEffectParticle(particle);
+    SetEffectParticleAlpha(particle, g_stationarySmokeAlpha);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeStationarySmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveStationarySmoke;
+    particle->scale = 1.0f;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void FadeRadialSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    IntegrateEffectParticle(particle);
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion2;
+    float alpha = 1.0f - g_smokeFadeFactor2 * particle->scale;
+    if (alpha < 0.0f)
+        RetireEffectParticle(particle);
+    alpha *= 0.8f;
+    SetEffectParticleAlpha(particle, alpha * 128.0f);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveRadialSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    std::int32_t alpha = particle->colour >> 24;
+    const float wave = dc::sdk::SinFixed(std::uint16_t(static_cast<std::int32_t>(float(alpha * 2) * 8192.0f / 45.0f)));
+    particle->position.x = wave * particle->velocity.x + particle->position.x;
+    particle->position.y += particle->velocity.y;
+    particle->position.z = wave * particle->velocity.z + particle->position.z;
+    ++alpha;
+    if (alpha > 126) {
+        particle->velocity.x = dc::sdk::RandomFloat() * 0.002f - 0.001f;
+        particle->velocity.z = dc::sdk::RandomFloat() * 0.002f - 0.001f;
+        particle->velocity.y = dc::sdk::RandomFloat() * particle->velocity.y + 0.001f;
+        alpha = 127;
+        particle->update = FadeRadialSmoke;
+    }
+    particle->colour = (alpha << 24) | (particle->colour & 0xffffffU);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeRadialSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveRadialSmoke;
+    particle->scale = g_smokeInitialScale2;
+    particle->phase1 = 0;
+    particle->phaseStep0 = 80;
+    particle->velocity.x = dc::sdk::SinFixed(radialSmokeAngle) * 0.00039999999f;
+    particle->velocity.z = dc::sdk::CosFixed(radialSmokeAngle) * 0.00039999999f;
+    radialSmokeAngle = std::uint32_t(radialSmokeAngle) + 546;
+    if (particle->velocity.x < 0)
+        particle->phaseStep0 = -particle->phaseStep0;
+    if (particle->velocity.z < 0)
+        particle->phaseStep0 = -particle->phaseStep0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void GrowSpreadingSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x + *reinterpret_cast<float *>(&particle->attribute);
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z + *reinterpret_cast<float *>(&particle->phaseStep1);
+    *reinterpret_cast<float *>(&particle->attribute) *= g_smokeRadialDecay3;
+    *reinterpret_cast<float *>(&particle->phaseStep1) *= g_smokeRadialDecay3;
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion3;
+    std::int32_t alpha = (particle->colour >> 24) + 1;
+    alpha += g_smokeAlphaStep3;
+    const float maximum = 1.0f - g_smokeFadeFactor3 * particle->scale * g_smokeOpacityScale3;
+    if (maximum < 0.1f) {
+        RetireEffectParticle(particle);
+    } else if (alpha >= maximum * 128.0f) {
+        particle->colour = (std::int32_t(maximum * 128.0f) << 24) | (particle->colour & 0xffffffU);
+        particle->update = FadeSpreadingSmoke;
+    } else {
+        particle->colour = (alpha << 24) | (particle->colour & 0xffffffU);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void FadeSpreadingSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x + *reinterpret_cast<float *>(&particle->attribute);
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z + *reinterpret_cast<float *>(&particle->phaseStep1);
+    *reinterpret_cast<float *>(&particle->attribute) *= g_smokeRadialDecay3;
+    *reinterpret_cast<float *>(&particle->phaseStep1) *= g_smokeRadialDecay3;
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion3;
+    const float alpha = 1.0f - g_smokeFadeFactor3 * particle->scale * g_smokeOpacityScale3;
+    if (alpha < 0.1f)
+        RetireEffectParticle(particle);
+    particle->colour = (std::int32_t(alpha * 128.0f) << 24) | (particle->colour & 0xffffffU);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void GrowWideSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x + *reinterpret_cast<float *>(&particle->attribute);
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z + *reinterpret_cast<float *>(&particle->phaseStep1);
+    *reinterpret_cast<float *>(&particle->attribute) *= g_smokeRadialDecay4;
+    *reinterpret_cast<float *>(&particle->phaseStep1) *= g_smokeRadialDecay4;
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion4;
+    std::int32_t alpha = (particle->colour >> 24) + 1;
+    alpha += g_smokeAlphaStep4;
+    const float maximum = 1.0f - g_smokeFadeFactor4 * particle->scale * g_smokeOpacityScale4;
+    if (maximum < 0.1f) {
+        RetireEffectParticle(particle);
+    } else if (alpha >= maximum * 128.0f) {
+        particle->colour = (std::int32_t(maximum * 128.0f) << 24) | (particle->colour & 0xffffffU);
+        particle->update = FadeWideSmoke;
+    } else {
+        particle->colour = (alpha << 24) | (particle->colour & 0xffffffU);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void FadeWideSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x + *reinterpret_cast<float *>(&particle->attribute);
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z + *reinterpret_cast<float *>(&particle->phaseStep1);
+    *reinterpret_cast<float *>(&particle->attribute) *= g_smokeRadialDecay4;
+    *reinterpret_cast<float *>(&particle->phaseStep1) *= g_smokeRadialDecay4;
+    RotateEffectParticle(particle);
+    particle->scale += g_smokeExpansion4;
+    const float alpha = 1.0f - g_smokeFadeFactor4 * particle->scale * g_smokeOpacityScale4;
+    if (alpha < 0.1f)
+        RetireEffectParticle(particle);
+    particle->colour = (std::int32_t(alpha * 128.0f) << 24) | (particle->colour & 0xffffffU);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeSpreadingSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    const std::uint32_t angle = dc::sdk::RandomInt() * 2;
+    *reinterpret_cast<float *>(&particle->attribute) = dc::sdk::CosFixed(angle) * g_smokeRadialVelocity3;
+    *reinterpret_cast<float *>(&particle->phaseStep1) = dc::sdk::SinFixed(angle) * g_smokeRadialVelocity3;
+    particle->flags = 0x80000000U;
+    particle->update = GrowSpreadingSmoke;
+    particle->scale = g_smokeInitialScale3;
+    particle->phase1 = dc::sdk::RandomInt();
+    particle->phaseStep0 = 80;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeWideSmoke(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    const std::uint32_t angle = dc::sdk::RandomInt() * 2;
+    *reinterpret_cast<float *>(&particle->attribute) = dc::sdk::CosFixed(angle) * g_smokeRadialVelocity4;
+    *reinterpret_cast<float *>(&particle->phaseStep1) = dc::sdk::SinFixed(angle) * g_smokeRadialVelocity4;
+    particle->flags = 0x80000000U;
+    particle->update = GrowWideSmoke;
+    particle->scale = g_smokeInitialScale4;
+    particle->phase1 = dc::sdk::RandomInt();
+    particle->phaseStep0 = 80;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SmokeControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        float table[64];
+        const float falloff = g_inputBuffer[3].triggers[0];
+        const float fade = g_inputBuffer[3].triggers[1];
+        dc::sdk::SetFftEffectFalloff(g_smokeFftData[effect->texture->slot],
+            dc::sdk::ScaleFftFalloff(fade * 100.0f / 255.0f, dc::sdk::BuildFftFalloff(falloff * 10.0f / 255.0f - 2.0f, table)));
+        if ((g_inputBuffer[2].held & 0x8000) && (g_inputBuffer[2].held & 1))
+            dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[effect->texture->slot], (float(g_inputBuffer[2].rightStickY) - 128.0f) / 255.0f * 2.0f);
+        effect->expansion = g_smokeExpansion0 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor0 = fade / 255.0f + 0.7f;
+        const std::int8_t red = g_inputBuffer[2].triggers[0];
+        const std::uint8_t green = g_inputBuffer[2].triggers[1];
+        const std::int8_t blue = g_inputBuffer[2].leftStickX;
+        dc::sdk::g_particleChannels[effect->slot].colour = (static_cast<std::uint8_t>(red) << 16) | (green << 8) | static_cast<std::uint8_t>(blue);
+        for (std::int32_t index = 0; index < effect->count; ++index) {
+            effect->particles[index].colour &= 0xff000000U;
+            effect->particles[index].colour |= dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        effect->height = float(g_inputBuffer[2].leftStickY) / 255.0f * 10.0f;
+        effect->width = float(g_inputBuffer[2].rightStickX) / 255.0f * 10.0f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        effect->velocity.x = float(g_inputBuffer[3].leftStickX) / 255.0f * 0.1f;
+        effect->velocity.y = float(g_inputBuffer[3].leftStickY) / 255.0f * 0.1f;
+        effect->velocity.z = float(g_inputBuffer[3].rightStickX) / 255.0f * 0.1f;
+        effect->velocityVariance.x = float(g_inputBuffer[1].triggers[0]) / 255.0f * 0.1f;
+        effect->velocityVariance.y = float(g_inputBuffer[1].triggers[1]) / 255.0f * 0.1f;
+        effect->velocityVariance.z = float(g_inputBuffer[1].leftStickX) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        effect->initialScale = g_smokeInitialScale0 = float(g_inputBuffer[3].rightStickY) / 255.0f * 0.5f;
+        effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void StationarySmokeControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        float table[64];
+        const float falloff = g_inputBuffer[3].triggers[0];
+        const float fade = g_inputBuffer[3].triggers[1];
+        dc::sdk::SetFftEffectFalloff(g_smokeFftData[effect->texture->slot],
+            dc::sdk::ScaleFftFalloff(fade * 100.0f / 255.0f, dc::sdk::BuildFftFalloff(falloff * 10.0f / 255.0f - 2.0f, table)));
+        effect->expansion = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = fade / 255.0f + 0.7f;
+        g_stationarySmokeAlpha = float(g_inputBuffer[1].rightStickY);
+        const std::int8_t red = g_inputBuffer[2].triggers[0];
+        const std::uint8_t green = g_inputBuffer[2].triggers[1];
+        const std::int8_t blue = g_inputBuffer[2].leftStickX;
+        dc::sdk::g_particleChannels[effect->slot].colour = (static_cast<std::uint8_t>(red) << 16) | (green << 8) | static_cast<std::uint8_t>(blue);
+        for (std::int32_t index = 0; index < effect->count; ++index) {
+            effect->particles[index].colour &= 0xff000000U;
+            effect->particles[index].colour |= dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        effect->height = float(g_inputBuffer[2].leftStickY) / 255.0f * 10.0f;
+        effect->width = float(g_inputBuffer[2].rightStickX) / 255.0f * 10.0f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        effect->velocity.x = float(g_inputBuffer[3].leftStickX) / 255.0f * 0.1f;
+        effect->velocity.y = float(g_inputBuffer[3].leftStickY) / 255.0f * 0.1f;
+        effect->velocity.z = float(g_inputBuffer[3].rightStickX) / 255.0f * 0.1f;
+        effect->velocityVariance.x = float(g_inputBuffer[1].triggers[0]) / 255.0f * 0.1f;
+        effect->velocityVariance.y = float(g_inputBuffer[1].triggers[1]) / 255.0f * 0.1f;
+        effect->velocityVariance.z = float(g_inputBuffer[1].leftStickX) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        effect->initialScale = float(g_inputBuffer[3].rightStickY) / 255.0f * 0.5f;
+        effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void RadialSmokeControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        float table[64];
+        const float falloff = g_inputBuffer[3].triggers[0];
+        const float fade = g_inputBuffer[3].triggers[1];
+        dc::sdk::SetFftEffectFalloff(g_smokeFftData[effect->texture->slot],
+            dc::sdk::ScaleFftFalloff(fade * 100.0f / 255.0f, dc::sdk::BuildFftFalloff(falloff * 10.0f / 255.0f - 2.0f, table)));
+        effect->expansion = g_smokeExpansion2 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor2 = fade / 255.0f + 0.7f;
+        const std::int8_t red = g_inputBuffer[2].triggers[0];
+        const std::uint8_t green = g_inputBuffer[2].triggers[1];
+        const std::int8_t blue = g_inputBuffer[2].leftStickX;
+        dc::sdk::g_particleChannels[effect->slot].colour = (static_cast<std::uint8_t>(red) << 16) | (green << 8) | static_cast<std::uint8_t>(blue);
+        for (std::int32_t index = 0; index < effect->count; ++index) {
+            effect->particles[index].colour &= 0xff000000U;
+            effect->particles[index].colour |= dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        effect->height = float(g_inputBuffer[2].leftStickY) / 255.0f * 0.2f;
+        effect->width = float(g_inputBuffer[2].rightStickX) / 255.0f * 0.2f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        effect->velocity.x = float(g_inputBuffer[3].leftStickX) / 255.0f * 0.003f;
+        effect->velocity.y = float(g_inputBuffer[3].leftStickY) / 255.0f * 0.003f;
+        effect->velocity.z = float(g_inputBuffer[3].rightStickX) / 255.0f * 0.003f;
+        effect->velocityVariance.x = float(g_inputBuffer[1].triggers[0]) / 255.0f * 0.003f;
+        effect->velocityVariance.y = float(g_inputBuffer[1].triggers[1]) / 255.0f * 0.003f;
+        effect->velocityVariance.z = float(g_inputBuffer[1].leftStickX) / 255.0f * 0.003f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        effect->initialScale = g_smokeInitialScale2 = float(g_inputBuffer[3].rightStickY) / 255.0f * 0.5f;
+        effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SpreadingSmokeControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        float table[64];
+        const float falloff = g_inputBuffer[3].triggers[0];
+        const float fade = g_inputBuffer[3].triggers[1];
+        dc::sdk::SetFftEffectFalloff(g_smokeFftData[effect->texture->slot],
+            dc::sdk::ScaleFftFalloff(fade * 100.0f / 255.0f, dc::sdk::BuildFftFalloff(falloff * 10.0f / 255.0f - 2.0f, table)));
+        effect->expansion = g_smokeExpansion3 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor3 = fade / 255.0f + 0.7f;
+        if ((g_inputBuffer[2].held & 0x8000) && (g_inputBuffer[2].held & 1))
+            dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[effect->texture->slot], (float(g_inputBuffer[2].rightStickY) - 128.0f) / 255.0f * 2.0f);
+        const std::int8_t red = g_inputBuffer[2].triggers[0];
+        const std::uint8_t green = g_inputBuffer[2].triggers[1];
+        const std::int8_t blue = g_inputBuffer[2].leftStickX;
+        dc::sdk::g_particleChannels[effect->slot].colour = (static_cast<std::uint8_t>(red) << 16) | (green << 8) | static_cast<std::uint8_t>(blue);
+        for (std::int32_t index = 0; index < effect->count; ++index) {
+            effect->particles[index].colour &= 0xff000000U;
+            effect->particles[index].colour |= dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        effect->height = float(g_inputBuffer[2].leftStickY) / 255.0f * 10.0f;
+        effect->width = float(g_inputBuffer[2].rightStickX) / 255.0f * 10.0f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        effect->velocity.x = (float(g_inputBuffer[3].leftStickX) - 127.0f) / 255.0f * 0.1f;
+        effect->velocity.y = (float(g_inputBuffer[3].leftStickY) - 127.0f) / 255.0f * 0.1f;
+        effect->velocity.z = (float(g_inputBuffer[3].rightStickX) - 127.0f) / 255.0f * 0.1f;
+        effect->velocityVariance.x = float(g_inputBuffer[1].triggers[0]) / 255.0f * 0.1f;
+        effect->velocityVariance.y = float(g_inputBuffer[1].triggers[1]) / 255.0f * 0.1f;
+        effect->velocityVariance.z = float(g_inputBuffer[1].leftStickX) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        effect->initialScale = g_smokeInitialScale3 = float(g_inputBuffer[3].rightStickY) / 255.0f * 0.5f;
+        if (!(g_inputBuffer[1].held & 0x200)) {
+            effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.1f;
+            dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+        }
+        if (g_inputBuffer[1].held & 0x8000) {
+            g_smokeAlphaStep3 = g_inputBuffer[1].rightStickX / 3;
+            g_smokeOpacityScale3 = float(g_inputBuffer[1].rightStickY) / 255.0f * 10.0f;
+        }
+        if (g_inputBuffer[1].held & 0x2000) {
+            g_smokeRadialVelocity3 = float(g_inputBuffer[1].rightStickX) / 255.0f;
+            g_smokeRadialDecay3 = float(g_inputBuffer[1].rightStickY) / 255.0f;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void WideSmokeControlCallback(void *data) {
+    SmokeEffect *const effect = static_cast<SmokeEffect *>(data);
+    if (effect->flags & 1) {
+        float table[64];
+        const float falloff = g_inputBuffer[3].triggers[0];
+        const float fade = g_inputBuffer[3].triggers[1];
+        dc::sdk::SetFftEffectFalloff(g_smokeFftData[effect->texture->slot],
+            dc::sdk::ScaleFftFalloff(fade * 100.0f / 255.0f, dc::sdk::BuildFftFalloff(falloff * 10.0f / 255.0f - 2.0f, table)));
+        effect->expansion = g_smokeExpansion4 = falloff / 255.0f * 0.02f - 0.0039999997f;
+        effect->fadeFactor = g_smokeFadeFactor4 = fade / 255.0f + 0.7f;
+        if ((g_inputBuffer[2].held & 0x8000) && (g_inputBuffer[2].held & 1))
+            dc::sdk::SetFftEffectPhaseScale(g_smokeFftData[effect->texture->slot], (float(g_inputBuffer[2].rightStickY) - 128.0f) / 255.0f * 2.0f);
+        const std::int8_t red = g_inputBuffer[2].triggers[0];
+        const std::uint8_t green = g_inputBuffer[2].triggers[1];
+        const std::int8_t blue = g_inputBuffer[2].leftStickX;
+        dc::sdk::g_particleChannels[effect->slot].colour = (static_cast<std::uint8_t>(red) << 16) | (green << 8) | static_cast<std::uint8_t>(blue);
+        for (std::int32_t index = 0; index < effect->count; ++index) {
+            effect->particles[index].colour &= 0xff000000U;
+            effect->particles[index].colour |= dc::sdk::g_particleChannels[effect->slot].colour;
+        }
+        effect->height = float(g_inputBuffer[2].leftStickY) / 255.0f * 10.0f;
+        effect->width = float(g_inputBuffer[2].rightStickX) / 255.0f * 10.0f;
+        dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+        effect->velocity.x = (float(g_inputBuffer[3].leftStickX) - 127.0f) / 255.0f * 0.1f;
+        effect->velocity.y = (float(g_inputBuffer[3].leftStickY) - 127.0f) / 255.0f * 0.1f;
+        effect->velocity.z = (float(g_inputBuffer[3].rightStickX) - 127.0f) / 255.0f * 0.1f;
+        effect->velocityVariance.x = float(g_inputBuffer[1].triggers[0]) / 255.0f * 0.1f;
+        effect->velocityVariance.y = float(g_inputBuffer[1].triggers[1]) / 255.0f * 0.1f;
+        effect->velocityVariance.z = float(g_inputBuffer[1].leftStickX) / 255.0f * 0.1f;
+        dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+            effect->velocityVariance.y, effect->velocityVariance.z);
+        effect->initialScale = g_smokeInitialScale4 = float(g_inputBuffer[3].rightStickY) / 255.0f * 0.5f;
+        if (!(g_inputBuffer[1].held & 0x200)) {
+            effect->birthRate = float(g_inputBuffer[1].leftStickY) / 255.0f * 0.1f;
+            dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+        }
+        if (g_inputBuffer[1].held & 0x8000) {
+            g_smokeAlphaStep4 = g_inputBuffer[1].rightStickX / 3;
+            g_smokeOpacityScale4 = float(g_inputBuffer[1].rightStickY) / 255.0f * 10.0f;
+        }
+        if (g_inputBuffer[1].held & 0x2000) {
+            g_smokeRadialVelocity4 = float(g_inputBuffer[1].rightStickX) / 255.0f;
+            g_smokeRadialDecay4 = float(g_inputBuffer[1].rightStickY) / 255.0f;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SampleFallingParticleCurve(Vector4 *output, const Vector4 *a, const Vector4 *b, const Vector4 *c, const Vector4 *d, float time) {
+    const float cube = time * time * time;
+    const float third = time * time * (1.0f - time);
+    const float inverse = 1.0f - time;
+    const float second = time * inverse * inverse;
+    const float first = inverse * inverse * inverse;
+    output->x = ((first * a->x + (second * 3.0f) * b->x) + (third * 3.0f) * c->x) + cube * d->x;
+    output->y = ((first * a->y + (second * 3.0f) * b->y) + (third * 3.0f) * c->y) + cube * d->y;
+    output->z = ((first * a->z + (second * 3.0f) * b->z) + (third * 3.0f) * c->z) + cube * d->z;
+    output->w = ((first * a->w + (second * 3.0f) * b->w) + (third * 3.0f) * c->w) + cube * d->w;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+Vector4 curvedParticlePath[7] = {
+    {0, 0, 0, 0.2f}, {0, 1.5f, 0, 0.6f}, {-1.5f, 1.5f, 0, 0.8f}, {-1.5f, 2, -1.5f, 0.8f}, {-1.5f, 2.5f, -3, 0.8f}, {1, 2.5f, -3, 0.8f}, {1, 5, -2.5f, 2}};
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveCurvedParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    Vector4 curve;
+    if (particle->velocity.y < 1.0f) {
+        SampleFallingParticleCurve(&curve, curvedParticlePath, curvedParticlePath + 1, curvedParticlePath + 2, curvedParticlePath + 3, particle->velocity.y);
+    } else if (particle->velocity.y < 2.0f) {
+        SampleFallingParticleCurve(
+            &curve, curvedParticlePath + 3, curvedParticlePath + 4, curvedParticlePath + 5, curvedParticlePath + 6, particle->velocity.y - 1.0f);
+    } else {
+        RetireEffectParticle(particle);
+    }
+    const Vector3 *const origin = &fallingParticleOrigins[1];
+    particle->position.x = (origin->x + curve.x) + dc::sdk::SinFixed(particle->phase1) * curve.w;
+    particle->position.y = (origin->y + curve.y) + dc::sdk::SinFixed(std::uint32_t(particle->phase1 / 2) * 3) * (curve.w * 0.3f);
+    particle->position.z = (origin->z + curve.z) + dc::sdk::SinFixed(std::uint32_t(particle->phase1 / 2) * 5) * curve.w;
+    RotateEffectParticle(particle);
+    particle->phase2 = std::uint32_t(particle->phase2) + std::uint32_t(particle->phaseStep1);
+    particle->velocity.y += 0.022222223f;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void MoveVortexParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    if (particle->position.y < -0.5f || particle->position.y > 8.0f) {
+        RetireEffectParticle(particle);
+        return;
+    }
+    const Vector3 *const origin = &fallingParticleOrigins[2];
+    float delta[2];
+    delta[0] = origin->x - particle->position.x;
+    delta[1] = origin->z - particle->position.z;
+    float distance = delta[0] * delta[0] + delta[1] * delta[1];
+    if (distance < 0.01f)
+        distance = 0.01f;
+    particle->position.x += particle->velocity.x + dc::sdk::SinFixed(particle->phase1) * 0.01f;
+    particle->position.y += particle->velocity.y -
+        (dc::sdk::CosFixed(particle->phase1) * 0.015f < 0.0f ? -(dc::sdk::CosFixed(particle->phase1) * 0.015f) : dc::sdk::CosFixed(particle->phase1) * 0.015f) -
+        0.016000001f;
+    particle->position.z += particle->velocity.z + dc::sdk::SinFixed(particle->phase1) * 0.01f;
+    float pull = 0.014117648f;
+    float swirl = 0.0019607844f;
+    float lift = 0.077254906f;
+    float damping = 0.97843134f;
+    particle->velocity.x += (delta[0] / distance) * pull - (delta[1] / distance) * swirl;
+    particle->velocity.y =
+        (dc::sdk::SinFixed(particle->phase1) < 0.0f ? -dc::sdk::SinFixed(particle->phase1) : dc::sdk::SinFixed(particle->phase1)) / distance * lift;
+    particle->velocity.z += (delta[1] / distance) * pull + (delta[0] / distance) * swirl;
+    particle->velocity.x *= damping;
+    particle->velocity.z *= damping;
+    RotateEffectParticle(particle);
+    particle->phase2 = std::uint32_t(particle->phase2) + std::uint32_t(particle->phaseStep1);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void MoveLitFallingParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    Vector3 direction;
+    Matrix4x4 transform;
+    Vector3 normal;
+    particle->position.x += particle->velocity.x;
+    particle->phase0 = std::uint32_t(particle->phase0) + std::uint32_t(particle->attribute);
+    particle->position.y += particle->velocity.y;
+    RotateEffectParticle(particle);
+    particle->position.z += particle->velocity.z;
+    particle->phase2 = std::uint32_t(particle->phase2) + std::uint32_t(particle->phaseStep1);
+    direction = reinterpret_cast<const Vector3 &>(dc::sdk::g_mt7SingleLightDirection);
+    float intensity = dc::sdk::g_mt7AmbientIntensity;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundZ_Wrapper(particle->phase2);
+    Matrix4x4::RotateAroundY_Wrapper(particle->phase1);
+    Matrix4x4::RotateAroundX_Wrapper(particle->phase0);
+    matrix_stack::GetMatrix(&transform);
+    PopCurrentMatrix(1);
+    normal.x = -transform.rows[0].z;
+    normal.y = -transform.rows[1].z;
+    normal.z = -transform.rows[2].z;
+    const float dot = am2Vector3Dot(&direction, &normal);
+    if (dot > 0)
+        intensity += dot;
+    if (intensity > 1)
+        intensity = 1;
+    intensity *= 255.0f;
+    const std::int32_t red = std::int32_t(dc::sdk::g_mt7DiffuseChannels.x * intensity);
+    const std::uint8_t green = std::int32_t(dc::sdk::g_mt7DiffuseChannels.y * intensity);
+    const std::uint8_t blue = std::int32_t(dc::sdk::g_mt7DiffuseChannels.z * intensity);
+    particle->colour = 0xff000000U | (std::uint8_t(red) << 16) | (green << 8) | blue;
+    if (fallingParticleFloor > particle->position.y)
+        particle->update = dc::sdk::SpawnInactiveParticle;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeFallingParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x90000000U;
+    particle->update = MoveFallingParticle;
+    particle->phase0 = dc::sdk::RandomInt() << 1;
+    particle->phase1 = dc::sdk::RandomInt() << 1;
+    particle->phase2 = dc::sdk::RandomInt() << 1;
+    particle->phaseStep0 = 512;
+    particle->phaseStep1 = 512;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeDriftingParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x90000000U;
+    particle->update = MoveDriftingParticle;
+    particle->phase0 = dc::sdk::RandomInt() << 1;
+    particle->phase1 = dc::sdk::RandomInt() << 1;
+    particle->phase2 = dc::sdk::RandomInt() << 1;
+    particle->phaseStep0 = (static_cast<std::int32_t>(dc::sdk::RandomInt()) >> 4) + 256;
+    particle->phaseStep1 = 512;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeCurvedParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x90000000U;
+    particle->update = MoveCurvedParticle;
+    particle->phase0 = dc::sdk::RandomInt() << 1;
+    particle->phase1 = dc::sdk::RandomInt() << 1;
+    particle->phase2 = dc::sdk::RandomInt() << 1;
+    particle->phaseStep0 = (static_cast<std::int32_t>(dc::sdk::RandomInt()) >> 5) + 256;
+    particle->phaseStep1 = 512;
+    particle->velocity.y = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeVortexParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x90000000U;
+    particle->update = MoveVortexParticle;
+    particle->phase0 = dc::sdk::RandomInt() << 1;
+    particle->phase1 = dc::sdk::RandomInt() << 1;
+    particle->phase2 = dc::sdk::RandomInt() << 1;
+    particle->phaseStep0 = (static_cast<std::int32_t>(dc::sdk::RandomInt()) >> 5) + 512;
+    particle->phaseStep1 = 512;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeLitFallingParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveLitFallingParticle;
+    particle->phase0 = 0;
+    particle->phase1 = 0;
+    particle->phase2 = 0;
+    particle->attribute = dc::sdk::RandomInt() & 0xfff;
+    particle->phaseStep0 = dc::sdk::RandomInt() & 0xfff;
+    particle->phaseStep1 = dc::sdk::RandomInt() & 0xfff;
+    particle->colour = 0xff000000U;
+}
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetFallingParticleFloor(float floorHeight) {
+    fallingParticleFloor = floorHeight;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t CreateFallingParticleEffect(const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags,
+    const char *textureArchive, const char *textureName, float floorHeight) {
+    Vector3 velocity, velocityVariance;
+    velocity.x = 0.006f;
+    velocity.y = -0.015f;
+    velocity.z = 0.006f;
+    velocityVariance.x = 0.012f;
+    velocityVariance.y = 0.001f;
+    velocityVariance.z = 0.012f;
+    std::int32_t index = 0;
+    while (g_fallingEffects[index] && index < 16)
+        ++index;
+    if (index >= 16)
+        return -1;
+    EF_Callback_EffectCtrl_Enqueue();
+    SmokeEffect *effect;
+    g_fallingEffects[index] = effect = static_cast<SmokeEffect *>(HLib::AllocateTaskData(sizeof(SmokeEffect), PARTICLE_EFFECT_TASK));
+    effect->slot = AllocateParticleEffectSlot(0, -1, 0, 0, PARTICLE_EFFECT_TASK);
+    effect->count = count;
+    effect->particles = static_cast<dc::sdk::Particle *>(HLib::AllocateTaskData(count * sizeof(dc::sdk::Particle), PARTICLE_EFFECT_TASK));
+    for (std::int32_t particle = 0; particle < count; ++particle)
+        effect->particles[particle].attribute = index;
+    effect->position = *position;
+    effect->spawnVariance = *spawnVolume;
+    effect->velocity = velocity;
+    effect->velocityVariance = velocityVariance;
+    effect->width = 0.04f;
+    effect->height = 0.08f;
+    effect->birthRate = birthRate;
+    effect->texture = 0;
+    effect->flags = shen_name(flags);
+    effect->expansion = 0.0f;
+    effect->fadeFactor = 0.0f;
+    effect->initialScale = 1.0f;
+    effect->profile = 0;
+    dc::sdk::InitializeParticleChannelParticles(effect->slot, effect->count, 0, effect->particles);
+    switch (std::uint8_t(effect->flags >> 8)) {
+    case 0:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeFallingParticle);
+        break;
+    case 1:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeDriftingParticle);
+        AssignFloatVector(&fallingParticleOrigins[0], &effect->position);
+        break;
+    case 2:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeCurvedParticle);
+        AssignFloatVector(&fallingParticleOrigins[1], &effect->position);
+        break;
+    case 3:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeVortexParticle);
+        AssignFloatVector(&fallingParticleOrigins[2], &effect->position);
+        break;
+    case 4:
+        dc::sdk::SetParticleChannelCallback(effect->slot, InitializeLitFallingParticle);
+        break;
+    }
+    dc::sdk::SetParticleChannelPositionRange(
+        effect->slot, effect->position.x, effect->position.y, effect->position.z, effect->spawnVariance.x, effect->spawnVariance.y, effect->spawnVariance.z);
+    dc::sdk::SetParticleChannelVelocityRange(effect->slot, effect->velocity.x, effect->velocity.y, effect->velocity.z, effect->velocityVariance.x,
+        effect->velocityVariance.y, effect->velocityVariance.z);
+    dc::sdk::SetParticleChannelBlendMode(effect->slot, 1);
+    dc::sdk::SetParticleChannelSize(effect->slot, effect->width, effect->height);
+    dc::sdk::SetParticleChannelSpawnProbability(effect->slot, effect->birthRate);
+    std::uint32_t *const image = static_cast<std::uint32_t *>(shenLoadFile(textureArchive, textureName, PARTICLE_EFFECT_TASK));
+    if (image)
+        dc::sdk::SetParticleChannelTexture(effect->slot, 16, 32, 0xd02, image + 7);
+    HLib::FreeTaskData(image);
+    SuspendParticleEffect(3, index);
+    fallingParticleFloor = floorHeight;
+    return index;
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void MoveShipSprayEmitterParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x;
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z;
+    particle->velocity.y -= 0.005f;
+    particle->scale -= 0.04f;
+    if (particle->scale < 0.1f) {
+        particle->flags &= 0x7fffffffU;
+        particle->update = dc::sdk::SpawnInactiveParticle;
+    }
+    const float alpha = static_cast<float>(particle->colour >> 24) / 255.0f - 0.01f;
+    if (alpha < 0.05f) {
+        particle->flags &= 0x7fffffffU;
+        particle->update = dc::sdk::SpawnInactiveParticle;
+    }
+    particle->colour = (static_cast<std::uint32_t>(static_cast<std::int32_t>(alpha * 255.0f)) << 24) | (particle->colour & 0xffffffU);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeShipSprayEmitterParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags |= 0x80000000U;
+    particle->update = MoveShipSprayEmitterParticle;
+    particle->colour = g_shipSprayColour;
+    particle->scale = 1.0f;
+}
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ShipSprayControlCallback(void *) {
+    Vector3 localPosition;
+    Vector3 positions[6];
+    std::int32_t index;
+    localPosition.x = localPosition.y = localPosition.z = 0.0f;
+    for (index = 0; index <= 5; ++index) {
+        positions[index].x = shipSprayDefault[index].position.x;
+        positions[index].z = shipSprayDefault[index].position.z;
+        positions[index].y = 0.0f;
+    }
+    for (index = 0; index <= 1; ++index) {
+        if (shipSprayDefault[index].position.y >= 0.0f)
+            shipSprayDefault[index].widthOffset += 0.05f;
+        else if (shipSprayDefault[index].position.y < 0.0f)
+            shipSprayDefault[index].widthOffset -= 0.05f;
+        if (shipSprayDefault[index].widthOffset > 1.3f)
+            shipSprayDefault[index].widthOffset = 1.3f;
+        else if (shipSprayDefault[index].widthOffset < -0.6f)
+            shipSprayDefault[index].widthOffset = -0.6f;
+    }
+    for (index = 0; index <= 5; ++index) {
+        dc::sdk::SetParticleChannelSize(shipSprayDefault[index].slot, (shipSprayDefault[index].width + shipSprayDefault[index].widthOffset) * g_shipSprayLocalX,
+            shipSprayDefault[index].height * g_shipSprayLocalY);
+        dc::sdk::SetParticleChannelPositionRange(shipSprayDefault[index].slot, positions[index].x, positions[index].y, positions[index].z,
+            shipSprayDefault[index].spawnVariance.x, shipSprayDefault[index].spawnVariance.y, shipSprayDefault[index].spawnVariance.z);
+        AssignParticleEmitterReferences(shipSprayDefault[index].slot, g_shipSprayPosition, localPosition, g_shipSprayYaw);
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeShipSpray() {
+    if (shipSprayDefault[0].slot < 0)
+        return;
+    g_shipSprayPosition.x = g_shipSprayPosition.y = g_shipSprayPosition.z = 0.0f;
+    g_shipSprayYaw = 0;
+    g_shipSprayLocalX = g_shipSprayLocalY = g_shipSprayLocalZ = 1.0f;
+    g_shipSprayColour = kShipSprayColourDefault;
+    void *const image = shenLoadFile("MISC", "SHIBU.PVR", TASK_SIBU);
+    if (!image)
+        return;
+    const std::int16_t *const header = reinterpret_cast<const std::int16_t *>(static_cast<std::byte *>(image) + 12);
+    for (std::int32_t index = 0; index <= 5; ++index) {
+        shipSprayDefault[index].widthOffset = 0.0f;
+        if (index == 0)
+            shipSprayDefault[index].slot = AllocateParticleEffectSlot(0, -1, ShipSprayControlCallback, 0, TASK_SIBU);
+        else
+            shipSprayDefault[index].slot = AllocateParticleEffectSlot(0, -1, 0, 0, TASK_SIBU);
+        if (shipSprayDefault[index].slot < 0)
+            continue;
+        shipSprayDefault[index].particles = HLib::AllocateTaskData(shipSprayDefault[index].count * sizeof(dc::sdk::Particle), TASK_SIBU);
+        if (!shipSprayDefault[index].particles)
+            continue;
+        dc::sdk::InitializeParticleChannelSpawnParticles(shipSprayDefault[index].slot, shipSprayDefault[index].count, 0, shipSprayDefault[index].particles, 0);
+        dc::sdk::SetParticleChannelPositionRange(shipSprayDefault[index].slot, shipSprayDefault[index].position.x, shipSprayDefault[index].position.y,
+            shipSprayDefault[index].position.z, shipSprayDefault[index].spawnVariance.x, shipSprayDefault[index].spawnVariance.y,
+            shipSprayDefault[index].spawnVariance.z);
+        dc::sdk::SetParticleChannelCallback(shipSprayDefault[index].slot, InitializeShipSprayEmitterParticle);
+        dc::sdk::SetParticleChannelVelocityRange(shipSprayDefault[index].slot, shipSprayDefault[index].velocity.x, shipSprayDefault[index].velocity.y,
+            shipSprayDefault[index].velocity.z, shipSprayDefault[index].velocityVariance.x, shipSprayDefault[index].velocityVariance.y,
+            shipSprayDefault[index].velocityVariance.z);
+        dc::sdk::SetParticleChannelSpawnProbability(shipSprayDefault[index].slot, shipSprayDefault[index].birthRate);
+        dc::sdk::SetParticleChannelSize(shipSprayDefault[index].slot, shipSprayDefault[index].width, shipSprayDefault[index].height);
+        dc::sdk::SetParticleChannelTexture(
+            shipSprayDefault[index].slot, header[6], header[7], *reinterpret_cast<const std::uint32_t *>(header + 4), static_cast<std::uint32_t *>(image) + 7);
+        dc::sdk::SetParticleChannelBlendMode(shipSprayDefault[index].slot, 1);
+        dc::sdk::SetParticleChannelDepthMode(shipSprayDefault[index].slot, 1);
+        dc::sdk::SetParticleChannelActive(shipSprayDefault[index].slot, 1);
+        dc::sdk::g_particleChannels[shipSprayDefault[index].slot].colour = g_shipSprayColour;
+        StartEffectRegistry(0, shipSprayDefault[index].slot);
+    }
+    HLib::FreeTaskData(image);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void ResetShipSprayParameters() {
+    shipSprayDefault[0].slot = -1;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ReleaseShipSpray() {
+    if (shipSprayDefault[0].slot < 0)
+        return;
+    SuspendEffectRegistry(0, shipSprayDefault[0].slot);
+    for (std::int32_t index = 0; index < 6; ++index) {
+        ClearEffectRegistry(0, shipSprayDefault[index].slot);
+        HLib::FreeTaskData(shipSprayDefault[index].particles);
+        shipSprayDefault[index].particles = 0;
+        shipSprayDefault[index].slot = -1;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetShipSprayColour(std::int32_t alpha, std::int32_t red, std::int32_t green, std::int32_t blue) {
+    g_shipSprayColour = (alpha << 24) | (std::uint8_t(red) << 16) | (std::uint8_t(green) << 8) | std::uint8_t(blue);
+    for (std::int32_t index = 0; index < 6; ++index)
+        dc::sdk::g_particleChannels[shipSprayDefault[index].slot].colour = g_shipSprayColour;
+}
+#endif
+
+namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+std::array<Vector3, 3> fallingParticleOrigins;
 
 float weatherRainPressureParam0 = std::bit_cast<float>(0x15b7b9bbU);
 float weatherRainPressureParam1 = std::bit_cast<float>(0x3b656042U);
@@ -287,20 +3746,6 @@ float weatherRainDriftVarianceX = 0.0f;
 float weatherRainDriftVarianceY = 0.0f;
 float weatherRainDriftVarianceZ = 0.0f;
 float weatherRainMotionDamping = std::bit_cast<float>(0x3d75c28fU);
-
-struct WeatherInteractionCamera {
-    Vector3 position;
-    Vector3 currentCameraPosition;
-    Vector3 previousBackwardDirection;
-    Vector3 nextCameraPosition;
-    Vector3 currentCameraPosition2;
-    Vector3 backwardDirection;
-};
-
-static_assert(sizeof(WeatherInteractionCamera) == 0x48);
-static_assert(offsetof(WeatherInteractionCamera, nextCameraPosition) == 0x24);
-static_assert(offsetof(WeatherInteractionCamera, currentCameraPosition2) == 0x30);
-static_assert(offsetof(WeatherInteractionCamera, backwardDirection) == 0x3c);
 
 WeatherFixcOwner *weatherFixcData{};
 WeatherFixcNode *weatherFixcList{};
@@ -345,13 +3790,17 @@ float weatherParticleDeltaTime{};
 
 using WeatherParticleRenderFunction = void (*)();
 WeatherParticleRenderFunction weatherParticleRender{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFloat *AllocateWeatherParticleLflt() {
     WeatherFloat *const value = static_cast<WeatherFloat *>(HLib::AllocateTaskData(sizeof(WeatherFloat), SHEN_NAME(LFLT)));
     std::memset(value, 0, sizeof(*value));
     return value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFixcNode *FindWeatherFixcNode(WeatherFixcNode *node, const void *payload) {
     while (node) {
         if (node->payload.pointer == payload)
@@ -360,7 +3809,9 @@ WeatherFixcNode *FindWeatherFixcNode(WeatherFixcNode *node, const void *payload)
     }
     return nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFixcNode *AllocateWeatherFixcNode(std::int32_t index, void *payload) {
     WeatherFixcNode *const node = static_cast<WeatherFixcNode *>(HLib::AllocateTaskData(sizeof(WeatherFixcNode), weatherFixcNodeName));
     node->index = index;
@@ -369,7 +3820,9 @@ WeatherFixcNode *AllocateWeatherFixcNode(std::int32_t index, void *payload) {
     node->payload.pointer = payload;
     return node;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AppendWeatherFixcNode(WeatherFixcNode **head, WeatherFixcNode *node) {
     WeatherFixcNode *previous = *head;
     if (!previous) {
@@ -381,7 +3834,9 @@ void AppendWeatherFixcNode(WeatherFixcNode **head, WeatherFixcNode *node) {
     previous->next = node;
     node->previous = previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UnlinkWeatherFixcNode(WeatherFixcNode **head, WeatherFixcNode *node) {
     if (!node)
         return;
@@ -395,7 +3850,9 @@ void UnlinkWeatherFixcNode(WeatherFixcNode **head, WeatherFixcNode *node) {
     node->next = nullptr;
     HLib::FreeTaskData(node);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AppendWeatherParticleGroup(WeatherParticleGroup *group) {
     WeatherParticleGroup *previous = weatherGroupList;
     if (previous) {
@@ -409,7 +3866,9 @@ void AppendWeatherParticleGroup(WeatherParticleGroup *group) {
     group->next = nullptr;
     ++weatherWarState;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherParticleGroup *AllocateWeatherParticleGroup(const Vector3 &center, float spanX, float spanY, float spanZ, bool wccp) {
     const std::size_t size = wccp ? sizeof(WeatherParticleGroup) : static_cast<std::size_t>(weatherGroupMode0Size);
     WeatherParticleGroup *const group = static_cast<WeatherParticleGroup *>(HLib::AllocateTaskData(size, weatherGroupName));
@@ -431,7 +3890,9 @@ WeatherParticleGroup *AllocateWeatherParticleGroup(const Vector3 &center, float 
     AppendWeatherParticleGroup(group);
     return group;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeWeatherParticleGroup(WeatherParticleGroup *group) {
     if (!group)
         return;
@@ -461,7 +3922,9 @@ void FreeWeatherParticleGroup(WeatherParticleGroup *group) {
     }
     HLib::FreeTaskData(group);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherRainOwner *AllocateWeatherRainOwner(std::uint32_t frustumFov) {
     WeatherRainOwner *const owner = static_cast<WeatherRainOwner *>(HLib::AllocateTaskData(sizeof(WeatherRainOwner), weatherRainOwnerName));
     const std::byte *const clearEnd = reinterpret_cast<const std::byte *>(owner) + 40;
@@ -469,7 +3932,9 @@ WeatherRainOwner *AllocateWeatherRainOwner(std::uint32_t frustumFov) {
     owner->frustumFov = static_cast<std::int32_t>(frustumFov);
     return owner;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFixcOwner *AllocateWeatherFixc(std::uint32_t frustumFov) {
     WeatherFixcOwner *const fixc = static_cast<WeatherFixcOwner *>(HLib::AllocateTaskData(sizeof(WeatherFixcOwner), weatherFixcDataName));
     fixc->mode = 1;
@@ -477,7 +3942,9 @@ WeatherFixcOwner *AllocateWeatherFixc(std::uint32_t frustumFov) {
     fixc->windList = nullptr;
     return fixc;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetRainGroupCountImmediate(WeatherParticleGroup *group, float pressure) {
     if (!group || !group->rainParticles)
         return;
@@ -486,7 +3953,9 @@ void SetRainGroupCountImmediate(WeatherParticleGroup *group, float pressure) {
     (void)lfltSetImmediate(static_cast<WeatherFloat *>(group->rainCountLflt), count);
     group->rainFlags |= 1U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BeginRainGroupTransition(WeatherParticleGroup *group, float rainValue, std::int32_t frames) {
     if (!group || !group->rainParticles)
         return;
@@ -499,11 +3968,17 @@ void BeginRainGroupTransition(WeatherParticleGroup *group, float rainValue, std:
     BeginWeatherFloatTransition(static_cast<WeatherFloat *>(group->rainCountLflt), static_cast<float>(target), frames);
     group->rainFlags &= ~1U;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float WeatherFrustumSpan(float distance, std::int32_t fov) {
     constexpr float radiansPerAngleUnit = 6.28318530717958647692f / 65536.0f;
     const std::int32_t halfAngle = fov / 2;
     return (2.0f * std::tan(static_cast<float>(halfAngle) * radiansPerAngleUnit)) * distance;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherPressureParameters(WeatherParticleGroup *group, float pressure, std::int32_t sideIndex) {
     float parameter1 = weatherRainPressureParam1Dry;
     float parameter2 = weatherRainPressureParam2Dry;
@@ -528,14 +4003,18 @@ void ApplyWeatherPressureParameters(WeatherParticleGroup *group, float pressure,
     group->fallSpeed = fallSpeed;
     group->spawnDriftZ = driftZ;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SpawnWeatherRainParticle_Mode0(WeatherRainParticle *particle, WeatherParticleGroup *group);
 void SpawnWeatherRainParticle_Direct(WeatherRainParticle *particle, WeatherParticleGroup *group);
 void SpawnWeatherRainParticle_Mode1WCCP(WeatherRainParticle *particle, WeatherParticleGroup *group);
 void WeatherRainParticleUpdate_Mode0(WeatherRainParticle *particle, WeatherParticleGroup *group);
 void WeatherRainParticleUpdate_Direct(WeatherRainParticle *particle, WeatherParticleGroup *group);
 void WeatherRainParticleUpdate_Mode1WCCP(WeatherRainParticle *particle, WeatherParticleGroup *group);
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool WeatherPointInsideClipPlanes(const WeatherClipQuadPlanes &clip, const Vector3 &position, bool requireOrdered = false) {
     for (std::size_t index = 0; index < 2; ++index) {
         const std::size_t edge = index * 2;
@@ -551,27 +4030,38 @@ bool WeatherPointInsideClipPlanes(const WeatherClipQuadPlanes &clip, const Vecto
     }
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool WeatherPointInsideClip(const WeatherClipQuadPlanes &clip, const Vector3 &position, bool requireOrdered = false) {
     if (requireOrdered ? !(position.y <= clip.clipY1 && clip.clipY0 <= position.y) : position.y > clip.clipY1 || clip.clipY0 > position.y)
         return false;
     return WeatherPointInsideClipPlanes(clip, position, requireOrdered);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetWeatherRainParticle_Mode0(WeatherRainParticle *particle) {
     particle->flags = weatherParticleSpawnFlag;
     particle->update = SpawnWeatherRainParticle_Mode0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetWeatherRainParticle_Direct(WeatherRainParticle *particle) {
     particle->flags = weatherParticleSpawnFlag;
     particle->update = SpawnWeatherRainParticle_Direct;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetWeatherRainParticle_Mode1WCCP(WeatherRainParticle *particle) {
     particle->flags = weatherParticleSpawnFlag;
     particle->update = SpawnWeatherRainParticle_Mode1WCCP;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SpawnWeatherRainParticle_Mode0(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (group->rainCurrentCount <= 0)
         return;
@@ -585,7 +4075,9 @@ void SpawnWeatherRainParticle_Mode0(WeatherRainParticle *particle, WeatherPartic
     particle->drift.x = (IncrementSharedPrngFloat() * group->driftVarianceX - group->driftVarianceX * 0.5f) + group->spawnDriftX;
     particle->drift.z = (IncrementSharedPrngFloat() * group->driftVarianceZ - group->driftVarianceZ * 0.5f) + group->spawnDriftZ;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SpawnWeatherRainParticle_Direct(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (group->rainCurrentCount <= 0)
         return;
@@ -599,7 +4091,9 @@ void SpawnWeatherRainParticle_Direct(WeatherRainParticle *particle, WeatherParti
     particle->drift.x = (IncrementSharedPrngFloat() * group->driftVarianceX - group->driftVarianceX * 0.5f) + group->spawnDriftX;
     particle->drift.z = (IncrementSharedPrngFloat() * group->driftVarianceZ - group->driftVarianceZ * 0.5f) + group->spawnDriftZ;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SpawnWeatherRainParticle_Mode1WCCP(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (group->rainCurrentCount <= 0)
         return;
@@ -618,7 +4112,9 @@ void SpawnWeatherRainParticle_Mode1WCCP(WeatherRainParticle *particle, WeatherPa
         particle->flags = activeFlag;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherRainParticleMotion(WeatherRainParticle *particle, WeatherParticleGroup *group, float fallDelta, float xSpan, float zSpan, bool wccp = false) {
     particle->position.x += group->motionX + particle->drift.x;
     particle->position.y += fallDelta;
@@ -636,7 +4132,9 @@ void UpdateWeatherRainParticleMotion(WeatherRainParticle *particle, WeatherParti
     else if (particle->position.z < group->boundsMinZ)
         particle->position.z += zSpan;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRainParticleUpdate_Mode0(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (particle->position.y < group->boundsMinY) {
         ResetWeatherRainParticle_Mode0(particle);
@@ -645,7 +4143,9 @@ void WeatherRainParticleUpdate_Mode0(WeatherRainParticle *particle, WeatherParti
     }
     UpdateWeatherRainParticleMotion(particle, group, group->motionY, group->frustumSpan, group->frustumSpan);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRainParticleUpdate_Direct(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (particle->position.y < group->boundsMinY) {
         ResetWeatherRainParticle_Direct(particle);
@@ -654,7 +4154,9 @@ void WeatherRainParticleUpdate_Direct(WeatherRainParticle *particle, WeatherPart
     }
     UpdateWeatherRainParticleMotion(particle, group, group->fallSpeed, group->frustumDistance, group->clipA.clipY1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRainParticleUpdate_Mode1WCCP(WeatherRainParticle *particle, WeatherParticleGroup *group) {
     if (particle->position.y < group->boundsMinY) {
         ResetWeatherRainParticle_Mode1WCCP(particle);
@@ -667,7 +4169,9 @@ void WeatherRainParticleUpdate_Mode1WCCP(WeatherRainParticle *particle, WeatherP
     else
         particle->flags = activeFlag;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeWeatherRainRenderState(WeatherParticleGroup *group, WeatherRainParticleUpdate spawn) {
     group->rainFlags = 0xc2000000U;
     group->rainRenderMode = std::bit_cast<std::int32_t>(0x82000002U);
@@ -684,7 +4188,9 @@ void InitializeWeatherRainRenderState(WeatherParticleGroup *group, WeatherRainPa
         particle.drift = {};
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureWeatherRainParticles(WeatherParticleGroup *group, float spawnScale, WeatherRainParticleUpdate spawn) {
     if (!group || group->rainParticles)
         return;
@@ -716,7 +4222,9 @@ void EnsureWeatherRainParticles(WeatherParticleGroup *group, float spawnScale, W
     group->motionDamping = weatherRainMotionDamping;
     InitializeWeatherRainRenderState(group, spawn);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleSpawn_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group);
 void WeatherRippleParticleSpawn_Direct(WeatherRippleParticle *particle, WeatherParticleGroup *group);
 void WeatherRippleParticleSpawn_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group);
@@ -725,7 +4233,9 @@ void WeatherRippleParticleUpdate_Direct(WeatherRippleParticle *particle, Weather
 void WeatherRippleParticleUpdate_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group);
 void WeatherRippleParticleReprobe_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group);
 void WeatherRippleParticleReprobe_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group);
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AllocateWeatherRippleColourRamp(WeatherParticleGroup *group, std::uint32_t colour) {
     if (!group)
         return;
@@ -753,7 +4263,9 @@ void AllocateWeatherRippleColourRamp(WeatherParticleGroup *group, std::uint32_t 
             group->rippleColourRamp[index] = (group->rippleColourRamp[index] & 0xff000000U) | rgb;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool InitializeWeatherRippleAtGroundHit(
     WeatherRippleParticle *particle, WeatherParticleGroup *group, WeatherRippleParticleUpdate update, bool incrementLiveCount) {
     if (!weatherInteractionCamera)
@@ -783,6 +4295,9 @@ bool InitializeWeatherRippleAtGroundHit(
     }
     return true;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleSpawn_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount)
         return;
@@ -790,7 +4305,9 @@ void WeatherRippleParticleSpawn_Mode0(WeatherRippleParticle *particle, WeatherPa
     particle->position.z = IncrementSharedPrngFloat() * group->frustumSpan + group->boundsMinZ;
     (void)InitializeWeatherRippleAtGroundHit(particle, group, WeatherRippleParticleUpdate_Mode0, true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleSpawn_Direct(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount)
         return;
@@ -798,7 +4315,9 @@ void WeatherRippleParticleSpawn_Direct(WeatherRippleParticle *particle, WeatherP
     particle->position.z = IncrementSharedPrngFloat() * group->clipA.clipY1 + group->boundsMinZ;
     (void)InitializeWeatherRippleAtGroundHit(particle, group, WeatherRippleParticleUpdate_Direct, true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleSpawn_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount)
         return;
@@ -806,7 +4325,9 @@ void WeatherRippleParticleSpawn_Mode1(WeatherRippleParticle *particle, WeatherPa
     particle->position.z = IncrementSharedPrngFloat() * group->frustumSpan + group->boundsMinZ;
     (void)InitializeWeatherRippleAtGroundHit(particle, group, WeatherRippleParticleUpdate_Mode1, true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleRespawnOrAge(WeatherRippleParticle *particle, WeatherParticleGroup *group, WeatherRippleParticleUpdate spawn) {
     if (group->rippleLiveCount < group->rippleCurrentCount) {
         const float lifetime = IncrementSharedPrngFloat() + 1.0f;
@@ -819,21 +4340,27 @@ void WeatherRippleParticleRespawnOrAge(WeatherRippleParticle *particle, WeatherP
         particle->flags = weatherParticleSpawnFlag;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleReprobe_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount || !InitializeWeatherRippleAtGroundHit(particle, group, WeatherRippleParticleUpdate_Mode0, false)) {
         --group->rippleLiveCount;
         particle->update = WeatherRippleParticleSpawn_Mode0;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleReprobe_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (group->rippleLiveCount >= group->rippleCurrentCount || !InitializeWeatherRippleAtGroundHit(particle, group, WeatherRippleParticleUpdate_Mode1, false)) {
         --group->rippleLiveCount;
         particle->update = WeatherRippleParticleSpawn_Mode1;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleUpdate_Mode0(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (particle->lifetime <= particle->age) {
         WeatherRippleParticleRespawnOrAge(particle, group, WeatherRippleParticleSpawn_Mode0);
@@ -865,7 +4392,9 @@ void WeatherRippleParticleUpdate_Mode0(WeatherRippleParticle *particle, WeatherP
     if (group->cameraY > particle->position.y)
         particle->flags = activeFlag;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleUpdate_Direct(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (particle->lifetime < particle->age) {
         WeatherRippleParticleRespawnOrAge(particle, group, WeatherRippleParticleSpawn_Direct);
@@ -877,7 +4406,9 @@ void WeatherRippleParticleUpdate_Direct(WeatherRippleParticle *particle, Weather
         particle->flags = weatherParticleSpawnFlag;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRippleParticleUpdate_Mode1(WeatherRippleParticle *particle, WeatherParticleGroup *group) {
     if (particle->lifetime <= particle->age) {
         WeatherRippleParticleRespawnOrAge(particle, group, WeatherRippleParticleSpawn_Mode1);
@@ -912,7 +4443,9 @@ void WeatherRippleParticleUpdate_Mode1(WeatherRippleParticle *particle, WeatherP
             particle->flags = weatherParticleSpawnFlag;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureWeatherRippleParticles(WeatherParticleGroup *group, float spawnScale, WeatherRippleParticleUpdate spawn) {
     if (!group || group->rippleParticles)
         return;
@@ -978,7 +4511,9 @@ void EnsureWeatherRippleParticles(WeatherParticleGroup *group, float spawnScale,
     std::memcpy(group->gap160 + 0x20, &characterState, sizeof(characterState));
     std::memcpy(group->gap160 + 0x0c, &maxDistance, sizeof(maxDistance));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureMode0RainGroups(WeatherRainOwner *cara, float spawnScale) {
     const Vector3 center{};
     float span = WeatherFrustumSpan(2.8f, cara->frustumFov);
@@ -992,7 +4527,9 @@ void EnsureMode0RainGroups(WeatherRainOwner *cara, float spawnScale) {
     EnsureWeatherRainParticles(cara->rain1, spawnScale * 0.47265625f, SpawnWeatherRainParticle_Mode0);
     cara->rain1->frustumDistance = 6.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureMode1RainGroups(WeatherRainOwner *cara, float spawnScale, float minY, float maxY) {
     const Vector3 center{};
     const float firstDistance = minY < 0.0f ? 2.8f : minY;
@@ -1008,7 +4545,9 @@ void EnsureMode1RainGroups(WeatherRainOwner *cara, float spawnScale, float minY,
     EnsureWeatherRainParticles(cara->rain1, spawnScale * 0.47265625f, SpawnWeatherRainParticle_Mode1WCCP);
     cara->rain1->frustumDistance = secondDistance;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureMode0RippleGroup(WeatherRainOwner *cara, float spawnScale) {
     const Vector3 center{};
     const float span = WeatherFrustumSpan(4.0f, cara->frustumFov);
@@ -1017,7 +4556,9 @@ void EnsureMode0RippleGroup(WeatherRainOwner *cara, float spawnScale) {
     EnsureWeatherRippleParticles(cara->rippleGroup, spawnScale, WeatherRippleParticleSpawn_Mode0);
     cara->rippleGroup->frustumDistance = 4.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureMode1RippleGroup(WeatherRainOwner *cara, float spawnScale) {
     const Vector3 center{};
     const float span = WeatherFrustumSpan(4.0f, cara->frustumFov);
@@ -1026,7 +4567,9 @@ void EnsureMode1RippleGroup(WeatherRainOwner *cara, float spawnScale) {
     EnsureWeatherRippleParticles(cara->rippleGroup, spawnScale, WeatherRippleParticleSpawn_Mode1);
     cara->rippleGroup->frustumDistance = 4.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureWeatherRainForFixc(WeatherFixcOwner *fixc, float spawnScale, float minY, float maxY) {
     switch (fixc->mode) {
     case 0:
@@ -1040,7 +4583,9 @@ void EnsureWeatherRainForFixc(WeatherFixcOwner *fixc, float spawnScale, float mi
         break;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureWeatherRippleForFixc(WeatherFixcOwner *fixc, float spawnScale) {
     switch (fixc->mode) {
     case 0:
@@ -1054,7 +4599,9 @@ void EnsureWeatherRippleForFixc(WeatherFixcOwner *fixc, float spawnScale) {
         break;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AddWeatherWindLink(WeatherFixcOwner *fixc) {
     WeatherWind *const wind = GetWind();
     if (!wind || FindWeatherFixcNode(fixc->windList, wind))
@@ -1062,14 +4609,18 @@ void AddWeatherWindLink(WeatherFixcOwner *fixc) {
     WeatherFixcNode *const node = AllocateWeatherFixcNode(0, wind);
     AppendWeatherFixcNode(&fixc->windList, node);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RemoveWeatherWindLink(WeatherFixcOwner *fixc) {
     WeatherWind *const wind = GetWind();
     WeatherFixcNode *const node = FindWeatherFixcNode(fixc->windList, wind);
     if (node)
         UnlinkWeatherFixcNode(&fixc->windList, node);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ModulateWeatherFixc(WeatherFixcOwner *fixc) {
     if (FindWeatherFixcNode(weatherFixcList, fixc))
         return;
@@ -1119,14 +4670,18 @@ void ModulateWeatherFixc(WeatherFixcOwner *fixc) {
     }
     AddWeatherWindLink(fixc);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UnregisterWeatherFixc(WeatherFixcOwner *fixc) {
     WeatherFixcNode *const node = FindWeatherFixcNode(weatherFixcList, fixc);
     if (node)
         UnlinkWeatherFixcNode(&weatherFixcList, node);
     RemoveWeatherWindLink(fixc);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeWeatherFixc(WeatherFixcOwner *fixc) {
     if (!fixc)
         return;
@@ -1144,7 +4699,9 @@ void FreeWeatherFixc(WeatherFixcOwner *fixc) {
     }
     HLib::FreeTaskData(fixc);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherClipPlanes(WeatherParticleGroup *group, std::size_t setIndex, const std::array<Vector2, 4> &points, float clipY0, float clipY1) {
     if (!group)
         return;
@@ -1163,7 +4720,9 @@ void SetWeatherClipPlanes(WeatherParticleGroup *group, std::size_t setIndex, con
         edges[edge] = points[next].y - points[index].y;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherClipToRain(WeatherFixcOwner *fixc, std::size_t setIndex, const std::array<Vector2, 4> &points, float clipY0, float clipY1) {
     if (fixc->mode != 1)
         return;
@@ -1171,7 +4730,9 @@ void ApplyWeatherClipToRain(WeatherFixcOwner *fixc, std::size_t setIndex, const 
     SetWeatherClipPlanes(cara->rain0, setIndex, points, clipY0, clipY1);
     SetWeatherClipPlanes(cara->rain1, setIndex, points, clipY0, clipY1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherClipToRipple(WeatherFixcOwner *fixc, std::size_t setIndex, const std::array<Vector2, 4> &points, float clipY0, float clipY1) {
     if (fixc->mode != 1)
         return;
@@ -1179,17 +4740,23 @@ void ApplyWeatherClipToRipple(WeatherFixcOwner *fixc, std::size_t setIndex, cons
     SetWeatherClipPlanes(cara->rippleGroup, setIndex, points, clipY0, clipY1);
     SetWeatherClipPlanes(cara->rippleGroup1, setIndex, points, clipY0, clipY1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_ApplyWCCPClipSet0ToRainGroups(const std::array<Vector2, 4> &points, float clipY0, float clipY1) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         ApplyWeatherClipToRain(static_cast<WeatherFixcOwner *>(node->payload.pointer), 0, points, clipY0 + -0.1f, clipY1 + 0.1f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_ApplyWCCPClipSet0ToRippleGroups(const std::array<Vector2, 4> &points, float clipY0, float clipY1) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         ApplyWeatherClipToRipple(static_cast<WeatherFixcOwner *>(node->payload.pointer), 0, points, clipY0 + -0.1f, clipY1 + 0.1f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_ApplyWCCPClipSet1ToParticleGroups(const std::array<Vector2, 4> &points, float clipY0, float clipY1) {
     const float minimum = clipY0 + -0.1f;
     const float maximum = clipY1 + 0.1f;
@@ -1198,7 +4765,9 @@ void Weather_ApplyWCCPClipSet1ToParticleGroups(const std::array<Vector2, 4> &poi
         ApplyWeatherClipToRipple(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1, points, minimum, maximum);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const WeatherClipEntry *SelectWeatherClipEntry(const WeatherClipSet &set) {
     const WeatherClipEntry *selected = nullptr;
     float distance = 1.0e10f;
@@ -1223,11 +4792,15 @@ const WeatherClipEntry *SelectWeatherClipEntry(const WeatherClipSet &set) {
     }
     return selected;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float WeatherFlushSmallFloat(float value) {
     return std::fabs(value) < 0.00000011920929f ? 0.0f : value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherRainWind(WeatherParticleGroup *group, const Vector3 &windOffset) {
     const float x = WeatherFlushSmallFloat(group->motionX);
     const float z = WeatherFlushSmallFloat(group->motionZ);
@@ -1237,7 +4810,9 @@ void ApplyWeatherRainWind(WeatherParticleGroup *group, const Vector3 &windOffset
     group->motionX = WeatherFlushSmallFloat(nextX + WeatherFlushSmallFloat(windOffset.x + windOffset.x));
     group->motionZ = WeatherFlushSmallFloat(nextZ + WeatherFlushSmallFloat(windOffset.z + windOffset.z));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherRainOrientation(WeatherParticleGroup *group, const Vector3 &camPos, const Vector3 &camPos2) {
     float x = WeatherFlushSmallFloat(-group->spawnDriftX - group->motionX);
     float z = WeatherFlushSmallFloat(-group->spawnDriftZ - group->motionZ);
@@ -1274,7 +4849,9 @@ void UpdateWeatherRainOrientation(WeatherParticleGroup *group, const Vector3 &ca
     Matrix4x4::Pop(1);
     group->rotationZ = static_cast<std::int16_t>(atan2_fixed16(motion.y, motion.x)) - 0x4000;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherRainGroup(WeatherParticleGroup *group, const Vector3 &cameraPosition, const Vector3 &currentCameraPosition,
     const Vector3 &currentCameraPosition2, const Vector3 &backward, const Vector3 &windOffset, bool pressureMode, std::int32_t sideIndex, bool direct = false) {
     if (!group)
@@ -1359,7 +4936,9 @@ void UpdateWeatherRainGroup(WeatherParticleGroup *group, const Vector3 &cameraPo
         group->rippleDrawCount = group->rippleCurrentCount == 0 ? 0 : group->rippleCapacity;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector4 TransformWeatherVector(const Vector4 &vector) {
     const auto &rows = workTransformMatrix.rows;
     return {((rows[1].x * vector.y + rows[0].x * vector.x) + rows[2].x * vector.z) + rows[3].x * vector.w,
@@ -1367,7 +4946,9 @@ Vector4 TransformWeatherVector(const Vector4 &vector) {
         ((rows[0].z * vector.x + rows[1].z * vector.y) + rows[2].z * vector.z) + rows[3].z * vector.w,
         ((rows[1].w * vector.y + rows[0].w * vector.x) + rows[2].w * vector.z) + rows[3].w * vector.w};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector4 TransformWeatherParticlePosition(const Vector3 &position) {
     Vector3 projected{};
     Matrix4x4::TransformPoint(position, projected);
@@ -1375,29 +4956,43 @@ Vector4 TransformWeatherParticlePosition(const Vector3 &position) {
     const float w = ((rows[1].w * position.y + rows[0].w * position.x) + rows[2].w * position.z) + rows[3].w;
     return {projected.x, projected.y, projected.z, w};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherParticleAnnotationNullsub(const char *) {
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherParticleEndAnnotationNullsub() {
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherParticleRenderNullsub() {
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void PublishWeatherParticleCallback(std::int32_t index) {
     const std::byte *const callback =
         weatherParticleStorage + static_cast<std::uint32_t>(index) * weatherParticleLayerStride + offsetof(WeatherRainParticle, update);
-
-
+    // Native reads the next callback even at the tail. The HLib byte arena owns
+    // its rounded padding and following block header; neither is another particle.
     std::memcpy(&weatherParticleEvaluate, callback, sizeof(weatherParticleEvaluate));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EvaluateWeatherParticle(void *particle) {
     if (weatherParticleLayerStride == sizeof(WeatherRippleParticle))
         reinterpret_cast<WeatherRippleParticleUpdate>(weatherParticleEvaluate)(static_cast<WeatherRippleParticle *>(particle), weatherCurrentGroup);
     else
         reinterpret_cast<WeatherRainParticleUpdate>(weatherParticleEvaluate)(static_cast<WeatherRainParticle *>(particle), weatherCurrentGroup);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherParticleRotationX(std::int32_t angle) {
     const float cosine = cos_fixed16(static_cast<std::uint16_t>(angle));
     const float sine = sin_fixed16(static_cast<std::int16_t>(angle));
@@ -1406,7 +5001,9 @@ void ApplyWeatherParticleRotationX(std::int32_t angle) {
     workTransformMatrix.rows[1] = row1;
     workTransformMatrix.rows[2] = row2;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherParticleRotationY(std::int32_t angle) {
     const float cosine = cos_fixed16(static_cast<std::uint16_t>(angle));
     const float sine = sin_fixed16(static_cast<std::int16_t>(angle));
@@ -1415,7 +5012,9 @@ void ApplyWeatherParticleRotationY(std::int32_t angle) {
     workTransformMatrix.rows[0] = row0;
     workTransformMatrix.rows[2] = row2;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyWeatherParticleRotationZ(std::int32_t angle) {
     const float cosine = cos_fixed16(static_cast<std::uint16_t>(angle));
     const float sine = sin_fixed16(static_cast<std::int16_t>(angle));
@@ -1424,7 +5023,9 @@ void ApplyWeatherParticleRotationZ(std::int32_t angle) {
     workTransformMatrix.rows[0] = row0;
     workTransformMatrix.rows[1] = row1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DoRainParticleEffect() {
     if ((weatherCurrentParticleFlags & weatherParticlePausedFlag) != 0)
         return;
@@ -1436,7 +5037,9 @@ void DoRainParticleEffect() {
         PublishWeatherParticleCallback(index + 1);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherParticleVertex *GetWeatherParticleVertexBuffer(std::int32_t count) {
 #if defined(_WIN32)
     d3t::D3TDeviceContext *const context = d3t::DX11::g_ppD3DDeviceContext;
@@ -1448,7 +5051,9 @@ WeatherParticleVertex *GetWeatherParticleVertexBuffer(std::int32_t count) {
     return nullptr;
 #endif
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool WriteWeatherBillboardQuad(WeatherParticleVertex *output, float width, float height, std::uint32_t colour) {
     const Vector4 topLeft = TransformWeatherVector({-width, height, 0.0f, 1.0f});
     const Vector4 bottomLeft = TransformWeatherVector({-width, -height, 0.0f, 1.0f});
@@ -1474,7 +5079,9 @@ bool WriteWeatherBillboardQuad(WeatherParticleVertex *output, float width, float
     output[5] = {{bottomLeft.x / bottomLeft.w, bottomLeft.y / bottomLeft.w, bottomLeft.z / bottomLeft.w, 1.0f / bottomLeft.w}, colour, 0, 1};
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRenderRotatedRainBillboardQuads() {
     WeatherRainParticle *particle = static_cast<WeatherRainParticle *>(weatherCurrentParticles);
     const std::uint32_t colour = std::bit_cast<std::uint32_t>(weatherCurrentGroup->rainPressureParam0);
@@ -1500,7 +5107,9 @@ void WeatherRenderRotatedRainBillboardQuads() {
     }
     RenderLegacyWeatherQuads(written);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRenderRainSnowStreakQuads() {
     WeatherRainParticle *particle = static_cast<WeatherRainParticle *>(weatherCurrentParticles);
     std::uint32_t colour{};
@@ -1532,7 +5141,9 @@ void WeatherRenderRainSnowStreakQuads() {
     }
     RenderLegacyWeatherQuads(written);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherRenderRippleBillboardQuads() {
     WeatherRippleParticle *particle = static_cast<WeatherRippleParticle *>(weatherCurrentParticles);
     WeatherParticleVertex *output = GetWeatherParticleVertexBuffer(weatherParticleDrawCount);
@@ -1559,11 +5170,15 @@ void WeatherRenderRippleBillboardQuads() {
     }
     RenderLegacyWeatherQuads(written);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const std::array<WeatherParticleRenderFunction, 8> weatherParticleRenderFunctions{WeatherParticleRenderNullsub, WeatherRenderRotatedRainBillboardQuads,
     WeatherParticleRenderNullsub, WeatherRenderRippleBillboardQuads, WeatherParticleRenderNullsub, WeatherParticleRenderNullsub,
     WeatherRenderRainSnowStreakQuads, WeatherRenderRainSnowStreakQuads};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DispatchWeatherParticleLayer(
     std::uint32_t flags, void *particles, std::int32_t count, std::uint32_t stride, const std::int32_t *renderMode, const char *annotation) {
     if ((flags & activeFlag) == 0 || count == 0 || !particles)
@@ -1602,7 +5217,9 @@ void DispatchWeatherParticleLayer(
 #endif
     WeatherParticleEndAnnotationNullsub();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherParticleCallback(void *data) {
     weatherScreenProjection.rows[0].x = 320.0f;
     weatherScreenProjection.rows[1].y = -240.0f;
@@ -1640,10 +5257,15 @@ void UpdateWeatherParticleCallback(void *data) {
     } while (group);
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WeatherParticle_Callback(void *data) {
     SetUpdateCallback(UpdateWeatherParticleCallback, data, 0.0f);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BeginRainTransitionForFixc(WeatherFixcOwner *fixc, float rainValue, std::int32_t frames) {
     const std::uint32_t mode = static_cast<std::uint32_t>(fixc->mode);
     if (mode < 2U) {
@@ -1654,7 +5276,9 @@ void BeginRainTransitionForFixc(WeatherFixcOwner *fixc, float rainValue, std::in
         BeginRainGroupTransition(static_cast<WeatherParticleGroup *>(fixc->cara), rainValue, frames);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void BeginRippleTransitionForFixc(WeatherFixcOwner *fixc, float rainValue, std::int32_t frames) {
     WeatherParticleGroup *group;
@@ -1669,7 +5293,9 @@ void BeginRippleTransitionForFixc(WeatherFixcOwner *fixc, float rainValue, std::
         BeginWeatherFloatTransition(static_cast<WeatherFloat *>(group->rippleCountLflt), target, frames);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AdvanceWeatherInteractionCamera() {
     if (!weatherInteractionCamera || !g_cameraControl)
         return;
@@ -1687,7 +5313,9 @@ void AdvanceWeatherInteractionCamera() {
         direction.z /= length;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherFixc(WeatherFixcOwner *fixc) {
     Vector3 windOffset{};
     for (WeatherFixcNode *node = fixc->windList; node; node = node->next) {
@@ -1724,47 +5352,65 @@ void UpdateWeatherFixc(WeatherFixcOwner *fixc) {
             windOffset, false, 0, true);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float EffectDelta(float value) {
     return value * HLib::GetScaledDeltaTick();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float ParticleDrift(std::uint64_t value) {
     return std::bit_cast<float>(static_cast<std::uint32_t>(value));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetParticleDrift(std::uint64_t &word, float value) {
     word = (word & 0xffffffff00000000ULL) | std::bit_cast<std::uint32_t>(value);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetParticleAlpha(ParticleRecord &particle, float alpha) {
     particle.colour = (particle.colour & 0x00ffffffU) | (static_cast<std::uint32_t>(static_cast<std::int32_t>(alpha)) << 24U);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 template <typename Record> void BirthParticle(Record &particle);
 void FadeSmoke(ParticleRecord &particle);
 void FadeRadialSmoke(ParticleRecord &particle);
 void FadeSpreadingSmoke(ParticleRecord &particle);
 void FadeWideSmoke(ParticleRecord &particle);
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void IntegrateParticle(ParticleRecord &particle) {
     particle.position.x = EffectDelta(particle.velocity.x) + particle.position.x;
     particle.position.y = EffectDelta(particle.velocity.y) + particle.position.y;
     particle.position.z = EffectDelta(particle.velocity.z) + particle.position.z;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RotateParticle(ParticleRecord &particle) {
-
-
+    // Native casts through signed DWORD, then zero-extends that DWORD into
+    // the QWORD accumulator, including for a negative angular step.
     const auto step = static_cast<std::int32_t>(particle.stepY);
     particle.phaseY += static_cast<std::uint32_t>(static_cast<std::int32_t>(EffectDelta(static_cast<float>(step))));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RetireParticle(ParticleRecord &particle) {
     particle.flags = 0;
     particle.callback = BirthParticle;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float NextParticleOffset() {
     particleRandomState *= 1103515245ULL;
     std::uint32_t taps = (particleRandomState >> 16U) & 0x7fffU;
@@ -1773,7 +5419,9 @@ float NextParticleOffset() {
     }
     return static_cast<float>(taps) * std::bit_cast<float>(std::uint32_t{939524092}) - 3.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // AM2_Effect_Code: a successful BirthParticle installs the initializer;
 // it does not invoke it until the next renderer visit to this particle.
 template <typename Record> void BirthParticle(Record &particle) {
@@ -1804,9 +5452,11 @@ template <typename Record> void BirthParticle(Record &particle) {
             particle.colour = emitter.colour;
     }
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// GrowSmoke and FadeSmoke retain distinct callbacks. Alpha is a byte in
+// colour +0x58; neither path saturates the native integer-to-byte write.
 void GrowSmoke(ParticleRecord &particle) {
     IntegrateParticle(particle);
     RotateParticle(particle);
@@ -1820,7 +5470,9 @@ void GrowSmoke(ParticleRecord &particle) {
         particle.callback = FadeSmoke;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FadeSmoke(ParticleRecord &particle) {
     IntegrateParticle(particle);
     RotateParticle(particle);
@@ -1830,7 +5482,9 @@ void FadeSmoke(ParticleRecord &particle) {
         RetireParticle(particle);
     SetParticleAlpha(particle, alpha * 128.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeSmoke(ParticleRecord &particle) {
     particle.scale = smokeInitialScale[0];
     particle.callback = GrowSmoke;
@@ -1838,19 +5492,25 @@ void InitializeSmoke(ParticleRecord &particle) {
     particle.phaseY = IncrementSharedPrngUInt16();
     particle.stepY = 80;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // MoveStationarySmoke's profile one never rotates, expands or self-retires.
 void MoveStationarySmoke(ParticleRecord &particle) {
     IntegrateParticle(particle);
     SetParticleAlpha(particle, stationarySmokeAlpha);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeStationarySmoke(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveStationarySmoke;
     particle.scale = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // MoveRadialSmoke and its fade stages advance alpha by exactly one
 // per visit; its movement, unlike that byte increment, is delta-scaled.
 void MoveRadialSmoke(ParticleRecord &particle) {
@@ -1871,7 +5531,9 @@ void MoveRadialSmoke(ParticleRecord &particle) {
     }
     SetParticleAlpha(particle, static_cast<float>(nextAlpha));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FadeRadialSmoke(ParticleRecord &particle) {
     IntegrateParticle(particle);
     RotateParticle(particle);
@@ -1881,7 +5543,9 @@ void FadeRadialSmoke(ParticleRecord &particle) {
         RetireParticle(particle);
     SetParticleAlpha(particle, (alpha * 0.80000001f) * 128.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeRadialSmoke(ParticleRecord &particle) {
     particle.scale = smokeInitialScale[2];
     particle.callback = MoveRadialSmoke;
@@ -1899,7 +5563,9 @@ void InitializeRadialSmoke(ParticleRecord &particle) {
     if (particle.velocity.z < 0.0f)
         particle.stepY = 0ULL - particle.stepY;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void IntegrateSpreadingSmoke(ParticleRecord &particle, std::size_t profile) {
     const float driftX = ParticleDrift(particle.stepX);
     const float driftZ = ParticleDrift(particle.stepZ);
@@ -1911,7 +5577,9 @@ void IntegrateSpreadingSmoke(ParticleRecord &particle, std::size_t profile) {
     RotateParticle(particle);
     particle.scale = EffectDelta(smokeExpansion[profile]) + particle.scale;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GrowSpreadingSmokeProfile(ParticleRecord &particle, std::size_t profile, ParticleCallback fade) {
     IntegrateSpreadingSmoke(particle, profile);
     const auto alpha =
@@ -1926,7 +5594,9 @@ void GrowSpreadingSmokeProfile(ParticleRecord &particle, std::size_t profile, Pa
         particle.callback = fade;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FadeSpreadingSmokeProfile(ParticleRecord &particle, std::size_t profile) {
     IntegrateSpreadingSmoke(particle, profile);
     const float alpha = 1.0f - (particle.scale * smokeFadeFactor[profile]) * smokeOpacityScale[profile];
@@ -1934,20 +5604,33 @@ void FadeSpreadingSmokeProfile(ParticleRecord &particle, std::size_t profile) {
         RetireParticle(particle);
     SetParticleAlpha(particle, alpha * 128.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GrowSpreadingSmoke(ParticleRecord &particle) {
     GrowSpreadingSmokeProfile(particle, 3, FadeSpreadingSmoke);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FadeSpreadingSmoke(ParticleRecord &particle) {
     FadeSpreadingSmokeProfile(particle, 3);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GrowWideSmoke(ParticleRecord &particle) {
     GrowSpreadingSmokeProfile(particle, 4, FadeWideSmoke);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FadeWideSmoke(ParticleRecord &particle) {
     FadeSpreadingSmokeProfile(particle, 4);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeSpreadingSmokeProfile(ParticleRecord &particle, std::size_t profile, ParticleCallback callback) {
     const auto angle = static_cast<std::uint16_t>(2 * IncrementSharedPrngUInt16());
     SetParticleDrift(particle.stepX,
@@ -1961,14 +5644,21 @@ void InitializeSpreadingSmokeProfile(ParticleRecord &particle, std::size_t profi
     particle.phaseY = IncrementSharedPrngUInt16();
     particle.stepY = 80;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeSpreadingSmoke(ParticleRecord &particle) {
     InitializeSpreadingSmokeProfile(particle, 3, GrowSpreadingSmoke);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeWideSmoke(ParticleRecord &particle) {
     InitializeSpreadingSmokeProfile(particle, 4, GrowWideSmoke);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EffectControlCallback(void *);
 void SmokeControlCallback(void *);
 void StationarySmokeControlCallback(void *);
@@ -1979,7 +5669,9 @@ void FireControlCallback(void *);
 
 std::uint32_t effectTaskReferences{};
 std::array<LegacyEffectTexture, 16> smokeTextureRecords{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 template <std::size_t Count>
 std::int32_t AllocateEffectSlot(std::array<EffectSlot, Count> &slots, std::int32_t textureSlot, HLib::TaskCallback callback, void *data, shen_name token) {
     for (std::size_t index = 0; index != Count; ++index) {
@@ -1995,7 +5687,9 @@ std::int32_t AllocateEffectSlot(std::array<EffectSlot, Count> &slots, std::int32
     }
     return -1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ClearEffectSlot(EffectSlot &slot) {
     slot.state = 0;
     slot.link = -1;
@@ -2005,12 +5699,16 @@ void ClearEffectSlot(EffectSlot &slot) {
     slot.token = shen_name{0x20202020U};
     slot.reserved28 = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetTextureRecordHandle(FireFftGraphicsRecord &record, std::uint32_t handle) {
     const std::uint64_t nativeHandle = handle;
     std::memcpy(record.storage.data() + 0x20, &nativeHandle, sizeof(nativeHandle));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WriteSmokeDdsHeader(std::byte *data) {
     std::array<std::uint32_t, 32> header{};
     header[0] = make_shen_name('D', 'D', 'S', ' ');
@@ -2019,25 +5717,32 @@ void WriteSmokeDdsHeader(std::byte *data) {
     header[3] = 16;
     header[4] = 16;
     header[5] = 64;
-    constexpr std::array<std::uint32_t, 8> pixelFormat{
-        32, 65, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000};
+    constexpr std::array<std::uint32_t, 8> pixelFormat{32, 65, 0, 32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000};
     std::copy(pixelFormat.begin(), pixelFormat.end(), header.begin() + 19);
     header[27] = 4096;
     std::memcpy(data, header.data(), sizeof(header));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void CreateAuthoredParticleTexture(
     std::int32_t emitterIndex, std::uint32_t width, std::uint32_t height, std::uint16_t format, const std::byte *pixels, std::size_t size, bool rawDds = false);
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UploadSmokeTexture(SmokeEffect &effect) {
     CreateAuthoredParticleTexture(effect.slot, 16, 16, 0x8083U, effect.texture->pixels, 0x480, true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void CreateSmokeTexture(SmokeEffect &effect) {
     WriteSmokeDdsHeader(effect.texture->pixels);
     UploadSmokeTexture(effect);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 SmokeEffect *&ParticleEffectEntry(std::int32_t type, std::uint32_t index) {
     const auto signedIndex = static_cast<std::int32_t>(index);
     switch (type) {
@@ -2051,26 +5756,36 @@ SmokeEffect *&ParticleEffectEntry(std::int32_t type, std::uint32_t index) {
         return fallingEffects[signedIndex];
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 SmokeEffect *FindSmokeEffect(std::int32_t type, std::uint32_t index) {
     if (index == invalidEffect || static_cast<std::uint32_t>(type) > 3U)
         return nullptr;
     return ParticleEffectEntry(type, index);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 FireEffect *FindFireEffect(std::uint32_t index) {
     return index != invalidEffect ? fireEffects[static_cast<std::int32_t>(index)] : nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetEmitterSize(ParticleEmitter &emitter, float width, float height) {
     emitter.halfWidth = (emitter.flags & 0x20000000U) ? width : width * 0.5f;
     emitter.halfHeight = (emitter.flags & 0x20000000U) ? height : height * 0.5f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetEmitterBirthRate(ParticleEmitter &emitter, float fraction) {
     emitter.birthThreshold = _mm_cvttsd_si32(_mm_set_sd(static_cast<double>(fraction) * 32767.0));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RegisterEmitter(SmokeEffect &effect, ParticleCallback initializer) {
     ParticleEmitter &emitter = emitters[static_cast<std::size_t>(effect.slot)];
     emitter.count = effect.count;
@@ -2093,13 +5808,17 @@ void RegisterEmitter(SmokeEffect &effect, ParticleCallback initializer) {
         effect.particles[index] = initial;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnableEmitter(ParticleEmitter &emitter) {
     emitter.gpuFlags = ((emitter.gpuFlags | 0x100000U) & 0x00ffffffU) | 0x94000000U;
     emitter.textureFlags |= 0x02000000U;
     emitter.flags |= 0x40000000U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void CreateAuthoredParticleTexture(
     std::int32_t emitterIndex, std::uint32_t width, std::uint32_t height, std::uint16_t format, const std::byte *pixels, std::size_t size, bool rawDds) {
     ParticleEmitter &emitter = emitters[emitterIndex];
@@ -2135,11 +5854,15 @@ void CreateAuthoredParticleTexture(
     emitter.flags |= 0x10000000U;
     emitter.textureSource = rawDds ? pixels : pixels + 28;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AdvanceParticlePhase(std::uint64_t &phase, std::uint64_t step) {
     phase += static_cast<std::uint32_t>(static_cast<std::int32_t>(EffectDelta(static_cast<float>(static_cast<std::int32_t>(step)))));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveSplashParticle(ParticleRecord &particle) {
     const float floor = *reinterpret_cast<const float *>(particle.stepX);
     if (floor <= particle.position.y) {
@@ -2151,29 +5874,39 @@ void MoveSplashParticle(ParticleRecord &particle) {
         RetireParticle(particle);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveShrinkingSplashParticle(ParticleRecord &particle) {
     MoveSplashParticle(particle);
     if (particle.scale > 0.001f)
         particle.scale -= EffectDelta(particle.scale <= 0.1f ? 0.001f : 0.0099999998f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveWideSplashParticle(ParticleRecord &particle) {
     MoveSplashParticle(particle);
     if (particle.scale > 0.2f)
         particle.scale -= EffectDelta(0.0049999999f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeSplashParticle(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveSplashParticle;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeShrinkingSplashParticle(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveShrinkingSplashParticle;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeRadialSplashParticle(ParticleRecord &particle) {
     particle.callback = MoveShrinkingSplashParticle;
     particle.flags = activeFlag;
@@ -2186,12 +5919,16 @@ void InitializeRadialSplashParticle(ParticleRecord &particle) {
     particle.velocity.z = sine * particle.velocity.z;
     particle.stepZ = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeWideSplashParticle(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveWideSplashParticle;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SplashControlCallback(void *data) {
     SmokeEffect &effect = *static_cast<SmokeEffect *>(data);
     if ((effect.flags.name & 1U) == 0)
@@ -2216,7 +5953,9 @@ void SplashControlCallback(void *data) {
     for (std::int32_t index = 0; index < effect.count; ++index)
         effect.particles[index].colour = emitter.colour;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveFallingParticle(ParticleRecord &particle) {
     AdvanceParticlePhase(particle.phaseY, particle.stepY);
     AdvanceParticlePhase(particle.phaseZ, particle.stepZ);
@@ -2237,7 +5976,9 @@ void MoveFallingParticle(ParticleRecord &particle) {
     particle.position.x = EffectDelta(sine * particle.velocity.x) + particle.position.x;
     particle.position.z = EffectDelta(sine * particle.velocity.z) + particle.position.z;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveDriftingParticle(ParticleRecord &particle) {
     AdvanceParticlePhase(particle.phaseY, particle.stepY);
     AdvanceParticlePhase(particle.phaseZ, particle.stepZ);
@@ -2256,7 +5997,9 @@ void MoveDriftingParticle(ParticleRecord &particle) {
     if (x * x + z * z > 64.0f)
         RetireParticle(particle);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector4 SampleFallingParticleCurve(const Vector4 *points, float time) {
     const float cubic = time * time * time;
     const float inverse = 1.0f - time;
@@ -2268,13 +6011,12 @@ Vector4 SampleFallingParticleCurve(const Vector4 *points, float time) {
         ((b * points[1].z + a * points[0].z) + c * points[2].z) + cubic * points[3].z,
         ((b * points[1].w + a * points[0].w) + c * points[2].w) + cubic * points[3].w};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveCurvedParticle(ParticleRecord &particle) {
-    constexpr std::array<Vector4, 7> points{{
-        {0.0f, 0.0f, 0.0f, 0.2f}, {0.0f, 1.5f, 0.0f, 0.6f},
-        {-1.5f, 1.5f, 0.0f, 0.8f}, {-1.5f, 2.0f, -1.5f, 0.8f},
-        {-1.5f, 2.5f, -3.0f, 0.8f}, {1.0f, 2.5f, -3.0f, 0.8f},
-        {1.0f, 5.0f, -2.5f, 2.0f}}};
+    constexpr std::array<Vector4, 7> points{{{0.0f, 0.0f, 0.0f, 0.2f}, {0.0f, 1.5f, 0.0f, 0.6f}, {-1.5f, 1.5f, 0.0f, 0.8f}, {-1.5f, 2.0f, -1.5f, 0.8f},
+        {-1.5f, 2.5f, -3.0f, 0.8f}, {1.0f, 2.5f, -3.0f, 0.8f}, {1.0f, 5.0f, -2.5f, 2.0f}}};
     Vector4 curve{};
     if (particle.velocity.y >= 2.0f)
         RetireParticle(particle);
@@ -2289,7 +6031,9 @@ void MoveCurvedParticle(ParticleRecord &particle) {
     AdvanceParticlePhase(particle.phaseZ, particle.stepZ);
     particle.velocity.y += 0.022222223f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveVortexParticle(ParticleRecord &particle) {
     if (particle.position.y < -0.5f || particle.position.y > 8.0f) {
         RetireParticle(particle);
@@ -2313,7 +6057,9 @@ void MoveVortexParticle(ParticleRecord &particle) {
     AdvanceParticlePhase(particle.phaseY, particle.stepY);
     AdvanceParticlePhase(particle.phaseZ, particle.stepZ);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveLitFallingParticle(ParticleRecord &particle) {
     const Vector3 colour = GetLegacyParticleLightColour();
     particle.position.x = EffectDelta(particle.velocity.x) + particle.position.x;
@@ -2341,7 +6087,9 @@ void MoveLitFallingParticle(ParticleRecord &particle) {
     if (!(fallingParticleFloor <= particle.position.y))
         particle.callback = BirthParticle;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeFallingParticle(ParticleRecord &particle) {
     particle.flags = 0x90000000U;
     particle.callback = MoveFallingParticle;
@@ -2351,26 +6099,34 @@ void InitializeFallingParticle(ParticleRecord &particle) {
     particle.stepY = 512;
     particle.stepZ = 512;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeDriftingParticle(ParticleRecord &particle) {
     InitializeFallingParticle(particle);
     particle.callback = MoveDriftingParticle;
     particle.stepY = (IncrementSharedPrngUInt16() >> 4U) + 256;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeCurvedParticle(ParticleRecord &particle) {
     InitializeFallingParticle(particle);
     particle.callback = MoveCurvedParticle;
     particle.stepY = (IncrementSharedPrngUInt16() >> 5U) + 256;
     particle.velocity.y = 0.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeVortexParticle(ParticleRecord &particle) {
     InitializeFallingParticle(particle);
     particle.callback = MoveVortexParticle;
     particle.stepY = (IncrementSharedPrngUInt16() >> 5U) + 512;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeLitFallingParticle(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveLitFallingParticle;
@@ -2380,7 +6136,9 @@ void InitializeLitFallingParticle(ParticleRecord &particle) {
     particle.stepZ = IncrementSharedPrngUInt16() & 0xfffU;
     particle.colour = 0xff000000U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // UpdateSmokeControls profiles read physical input slots 1..3.
 // Their globals alias the ordinary 24-byte g_inputBuffer records.
 void UpdateSmokeControls(SmokeEffect &effect, std::size_t profile) {
@@ -2442,28 +6200,46 @@ void UpdateSmokeControls(SmokeEffect &effect, std::size_t profile) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SmokeControlCallback(void *data) {
     UpdateSmokeControls(*static_cast<SmokeEffect *>(data), 0);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void StationarySmokeControlCallback(void *data) {
     UpdateSmokeControls(*static_cast<SmokeEffect *>(data), 1);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RadialSmokeControlCallback(void *data) {
     UpdateSmokeControls(*static_cast<SmokeEffect *>(data), 2);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SpreadingSmokeControlCallback(void *data) {
     UpdateSmokeControls(*static_cast<SmokeEffect *>(data), 3);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WideSmokeControlCallback(void *data) {
     UpdateSmokeControls(*static_cast<SmokeEffect *>(data), 4);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void QueueCurrentFireQuad(std::size_t index, float alpha) {
     const FireFftData &fft = *fireFft[index];
     QueueFireQuad({workTransformMatrix, fft.width, fft.height, alpha, fireTextureHandles[index], fft.tick});
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // FireControlCallback is separate from the earlier bone/trail/FFT update pass.
 void FireControlCallback(void *data) {
     auto *const effect = static_cast<FireEffect *>(data);
@@ -2527,7 +6303,9 @@ void FireControlCallback(void *data) {
         SetFireFftSize(fft, width, height);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateFireAttachment(Character *character, std::int16_t bone, const Vector3 &local, Vector3 &world, float &alpha) {
     world = local;
     if (!character)
@@ -2544,12 +6322,13 @@ void UpdateFireAttachment(Character *character, std::int16_t bone, const Vector3
     Matrix4x4::Pop(1);
     alpha = character->alpha;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateFireOwner(FireEffect &effect) {
     UpdateFireAttachment(effect.character, effect.bone, effect.localPosition, effect.worldPosition, effect.alpha);
     if (effect.trail) {
-        constexpr std::array<std::int16_t, 10> seedAges{
-            7, 20, 18, 10, 12, 5, 3, 1, 4, 7};
+        constexpr std::array<std::int16_t, 10> seedAges{7, 20, 18, 10, 12, 5, 3, 1, 4, 7};
         for (std::int32_t index = 511; index >= 0; --index) {
             FireTrailEntry &entry = effect.trail[index];
             if (index > 10) {
@@ -2589,7 +6368,9 @@ void UpdateFireOwner(FireEffect &effect) {
     handle = d3t::CreateTexture2D(&description);
     SetTextureRecordHandle(output ? fft.graphicsRecord1 : fft.graphicsRecord0, handle);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawEmitter(void *data) {
     const std::size_t index = reinterpret_cast<std::uintptr_t>(data);
     if (!GetLegacyRenderMask()) {
@@ -2606,7 +6387,6 @@ void DrawEmitter(void *data) {
     currentEmitter = &emitter;
     if ((emitter.flags & activeFlag) == 0)
         return;
-
     const Matrix4x4 transform = workTransformMatrix;
     const bool update = (emitter.flags & suspendedFlag) == 0;
     const bool draw = (emitter.flags & 0x04000000U) == 0;
@@ -2616,13 +6396,11 @@ void DrawEmitter(void *data) {
         BeginSmokeDraw(static_cast<std::uint32_t>(emitter.count), emitter.flags, emitter.textureHandle,
             {emitter.textureFlags, emitter.samplerControl, emitter.gpuFlags}, particleProjectionScratch);
     if (!draw || mapped) {
-
         if (compact) {
             CompactParticleRecord *const particles = reinterpret_cast<CompactParticleRecord *>(emitter.particles);
             for (std::int32_t particleIndex = 0; particleIndex < emitter.count; ++particleIndex) {
                 if (update)
                     particles[particleIndex].callback(particles[particleIndex]);
-
                 if (!draw)
                     workTransformMatrix = transform;
             }
@@ -2645,14 +6423,15 @@ void DrawEmitter(void *data) {
         if (draw)
             EndSmokeDraw();
     }
-
 #if defined(_WIN32)
     if (d3t::DX11::g_ppD3DDeviceContext)
         RestoreLegacyEffectRenderFlags(d3t::GetRenderState(*d3t::DX11::g_ppD3DDeviceContext));
 #endif
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void UpdateParticleSystem(void *data) {
     const std::int32_t selected = static_cast<std::int32_t>(reinterpret_cast<std::intptr_t>(data));
@@ -2675,6 +6454,9 @@ void UpdateParticleSystem(void *data) {
         }
     }
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void QueueEmitterDraws(void *) {
     for (std::size_t index = 0; index < emitterSlots.size(); ++index) {
         if (emitterSlots[index].state == 0 || !IsWorldDrawingEnabled())
@@ -2696,7 +6478,9 @@ void QueueEmitterDraws(void *) {
             Matrix4x4::Pop(1);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EffectControlCallback(void *) {
     for (std::size_t index = 0; index < smokeSlots.size(); ++index) {
         EffectSlot &slot = smokeSlots[index];
@@ -2725,9 +6509,11 @@ void EffectControlCallback(void *) {
     }
     HLib::ExecuteCallbackNow(QueueEmitterDraws, nullptr);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void MoveDakuSprayParticle(ParticleRecord &particle) {
-
     particle.scale -= EffectDelta(0.05f);
     if (static_cast<double>(particle.scale) < 0.1) {
         particle.flags &= ~activeFlag;
@@ -2740,7 +6526,9 @@ void MoveDakuSprayParticle(ParticleRecord &particle) {
     }
     SetParticleAlpha(particle, alpha * 255.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InitializeDakuSprayParticle0(ParticleRecord &particle) {
     particle.flags |= activeFlag;
@@ -2748,7 +6536,9 @@ void InitializeDakuSprayParticle0(ParticleRecord &particle) {
     particle.colour = g_dakuSprayColours[0];
     particle.scale = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InitializeDakuSprayParticle1(ParticleRecord &particle) {
     particle.flags |= activeFlag;
@@ -2756,7 +6546,9 @@ void InitializeDakuSprayParticle1(ParticleRecord &particle) {
     particle.colour = g_dakuSprayColours[1];
     particle.scale = 1.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InitializeDakuSprayParticle2(ParticleRecord &particle) {
     particle.flags |= activeFlag;
@@ -2764,6 +6556,9 @@ void InitializeDakuSprayParticle2(ParticleRecord &particle) {
     particle.colour = g_dakuSprayColours[2];
     particle.scale = 1.0f;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AssignStandardParticleEmitterBuffer(std::int32_t slot, std::int32_t count, ParticleRecord *particles) {
     ParticleEmitter &emitter = emitters[slot];
     emitter.count = count;
@@ -2778,6 +6573,10 @@ void AssignStandardParticleEmitterBuffer(std::int32_t slot, std::int32_t count, 
         particles[index] = initial;
     emitter.samplerControl = 0x88800000U;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// @verified - p
 void MoveShipSprayParticle(ParticleRecord &particle) {
     IntegrateParticle(particle);
     particle.velocity.y -= EffectDelta(0.005f);
@@ -2793,7 +6592,9 @@ void MoveShipSprayParticle(ParticleRecord &particle) {
     }
     SetParticleAlpha(particle, alpha * 255.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InitializeShipSprayParticle(ParticleRecord &particle) {
     const float opacity = g_hikiOpacity;
@@ -2809,20 +6610,21 @@ void InitializeShipSprayParticle(ParticleRecord &particle) {
         particle.colour = 0;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DropParticleControlCallback(void *) {
     for (std::int32_t slot : dropEmitterSlots)
         AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
     Vector3 root{};
     GetLightRootPosition(&root);
-
     for (std::size_t index = 0; index < dropLightIndices.size(); ++index) {
         const std::int32_t lightIndex = dropLightIndices[index];
         if (lightIndex < 0) {
             dropLightEnabled[index] = 0;
             continue;
         }
-        const std::uint32_t slot = static_cast<std ::uint32_t>(lightIndex);
+        const std::uint32_t slot = static_cast<std::uint32_t>(lightIndex);
         dropLightEnabled[index] = static_cast<std::int32_t>(GetLightEntryIndex(slot));
         dropLightKinds[index] = static_cast<std::uint32_t>(GetLegacySelectedLightKind(slot));
         const LightRuntimeEntry *const light = GetLightRuntimeEntry(slot);
@@ -2845,7 +6647,9 @@ void DropParticleControlCallback(void *) {
         dropLightPositions[index].z -= EffectDelta(dropParticlePosition.z);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveDropParticle(ParticleRecord &particle) {
     IntegrateParticle(particle);
     particle.velocity.y -= EffectDelta(0.010888889f);
@@ -2869,11 +6673,16 @@ void MoveDropParticle(ParticleRecord &particle) {
         particle.callback = BirthParticle;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeDropParticle(ParticleRecord &particle) {
     particle.flags = activeFlag;
     particle.callback = MoveDropParticle;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void MoveCompactDropParticle(CompactParticleRecord &particle) {
     particle.position.x = EffectDelta(particle.velocity.x) + particle.position.x;
     particle.position.y = EffectDelta(particle.velocity.y) + particle.position.y;
@@ -2884,14 +6693,17 @@ void MoveCompactDropParticle(CompactParticleRecord &particle) {
         particle.callback = BirthParticle;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeCompactDropParticle(CompactParticleRecord &particle) {
     particle.flags = (particle.flags & 0x00ffffffU) | activeFlag;
     particle.callback = MoveCompactDropParticle;
 }
+#endif
 
 } // namespace
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeDropParticles() {
     if (dropEmitterSlots[0] >= 0)
         return;
@@ -2917,9 +6729,7 @@ void InitializeDropParticles() {
             CompactParticleRecord *const particles = index == 2 ? dropParticles2.data() : index == 3 ? dropParticles3.data() : dropParticles4.data();
             emitter.particles = reinterpret_cast<ParticleRecord *>(particles);
             emitter.textureFlags = 0xa0000002U;
-            const CompactParticleRecord initial{.flags = 0x00ffffffU, .position = {}, .velocity = {}, .reserved1c = 0, .callback = BirthParticle}
-
-            ;
+            const CompactParticleRecord initial{.flags = 0x00ffffffU, .position = {}, .velocity = {}, .reserved1c = 0, .callback = BirthParticle};
             for (std::int32_t particle = 0; particle < settings.count; ++particle)
                 particles[particle] = initial;
         } else {
@@ -2927,13 +6737,7 @@ void InitializeDropParticles() {
             emitter.particles = index == 0 ? dropParticles0.data() : dropParticles1.data();
             emitter.textureFlags = 0x80000002U;
             const ParticleRecord initial{.flags = 0,
-                .position =
-                    {
-
-                    }
-
-                // @verified - p
-                ,
+                .position = {},
                 .velocity = {},
                 .reserved1c = 0,
                 .callback = BirthParticle,
@@ -2944,10 +6748,7 @@ void InitializeDropParticles() {
                 .stepY = 0,
                 .stepZ = 0,
                 .colour = 0xffffffffU,
-                .scale = 1.0f}
-
-            // @verified - p
-            ;
+                .scale = 1.0f};
             for (std::int32_t particle = 0; particle < settings.count; ++particle)
                 emitter.particles[particle] = initial;
         }
@@ -2967,8 +6768,10 @@ void InitializeDropParticles() {
         AssignParticleEmitterReferences(dropEmitterSlots[index], dropParticlePosition, dropParticleLocalPosition, 0);
     }
     HLib::FreeTaskData(image);
-    }
+}
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseDropParticles() {
     const std::int32_t first = dropEmitterSlots[0];
     if (emitterSlots[first].state == 2) {
@@ -2983,33 +6786,45 @@ void ReleaseDropParticles() {
         slot = -1;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetDropParticleAdmission() {
     dropEmitterSlots[0] = -1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherClipCameraPosition() {
     camCtrlGetNextCamPos(&weatherClipCameraPosition);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// @verified - p
 void ApplyWeatherRainAndRippleClip(const Vector2 *clip) {
     const std::array<Vector2, 4> points{{clip[0], clip[1], clip[2], clip[3]}};
     Weather_ApplyWCCPClipSet0ToRainGroups(points, clip[4].x, clip[4].y);
     Weather_ApplyWCCPClipSet0ToRippleGroups(points, clip[4].x, clip[4].y);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// @verified - p
 void ApplyWeatherParticleClip(const Vector2 *clip) {
     const std::array<Vector2, 4> points{{clip[0], clip[1], clip[2], clip[3]}};
     Weather_ApplyWCCPClipSet1ToParticleGroups(points, clip[4].x, clip[4].y);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_LoadWCCPEntries(const void *entries, std::int32_t count, std::int32_t setIndex) {
     WeatherClipSet &set = weatherClipSets[static_cast<std::uint32_t>(setIndex)];
     set.enabled = 1;
     set.count = count;
     if (set.entries)
         HLib::FreeTaskData(set.entries);
-    set.entries = static_cast<WeatherClipEntry *>(HLib ::AllocateStaticOrDynamicBlock(static_cast<std::uint64_t>(60LL * count), weatherClipEntryName));
+    set.entries = static_cast<WeatherClipEntry *>(HLib::AllocateStaticOrDynamicBlock(static_cast<std::uint64_t>(60LL * count), weatherClipEntryName));
     const std::byte *source = static_cast<const std::byte *>(entries);
     for (std::int32_t index = 0; index < count; ++index) {
         set.entries[index].enabled = 1;
@@ -3017,7 +6832,9 @@ void Weather_LoadWCCPEntries(const void *entries, std::int32_t count, std::int32
         source += 56;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_ResetWCCPClipSet0() {
     const std::array<Vector2, 4> points{};
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
@@ -3025,21 +6842,19 @@ void Weather_ResetWCCPClipSet0() {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         ApplyWeatherClipToRipple(static_cast<WeatherFixcOwner *>(node->payload.pointer), 0, points, -0.1f, -99999.898f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_ResetWCCPClipSet1() {
-    const std ::array<Vector2, 4> points{
-
-    }
-
-    ;
+    const std::array<Vector2, 4> points{};
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next) {
         ApplyWeatherClipToRain(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1, points, -0.1f, -99999.898f);
         ApplyWeatherClipToRipple(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1, points, -0.1f, -99999.898f);
     }
-
-    // @verified - p
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_UpdateWCCPClipSet0() {
     const WeatherClipSet &set = weatherClipSets[0];
     if (!set.entries || set.enabled == 0)
@@ -3052,6 +6867,9 @@ void Weather_UpdateWCCPClipSet0() {
         Weather_ResetWCCPClipSet0();
     }
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_UpdateWCCPClipSet1() {
     const WeatherClipSet &set = weatherClipSets[1];
     if (!set.entries || set.enabled == 0)
@@ -3062,11 +6880,15 @@ void Weather_UpdateWCCPClipSet1() {
     else
         Weather_ResetWCCPClipSet1();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherParticleGroundCameraPosition() {
     camCtrlGetNextCamPos(&weatherParticleGroundCameraPosition);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 LegacyEffectTexture *ReadWeatherRipplePvrTexture(std::span<const std::byte> image) {
     std::uint32_t magic{};
     std::memcpy(&magic, image.data(), sizeof(magic));
@@ -3079,7 +6901,9 @@ LegacyEffectTexture *ReadWeatherRipplePvrTexture(std::span<const std::byte> imag
     std::memcpy(&height, image.data() + header + 14, sizeof(height));
     return CreateEffectTextureReference(width, height, format, image, 1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 HLib::Task *WAR_CallbackParticleResource_Enqueue(float rainSpawnLimit, float secondaryRainParam, float rippleSpawnLimit, float unused) {
     weatherSecondaryRainParameter = secondaryRainParam;
     weatherWarState = 0;
@@ -3092,12 +6916,16 @@ HLib::Task *WAR_CallbackParticleResource_Enqueue(float rainSpawnLimit, float sec
         HLib::EnqueueTaskWithoutParameter(WAR_CallbackParticleResource_Callback, 14, 8, static_cast<std::int32_t>(weatherResourceTaskName.name));
     return weatherParticleResourceTask;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WAR_CallbackParticleResource_Callback(void *) {
     if (weatherWarState != 0)
         (void)HLib::ExecuteCallbackNow(WeatherParticle_Callback, weatherGroupList);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnsureWeatherFixcRegistered() {
     if (weatherRegisteredFixc != 0)
         return;
@@ -3105,17 +6933,22 @@ void EnsureWeatherFixcRegistered() {
         weatherFixcData = AllocateWeatherFixc(14563U);
     Weather_RegisterActiveFIXCAndInitEffects();
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void Weather_RegisterActiveFIXCAndInitEffects() {
     ModulateWeatherFixc(weatherFixcData);
     weatherRegisteredFixc = 1;
-
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         EnsureWeatherRainForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), 1.5f, -1.0f, -1.0f);
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         EnsureWeatherRippleForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), 0.95f);
 }
+#endif
 
-HLib ::Task *AllocateICAR(float rainSpawnLimit, float secondaryRainParam, float rippleSpawnLimit, float unused) {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// @verified - p
+HLib::Task *AllocateICAR(float rainSpawnLimit, float secondaryRainParam, float rippleSpawnLimit, float unused) {
     WeatherInteractionCamera *const camera =
         static_cast<WeatherInteractionCamera *>(HLib::AllocateTaskData(sizeof(WeatherInteractionCamera), weatherInteractionCameraName));
     camCtrlGetNextCamPos(&camera->position);
@@ -3127,7 +6960,9 @@ HLib ::Task *AllocateICAR(float rainSpawnLimit, float secondaryRainParam, float 
     weatherInteractionCamera = camera;
     return WAR_CallbackParticleResource_Enqueue(rainSpawnLimit, secondaryRainParam, rippleSpawnLimit, unused);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeWeatherParticleResources() {
     weatherRainColour = std::bit_cast<std::uint32_t>(weatherRainPressureParam0);
     weatherRippleColour = weatherDefaultRippleColour;
@@ -3144,7 +6979,9 @@ void InitializeWeatherParticleResources() {
         weatherRegisteredFixc = 0;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EV_WeatherEffectUtil_Impl(std::uint32_t frustumFov, float spawnScale, std::int64_t, float rippleScale, float minY, float maxY) {
     if (weatherFixcData) {
         UnregisterWeatherFixc(weatherFixcData);
@@ -3160,7 +6997,9 @@ void EV_WeatherEffectUtil_Impl(std::uint32_t frustumFov, float spawnScale, std::
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         EnsureWeatherRippleForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), rippleScale);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int64_t Weather_FreeActiveFIXC() {
     if (weatherFixcData) {
         UnregisterWeatherFixc(weatherFixcData);
@@ -3170,6 +7009,9 @@ std::int64_t Weather_FreeActiveFIXC() {
     }
     return 0;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t SetWeatherRainPressureImmediate(float pressure) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next) {
         WeatherFixcOwner *const fixc = static_cast<WeatherFixcOwner *>(node->payload.pointer);
@@ -3183,23 +7025,31 @@ std::int32_t SetWeatherRainPressureImmediate(float pressure) {
     }
     return lfltSetImmediate(GetWeatherPressureLflt(), pressure);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BeginRainPressureTransitionForWeatherEffects(float rainValue, std::int32_t frames) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         BeginRainTransitionForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), rainValue, frames);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ComputeCloudVisibility(float rainValue, std::int32_t frames) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next)
         BeginRippleTransitionForFixc(static_cast<WeatherFixcOwner *>(node->payload.pointer), rainValue, frames);
     BeginWeatherFloatTransition(GetWeatherRippleLflt(), rainValue, frames);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherInteractionCamera() {
     AdvanceWeatherInteractionCamera();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherParticleGroups() {
     AdvanceWeatherFloat(GetWeatherPressureLflt());
     AdvanceWeatherFloat(GetWeatherRippleLflt());
@@ -3208,7 +7058,9 @@ void UpdateWeatherParticleGroups() {
     (void)GetWeatherPressure();
     PublishLegacyWeatherSpawnDrift(weatherRegisteredSpawnDrift);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherParticleRainColour(std::uint32_t colour) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next) {
         WeatherFixcOwner *const fixc = static_cast<WeatherFixcOwner *>(node->payload.pointer);
@@ -3226,7 +7078,9 @@ void SetWeatherParticleRainColour(std::uint32_t colour) {
     }
     weatherRainColour = colour;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherParticleRippleColour(std::uint32_t colour) {
     for (WeatherFixcNode *node = weatherFixcList; node; node = node->next) {
         WeatherFixcOwner *const fixc = static_cast<WeatherFixcOwner *>(node->payload.pointer);
@@ -3238,7 +7092,9 @@ void SetWeatherParticleRippleColour(std::uint32_t colour) {
     }
     weatherRippleColour = colour;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherParticleDrawingEnabled(std::int32_t enabled) {
     for (WeatherParticleGroup *group = weatherGroupList; group; group = group->next) {
         if (enabled != 0) {
@@ -3250,7 +7106,9 @@ void SetWeatherParticleDrawingEnabled(std::int32_t enabled) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AssignParticleEmitterReferences(std::int32_t emitter, const Vector3 &position, const Vector3 &localPosition, std::int32_t yaw) {
     ParticleEmitterReference &reference = emitterReferences[static_cast<std::size_t>(emitter)];
@@ -3259,23 +7117,344 @@ void AssignParticleEmitterReferences(std::int32_t emitter, const Vector3 &positi
     reference.rotation = {.x = 0, .y = yaw, .z = 0};
     reference.active = 1;
 }
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
+
 void AssignShipSprayPosition(const Vector3 &position) {
     g_shipSprayPosition = position;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint64_t AssignShipSprayLocalPosition(const Vector3 &position) {
     g_shipSprayLocalPosition = position;
     return std::bit_cast<std::uint32_t>(position.z);
 }
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
+
 void AssignShipSprayYaw(std::int32_t yaw) {
     g_shipSprayYaw = yaw;
 }
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void AssignShipSprayLocalPosition(float x, float y, float z) {
+    g_shipSprayLocalX = x;
+    g_shipSprayLocalY = y;
+    g_shipSprayLocalZ = z;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ApplyHikiSegmentTransforms() {
+    matrix_stack::Matrix4x4_Push(0);
+    Matrix4x4::preTranslate(hikiSegmentOrigin.x, hikiSegmentOrigin.y + 0.01f, hikiSegmentOrigin.z);
+    Matrix4x4::RotateAroundY_Wrapper(hikiSegmentYaw);
+    Matrix4x4::preTranslate(hikiSegmentOffset.x, hikiSegmentOffset.y, hikiSegmentOffset.z);
+    for (std::int32_t segment = 0; segment < hikiSegmentCount + 1; ++segment) {
+        switch (segment) {
+        case 0:
+            Matrix4x4::preTranslate(0.0f, 0.0f, -hikiSegmentSpacing);
+            break;
+        case 1:
+            Matrix4x4::preTranslate(0.0f, 0.0f, -hikiSegmentSpacing);
+            break;
+        case 2:
+            Matrix4x4::preTranslate(0.0f, 0.0f, -hikiSegmentSpacing);
+            break;
+        case 3:
+            Matrix4x4::preTranslate(0.0f, 0.0f, -hikiSegmentSpacing);
+            break;
+        case 4:
+            segment = hikiSegmentCount + 1;
+            break;
+        }
+    }
+    PopCurrentMatrix(1);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t AssignParticleEmitterReferences(std::int32_t index, const Vector3 &position, const Vector3 &localPosition, std::int32_t yaw) {
+    ParticleEmitterReference *references = g_particleEmitterReferences;
+    references[index].position = position;
+    references[index].localPosition = localPosition;
+    g_particleEmitterReferences[index].rotation.x = 0;
+    g_particleEmitterReferences[index].rotation.y = yaw;
+    g_particleEmitterReferences[index].rotation.z = 0;
+    g_particleEmitterReferences[index].active = 1;
+    return 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t AssignParticleEmitterTransform(
+    std::int32_t index, const Vector3 &position, const Vector3 &localPosition, std::int32_t x, std::int32_t y, std::int32_t z) {
+    ParticleEmitterReference *references = g_particleEmitterReferences;
+    references[index].position = position;
+    references[index].localPosition = localPosition;
+    g_particleEmitterReferences[index].rotation.x = x;
+    g_particleEmitterReferences[index].rotation.y = y;
+    g_particleEmitterReferences[index].rotation.z = z;
+    g_particleEmitterReferences[index].active = 1;
+    return 0;
+}
+#endif
+
+namespace {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const shen_name CHUNK_TEXL = 0x4c584554U, CHUNK_TEXD = 0x44584554U, CHUNK_HRCM = 0x4d435248U, CHUNK_PTRL = 0x4c525450U, CHUNK_TEXN = 0x4e584554U;
+const shen_name CHUNK_GBIX = 0x58494247U;
+#endif
+
+} // namespace
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetParticleChannelTextureFromPack(std::int32_t channel, PakChunkHeader *chunk) {
+    std::byte *const base = reinterpret_cast<std::byte *>(chunk);
+    std::byte *texture;
+    for (;;) {
+        switch (chunk->name) {
+        case CHUNK_TEXL:
+        case CHUNK_TEXD:
+        case CHUNK_HRCM:
+            break;
+        case CHUNK_TEXN:
+            texture = reinterpret_cast<std::byte *>(chunk) + 16;
+            break;
+        case CHUNK_PTRL: {
+            const std::int32_t count = reinterpret_cast<const std::int32_t *>(chunk)[2];
+            const std::uint32_t *offset = reinterpret_cast<const std::uint32_t *>(chunk) + 3;
+            for (std::int32_t index = 0; index < count; ++index, ++offset) {
+                std::uint32_t *const field = reinterpret_cast<std::uint32_t *>(base + *offset);
+                if (*field)
+                    *field += reinterpret_cast<std::uint32_t>(base);
+            }
+            break;
+        }
+        }
+        if (chunk->name == CHUNK_PTRL)
+            break;
+        chunk = reinterpret_cast<PakChunkHeader *>(reinterpret_cast<std::byte *>(chunk) + chunk->size);
+    }
+    if (*reinterpret_cast<const std::uint32_t *>(texture) == CHUNK_GBIX)
+        texture += 12;
+    dc::sdk::SetParticleChannelTexture(channel, *reinterpret_cast<const std::int16_t *>(texture + 12), *reinterpret_cast<const std::int16_t *>(texture + 14),
+        *reinterpret_cast<const std::uint32_t *>(texture + 8), reinterpret_cast<std::uint32_t *>(texture + 16));
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void DropParticleControlCallback(void *) {
+    std::int32_t index;
+    for (index = 0; index < 5; ++index)
+        AssignParticleEmitterReferences(g_dropEmitterSlots[index], dropParticlePosition, dropParticleLocalPosition, 0);
+    for (index = 0; index < 4; ++index) {
+        const std::int32_t light = dropLightIndices[index];
+        if (light < 0) {
+            dropLightEnabled[index] = 0;
+            continue;
+        }
+        dropLightEnabled[index] = GetLightEntryIndex(light);
+        dropLightKinds[index] = GetSelectedLightKind(light);
+        GetLightRuntimePosition(light, &dropLightPositions[index]);
+        GetLightRuntimeDirection(light, &dropLightDirections[index]);
+        dropLightRanges[index] = GetLightRuntimeRange(light);
+        dropLightConeCosines[index] = dc::sdk::CosFixed(GetLightRuntimeConeAngle(light));
+        dropLightPositions[index].x -= dropParticlePosition.x;
+        dropLightPositions[index].y -= dropParticlePosition.y;
+        dropLightPositions[index].z -= dropParticlePosition.z;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void MoveDropParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->position.x += particle->velocity.x;
+    particle->position.y += particle->velocity.y;
+    particle->position.z += particle->velocity.z;
+    particle->velocity.y -= 0.010888889f;
+    particle->colour = 0x70d0c0ffU;
+    for (std::int32_t index = 0; index < 4; ++index) {
+        if (dropLightEnabled[index] != 1 || dropLightKinds[index] - 3U > 1U)
+            continue;
+        Vector3 direction;
+        direction.x = particle->position.x - dropLightPositions[index].x;
+        direction.y = particle->position.y - dropLightPositions[index].y;
+        direction.z = particle->position.z - dropLightPositions[index].z;
+        const float distance = am2Vector3NormalizeInPlace(&direction);
+        if (!(dropLightRanges[index] > distance))
+            continue;
+        if (dropLightKinds[index] == 3U) {
+            particle->colour = 0x8090ffa0U;
+            break;
+        }
+        float dot = dropLightDirections[index].x * direction.x + dropLightDirections[index].y * direction.y;
+        dot = -(dropLightDirections[index].z * direction.z + dot);
+        if (dot > dropLightConeCosines[index]) {
+            particle->colour = 0x8090ffa0U;
+            break;
+        }
+    }
+    if (particle->position.y < 7.0f) {
+        particle->flags &= 0x7fffffffU;
+        particle->update = dc::sdk::SpawnInactiveParticle;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeDropParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    particle->flags = 0x80000000U;
+    particle->update = MoveDropParticle;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void MoveCompactDropParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    dc::sdk::CompactParticle *const compact = reinterpret_cast<dc::sdk::CompactParticle *>(particle);
+    compact->position.x += compact->velocity.x;
+    compact->position.y += compact->velocity.y;
+    compact->position.z += compact->velocity.z;
+    compact->velocity.y -= 0.010888889f;
+    if (compact->position.y < 7.0f) {
+        reinterpret_cast<std::uint8_t *>(&compact->flags)[3] &= 0x7fU;
+        compact->update = dc::sdk::SpawnInactiveParticle;
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void InitializeCompactDropParticle(dc::sdk::Particle *particle, dc::sdk::ParticleChannel *) {
+    dc::sdk::CompactParticle *const compact = reinterpret_cast<dc::sdk::CompactParticle *>(particle);
+    reinterpret_cast<std::uint8_t *>(&compact->flags)[3] = 0x80;
+    compact->update = MoveCompactDropParticle;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void InitializeDropParticles() {
+    if (g_dropEmitterSlots[0] >= 0)
+        return;
+    dropParticlePosition.x = 234.0f;
+    dropParticlePosition.y = 78.0f;
+    dropParticlePosition.z = 122.0f;
+    dropParticleLocalPosition.x = dropParticleLocalPosition.y = dropParticleLocalPosition.z = 0.0f;
+    dropLightIndices[0] = 1;
+    dropLightIndices[1] = 2;
+    dropLightIndices[2] = dropLightIndices[3] = dropLightIndices[4] = -1;
+    g_dropEmitterSlots[0] = AllocateParticleEffectSlot(0, -1, DropParticleControlCallback, 0, TASK_DROP);
+    if (g_dropEmitterSlots[0] < 0)
+        return;
+    g_dropEmitterSlots[1] = AllocateParticleEffectSlot(0, -1, 0, 0, TASK_DROP);
+    if (g_dropEmitterSlots[1] < 0)
+        return;
+    g_dropEmitterSlots[2] = AllocateParticleEffectSlot(0, -1, 0, 0, TASK_DROP);
+    if (g_dropEmitterSlots[2] < 0)
+        return;
+    g_dropEmitterSlots[3] = AllocateParticleEffectSlot(0, -1, 0, 0, TASK_DROP);
+    if (g_dropEmitterSlots[3] < 0)
+        return;
+    g_dropEmitterSlots[4] = AllocateParticleEffectSlot(0, -1, 0, 0, TASK_DROP);
+    if (g_dropEmitterSlots[4] < 0)
+        return;
+    void *const image = shenLoadFile("MISC", "DROP.PVR", TASK_DROP);
+    if (!image)
+        return;
+    std::int32_t slot = g_dropEmitterSlots[0];
+    dc::sdk::SetParticleChannelActive(slot, 1);
+    dc::sdk::InitializeParticleChannelParticles(slot, 30, 0, dropParticles0);
+    dc::sdk::SetParticleChannelSize(slot, 0.01f, 0.2f);
+    dc::sdk::SetParticleChannelCallback(slot, InitializeDropParticle);
+    dc::sdk::SetParticleChannelSpawnProbability(slot, 0.015f);
+    dc::sdk::SetParticleChannelPositionRange(slot, 3.8f, 17.700001f, 3.8f, 3.0f, 0.0f, 3.0f);
+    dc::sdk::SetParticleChannelVelocityRange(slot, 0.0f, -0.1f, 0.0f, 0.0f, 0.02f, 0.0f);
+    dc::sdk::SetParticleChannelColour(slot, 0xff000000U);
+    dc::sdk::SetParticleChannelBlendMode(slot, 1);
+    StartEffectRegistry(0, slot);
+    AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
+    slot = g_dropEmitterSlots[1];
+    dc::sdk::SetParticleChannelActive(slot, 1);
+    dc::sdk::InitializeParticleChannelParticles(slot, 30, 0, dropParticles1);
+    dc::sdk::SetParticleChannelSize(slot, 0.01f, 0.5f);
+    dc::sdk::SetParticleChannelCallback(slot, InitializeDropParticle);
+    dc::sdk::SetParticleChannelSpawnProbability(slot, 0.01f);
+    dc::sdk::SetParticleChannelPositionRange(slot, -2.8f, 17.700001f, -1.5599999f, 3.0f, 0.0f, 3.0f);
+    dc::sdk::SetParticleChannelVelocityRange(slot, 0.0f, -0.1f, 0.0f, 0.0f, 0.04f, 0.0f);
+    dc::sdk::SetParticleChannelColour(slot, 0xff000000U);
+    dc::sdk::SetParticleChannelBlendMode(slot, 1);
+    StartEffectRegistry(0, slot);
+    AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
+    slot = g_dropEmitterSlots[2];
+    dc::sdk::SetParticleChannelActive(slot, 1);
+    dc::sdk::InitializeParticleChannelParticles(slot, 30, 1, dropParticles2);
+    dc::sdk::SetParticleChannelSize(slot, 0.01f, 0.5f);
+    dc::sdk::SetParticleChannelCallback(slot, InitializeCompactDropParticle);
+    dc::sdk::SetParticleChannelSpawnProbability(slot, 0.1f);
+    dc::sdk::SetParticleChannelPositionRange(slot, 6.5f, 14.0f, 0.4f, 0.05f, 0.0f, 0.05f);
+    dc::sdk::SetParticleChannelVelocityRange(slot, 0.0f, -0.1f, 0.0f, 0.0f, 0.05f, 0.0f);
+    dc::sdk::SetParticleChannelColour(slot, 0x30d0c0ffU);
+    dc::sdk::SetParticleChannelBlendMode(slot, 1);
+    StartEffectRegistry(0, slot);
+    AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
+    slot = g_dropEmitterSlots[3];
+    dc::sdk::SetParticleChannelActive(slot, 1);
+    dc::sdk::InitializeParticleChannelParticles(slot, 40, 1, dropParticles3);
+    dc::sdk::SetParticleChannelSize(slot, 0.01f, 0.5f);
+    dc::sdk::SetParticleChannelCallback(slot, InitializeCompactDropParticle);
+    dc::sdk::SetParticleChannelSpawnProbability(slot, 0.2f);
+    dc::sdk::SetParticleChannelPositionRange(slot, 8.9299927f, 13.889999f, 10.270004f, 0.03f, 0.0f, 0.03f);
+    dc::sdk::SetParticleChannelVelocityRange(slot, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f, 0.0f);
+    dc::sdk::SetParticleChannelColour(slot, 0x30d0c0ffU);
+    dc::sdk::SetParticleChannelBlendMode(slot, 1);
+    StartEffectRegistry(0, slot);
+    AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
+    slot = g_dropEmitterSlots[4];
+    dc::sdk::SetParticleChannelActive(slot, 1);
+    dc::sdk::InitializeParticleChannelParticles(slot, 25, 1, dropParticles4);
+    dc::sdk::SetParticleChannelSize(slot, 0.01f, 0.5f);
+    dc::sdk::SetParticleChannelCallback(slot, InitializeCompactDropParticle);
+    dc::sdk::SetParticleChannelSpawnProbability(slot, 0.2f);
+    dc::sdk::SetParticleChannelPositionRange(slot, 1.1600037f, 11.75f, 2.3000031f, 0.01f, 0.0f, 0.1f);
+    dc::sdk::SetParticleChannelVelocityRange(slot, 0.0f, 0.0f, 0.0f, 0.0f, 0.05f, 0.0f);
+    dc::sdk::SetParticleChannelColour(slot, 0x50d0c0ffU);
+    dc::sdk::SetParticleChannelBlendMode(slot, 1);
+    StartEffectRegistry(0, slot);
+    AssignParticleEmitterReferences(slot, dropParticlePosition, dropParticleLocalPosition, 0);
+    HLib::FreeTaskData(image);
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void ReleaseDropParticles() {
+    SuspendEffectRegistry(0, g_dropEmitterSlots[0]);
+    for (std::int32_t index = 0; index < 5; ++index) {
+        if (g_dropEmitterSlots[index] >= 0) {
+            ClearEffectRegistry(0, g_dropEmitterSlots[index]);
+            g_dropEmitterSlots[index] = -1;
+        }
+    }
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void ResetDropParticleAdmission() {
+    g_dropEmitterSlots[0] = -1;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ResetShipSprayParameters() {
     if ((g_currentMap.name & 0xffU) == 'K') {
@@ -3285,7 +7464,9 @@ void ResetShipSprayParameters() {
     }
     g_shipSprayParameters[0].slot = -1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ShipSprayControlCallback(void *) {
     if (!(g_hikiOpacity >= 0.0001f))
@@ -3327,7 +7508,9 @@ void ShipSprayControlCallback(void *) {
         AssignParticleEmitterReferences(parameters.slot, g_shipSprayPosition, g_shipSprayLocalPosition, g_shipSprayYaw);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeShipSpray() {
     if (g_shipSprayParameters[0].slot >= 0)
         return;
@@ -3374,10 +7557,7 @@ void InitializeShipSpray() {
             .stepY = 0,
             .stepZ = 0,
             .colour = 0xffffffffU,
-            .scale = 1.0f}
-
-        // @verified - p
-        ;
+            .scale = 1.0f};
         for (std::int32_t particle = 0; particle < parameters.count; ++particle)
             emitter.particles[particle] = initial;
         emitter.position = parameters.position;
@@ -3391,7 +7571,6 @@ void InitializeShipSpray() {
             d3t::InitTexture2DResource(emitter.textureHandle);
         LegacyEffectTexture &texture = smokeTextureRecords[parameters.slot];
         emitter.textureRecord = &texture;
-
         if (InitializeLegacyEffectTexture(texture, width, height, static_cast<std::uint16_t>(pvr[5])) == 0 &&
             UploadLegacyEffectPvr(texture, {static_cast<const std::byte *>(image), size}) == 0) {
             emitter.textureHandle = static_cast<std::uint32_t>(texture.handle);
@@ -3418,30 +7597,42 @@ void InitializeShipSpray() {
     }
     HLib::FreeTaskData(image);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ResetDakuSpray() {
     g_dakuSpraySlots[0] = -1;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void DakuSprayControlCallback(void *) {
     const Vector3 local{};
     for (std::uint32_t index = 0; index < 3; ++index)
         AssignParticleEmitterReferences(g_dakuSpraySlots[index], g_dakuSprayPositions[index], local, 0);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetDakuSprayColour(std::uint32_t emitter, std::uint32_t colour) {
     if (emitter <= 2)
         g_dakuSprayColours[emitter] = colour;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetDakuSprayPosition(std::uint32_t emitter, const Vector3 &position) {
     if (emitter <= 2)
         g_dakuSprayPositions[emitter] = position;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// @verified - p
 void SetDakuSpraySize(std::uint32_t emitter, float width, float height) {
     if (emitter <= 2) {
         g_dakuSpraySizes[emitter] = {.x = width, .y = height};
@@ -3450,7 +7641,9 @@ void SetDakuSpraySize(std::uint32_t emitter, float width, float height) {
             SetEmitterSize(emitters[slot], width, height);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InitializeDakuSpray() {
     if (g_dakuSpraySlots[0] >= 0)
@@ -3483,7 +7676,6 @@ void InitializeDakuSpray() {
         SetEmitterSize(emitter, 1.1f, 0.86f);
         CreateAuthoredParticleTexture(slot, width, height, static_cast<std::uint16_t>(pvr[5]), static_cast<const std::byte *>(image), size);
         EnableEmitter(emitter);
-
         emitter.gpuFlags = (emitter.gpuFlags & ~0x4000U) | 0x2000U;
         emitter.flags |= activeFlag;
         g_dakuSprayColours[index] = DAKU_SPRAY_DEFAULT_COLOUR;
@@ -3495,7 +7687,9 @@ void InitializeDakuSpray() {
     }
     HLib::FreeTaskData(image);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeEffectControl() {
     effectController = nullptr;
     effectTaskReferences = 0;
@@ -3525,14 +7719,18 @@ void InitializeEffectControl() {
     for (EffectSlot &slot : fireSlots)
         ClearEffectSlot(slot);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EnqueueEffectControlTask() {
     if (!effectController) {
         effectController = HLib::EnqueueTaskWithoutParameter(EffectControlCallback, 13, 8, static_cast<std::int32_t>(controllerToken.name));
     }
     ++effectTaskReferences;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeEffectPoints() {
     smokeEffects.fill(nullptr);
     splashEffects.fill(nullptr);
@@ -3544,7 +7742,9 @@ void InitializeEffectPoints() {
     for (auto &handles : fireTextureHandles)
         handles.fill(0);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void CacheCurrentParticleEffects(std::int32_t suspended) {
     if (suspended == 1) {
         for (ParticleEmitter &emitter : emitters)
@@ -3556,9 +7756,13 @@ void CacheCurrentParticleEffects(std::int32_t suspended) {
         effectsSuspended = 0;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t g_currentWeatherForceFlag = 0;
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetRainAndRippleFlagsTo(std::int32_t paused) {
     g_currentWeatherForceFlag = paused != 0;
     for (WeatherParticleGroup *group = weatherGroupList; group; group = group->next) {
@@ -3571,7 +7775,9 @@ void SetRainAndRippleFlagsTo(std::int32_t paused) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t CreateSplashEffect(const Vector3 &position, const Vector3 &spawnVolume, std::int32_t count, float birthRate, shen_name flags,
     std::int32_t floorHeightBits, const char *textureArchive, const char *textureName) {
     std::uint32_t index = 0;
@@ -3634,7 +7840,9 @@ std::uint64_t CreateSplashEffect(const Vector3 &position, const Vector3 &spawnVo
         effect->particles[particle].stepX = reinterpret_cast<std::uintptr_t>(&effect->floorHeight);
     return index;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t CreateFallingParticleEffect(const Vector3 &position, const Vector3 &spawnVolume, std::int32_t count, float birthRate, shen_name flags,
     const char *textureArchive, const char *textureName, float floorHeight) {
     std::uint32_t index = 0;
@@ -3696,12 +7904,16 @@ std::uint64_t CreateFallingParticleEffect(const Vector3 &position, const Vector3
     fallingParticleFloor = floorHeight;
     return index;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFallingParticleFloor(float height) {
     fallingParticleFloor = height;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint64_t CreateSmokeEffect(
     const Vector3 &position, const Vector3 &spawnVolume, std::int32_t particleCount, float birthRate, shen_name flags, std::int32_t profile) {
@@ -3807,6 +8019,9 @@ std::uint64_t CreateSmokeEffect(
     EnqueueEffectControlTask();
     return index;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t ConfigureSmokeEffect(std::int32_t profile, std::uint32_t index, const Vector3 &position, const Vector3 &spawnVolume, std::int32_t particleCount,
     float birthRate, shen_name flags) {
@@ -3882,7 +8097,9 @@ std::uint32_t ConfigureSmokeEffect(std::int32_t profile, std::uint32_t index, co
     emitter.gpuFlags = (emitter.gpuFlags & ~0x4000U) | 0x2000U;
     return index;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSmokeEffectSpread(std::uint32_t index, float falloff, float opacity) {
     SmokeEffect *const effect = smokeEffects[index];
@@ -3894,7 +8111,9 @@ void SetSmokeEffectSpread(std::uint32_t index, float falloff, float opacity) {
         step = 0;
     smokeAlphaStep[effect->profile] = step;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSmokeEffectRadialMotion(std::uint32_t index, float velocity, float decay) {
     SmokeEffect *const effect = smokeEffects[index];
@@ -3903,7 +8122,9 @@ void SetSmokeEffectRadialMotion(std::uint32_t index, float velocity, float decay
     smokeRadialVelocity[effect->profile] = velocity;
     smokeRadialDecay[effect->profile] = decay;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint64_t CreateFireEffect(const Vector3 &position, float width, float height, std::int32_t drawMode, std::uint16_t flags) {
     std::uint32_t index = 0;
@@ -3911,6 +8132,7 @@ std::uint64_t CreateFireEffect(const Vector3 &position, float width, float heigh
         ++index;
     if (index == fireEffects.size())
         return invalidEffect;
+
     EnqueueEffectControlTask();
     auto *const effect = static_cast<FireEffect *>(HLib::AllocateTaskData(sizeof(FireEffect), effectToken));
     fireEffects[index] = effect;
@@ -3923,8 +8145,10 @@ std::uint64_t CreateFireEffect(const Vector3 &position, float width, float heigh
             InitializeFireFft(*fireFft[index]);
         }
     }
+
     if (!effect || !fireFft[index])
         return invalidEffect;
+
     if (flags & 1U) {
         constexpr std::size_t numTrails = 512;
         constexpr std::size_t fireTrailInstancesSize = sizeof(FireTrailEntry) * numTrails;
@@ -3938,6 +8162,7 @@ std::uint64_t CreateFireEffect(const Vector3 &position, float width, float heigh
             }
         }
     }
+
     if (flags & 4U) {
         constexpr std::size_t numInstances = 32;
         constexpr std::size_t fireInstancesSize = sizeof(FireInstance) * numInstances;
@@ -3985,7 +8210,9 @@ std::uint64_t CreateFireEffect(const Vector3 &position, float width, float heigh
     SuspendParticleEffect(4, index);
     return index;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SuspendParticleEffect(std::int32_t type, std::uint32_t index) {
     if (type == 4) {
@@ -4014,7 +8241,9 @@ void SuspendParticleEffect(std::int32_t type, std::uint32_t index) {
     }
     effect->flags.name &= ~2U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ResumeParticleEffect(std::int32_t type, std::uint32_t index) {
     if (type == 4) {
@@ -4043,7 +8272,9 @@ void ResumeParticleEffect(std::int32_t type, std::uint32_t index) {
     }
     effect->flags.name |= 2U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectVelocity(std::int32_t type, std::uint32_t index, const Vector3 &velocity, const Vector3 &variance) {
     if (SmokeEffect *const effect = FindSmokeEffect(type, index)) {
@@ -4053,7 +8284,9 @@ void SetParticleEffectVelocity(std::int32_t type, std::uint32_t index, const Vec
         emitters[effect->slot].velocityVariance = variance;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectColour(std::int32_t type, std::uint32_t index, std::int32_t alpha, std::uint8_t red, std::uint8_t green, std::uint8_t blue) {
     if (type != 0 && type != 1)
@@ -4067,7 +8300,9 @@ void SetParticleEffectColour(std::int32_t type, std::uint32_t index, std::int32_
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectPosition(std::int32_t type, std::uint32_t index, const Vector3 *position, const Vector3 *variance) {
     if (type == 4) {
@@ -4080,7 +8315,9 @@ void SetParticleEffectPosition(std::int32_t type, std::uint32_t index, const Vec
         emitters[effect->slot].spawnVariance = effect->spawnVariance;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectSize(std::int32_t type, std::uint32_t index, float width, float height) {
     if (type == 4) {
@@ -4095,7 +8332,9 @@ void SetParticleEffectSize(std::int32_t type, std::uint32_t index, float width, 
         SetEmitterSize(emitters[effect->slot], width, height);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectInitialScale(std::int32_t type, std::uint32_t index, float scale) {
     if (index == invalidEffect || static_cast<std::uint32_t>(type) > 3U)
@@ -4106,7 +8345,9 @@ void SetParticleEffectInitialScale(std::int32_t type, std::uint32_t index, float
     if (effect)
         effect->initialScale = scale;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectBirthRate(std::int32_t type, std::uint32_t index, float fraction) {
     if (SmokeEffect *const effect = FindSmokeEffect(type, index)) {
@@ -4114,7 +8355,9 @@ void SetParticleEffectBirthRate(std::int32_t type, std::uint32_t index, float fr
         SetEmitterBirthRate(emitters[effect->slot], fraction);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSmokeEffectFalloff(std::uint32_t index, std::int32_t value) {
     SmokeEffect *const effect = FindSmokeEffect(0, index);
@@ -4134,7 +8377,9 @@ void SetSmokeEffectFalloff(std::uint32_t index, std::int32_t value) {
         smokeExpansion[effect->profile] = expansion;
     effect->expansion = expansion;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSmokeEffectFadeFactor(std::uint32_t index, std::int32_t value) {
     SmokeEffect *const effect = FindSmokeEffect(0, index);
@@ -4154,7 +8399,9 @@ void SetSmokeEffectFadeFactor(std::uint32_t index, std::int32_t value) {
         smokeFadeFactor[effect->profile] = fade;
     effect->fadeFactor = fade;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSmokeEffectPhaseRate(std::uint32_t index, float rate) {
     if (index == invalidEffect)
@@ -4162,13 +8409,17 @@ void SetSmokeEffectPhaseRate(std::uint32_t index, float rate) {
     const SmokeEffect &effect = *smokeEffects[static_cast<std::int32_t>(index)];
     SetSmokeFftAmplitude(*smokeFft[effect.texture->slot], rate);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFirePalette(std::uint32_t index, const std::uint16_t *palette) {
     const FireEffect &effect = *fireEffects[static_cast<std::int32_t>(index)];
     SetFireFftPalette(*fireFft[effect.slot], palette);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireFalloff(std::uint32_t index, float radiusX, float radiusY, float gain) {
     const FireEffect &effect = *fireEffects[static_cast<std::int32_t>(index)];
@@ -4177,17 +8428,23 @@ void SetFireFalloff(std::uint32_t index, float radiusX, float radiusY, float gai
     ScaleFireFalloff(gain, falloff);
     SetFireFftFalloff(*fireFft[effect.slot], falloff);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetFireShaderInstanceCount() noexcept {
     fireShaderInstanceCount = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireFalloffScalar(std::uint32_t index, float scalar) {
     const FireEffect &effect = *fireEffects[static_cast<std::int32_t>(index)];
     SetFireFftScalar(*fireFft[effect.slot], scalar);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t SetFirePosition(std::uint32_t index, std::int32_t instance, const Vector3 *position) {
     FireInstance &target = fireEffects[static_cast<std::int32_t>(index)]->instances[instance];
@@ -4199,7 +8456,9 @@ std::uint32_t SetFirePosition(std::uint32_t index, std::int32_t instance, const 
     target.enabled = 1;
     return 1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 Character *AttachFireEffect(std::uint32_t index, shen_name name, std::int16_t bone, float offset) {
     FireEffect &effect = *fireEffects[static_cast<std::int32_t>(index)];
@@ -4209,12 +8468,16 @@ Character *AttachFireEffect(std::uint32_t index, shen_name name, std::int16_t bo
     effect.bone = bone;
     return character;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireAlpha(std::uint32_t index, float alpha) {
     fireEffects[static_cast<std::int32_t>(index)]->alpha = alpha;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 Character *AttachFireInstance(std::uint32_t index, std::int32_t instance, shen_name name, std::int16_t bone, std::int32_t offsetBits) {
     FireInstance &target = fireEffects[static_cast<std::int32_t>(index)]->instances[instance];
@@ -4224,29 +8487,39 @@ Character *AttachFireInstance(std::uint32_t index, std::int32_t instance, shen_n
     target.bone = bone;
     return character;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireCameraOffset(std::uint32_t index, float offset) {
     fireEffects[static_cast<std::int32_t>(index)]->cameraOffset = offset;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireInstanceCameraOffset(std::uint32_t index, std::int32_t instance, float offset) {
     fireEffects[static_cast<std::int32_t>(index)]->instances[instance].cameraOffset = offset;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireInstanceAlpha(std::uint32_t index, std::int32_t instance, float alpha) {
     fireEffects[static_cast<std::int32_t>(index)]->instances[instance].alpha = alpha;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetFireInstanceSize(std::uint32_t index, std::int32_t instance, float width, float height) {
     FireInstance &target = fireEffects[static_cast<std::int32_t>(index)]->instances[instance];
     target.width = width;
     target.height = height;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetSmokeEffectFalloffCurve(std::uint32_t index, float radius, float gain) {
     if (index == invalidEffect)
@@ -4257,14 +8530,18 @@ void SetSmokeEffectFalloffCurve(std::uint32_t index, float radius, float gain) {
     ScaleSmokeFalloff(gain, falloff);
     SetSmokeFftFalloff(*smokeFft[effect.texture->slot], falloff);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetStationarySmokeAlpha(std::uint32_t index, std::int32_t alpha) {
     const SmokeEffect *const effect = smokeEffects[static_cast<std::int32_t>(index)];
     if (effect && effect->profile == 1)
         stationarySmokeAlpha = static_cast<float>(alpha);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetParticleEffectUniformSize(std::int32_t type, std::uint32_t index, float size) {
     if (type == 4) {
@@ -4277,7 +8554,9 @@ void SetParticleEffectUniformSize(std::int32_t type, std::uint32_t index, float 
         SetEmitterSize(emitters[effect->slot], size, size);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void TranslateParticleEffectParticles(std::int32_t type, std::uint32_t index, const Vector3 &delta) {
     SmokeEffect *const effect = FindSmokeEffect(type, index);
@@ -4290,7 +8569,9 @@ void TranslateParticleEffectParticles(std::int32_t type, std::uint32_t index, co
         particle.position.z = EffectDelta(delta.z) + particle.position.z;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint64_t GetParticleEffectVisibility(std::int32_t type, std::uint32_t index) {
     if (index == invalidEffect)
@@ -4302,7 +8583,9 @@ std::uint64_t GetParticleEffectVisibility(std::int32_t type, std::uint32_t index
     const SmokeEffect *const effect = FindSmokeEffect(type, index);
     return effect ? ((effect->flags.name & 2U) != 0) : invalidEffect;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void FreeParticleEffect(std::int32_t type, std::uint32_t index) {
     if (type == 4) {
@@ -4363,5 +8646,58 @@ void FreeParticleEffect(std::int32_t type, std::uint32_t index) {
     ClearEffectSlot(emitterSlots[effect->slot]);
     HLib::FreeTaskData(effect);
 }
-} // namespace shenmue::s2
+#endif
 
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SmokeTextureParticles() {
+    shenmue::s2::InitializeDropParticles();
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokePosition(const shenmue::Vector3 *position) {
+    shenmue::s2::SetSmokePosition(position);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokeParameter(std::uint32_t parameter, std::uint32_t value) {
+    shenmue::s2::SetSmokeParameter(parameter, value);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokeEffectFalloff(std::uint32_t index, std::int32_t value) {
+    shenmue::s2::SetSmokeEffectFalloff(index, value);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokeEffectFadeFactor(std::uint32_t index, std::int32_t value) {
+    shenmue::s2::SetSmokeEffectFadeFactor(index, value);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokeEffectPhaseRate(std::uint32_t index, float rate) {
+    shenmue::s2::SetSmokeEffectPhaseRate(index, rate);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokeEffectFalloffCurve(std::uint32_t index, float exponent, float scale) {
+    shenmue::s2::SetSmokeEffectFalloffCurve(index, exponent, scale);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetSmokeEffectSpread(std::uint32_t index, float falloff, float opacity) {
+    shenmue::s2::SetSmokeEffectSpread(index, falloff, opacity);
+}
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetFireFalloff(std::uint32_t index, float radiusX, float radiusY, float gain) {
+    shenmue::s2::SetFireFalloff(index, radiusX, radiusY, gain);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_SetFireFalloffScalar(std::uint32_t index, float scalar) {
+    shenmue::s2::SetFireFalloffScalar(index, scalar);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_AttachFireEffect(std::uint32_t index, std::uint32_t name, std::int16_t bone, float offset) {
+    shenmue::s2::AttachFireEffect(index, shenmue::shen_name(name), bone, offset);
+}
+
+extern "C" void __attribute__((renesas)) shenmue_s2_event_AttachFireInstance(
+    std::uint32_t index, std::int32_t instance, std::uint32_t name, std::int16_t bone, float offset) {
+    shenmue::s2::AttachFireInstance(index, instance, shenmue::shen_name(name), bone, offset);
+}
+#endif

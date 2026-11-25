@@ -1,3 +1,39 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/conversation_dc.hpp"
+
+#include "s2/hlib.hpp"
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/conversation_fade_dc.hpp"
+#include "s2/conversation_playback_dc.hpp"
+#endif
+#include "s2/startup_assets_dc.hpp"
+#include "s2/face_controller_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/sound_table_dc.hpp"
+#include <sg_xpt.h>
+#include <sg_gd.h>
+#include <cri_adxf.h>
+#include <cri_adxt.h>
+
+#include <cstring>
+#include "s2/stream_audio_dc.hpp"
+#include "s2/area_names.hpp"
+#include "s2/player_stats_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/field_event_dc.hpp"
+#include "s2/map_info.hpp"
+#include "s2/scenario_character_query_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/scene_data.hpp"
+#include "platform/dc/aica.hpp"
+#include "platform/dc/audio.hpp"
+#include <cstdio>
+extern "C" void ADXT_DestroyAll();
+extern "C" void ADXF_CloseAll();
+#else
 #include "s2/conversation.hpp"
 #include "s2/conversation_index.hpp"
 #include "s2/conversation_packet.hpp"
@@ -30,112 +66,63 @@
 #include <span>
 #include <string_view>
 #include "s2/area_names.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 
 char currentAfsName[8]{};
+
 std::array<std::uint32_t, 5> g_conversationIndexBRecord{};
+
 std::array<std::uint32_t, 5> g_conversationIndexCRecord{};
+
 std::array<std::uint32_t, 5> g_conversationIndexDRecord{};
 
 namespace {
 
 ConversationTaskData conversationData{};
+
 ConversationTaskData *conversationTaskData{};
+
 ConversationResource *resources{};
+
 std::array<std::size_t, 16> indexSizes{};
+
 std::array<ConversationResource, 2> cachedResources{};
+
 std::array<std::size_t, 2> cachedIndexSizes{};
+
 std::byte *adfsSpace{};
+
 struct SpeakerAlias {
     shen_name source;
     shen_name target;
     std::int32_t requireCharacter;
 };
+
 std::array<SpeakerAlias, 8> speakerAliases{};
+
 ConversationBuffer *currentDialogue{};
+
 std::int32_t subtitleDestroyFrames{};
+
 std::int32_t cameraCodesEnabled{1};
+
 std::int32_t conversationAudioLanguage = 1;
+
 std::uint64_t silentConversationStreamHandle{};
+
 constexpr std::array<std::int16_t, 1> defaultFacialClip{-1};
 
 std::uint32_t scenarioActionQueue{};
+
 std::uint32_t scenarioAcknowledgementQueue{};
+
 ScenarioTalkPresentationState scenarioTalkPresentation{};
-
-std::int32_t ScenarioQueueRecordSize(const std::byte *record) {
-    std::int32_t size;
-    std::memcpy(&size, record, sizeof(size));
-    return size;
-}
-
-void SetScenarioQueueRecordSize(std::byte *record, std::int32_t size) {
-    std::memcpy(record, &size, sizeof(size));
-}
-
-std::uint32_t AllocateScenarioActionQueue(shen_name name) {
-    for (std::uint32_t index = 0; index < 2; ++index) {
-        if (scenarioActionQueueStorage[index].name.name == name.name)
-            return index;
-    }
-    for (std::uint32_t index = 0; index < 2; ++index) {
-        ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
-        if (queue.name.name)
-            continue;
-        queue.read = queue.storage.data();
-        queue.write = queue.read;
-        queue.name = name;
-        queue.count = 0;
-        SetScenarioQueueRecordSize(queue.write, 0);
-        return index;
-    }
-    return 0xffffffffU;
-}
-
-std::int32_t WriteScenarioAction(std::uint32_t index, const ScenarioAction &action) {
-    if (index > 1)
-        return -1;
-    ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
-    const std::int32_t precedingSize = ScenarioQueueRecordSize(queue.write);
-    if (precedingSize)
-        queue.write += ((static_cast<std::uint32_t>(precedingSize) + 3U) & ~3U) + 4U;
-    if (queue.storage.data() + 0x6c - queue.write < static_cast<std::ptrdiff_t>(sizeof(action) + 4)) {
-        SetScenarioQueueRecordSize(queue.write, 0x88);
-        queue.write = queue.storage.data();
-    }
-    if (queue.write < queue.read && queue.write + sizeof(action) + 4 > queue.read)
-        return -1;
-    ++queue.count;
-    SetScenarioQueueRecordSize(queue.write, sizeof(action));
-    std::memcpy(queue.write + 4, &action, sizeof(action));
-    return 0;
-}
-
-std::int32_t ReadScenarioAction(std::uint32_t index, ScenarioAction &action) {
-    if (index > 1)
-        return -1;
-    ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
-    if (!queue.count)
-        return 0;
-    const std::int32_t size = ScenarioQueueRecordSize(queue.read);
-    if (static_cast<std::int32_t>(sizeof(action)) < size)
-        return -1;
-    --queue.count;
-    std::memcpy(&action, queue.read + 4, static_cast<std::size_t>(size));
-    if (queue.read == queue.write) {
-        SetScenarioQueueRecordSize(queue.read, 0);
-        return size;
-    }
-    queue.read += ((static_cast<std::uint32_t>(size) + 3U) & ~3U) + 4U;
-    if (queue.read >= queue.storage.data() + queue.storage.size())
-        queue.read = queue.storage.data();
-    const std::int32_t followingSize = ScenarioQueueRecordSize(queue.read);
-    if (static_cast<std::int64_t>(followingSize) + 4 > queue.storage.data() + queue.storage.size() - queue.read)
-        queue.read = queue.storage.data();
-    return size;
-}
 
 
 
@@ -144,6 +131,7 @@ struct BuiltinFacialClip {
     std::uint32_t second;
     std::uint32_t offset;
 };
+
 constexpr std::array<std::int16_t, 10944> builtinFacialData{{
     0,
     2,
@@ -11348,18 +11336,207 @@ constexpr std::array<BuiltinFacialClip, 254> builtinFacialClips{{
     {0x35314232U, 0x31U, 5447U},
 }};
 
+} // namespace
+
+ScenarioActionQueue *scenarioActionQueueStorage{};
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+namespace {
+
+void StopConversationStream(ConversationStream &stream);
+void ConfigureConversationVoiceCategory(ConversationStream &stream, const char *code);
+void UpdateConversationStream(ConversationStream &stream);
+std::uint64_t GetConversationStreamPlaying(ConversationStream &stream);
+bool StartStream(ConversationStream &stream, std::int32_t archive, std::uint16_t entry, std::uint32_t outputFlags, std::uint32_t playFlags);
+void ReleaseBuffer(ConversationBuffer &buffer);
+void RetireSubtitles();
+void UpdateStream(ConversationBuffer &buffer);
+void PrepareConversationPacketSubtitles(HLib::Task *scenario, const char *text, shen_name speaker);
+void UpdatePacket(ConversationBuffer &buffer);
+void UpdateFade(ConversationBuffer &buffer);
+void UpdateDucking(ConversationBuffer &buffer);
+void SetCameraCode(ConversationBuffer &buffer, const std::array<char, 12> &voiceCode);
+
+} // namespace
+
+bool RemoveConversationSpeakerAlias(shen_name target);
+void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks);
+void EnsureLoadedPakForActiveScene();
+void CVS_CtrlConversTask();
+std::uint64_t GetConversationAudioLanguage() noexcept;
+bool cvsGet() noexcept;
+bool cvsHasValidConverseData(const ConversationBuffer *buffer) noexcept;
+shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer) noexcept;
+ConversationBuffer *GetConverseDataForChara(shen_name speaker) noexcept;
+ConversationBuffer *FindConversationByPriority(std::uint32_t mask) noexcept;
+bool EV_FreeAuthorPak(std::int32_t operation, const char *bankName);
+ConversationBuffer *shenPlayAudio(const char *voiceCode, shen_name speaker, std::uint32_t playFlags, bool showSubtitles, std::int32_t *sceneRemap);
+ConversationBuffer *shenPlayAudioWithFlags(const char *voiceCode, std::uint32_t playFlags);
+ConversationBuffer *EV_PlayDialogue(const char *voiceCode);
+std::uint64_t GetConversationPaused(const ConversationBuffer *buffer) noexcept;
+void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch);
+void scenCvsCtrlFree(ConversationBuffer *buffer);
+void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume);
+void PauseConversation(ConversationBuffer *buffer, std::int32_t paused);
+bool shenPrepareDialogue(HLib::Task *task, std::int64_t, const char *message, std::int32_t speakerMode);
+void scenDestroySubtitles(HLib::Task *task);
+void ForceScenarioSubtitles(HLib::Task *task);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+std::int32_t ScenarioQueueRecordSize(const std::byte *record) {
+    std::int32_t size;
+    std::memcpy(&size, record, sizeof(size));
+    return size;
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void SetScenarioQueueRecordSize(std::byte *record, std::int32_t size) {
+    std::memcpy(record, &size, sizeof(size));
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+std::uint32_t AllocateScenarioActionQueue(shen_name name) {
+    for (std::uint32_t index = 0; index < 2; ++index) {
+        if (scenarioActionQueueStorage[index].name.name == name.name)
+            return index;
+    }
+    for (std::uint32_t index = 0; index < 2; ++index) {
+        ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
+        if (queue.name.name)
+            continue;
+        queue.read = queue.storage.data();
+        queue.write = queue.read;
+        queue.name = name;
+        queue.count = 0;
+        SetScenarioQueueRecordSize(queue.write, 0);
+        return index;
+    }
+    return 0xffffffffU;
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+std::int32_t WriteScenarioAction(std::uint32_t index, const ScenarioAction &action) {
+    if (index > 1)
+        return -1;
+    ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
+    const std::int32_t precedingSize = ScenarioQueueRecordSize(queue.write);
+    if (precedingSize)
+        queue.write += ((static_cast<std::uint32_t>(precedingSize) + 3U) & ~3U) + 4U;
+    if (queue.storage.data() + 0x6c - queue.write < static_cast<std::ptrdiff_t>(sizeof(action) + 4)) {
+        SetScenarioQueueRecordSize(queue.write, 0x88);
+        queue.write = queue.storage.data();
+    }
+    if (queue.write < queue.read && queue.write + sizeof(action) + 4 > queue.read)
+        return -1;
+    ++queue.count;
+    SetScenarioQueueRecordSize(queue.write, sizeof(action));
+    std::memcpy(queue.write + 4, &action, sizeof(action));
+    return 0;
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+std::int32_t ReadScenarioAction(std::uint32_t index, ScenarioAction &action) {
+    if (index > 1)
+        return -1;
+    ScenarioActionQueue &queue = scenarioActionQueueStorage[index];
+    if (!queue.count)
+        return 0;
+    const std::int32_t size = ScenarioQueueRecordSize(queue.read);
+    if (static_cast<std::int32_t>(sizeof(action)) < size)
+        return -1;
+    --queue.count;
+    std::memcpy(&action, queue.read + 4, static_cast<std::size_t>(size));
+    if (queue.read == queue.write) {
+        SetScenarioQueueRecordSize(queue.read, 0);
+        return size;
+    }
+    queue.read += ((static_cast<std::uint32_t>(size) + 3U) & ~3U) + 4U;
+    if (queue.read >= queue.storage.data() + queue.storage.size())
+        queue.read = queue.storage.data();
+    const std::int32_t followingSize = ScenarioQueueRecordSize(queue.read);
+    if (static_cast<std::int64_t>(followingSize) + 4 > queue.storage.data() + queue.storage.size() - queue.read)
+        queue.read = queue.storage.data();
+    return size;
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 HLib::Task *ScenarioTask() {
     const auto *control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? control->scenarioTask : nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 ScenarioTaskData *ScenarioData(HLib::Task *task) {
     return static_cast<ScenarioTaskData *>(HLib::GetTaskParameter(task));
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 Character *SpeakerCharacter(shen_name name) {
     return scenFindChara(ScenarioTask(), name);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 shen_name ResolveSpeaker(shen_name name) {
     for (const SpeakerAlias &alias : speakerAliases) {
@@ -11368,6 +11545,14 @@ shen_name ResolveSpeaker(shen_name name) {
     }
     return name;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 const std::uint32_t *FindConversationIndexChunk(const std::uint32_t *chunk, std::uint32_t wanted) {
     while (chunk[0] != wanted) {
@@ -11378,6 +11563,14 @@ const std::uint32_t *FindConversationIndexChunk(const std::uint32_t *chunk, std:
     }
     return chunk;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 const std::uint32_t *ProcessIDXB(const std::uint32_t *index, const std::array<std::uint32_t, 3> &code) {
@@ -11406,6 +11599,14 @@ const std::uint32_t *ProcessIDXB(const std::uint32_t *index, const std::array<st
     return nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 const std::uint32_t *ProcessIDXC(const std::uint32_t *index, const std::array<std::uint32_t, 3> &code) {
     const std::uint32_t *table = FindConversationIndexChunk(index, SHEN_NAME(TABL));
@@ -11432,6 +11633,14 @@ const std::uint32_t *ProcessIDXC(const std::uint32_t *index, const std::array<st
     }
     return nullptr;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 const std::uint32_t *ProcessSubtitleFile(const std::uint32_t *index, const std::array<char, 12> &code) {
@@ -11469,11 +11678,27 @@ const std::uint32_t *ProcessSubtitleFile(const std::uint32_t *index, const std::
     return nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 bool BankPath(std::array<char, 96> &path, const char *bank, const char *extension, std::int32_t actNumber) {
     const int length =
         std::snprintf(path.data(), path.size(), "SCENE/%02d/STREAM/PC/%s/%s.%s", actNumber, GetConversationAudioLanguage() ? "JAP" : "ENG", bank, extension);
     return length > 0 && static_cast<std::size_t>(length) < path.size();
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 ConversationResource *FindCachedResource(const char *bankName) {
     if (!bankName)
@@ -11487,6 +11712,14 @@ ConversationResource *FindCachedResource(const char *bankName) {
     return nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::byte *AllocateIndex(const char *bankName, std::int32_t actNumber, std::int32_t dynamic, std::size_t &loadedSize) {
     std::array<char, 96> path;
     BankPath(path, bankName, "IDX", actNumber);
@@ -11499,6 +11732,14 @@ std::byte *AllocateIndex(const char *bankName, std::int32_t actNumber, std::int3
     return allocation;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ReleaseResource(ConversationResource &resource) {
     FreeAfsArchive(resource.archive);
     resource.archive = nullptr;
@@ -11506,6 +11747,14 @@ void ReleaseResource(ConversationResource &resource) {
     resource.bankName[0] = '\0';
     indexSizes[static_cast<std::size_t>(&resource - resources)] = 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void LoadIndex(const char *bankName) {
     ConversationResource *resource = resources;
@@ -11526,6 +11775,14 @@ void LoadIndex(const char *bankName) {
     indexSizes[static_cast<std::size_t>(resource - resources)] = size;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 AfsArchiveSlot *ReadConversationArchive(const char *bankName, std::int32_t actNumber, std::int32_t capacity, void *memory) {
     char directory[40], filename[16];
     std::sprintf(directory, "SCENE/%02d/STREAM/PC/%s/%s", actNumber, GetConversationAudioLanguage() ? "JAP" : "ENG", bankName);
@@ -11538,6 +11795,14 @@ AfsArchiveSlot *ReadConversationArchive(const char *bankName, std::int32_t actNu
     std::strncpy(currentAfsName, bankName, 4);
     return archive;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool LoadArchive(const char *bankName) {
     ConversationResource *resource = resources;
@@ -11560,9 +11825,25 @@ bool LoadArchive(const char *bankName) {
     return true;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::uint64_t ConversationPacketCancelNullsub(d3t::LargeFileHandle *) {
     return 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void ReleaseConversationPacket(d3t::LargeFileHandle *request) {
     if (request) {
@@ -11571,6 +11852,14 @@ void ReleaseConversationPacket(d3t::LargeFileHandle *request) {
         d3t::ReadCachedFile(request);
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool IsConversationPacketBusy(d3t::LargeFileHandle *request) {
     if (!request)
@@ -11582,6 +11871,14 @@ bool IsConversationPacketBusy(d3t::LargeFileHandle *request) {
     }
     return state != 3 && state != 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 d3t::LargeFileHandle *RequestConversationPacket(AfsArchiveSlot *archive, std::int32_t entry, std::int32_t sector, void *destination) {
     if (archive) {
@@ -11596,9 +11893,25 @@ d3t::LargeFileHandle *RequestConversationPacket(AfsArchiveSlot *archive, std::in
     return nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 float ConvertAudioAttenuation(float attenuation) {
     return attenuation > -64.0f ? std::pow(10.0f, attenuation / 20.0f) : 0.0f;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 float VoiceGain(std::int32_t attenuation, std::uint32_t flags) {
     const S2AudioSettings &settings = GetS2AudioSettings();
@@ -11606,13 +11919,266 @@ float VoiceGain(std::int32_t attenuation, std::uint32_t flags) {
     return ConvertAudioAttenuation(static_cast<float>(attenuation) / 10.0f) * master;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ApplyVolume(ConversationBuffer &buffer, std::int32_t attenuation) {
     buffer.stream.volume = attenuation;
     SetDialogueVoiceVolume(buffer.stream.handle, VoiceGain(attenuation, buffer.priority == 1 ? 1U : 0U));
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ConversationStreamStopNullsub(DialogueVoice *) {
 }
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+void RequestConversationBank(const char *name);
+
+std::uint32_t *LoadSceneAudioIndex(const char *name, std::int32_t scene, std::int32_t allocateFromBack);
+
+bool FinishConversationBank(const char *name);
+
+void ReleaseConversationBank(const char *name);
+
+void BuildSceneAudioPath(const char *name, const char *extension, char *directory, char *filename, std::int32_t scene);
+
+ConversationBuffer *shenPlayAudio(const char *code, shen_name speaker, std::uint32_t flags);
+
+void ConversationFadeOutCallback(ConversationBuffer &buffer);
+
+void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume);
+
+void StopConversationBuffers(ConversationBuffer *buffer);
+
+ConversationBuffer *FindConversationByPriority(std::uint32_t mask);
+
+void ReleaseConversationBuffer(ConversationBuffer &buffer);
+
+void AllocateConversationStreamBuffers();
+
+void ReleaseConversationPacket(void *request);
+
+ConversationTaskData *g_conversationTaskData = 0;
+
+ConversationResource *g_conversationResources;
+
+ConversationBuffer *g_currentDialogue;
+
+ConversationSpeakerAlias g_conversationSpeakerAliases[8] = {};
+
+void *g_conversationVoiceMemory;
+
+void *g_sharedConversationStream = 0;
+
+std::int32_t GetConversationPlaybackEnabled();
+
+void UpdateConversationStream(ConversationStream &stream);
+
+void SetConversationStreamPauseState(ConversationStream *stream, std::int32_t paused);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch);
+void ScenarioSoundNullsub();
+std::uint32_t *FindCachedConversationIndex(const char *name);
+AudioPartition *FindCachedConversationArchive(const char *name);
+std::uint16_t GetConversationIndexEntryCount(const std::uint32_t *index);
+AudioPartition *MountConversationArchive(const char *name, std::int32_t scene, std::int32_t entryCount, void *providedInfo);
+ConversationBuffer *EV_PlayDialogue(const char *code);
+void QueueConversationFadeOut(ConversationBuffer &buffer, std::int32_t frames);
+std::int32_t GetConversationStreamPauseState(const ConversationStream *stream);
+std::int32_t GetConversationCameraCode();
+bool EV_FreeAuthorPak(std::int32_t operation, const char *name);
+void ResetConversationSpeakerAliases();
+bool RegisterConversationSpeakerAlias(shen_name target, shen_name source, std::uint32_t flags);
+void SetConversationStreamVolume(ConversationStream &stream, std::int32_t volume);
+void RequestConversationBank(const char *name);
+std::uint32_t *LoadSceneAudioIndex(const char *name, std::int32_t scene, std::int32_t allocateFromBack);
+bool FinishConversationBank(const char *name);
+void ReleaseConversationBank(const char *name);
+void BuildSceneAudioPath(const char *name, const char *extension, char *directory, char *filename, std::int32_t scene);
+ConversationBuffer *shenPlayAudioWithFlags(const char *code, std::uint32_t flags);
+ConversationBuffer *shenPlayAudio(const char *code, shen_name speaker, std::uint32_t flags);
+void ReleaseConversationBuffersIfPlaybackDisabled(std::int32_t releaseBuffers);
+void scenCvsCtrlFree(ConversationBuffer *buffer, std::int32_t frames);
+void ConversationFadeOutCallback(ConversationBuffer &buffer);
+void SetConversationBufferVolume(ConversationBuffer *buffer, std::int32_t volume);
+void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer);
+#else
+bool cvsHasValidConverseData(const ConversationBuffer *buffer);
+#endif
+void UpdateConversationDucking(ConversationBuffer &buffer);
+void StopConversationStream(ConversationStream &stream);
+void StopConversationBuffers(ConversationBuffer *buffer);
+void CVS_CtrlConversTask();
+void CVS_CtrlConversTask_Callback(void *);
+void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks);
+void MountSceneConversationIndex();
+ConversationBuffer *FindConversationByPriority(std::uint32_t mask);
+void scenAssignFacialClip(HLib::Task *scenarioTask, const std::int16_t *clip, shen_name speaker);
+void PrepareConversationPacketSubtitles(HLib::Task *scenarioTask, const char *text, std::int32_t speakerMode);
+void cvsDestroySubtitles(HLib::Task *scenarioTask);
+shen_name ResolveConversationSpeaker(shen_name name);
+void ApplyConversationPacket(void *packet, ConversationBuffer &buffer);
+bool cvsGet();
+bool RemoveConversationSpeakerAlias(shen_name target);
+ConversationBuffer *GetConverseDataForChara(shen_name speaker);
+shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer);
+std::int32_t GetConversationPaused(const ConversationBuffer *buffer);
+void PauseConversation(ConversationBuffer *buffer, std::int32_t paused);
+void SetConversationsPaused(std::int32_t paused);
+void SetSoundPaused(std::int32_t enabled);
+void SOND_StopCdAudio();
+ConversationBuffer *PlaySpeakerDialogue(const char *code, shen_name speaker);
+void SetConversationStreamBaseAttenuation(ConversationStream &stream, std::int32_t attenuation);
+void SetConversationBaseAttenuation(ConversationBuffer *buffer, std::int32_t attenuation);
+void SetConversationCameraCode(ConversationBuffer *buffer, std::int32_t cameraCode);
+std::int32_t HasConversationWithPriority(std::uint32_t mask);
+#else
+namespace {
+
+std::int32_t ScenarioQueueRecordSize(const std::byte *record);
+void SetScenarioQueueRecordSize(std::byte *record, std::int32_t size);
+std::uint32_t AllocateScenarioActionQueue(shen_name name);
+std::int32_t WriteScenarioAction(std::uint32_t index, const ScenarioAction &action);
+std::int32_t ReadScenarioAction(std::uint32_t index, ScenarioAction &action);
+HLib::Task *ScenarioTask();
+ScenarioTaskData *ScenarioData(HLib::Task *task);
+Character *SpeakerCharacter(shen_name name);
+shen_name ResolveSpeaker(shen_name name);
+const std::uint32_t *FindConversationIndexChunk(const std::uint32_t *chunk, std::uint32_t wanted);
+const std::uint32_t *ProcessIDXB(const std::uint32_t *index, const std::array<std::uint32_t, 3> &code);
+const std::uint32_t *ProcessIDXC(const std::uint32_t *index, const std::array<std::uint32_t, 3> &code);
+const std::uint32_t *ProcessSubtitleFile(const std::uint32_t *index, const std::array<char, 12> &code);
+bool BankPath(std::array<char, 96> &path, const char *bank, const char *extension, std::int32_t actNumber);
+ConversationResource *FindCachedResource(const char *bankName);
+std::byte *AllocateIndex(const char *bankName, std::int32_t actNumber, std::int32_t dynamic, std::size_t &loadedSize);
+void ReleaseResource(ConversationResource &resource);
+void LoadIndex(const char *bankName);
+AfsArchiveSlot *ReadConversationArchive(const char *bankName, std::int32_t actNumber, std::int32_t capacity, void *memory);
+bool LoadArchive(const char *bankName);
+std::uint64_t ConversationPacketCancelNullsub(d3t::LargeFileHandle *);
+void ReleaseConversationPacket(d3t::LargeFileHandle *request);
+bool IsConversationPacketBusy(d3t::LargeFileHandle *request);
+d3t::LargeFileHandle *RequestConversationPacket(AfsArchiveSlot *archive, std::int32_t entry, std::int32_t sector, void *destination);
+float ConvertAudioAttenuation(float attenuation);
+float VoiceGain(std::int32_t attenuation, std::uint32_t flags);
+void ApplyVolume(ConversationBuffer &buffer, std::int32_t attenuation);
+void ConversationStreamStopNullsub(DialogueVoice *);
+void StopConversationStream(ConversationStream &stream);
+void ConfigureConversationVoiceCategory(ConversationStream &stream, const char *code);
+DialogueVoice *AllocatePrimaryConversationStreamNullsub(void *, void *, std::uint32_t);
+void InitializeConversationDecodeBufferNullsub(DialogueVoice *, void *, std::uint32_t);
+void UpdateConversationStream(ConversationStream &stream);
+std::uint64_t GetConversationStreamPlaying(ConversationStream &stream);
+bool InitializeConversationStreamBuffers(ConversationStream &stream, std::uint32_t flags);
+bool StartStream(ConversationStream &stream, std::int32_t archive, std::uint16_t entry, std::uint32_t outputFlags, std::uint32_t playFlags);
+void ReleaseBuffer(ConversationBuffer &buffer);
+void RetireSubtitles();
+void UpdateStream(ConversationBuffer &buffer);
+void CVS_CtrlConversTask_Callback(void *);
+std::byte *AllocateADFSSpace(std::int32_t capacity);
+void PrepareConversationPacketSubtitles(HLib::Task *scenario, const char *text, shen_name speaker);
+const std::int16_t *FindConversationBuiltinFacialClip(const ConversationBuffer &buffer);
+void PublishPacket(const std::uint32_t *packet, ConversationBuffer &buffer);
+void UpdatePacket(ConversationBuffer &buffer);
+void UpdateFade(ConversationBuffer &buffer);
+void UpdateDucking(ConversationBuffer &buffer);
+void SetCameraCode(ConversationBuffer &buffer, const std::array<char, 12> &voiceCode);
+
+} // namespace
+
+void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch);
+ConversationBuffer *EV_PlayDialogue(const char *voiceCode);
+std::uint64_t IsScenarioDialoguePlaying(ConversationBuffer *buffer);
+bool EV_FreeAuthorPak(std::int32_t operation, const char *bankName);
+ConversationBuffer *shenPlayAudioWithFlags(const char *voiceCode, std::uint32_t playFlags);
+ConversationBuffer *shenPlayAudio(const char *voiceCode, shen_name speaker, std::uint32_t playFlags, bool showSubtitles, std::int32_t *sceneRemap);
+void scenCvsCtrlFree(ConversationBuffer *buffer);
+void hsFadeVoice(ConversationBuffer *buffer, std::int32_t frames);
+void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume);
+const char *GetCurrentAfsName() noexcept;
+bool cvsHasValidConverseData(const ConversationBuffer *buffer) noexcept;
+void CVS_CtrlConversTask();
+std::uint64_t GetConversationAudioLanguage() noexcept;
+void SetConversationAudioLanguage(std::int32_t language);
+void ReleaseConversationResources();
+void AllocateAudioIndexData();
+bool adfsSetCameraIdxForChara(shen_name target, shen_name source);
+void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks);
+void EnsureLoadedPakForActiveScene();
+void UpdateConversationStreams();
+ConversationBuffer *FindConversationByPriority(std::uint32_t mask) noexcept;
+bool cvsGet() noexcept;
+bool RemoveConversationSpeakerAlias(shen_name target);
+ConversationBuffer *GetConverseDataForChara(shen_name speaker) noexcept;
+shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer) noexcept;
+std::uint64_t GetConversationPaused(const ConversationBuffer *buffer) noexcept;
+float GetConversationPlaybackSeconds(const ConversationBuffer *buffer) noexcept;
+void PauseConversation(ConversationBuffer *buffer, std::int32_t paused);
+void PauseConversationCategories(bool paused);
+std::uint8_t PauseOrDestroyAudioAndSubtitles(std::int32_t paused);
+void SetConversationCameraCodesEnabled(std::int32_t enabled) noexcept;
+std::uint64_t SCEN_ShowEventMessage(HLib::Task *task, std::int64_t, const char *message);
+bool shenPrepareDialogue(HLib::Task *task, std::int64_t, const char *message, std::int32_t speakerMode);
+void scenDestroySubtitles(HLib::Task *task);
+void ForceScenarioSubtitles(HLib::Task *task);
+ScenarioTalkPresentationState &GetScenarioTalkPresentationState() noexcept;
+void InitializeScenarioConversation();
+void QueueScenarioCharacterAction(shen_name name, std::int32_t action);
+std::int32_t ReadScenarioCharacterAction(ScenarioAction &action);
+void AcknowledgeScenarioCharacterAction(shen_name name, std::int32_t action);
+std::int32_t ReadScenarioAcknowledgement(ScenarioAction &action);
+std::int32_t DrainScenarioAcknowledgements();
+void QueueScenarioRecordAction(ScenarioFreeTalkRecord &record, std::int32_t action);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ScenarioSoundNullsub() {
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+void ReleaseConversationVoice(ConversationStream &stream);
+
+// @verified - d
+void StopConversationStream(ConversationStream &stream) {
+    ADXT const handle = static_cast<ADXT>(stream.handle);
+    if (handle) {
+        if (handle->stm)
+            ADXT_Stop(handle);
+        ReleaseConversationVoice(stream);
+        stream.handle = 0;
+    }
+}
+
+#else
+
+namespace {
 
 void StopConversationStream(ConversationStream &stream) {
     if (stream.handle) {
@@ -11624,6 +12190,14 @@ void StopConversationStream(ConversationStream &stream) {
         stream.handle = nullptr;
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void ConfigureConversationVoiceCategory(ConversationStream &stream, const char *code) {
     for (const char *category : CONVERSATION_PAUSE_CATEGORY_CODES) {
@@ -11637,11 +12211,36 @@ void ConfigureConversationVoiceCategory(ConversationStream &stream, const char *
     stream.pauseCategory = 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 DialogueVoice *AllocatePrimaryConversationStreamNullsub(void *, void *, std::uint32_t) {
     return nullptr;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void InitializeConversationDecodeBufferNullsub(DialogueVoice *, void *, std::uint32_t) {
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void UpdateConversationStream(ConversationStream &stream) {
@@ -11662,6 +12261,16 @@ void UpdateConversationStream(ConversationStream &stream) {
         stream.cameraCode = 0;
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+// @verified - p
 std::uint64_t GetConversationStreamPlaying(ConversationStream &stream) {
     if (!stream.handle)
         return 0;
@@ -11672,6 +12281,14 @@ std::uint64_t GetConversationStreamPlaying(ConversationStream &stream) {
     stream.remainingFrames = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(stream.remainingFrames) - 1U);
     return stream.remainingFrames ? 3 : 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool InitializeConversationStreamBuffers(ConversationStream &stream, std::uint32_t flags) {
     const bool playing = stream.handle && PollDialogueVoice(stream.handle) == DialogueVoiceState::Playing;
@@ -11685,6 +12302,14 @@ bool InitializeConversationStreamBuffers(ConversationStream &stream, std::uint32
     }
     return true;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool StartStream(ConversationStream &stream, std::int32_t archive, std::uint16_t entry, std::uint32_t outputFlags, std::uint32_t playFlags) {
     if (!GetAuthorStreamingAudioEnabled()) {
@@ -11713,6 +12338,14 @@ bool StartStream(ConversationStream &stream, std::int32_t archive, std::uint16_t
     return true;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ReleaseBuffer(ConversationBuffer &buffer) {
     StopConversationStream(buffer.stream);
     ReleaseConversationPacket(buffer.packetRequest);
@@ -11725,11 +12358,27 @@ void ReleaseBuffer(ConversationBuffer &buffer) {
     buffer.callback = nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void RetireSubtitles() {
     scenDestroySubtitles(ScenarioTask());
     currentDialogue = nullptr;
     subtitleDestroyFrames = 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void UpdateStream(ConversationBuffer &buffer) {
     if (GetConversationStreamPlaying(buffer.stream))
@@ -11759,203 +12408,203 @@ void UpdateStream(ConversationBuffer &buffer) {
     buffer.callback = nullptr;
 }
 
-void PrepareConversationPacketSubtitles(HLib::Task *scenario, const char *text, shen_name speaker) {
-    const bool isRyo = ScenarioCharacterIsRyo(speaker);
-    subtitleDestroyFrames = 0;
-    shenPrepareDialogue(scenario, 1, text, isRyo);
-}
-
-const std::int16_t *FindConversationBuiltinFacialClip(const ConversationBuffer &buffer) {
-    const std::array<std::uint32_t, 3> code = std::bit_cast<std::array<std::uint32_t, 3>>(buffer.code);
-    const BuiltinFacialClip *found = nullptr;
-    for (const BuiltinFacialClip &clip : builtinFacialClips)
-        if (clip.first == code[1] && clip.second == code[2])
-            found = &clip;
-    return found ? builtinFacialData.data() + 2U * found->offset : nullptr;
-}
-
-void PublishPacket(const std::uint32_t *packet, ConversationBuffer &buffer) {
-    HLib::Task *scenario = ScenarioTask();
-    const bool hasCharacter = packet[0] == SHEN_NAME(CHID);
-    if (!buffer.speaker.name && hasCharacter) {
-        const std::uint32_t *character = FindConversationIndexChunk(packet, SHEN_NAME(CHID));
-        if (character)
-            buffer.speaker = character[2];
-    }
-    buffer.speaker = ResolveSpeaker(buffer.speaker);
-    if (!buffer.subtitles) {
-        const char *text = nullptr;
-        if (hasCharacter && FindConversationIndexChunk(packet, SHEN_NAME(STDL))) {
-            text = FindSceneTextRemapped(buffer.code.data(), GetConversationAudioLanguage() == 1);
-        } else {
-            const std::array<std::uint32_t, 3> code = std::bit_cast<std::array<std::uint32_t, 3>>(buffer.code);
-            if (code[0] == SHEN_NAME(0001)) {
-                for (std::uint32_t index = 0; index != CONVERSATION_PACKET_FALLBACK_LABELS.size(); ++index) {
-                    if (code[1] != make_shen_name('B', '0', '0', static_cast<char>('1' + index)))
-                        continue;
-                    const std::string_view label = GetLocalizedSceneText(CONVERSATION_PACKET_FALLBACK_LABELS[index]);
-                    text = label.empty() ? " " : label.data();
-                    break;
-                }
-            }
-        }
-        if (text)
-            PrepareConversationPacketSubtitles(scenario, text, buffer.speaker);
-    }
-    if (hasCharacter) {
-        const std::uint32_t *clip = FindConversationIndexChunk(packet, SHEN_NAME(CLIP));
-        if (clip) {
-            Character *character = scenFindChara(scenario, buffer.speaker);
-            if (character)
-                AssignFacialClip(character, reinterpret_cast<const std::int16_t *>(clip + 2));
-        }
-    } else if (std::memcmp(buffer.code.data(), "F224", 4) == 0) {
-        const std::int16_t *clip = FindConversationBuiltinFacialClip(buffer);
-        if (clip) {
-            Character *character = scenFindChara(scenario, buffer.speaker);
-            if (character)
-                AssignFacialClip(character, clip);
-        }
-    }
-}
-
-void UpdatePacket(ConversationBuffer &buffer) {
-    if (IsConversationPacketBusy(buffer.packetRequest))
-        return;
-    ReleaseConversationPacket(buffer.packetRequest);
-    buffer.packetRequest = nullptr;
-    ConversationPacketBuffer &packet = *buffer.packet;
-    if (*reinterpret_cast<const std::uint32_t *>(packet.data.data()) == SHEN_NAME(SEGA)) {
-        buffer.packetRequest = RequestConversationPacket(buffer.resource->archive, static_cast<std::int32_t>(packet.entry), packet.sector, packet.data.data());
-    } else {
-        packet.pending = 0;
-        const std::uint64_t offset = (static_cast<std::uint32_t>(buffer.packetOffset) >> 2U) * 4ULL;
-        PublishPacket(reinterpret_cast<const std::uint32_t *>(packet.data.data() + offset), buffer);
-        buffer.callback = UpdateStream;
-    }
-}
-
-void UpdateFade(ConversationBuffer &buffer) {
-    buffer.fadeVolume -= buffer.fadeStep;
-    if (buffer.fadeVolume > -200)
-        SetConversationVolume(&buffer, buffer.fadeVolume);
-    else
-        scenCvsCtrlFree(&buffer);
-}
-
-void UpdateDucking(ConversationBuffer &buffer) {
-    if (buffer.priority != 1)
-        return;
-    bool competing = false;
-    for (const auto &other : conversationData.buffers) {
-        if (other.callback && (other.priority & 6)) {
-            competing = true;
-            break;
-        }
-    }
-    if (!competing) {
-        if (buffer.duckVolume > 0)
-            return;
-        if (buffer.duckVolume >= buffer.volume)
-            buffer.duckVolume = 1;
-        else
-            ++buffer.duckVolume;
-    } else if (buffer.duckVolume <= 0 || buffer.volume <= -50) {
-        if (static_cast<std::uint32_t>(buffer.duckVolume) < 0xffffffcfU && buffer.duckVolume != 0)
-            return;
-        buffer.duckVolume -= 4;
-    } else {
-        buffer.duckVolume = buffer.volume;
-        buffer.duckState = 2;
-    }
-    if (buffer.duckVolume <= 0)
-        ApplyVolume(buffer, buffer.duckVolume + buffer.stream.baseAttenuation);
-}
-
-void SetCameraCode(ConversationBuffer &buffer, const std::array<char, 12> &voiceCode) {
-    if (!cameraCodesEnabled)
-        return;
-    Vector3 cameraPosition;
-    camCtrlGetNextCamPos(&cameraPosition);
-    std::int32_t code = (flddQueryCameraIntersection(cameraPosition) >> 16) & 15U;
-    if (!code && GetConversationAudioLanguage() == 1) {
-        const std::string_view prefix{voiceCode.data(), 4};
-        const std::string_view suffix{voiceCode.data() + 4, 4};
-        std::string_view choices;
-        if (prefix == "0549")
-            choices = "A001A002A006B001B002B003C001";
-        else if (prefix == "0511")
-            choices = "B001B002C001C002C003";
-        else if (prefix == "0275")
-            choices = "F001F002";
-        else if (prefix == "0276")
-            choices = "F001";
-        else if (prefix == "0509")
-            choices = "C001C002C003C004D001D002";
-        else if (prefix == "0500")
-            code = 15;
-        else if (prefix == "0064")
-            choices = "C001C002C003C004C005C006D001D002D003D004D005D006";
-        else if (prefix == "0278")
-            choices = "D001D002D003E001E002E003E004";
-        for (std::size_t offset = 0; offset + 4 <= choices.size(); offset += 4)
-            if (choices.substr(offset, 4) == suffix) {
-                code = 15;
-                break;
-            }
-    }
-    if (code)
-        buffer.stream.cameraCode = buffer.stream.pauseCategory ? code : std::min(code, 16);
-}
-
-void CVS_CtrlConversTask_Callback(void *) {
-    CVS_CtrlConversTask();
-}
-
-// @verified - p
-std::byte *AllocateADFSSpace(std::int32_t capacity) {
-    const std::int32_t incremented = static_cast<std::int32_t>(static_cast<std::uint32_t>(capacity) + 1U);
-    const std::uint64_t size = (2ULL * static_cast<std::uint64_t>(static_cast<std::int64_t>(incremented)) + 278ULL) & ~3ULL;
-    return static_cast<std::byte *>(HLib::AllocateTaskData(size, CONVERSATION_ADFS_MEMORY));
-}
-
 } // namespace
 
-void AllocateAudioIndexData() {
-    const std::int32_t actNumber = g_actNumber;
-    if (!actNumber)
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void StopConversationBuffers(ConversationBuffer *buffer) {
+    if (!buffer) {
+        ConversationBuffer *candidate = g_conversationTaskData->buffers;
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        cvsDestroySubtitles(control->scenarioTask);
+        for (std::int32_t count = 2; count != 0; --count, ++candidate)
+            if (candidate->callback)
+                ReleaseConversationBuffer(*candidate);
         return;
-    char bank[16];
-    std::sprintf(bank, "BGM0%d", actNumber);
-    std::strcpy(cachedResources[0].bankName.data(), bank);
-    std::size_t size = 0;
-    cachedResources[0].index = AllocateIndex(bank, actNumber, 0, size);
-    cachedIndexSizes[0] = size;
-    std::uint16_t entries;
-    std::memcpy(&entries, cachedResources[0].index + 8, sizeof(entries));
-    adfsSpace = AllocateADFSSpace(entries);
+    }
+    ConversationBuffer *const target = buffer;
+    if (g_currentDialogue == target) {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        cvsDestroySubtitles(control->scenarioTask);
+    }
+    if (target->callback)
+        ReleaseConversationBuffer(*target);
 }
 
-bool adfsSetCameraIdxForChara(shen_name target, shen_name source) {
-    for (auto &alias : speakerAliases) {
-        if (!alias.source.name) {
-            alias = {source, target, 0};
-            return true;
-        }
-    }
-    return false;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t GetConversationStreamPauseState(const ConversationStream *stream) {
+    if (!stream->handle)
+        return 0;
+    return stream->paused;
 }
 
-// @verified - p
-bool RemoveConversationSpeakerAlias(shen_name target) {
-    for (std::size_t index = 0; index < speakerAliases.size(); ++index) {
-        if (speakerAliases[index].target.name == target.name) {
-            speakerAliases[index].source = {};
-            return true;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetConversationStreamVolume(ConversationStream &stream, std::int32_t volume) {
+    stream.volume = volume;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
+
+void SetSoundPaused(std::int32_t enabled) {
+    if (enabled) {
+        if (g_soundPauseDepth < 1) {
+            ExecuteAicaCommand(0x1100a0, 0, 0);
+            for (std::uint32_t bank = 7; bank; --bank) {
+                ExecuteAicaCommand(0x2a0, bank, 0);
+                ExecuteAicaCommand(0x1300a0, bank, 0);
+                ExecuteAicaCommand(0x11a0, bank, -64);
+            }
+            RestoreMaterialSoundHandles(0);
+            SetConversationsPaused(1);
+        } else {
+            SetConversationVolume(0, 0xfe);
+        }
+        g_soundPauseDepth = static_cast<std::int32_t>(static_cast<std::uint32_t>(g_soundPauseDepth) + 1U);
+    } else {
+        if (g_soundPauseDepth > 0) {
+            g_soundPauseDepth = static_cast<std::int32_t>(static_cast<std::uint32_t>(g_soundPauseDepth) - 1U);
+            if (g_soundPauseDepth < 1) {
+                for (std::uint32_t bank = 7; bank; --bank) {
+                    ExecuteAicaCommand(0x1300a0, bank, 0);
+                    ExecuteAicaCommand(0x11a0, bank, 0);
+                    ExecuteAicaCommand(0x3a0, bank, 0);
+                }
+                RestoreMaterialSoundHandles(1);
+                SetConversationsPaused(0);
+            } else if (g_soundPauseDepth == 1) {
+                SetConversationVolume(0, 0xff);
+            }
         }
     }
-    return false;
 }
+
+#else
+
+// @verified - d
+void SetSoundPaused(std::int32_t enabled) {
+    if (enabled) {
+        if (g_soundPauseDepth < 1) {
+            shenExecuteAICACommand(0x1100a0, 0, 0);
+            for (std::uint32_t bank = 7; bank; --bank) {
+                shenExecuteAICACommand(0x2a0, bank, 0);
+                shenExecuteAICACommand(0x1300a0, bank, 0);
+                shenExecuteAICACommand(0x11a0, bank, -64);
+            }
+            RestoreMaterialSoundHandles(0);
+            SetConversationsPaused(1);
+        } else {
+            SetConversationVolume(0, 0xfe);
+        }
+        g_soundPauseDepth = static_cast<std::int32_t>(static_cast<std::uint32_t>(g_soundPauseDepth) + 1U);
+    } else {
+        if (g_soundPauseDepth > 0) {
+            g_soundPauseDepth = static_cast<std::int32_t>(static_cast<std::uint32_t>(g_soundPauseDepth) - 1U);
+            if (g_soundPauseDepth < 1) {
+                for (std::uint32_t bank = 7; bank; --bank) {
+                    shenExecuteAICACommand(0x1300a0, bank, 0);
+                    shenExecuteAICACommand(0x11a0, bank, 0);
+                    shenExecuteAICACommand(0x3a0, bank, 0);
+                }
+                RestoreMaterialSoundHandles(1);
+                SetConversationsPaused(0);
+            } else if (g_soundPauseDepth == 1) {
+                SetConversationVolume(0, 0xff);
+            }
+        }
+    }
+}
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SOND_PlayCdAudio(std::uint32_t command, std::int32_t repeatCount) {
+    const std::int16_t volume = static_cast<std::int16_t>(command >> 16U);
+    const std::int32_t track = static_cast<std::int32_t>(command & 255U);
+    ExecuteCdAicaCommand(0xa3U, static_cast<std::uint32_t>(volume));
+    gdFsDaPlay(track, track, repeatCount);
+}
+#endif
+
+void SOND_StopCdAudio() {
+    gdFsDaStop();
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks) {
+    HLib::EnqueueTaskWithoutParameter(CVS_CtrlConversTask_Callback, 2, 3, CONVERSATION_TASK);
+    g_conversationTaskData = static_cast<ConversationTaskData *>(HLib::AllocateTaskData(0xa8, CONVERSATION_WORK_STORAGE));
+    std::memset(g_conversationTaskData, 0, 0xa8);
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    for (std::int32_t count = sizeof(g_conversationTaskData->buffers) / sizeof(g_conversationTaskData->buffers[0]); count != 0; --count, ++buffer) {
+        buffer->callback = 0;
+        buffer->packet = static_cast<ConversationPacketBuffer *>(HLib::AllocateTaskData(0x824, CONVERSATION_PACKET_STORAGE));
+        buffer->packet->sector = -1;
+    }
+    g_conversationResources = static_cast<ConversationResource *>(HLib::AllocateTaskData(0x200, CONVERSATION_RESOURCE_STORAGE));
+    std::memset(g_conversationResources, 0, 0x200);
+    AllocateConversationStreamBuffers();
+    ResetAudioPartitions();
+    g_currentDialogue = 0;
+    ResetConversationSpeakerAliases();
+    RegisterConversationSpeakerAlias(CONVERSATION_SYP, CONVERSATION_SYE, 1);
+    RegisterConversationSpeakerAlias(CONVERSATION_SYX, CONVERSATION_SYE, 1);
+    RegisterConversationSpeakerAlias(CONVERSATION_JOP, CONVERSATION_JOY, 1);
+    RegisterConversationSpeakerAlias(CONVERSATION_GAI2, CONVERSATION_GAI, 1);
+    if (!loadSceneBanks)
+        return;
+    switch (g_loadedActNumber) {
+    case 1:
+        EV_FreeAuthorPak(1, "BGM01");
+        EV_FreeAuthorPak(1, "FREE01");
+        break;
+    case 2:
+        EV_FreeAuthorPak(1, "BGM02");
+        EV_FreeAuthorPak(1, "FREE02");
+        break;
+    case 3:
+        EV_FreeAuthorPak(1, "BGM03");
+        EV_FreeAuthorPak(1, "FREE03");
+        break;
+    case 4:
+        EV_FreeAuthorPak(1, "BGM04");
+        EV_FreeAuthorPak(1, "FREE04");
+        break;
+    }
+}
+
+void ReserveAudioPartitionSlot();
+
+void MountSceneConversationIndex() {
+    SceneAudioBank *bank = g_sceneMusicBanks;
+    for (std::int32_t index = 0; index < 2 && bank->name[0]; ++index, ++bank) {
+        const std::int32_t scene = g_loadedActNumber;
+        bank->stream = MountConversationArchive(bank->name, scene, GetConversationIndexEntryCount(bank->index), g_sceneMusicPartitionInfo[index]);
+        ReserveAudioPartitionSlot();
+    }
+}
+
+#else
 
 void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks) {
     HLib::EnqueueTaskWithoutParameter(CVS_CtrlConversTask_Callback, 2, 3, static_cast<std::int32_t>(TASK_CONVERSATION.name));
@@ -11983,6 +12632,10 @@ void CVS_CtrlConversTask_Enqueue(std::int32_t loadSceneBanks) {
         EnsureLoadedPakForActiveScene();
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void EnsureLoadedPakForActiveScene() {
     if (g_actNumber < 1 || g_actNumber > 4)
         return;
@@ -11997,6 +12650,10 @@ void EnsureLoadedPakForActiveScene() {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void UpdateConversationStreams() {
     if (!conversationTaskData)
@@ -12006,118 +12663,100 @@ void UpdateConversationStreams() {
             UpdateConversationStream(buffer.stream);
 }
 
-void CVS_CtrlConversTask() {
-    for (auto &buffer : conversationData.buffers) {
-        if (buffer.callback) {
-            buffer.callback(buffer);
-            UpdateDucking(buffer);
-        }
-    }
-    if (subtitleDestroyFrames && --subtitleDestroyFrames == 0) {
-        scenDestroySubtitles(ScenarioTask());
-        currentDialogue = nullptr;
-    }
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void CVS_CtrlConversTask_Callback(void *) {
+    CVS_CtrlConversTask();
 }
+
+#else
+
+namespace {
+
+void CVS_CtrlConversTask_Callback(void *) {
+    CVS_CtrlConversTask();
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
-std::uint64_t GetConversationAudioLanguage() noexcept {
-    return static_cast<std::uint32_t>(conversationAudioLanguage);
+std::byte *AllocateADFSSpace(std::int32_t capacity) {
+    const std::int32_t incremented = static_cast<std::int32_t>(static_cast<std::uint32_t>(capacity) + 1U);
+    const std::uint64_t size = (2ULL * static_cast<std::uint64_t>(static_cast<std::int64_t>(incremented)) + 278ULL) & ~3ULL;
+    return static_cast<std::byte *>(HLib::AllocateTaskData(size, CONVERSATION_ADFS_MEMORY));
 }
 
-void SetConversationAudioLanguage(std::int32_t language) {
-    if (language == conversationAudioLanguage || language > 1)
-        return;
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void AllocateAudioIndexData() {
     const std::int32_t actNumber = g_actNumber;
-    conversationAudioLanguage = language;
-    if (actNumber == 99 || !resources)
+    if (!actNumber)
         return;
-    char names[368];
-    std::int32_t count = 0;
-    while (count < 16 && resources[count].bankName[0]) {
-        std::strcpy(names + 23 * count, resources[count].bankName.data());
-        ++count;
-    }
-    for (std::int32_t index = 0; index < 16; ++index)
-        if (resources[index].archive)
-            ReleaseResource(resources[index]);
     char bank[16];
-    std::sprintf(bank, "FREE0%d", actNumber);
-    LoadIndex(bank);
-    while (!LoadArchive(bank)) {
-    }
     std::sprintf(bank, "BGM0%d", actNumber);
-    LoadIndex(bank);
-    while (!LoadArchive(bank)) {
-    }
-    for (std::int32_t index = 0; index < count; ++index) {
-        LoadIndex(names + 23 * index);
-        while (!LoadArchive(names + 23 * index)) {
-        }
-    }
+    std::strcpy(cachedResources[0].bankName.data(), bank);
+    std::size_t size = 0;
+    cachedResources[0].index = AllocateIndex(bank, actNumber, 0, size);
+    cachedIndexSizes[0] = size;
+    std::uint16_t entries;
+    std::memcpy(&entries, cachedResources[0].index + 8, sizeof(entries));
+    adfsSpace = AllocateADFSSpace(entries);
 }
 
-void ReleaseConversationResources() {
-    // Defer heap retirement until VOIC destruction completes.
-    // The former task slot and SCEN/FACX references may already have been reused.
-    for (auto &buffer : conversationData.buffers) {
-        StopDialogueVoice(buffer.stream.handle);
-        ReleaseConversationPacket(buffer.packetRequest);
-        if (buffer.packet)
-            HLib::FreeTaskData(buffer.packet);
-        buffer = {};
-    }
-    if (resources) {
-        for (std::size_t index = 0; index < indexSizes.size(); ++index) {
-            ConversationResource &resource = resources[index];
-            ConversationResource *cached = FindCachedResource(resource.bankName.data());
-            if (resource.bankName[0] && (!cached || !cached->index))
-                ReleaseResource(resource);
-        }
-        HLib::FreeTaskData(resources);
-    }
-    resources = nullptr;
-    indexSizes = {};
-    currentDialogue = nullptr;
-    subtitleDestroyFrames = 0;
-    ReleaseDialogueAudio();
-}
+#endif
 
-bool cvsGet() noexcept {
-    for (const auto &buffer : conversationData.buffers)
-        if (buffer.callback && buffer.packetOffset >= 0)
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool adfsSetCameraIdxForChara(shen_name target, shen_name source) {
+    for (auto &alias : speakerAliases) {
+        if (!alias.source.name) {
+            alias = {source, target, 0};
             return true;
+        }
+    }
     return false;
 }
 
-bool cvsHasValidConverseData(const ConversationBuffer *buffer) noexcept {
-    if (buffer)
-        return buffer->callback != nullptr;
-    for (const auto &candidate : conversationData.buffers)
-        if (candidate.callback)
-            return true;
-    return false;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool EV_FreeAuthorPak(std::int32_t operation, const char *name) {
+    switch (operation) {
+    case 1:
+        RequestConversationBank(name);
+        while (!FinishConversationBank(name)) {
+        }
+        break;
+    case 0:
+        ReleaseConversationBank(name);
+        break;
+    case 2:
+        RequestConversationBank(name);
+        break;
+    case 3:
+        if (!FinishConversationBank(name))
+            return false;
+        break;
+    }
+    return true;
 }
 
-shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer) noexcept {
-    for (const auto &candidate : conversationData.buffers)
-        if (&candidate == buffer && candidate.callback)
-            return candidate.speaker;
-    return shen_name{};
-}
-
-ConversationBuffer *GetConverseDataForChara(shen_name speaker) noexcept {
-    for (auto &buffer : conversationData.buffers)
-        if (buffer.callback && buffer.speaker.name == speaker.name)
-            return &buffer;
-    return nullptr;
-}
-
-ConversationBuffer *FindConversationByPriority(std::uint32_t mask) noexcept {
-    for (auto &buffer : conversationData.buffers)
-        if (buffer.callback && (mask & buffer.priority))
-            return &buffer;
-    return nullptr;
-}
+#else
 
 bool EV_FreeAuthorPak(std::int32_t operation, const char *bankName) {
     switch (operation) {
@@ -12147,6 +12786,304 @@ bool EV_FreeAuthorPak(std::int32_t operation, const char *bankName) {
         return true;
     }
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void RequestConversationBank(const char *name) {
+    ConversationResource *resource = g_conversationResources;
+    std::int32_t remaining = 16;
+    if (resource->name[0]) {
+        do {
+            if (!std::strcmp(resource->name, name))
+                return;
+            ++resource;
+        } while (--remaining != 0 && resource->name[0]);
+    }
+    std::strcpy(resource->name, name);
+    std::uint32_t *index = FindCachedConversationIndex(name);
+    if (!index)
+        index = LoadSceneAudioIndex(name, g_loadedActNumber, 0);
+    resource->index = index;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::uint32_t *FindCachedConversationIndex(const char *name) {
+    const SceneAudioBank *bank = g_sceneMusicBanks;
+    std::int32_t count = 2;
+    while (bank->name[0]) {
+        if (!std::strcmp(bank->name, name))
+            return bank->index;
+        ++bank;
+        if (--count == 0)
+            return 0;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+AudioPartition *FindCachedConversationArchive(const char *name) {
+    const SceneAudioBank *bank = g_sceneMusicBanks;
+    std::int32_t count = 2;
+    while (bank->name[0]) {
+        if (!std::strcmp(bank->name, name)) {
+            if (bank->stream)
+                return static_cast<AudioPartition *>(bank->stream);
+            return 0;
+        }
+        ++bank;
+        if (--count == 0)
+            return 0;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::uint32_t *LoadSceneAudioIndex(const char *name, std::int32_t scene, std::int32_t allocateFromBack) {
+    char directory[40];
+    char filename[16];
+    BuildSceneAudioPath(name, ".IDX", directory, filename, scene);
+    const std::uint32_t bytes = shenOpenFile(directory, filename);
+    std::uint32_t *const index = static_cast<std::uint32_t *>(
+        allocateFromBack ? HLib::AllocateStaticOrDynamicBlock(bytes + 12, VOICE_INDEX_STORAGE) : HLib::AllocateTaskData(bytes + 12, VOICE_INDEX_STORAGE));
+    shenLoadFile(directory, filename, index, bytes);
+    return index;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool FinishConversationBank(const char *name) {
+    ConversationResource *resource = g_conversationResources;
+    std::int32_t remaining = 16;
+    while (remaining && std::strcmp(resource->name, name)) {
+        ++resource;
+        --remaining;
+    }
+    if (!resource->stream) {
+        resource->stream = FindCachedConversationArchive(name);
+        if (!resource->stream)
+            resource->stream = MountConversationArchive(name, g_loadedActNumber, GetConversationIndexEntryCount(resource->index), 0);
+        if (!resource->stream) {
+            resource->name[0] = 0;
+            HLib::FreeTaskData(resource->index);
+        }
+    }
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+AudioPartition *MountConversationArchive(const char *name, std::int32_t scene, std::int32_t entryCount, void *providedInfo) {
+    char filename[16];
+    char directory[40];
+    BuildSceneAudioPath(name, ".AFS", directory, filename, scene);
+    return MountAudioPartition(directory, filename, entryCount, providedInfo);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void BuildSceneAudioPath(const char *name, const char *extension, char *directory, char *filename, std::int32_t scene) {
+    char path[40];
+    std::sprintf(path, "SCENE/%02d/STREAM/%s", static_cast<int>(scene), name);
+    char *separator = std::strrchr(path, '/');
+    *separator++ = 0;
+    std::strcpy(filename, separator);
+    std::strcat(filename, extension);
+    std::strcpy(directory, path);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ReleaseConversationBank(const char *name) {
+    ConversationResource *resource = g_conversationResources;
+    for (std::int32_t count = 16; count != 0; --count, ++resource) {
+        if (!std::strcmp(resource->name, name) && !FindCachedConversationIndex(name)) {
+            ReleaseAudioPartition(static_cast<AudioPartition *>(resource->stream));
+            resource->stream = 0;
+            HLib::FreeTaskData(resource->index);
+            resource->name[0] = 0;
+        }
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+ConversationBuffer *shenPlayAudioWithFlags(const char *code, std::uint32_t flags) {
+    return shenPlayAudio(code, shen_name(), flags);
+}
+
+#else
+
+// @verified - p
+ConversationBuffer *shenPlayAudioWithFlags(const char *voiceCode, std::uint32_t playFlags) {
+    if ((g_audioPlaybackEnabled == 0 || g_audioPlaybackSuppressed != 0) && (playFlags & 1U) != 0)
+        return nullptr;
+    return shenPlayAudio(voiceCode, shen_name{}, playFlags, false);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+ConversationBuffer *EV_PlayDialogue(const char *code) {
+    return shenPlayAudio(code, shen_name(), 4);
+}
+
+ConversationBuffer *PlaySpeakerDialogue(const char *code, shen_name speaker) {
+    return shenPlayAudio(code, speaker, 4);
+}
+
+#else
+
+ConversationBuffer *EV_PlayDialogue(const char *voiceCode) {
+    return shenPlayAudio(voiceCode, shen_name{}, 4, false);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint64_t IsScenarioDialoguePlaying(ConversationBuffer *buffer) {
+    if (!buffer)
+        return 0;
+    if (!IsDialogueAudioActive() && IsFacialClipActive(SpeakerCharacter(buffer->speaker)))
+        return 1;
+    return GetConversationStreamPlaying(buffer->stream);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+ConversationBuffer *shenPlayAudio(const char *code, shen_name speaker, std::uint32_t flags) {
+    const ConversationIndexEntry *entry = 0;
+    std::int32_t output = 1;
+    std::int32_t pauseEnabled = 0;
+    const std::int32_t priority = flags & 0x0f;
+    if (flags & 0x10)
+        output = 2;
+    if (flags & 0x20)
+        pauseEnabled = 1;
+    char normalizedCode[12];
+    std::strncpy(normalizedCode, code, sizeof(normalizedCode));
+    char *cursor = normalizedCode;
+    std::int32_t remaining = 12;
+    do {
+        if (static_cast<std::uint8_t>(*cursor - 'a') <= 'z' - 'a')
+            *cursor -= 'a' - 'A';
+        ++cursor;
+    } while (--remaining);
+    ConversationResource *resource = g_conversationResources;
+    remaining = 16;
+    while (remaining) {
+        if (resource->name[0]) {
+            entry = FindConversationIndexEntry(resource->index, normalizedCode);
+            if (entry)
+                break;
+        }
+        --remaining;
+        ++resource;
+    }
+    if (!remaining)
+        return 0;
+
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    remaining = 2;
+    while (buffer->callback) {
+        const std::int32_t left = --remaining;
+        ++buffer;
+        if (!left)
+            break;
+    }
+    if (g_currentDialogue && entry->packetEntry != 0xffff) {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        cvsDestroySubtitles(control->scenarioTask);
+    }
+    const bool started =
+        remaining ? StartConversationStream(buffer->stream, static_cast<AudioPartition *>(resource->stream)->id, entry->audioEntry, output) : false;
+    if (!started) {
+        buffer = g_conversationTaskData->buffers;
+        remaining = 2;
+        while (priority > buffer->priority || buffer->output != output) {
+            const std::int32_t left = --remaining;
+            ++buffer;
+            if (!left)
+                break;
+        }
+        if (!remaining)
+            return 0;
+        ReleaseConversationBuffer(*buffer);
+        StartConversationStream(buffer->stream, static_cast<AudioPartition *>(resource->stream)->id, entry->audioEntry, output);
+    }
+    if (entry->packetEntry != 0xffff) {
+        if (FindCachedConversationPacket(*buffer->packet, resource->name, entry->packetEntry, entry->packetOffset / 0x800)) {
+            buffer->packetRequest = 0;
+        } else {
+            buffer->packetRequest =
+                ReadConversationPacket(static_cast<AudioPartition *>(resource->stream), entry->packetEntry, entry->packetOffset / 0x800, buffer->packet);
+            std::strcpy(buffer->packet->bankName, resource->name);
+            buffer->packet->entry = entry->packetEntry;
+            buffer->packet->sector = entry->packetOffset / 0x800;
+            const std::uint32_t pendingTag = CONVERSATION_PACKET_PENDING_TAG;
+            std::memcpy(buffer->packet->data, &pendingTag, sizeof(pendingTag));
+            buffer->packet->pending = 1;
+        }
+        buffer->packetOffset = entry->packetOffset & 0x7ff;
+        buffer->callback = ConversationPacketLoadCallback;
+        g_currentDialogue = buffer;
+    } else {
+        buffer->packetOffset = -1;
+        buffer->packetRequest = 0;
+        buffer->callback = ConversationPlaybackCallback;
+    }
+    if (speaker == CONVERSATION_NULL_SPEAKER)
+        speaker = __typeof__(speaker)();
+    buffer->speaker = speaker;
+    buffer->resource = resource;
+    buffer->priority = priority;
+    buffer->output = output;
+    buffer->pauseEnabled = pauseEnabled;
+    buffer->pauseOwned = 0;
+    buffer->volume = 0;
+    buffer->duckVolume = 1;
+    if (!GetConversationPlaybackEnabled() && priority > 3)
+        SetConversationVolume(buffer, -999);
+    return buffer;
+}
+
+#else
 
 ConversationBuffer *shenPlayAudio(const char *voiceCode, shen_name speaker, std::uint32_t playFlags, bool showSubtitles, std::int32_t *sceneRemap) {
     std::array<char, 12> code{};
@@ -12289,57 +13226,76 @@ ConversationBuffer *shenPlayAudio(const char *voiceCode, shen_name speaker, std:
     return buffer;
 }
 
-// @verified - p
-ConversationBuffer *shenPlayAudioWithFlags(const char *voiceCode, std::uint32_t playFlags) {
-    if ((g_audioPlaybackEnabled == 0 || g_audioPlaybackSuppressed != 0) && (playFlags & 1U) != 0)
-        return nullptr;
-    return shenPlayAudio(voiceCode, shen_name{}, playFlags, false);
-}
+#endif
 
-ConversationBuffer *EV_PlayDialogue(const char *voiceCode) {
-    return shenPlayAudio(voiceCode, shen_name{}, 4, false);
-}
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-// @verified - p
-std::uint64_t IsScenarioDialoguePlaying(ConversationBuffer *buffer) {
-    if (!buffer)
-        return 0;
-    if (!IsDialogueAudioActive() && IsFacialClipActive(SpeakerCharacter(buffer->speaker)))
-        return 1;
-    return GetConversationStreamPlaying(buffer->stream);
-}
-
-// @verified - p
-std::uint64_t GetConversationPaused(const ConversationBuffer *buffer) noexcept {
-    if (buffer)
-        return buffer->stream.handle ? static_cast<std::uint32_t>(buffer->stream.paused) : 0U;
-    for (const ConversationBuffer &candidate : conversationData.buffers)
-        if (candidate.stream.handle && candidate.stream.paused)
-            return 1;
-    return 0;
-}
-
-// @verified - p
-float GetConversationPlaybackSeconds(const ConversationBuffer *buffer) noexcept {
-    if (!buffer)
-        return 0.0f;
-    std::uint64_t samples = 0;
-    std::uint32_t rate = 0;
-    if (!GetDialogueVoicePosition(buffer->stream.handle, samples, rate))
-        return 0.0f;
-    return static_cast<float>(static_cast<std::int32_t>(samples)) / static_cast<float>(static_cast<std::int32_t>(rate));
-}
-
-
-void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch) {
-    if (buffer) {
-        buffer->stream.frameScale = static_cast<std::uint32_t>(pitch);
-        return;
+void ReleaseConversationBuffersIfPlaybackDisabled(std::int32_t releaseBuffers) {
+    if (releaseBuffers) {
+        if (!GetConversationPlaybackEnabled()) {
+            ConversationBuffer *buffer = g_conversationTaskData->buffers;
+            std::int32_t remaining = 2;
+            do {
+                if (buffer->callback)
+                    ReleaseConversationBuffer(*buffer);
+                ++buffer;
+            } while (--remaining);
+        }
+    } else if (!GetConversationPlaybackEnabled()) {
+        cvsDestroySubtitles(reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask))->scenarioTask);
     }
-    for (ConversationBuffer &candidate : conversationData.buffers)
-        if (candidate.callback)
-            candidate.stream.frameScale = static_cast<std::uint32_t>(pitch);
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void scenCvsCtrlFree(ConversationBuffer *input, std::int32_t frames) {
+    if (!input) {
+        ConversationBuffer *candidate = g_conversationTaskData->buffers;
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        cvsDestroySubtitles(control->scenarioTask);
+        std::int32_t remaining = 2;
+        do {
+            if (candidate->callback)
+                QueueConversationFadeOut(*candidate, frames);
+            ++candidate;
+        } while (--remaining);
+    } else {
+        ConversationBuffer *const buffer = input;
+        if (g_currentDialogue == buffer) {
+            const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            cvsDestroySubtitles(control->scenarioTask);
+        }
+        if (buffer->callback)
+            QueueConversationFadeOut(*buffer, frames);
+    }
+}
+#else
+void scenCvsCtrlFree(ConversationBuffer *buffer, std::int32_t frames) {
+    if (!buffer) {
+        ConversationBuffer *candidate = g_conversationTaskData->buffers;
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        cvsDestroySubtitles(control->scenarioTask);
+        std::int32_t remaining = 2;
+        do {
+            if (candidate->callback)
+                QueueConversationFadeOut(*candidate, frames);
+            ++candidate;
+        } while (--remaining);
+    } else {
+        if (buffer == g_currentDialogue) {
+            const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            cvsDestroySubtitles(control->scenarioTask);
+        }
+        if (buffer->callback)
+            QueueConversationFadeOut(*buffer, frames);
+    }
+}
+#endif
+
+#else
 
 void scenCvsCtrlFree(ConversationBuffer *buffer) {
     if (!buffer || currentDialogue == buffer)
@@ -12354,6 +13310,10 @@ void scenCvsCtrlFree(ConversationBuffer *buffer) {
                 ReleaseBuffer(candidate);
     }
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void hsFadeVoice(ConversationBuffer *buffer, std::int32_t frames) {
     if (!buffer || currentDialogue == buffer)
@@ -12373,6 +13333,37 @@ void hsFadeVoice(ConversationBuffer *buffer, std::int32_t frames) {
         for (auto &candidate : conversationData.buffers)
             begin(candidate);
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void QueueConversationFadeOut(ConversationBuffer &buffer, std::int32_t frames) {
+    buffer.fadeStep = CONVERSATION_FADE_RANGE / frames;
+    buffer.fadeVolume = 0;
+    buffer.callback = ConversationFadeOutCallback;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume) {
+    if (!buffer) {
+        ConversationBuffer *current = g_conversationTaskData->buffers;
+        std::int32_t count = 2;
+        do {
+            if (current->callback)
+                SetConversationBufferVolume(current, volume);
+            ++current;
+        } while (--count != 0);
+    } else
+        SetConversationBufferVolume(buffer, volume);
+}
+
+#else
 
 void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume) {
     const auto apply = [volume](ConversationBuffer &target) {
@@ -12394,10 +13385,651 @@ void SetConversationVolume(ConversationBuffer *buffer, std::int32_t volume) {
                 apply(candidate);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 
 const char *GetCurrentAfsName() noexcept {
     return currentAfsName;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetConversationBufferVolume(ConversationBuffer *buffer, std::int32_t volume) {
+    if (volume == 0xfe)
+        volume = -999;
+    else if (volume == 0xff)
+        volume = buffer->volume;
+    else
+        buffer->volume = static_cast<std::int16_t>(volume);
+    SetConversationStreamVolume(buffer->stream, volume);
+}
+
+void SetConversationBaseAttenuation(ConversationBuffer *buffer, std::int32_t attenuation) {
+    if (!buffer) {
+        ConversationBuffer *voice = g_conversationTaskData->buffers;
+        std::int32_t count = 2;
+        do {
+            if (voice->callback)
+                SetConversationStreamBaseAttenuation(voice->stream, attenuation);
+            ++voice;
+        } while (--count != 0);
+    } else
+        SetConversationStreamBaseAttenuation(buffer->stream, attenuation);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch) {
+    if (!buffer) {
+        ConversationBuffer *voice = g_conversationTaskData->buffers;
+        std::int32_t count = 2;
+        do {
+            if (voice->callback)
+                SetConversationStreamPitch(voice->stream, pitch);
+            ++voice;
+        } while (--count != 0);
+    } else
+        SetConversationStreamPitch(buffer->stream, pitch);
+}
+
+void SetConversationCameraCode(ConversationBuffer *buffer, std::int32_t cameraCode) {
+    if (!buffer) {
+        ConversationBuffer *voice = g_conversationTaskData->buffers;
+        std::int32_t count = 2;
+        do {
+            if (voice->callback)
+                SetConversationStreamCameraCode(voice->stream, cameraCode);
+            ++voice;
+        } while (--count != 0);
+    } else
+        SetConversationStreamCameraCode(buffer->stream, cameraCode);
+}
+#endif
+
+#else
+
+// Native cvsSetDialoguePitch: a null buffer retunes every live conversation buffer.
+void SetScenarioDialoguePitch(ConversationBuffer *buffer, std::int32_t pitch) {
+    if (buffer) {
+        buffer->stream.frameScale = static_cast<std::uint32_t>(pitch);
+        return;
+    }
+    for (ConversationBuffer &candidate : conversationData.buffers)
+        if (candidate.callback)
+            candidate.stream.frameScale = static_cast<std::uint32_t>(pitch);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer) {
+    const ConversationBuffer *candidate = g_conversationTaskData->buffers;
+    std::int32_t remaining;
+    if (buffer)
+        return buffer->callback != 0;
+    goto inspectBuffers;
+active:
+    return 1;
+inspectBuffers:
+    remaining = 2;
+    do {
+        if (candidate->callback)
+            goto active;
+        ++candidate;
+    } while (--remaining);
+    return 0;
+}
+#else
+// @verified - d
+bool cvsHasValidConverseData(const ConversationBuffer *buffer) {
+    if (buffer)
+        return buffer->callback != 0;
+    for (std::size_t rangeIndex53 = 0; rangeIndex53 < sizeof(g_conversationTaskData->buffers) / sizeof((g_conversationTaskData->buffers)[0]); ++rangeIndex53) {
+        const ConversationBuffer &candidate = (g_conversationTaskData->buffers)[rangeIndex53];
+
+        if (candidate.callback)
+            return true;
+    }
+    return false;
+}
+#endif
+
+std::int32_t HasConversationWithPriority(std::uint32_t mask) {
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    std::int32_t count = 2;
+    do {
+        if (buffer->callback && (static_cast<std::uint32_t>(buffer->priority) & mask))
+            return 1;
+        ++buffer;
+    } while (--count != 0);
+    return 0;
+}
+
+#else
+
+bool cvsHasValidConverseData(const ConversationBuffer *buffer) noexcept {
+    if (buffer)
+        return buffer->callback != nullptr;
+    for (const auto &candidate : conversationData.buffers)
+        if (candidate.callback)
+            return true;
+    return false;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+ConversationBuffer *FindConversationByPriority(std::uint32_t mask) {
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    std::int32_t count = 2;
+    do {
+        if (buffer->callback && (static_cast<std::uint32_t>(buffer->priority) & mask))
+            return buffer;
+        ++buffer;
+    } while (--count != 0);
+    return 0;
+}
+
+#else
+
+ConversationBuffer *FindConversationByPriority(std::uint32_t mask) noexcept {
+    for (auto &buffer : conversationData.buffers)
+        if (buffer.callback && (mask & buffer.priority))
+            return &buffer;
+    return nullptr;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t GetConversationCameraCode() {
+    Vector3 position;
+    camCtrlGetNextCamPos(&position);
+    return static_cast<std::int32_t>(GetFieldSoundProperties(&position)) >> 16 & 15;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void CVS_CtrlConversTask() {
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    for (std::int32_t count = 2; count != 0; --count, ++buffer) {
+        if (buffer->callback) {
+            buffer->callback(*buffer);
+            UpdateConversationDucking(*buffer);
+        }
+    }
+}
+
+#else
+
+void CVS_CtrlConversTask() {
+    for (auto &buffer : conversationData.buffers) {
+        if (buffer.callback) {
+            buffer.callback(buffer);
+            UpdateDucking(buffer);
+        }
+    }
+    if (subtitleDestroyFrames && --subtitleDestroyFrames == 0) {
+        scenDestroySubtitles(ScenarioTask());
+        currentDialogue = nullptr;
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint64_t GetConversationAudioLanguage() noexcept {
+    return static_cast<std::uint32_t>(conversationAudioLanguage);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetConversationAudioLanguage(std::int32_t language) {
+    if (language == conversationAudioLanguage || language > 1)
+        return;
+    const std::int32_t actNumber = g_actNumber;
+    conversationAudioLanguage = language;
+    if (actNumber == 99 || !resources)
+        return;
+    char names[368];
+    std::int32_t count = 0;
+    while (count < 16 && resources[count].bankName[0]) {
+        std::strcpy(names + 23 * count, resources[count].bankName.data());
+        ++count;
+    }
+    for (std::int32_t index = 0; index < 16; ++index)
+        if (resources[index].archive)
+            ReleaseResource(resources[index]);
+    char bank[16];
+    std::sprintf(bank, "FREE0%d", actNumber);
+    LoadIndex(bank);
+    while (!LoadArchive(bank)) {
+    }
+    std::sprintf(bank, "BGM0%d", actNumber);
+    LoadIndex(bank);
+    while (!LoadArchive(bank)) {
+    }
+    for (std::int32_t index = 0; index < count; ++index) {
+        LoadIndex(names + 23 * index);
+        while (!LoadArchive(names + 23 * index)) {
+        }
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void ReleaseConversationResources() {
+    // ReleaseConversationResources' heap-retirement epoch follows deferred VOIC destruction.
+    // The former task slot and SCEN/FACX borrowers may already be reused.
+    for (auto &buffer : conversationData.buffers) {
+        StopDialogueVoice(buffer.stream.handle);
+        ReleaseConversationPacket(buffer.packetRequest);
+        if (buffer.packet)
+            HLib::FreeTaskData(buffer.packet);
+        buffer = {};
+    }
+    if (resources) {
+        for (std::size_t index = 0; index < indexSizes.size(); ++index) {
+            ConversationResource &resource = resources[index];
+            ConversationResource *cached = FindCachedResource(resource.bankName.data());
+            if (resource.bankName[0] && (!cached || !cached->index))
+                ReleaseResource(resource);
+        }
+        HLib::FreeTaskData(resources);
+    }
+    resources = nullptr;
+    indexSizes = {};
+    currentDialogue = nullptr;
+    subtitleDestroyFrames = 0;
+    ReleaseDialogueAudio();
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void ApplyConversationPacket(void *packet, ConversationBuffer &buffer) {
+    MapInfoChunk *const first = static_cast<MapInfoChunk *>(packet);
+    MapInfoChunk *chunk;
+    const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    const shen_name speaker = buffer.speaker;
+    HLib::Task *const scenarioTask = control->scenarioTask;
+    if (!speaker) {
+        chunk = FindNativeChunk("CHID", first);
+        if (chunk)
+            buffer.speaker = *reinterpret_cast<const shen_name *>(chunk + 1);
+    }
+    buffer.speaker = ResolveConversationSpeaker(buffer.speaker);
+    chunk = FindNativeChunk("STDL", first);
+    if (chunk) {
+        if (ScenarioCharacterIsRyo(buffer.speaker))
+            PrepareConversationPacketSubtitles(scenarioTask, reinterpret_cast<const char *>(chunk + 1), 1);
+        else
+            PrepareConversationPacketSubtitles(scenarioTask, reinterpret_cast<const char *>(chunk + 1), 0);
+    }
+    chunk = FindNativeChunk("CLIP", first);
+    if (chunk)
+        scenAssignFacialClip(scenarioTask, reinterpret_cast<const std::int16_t *>(chunk + 1), buffer.speaker);
+    const std::int32_t cameraCode = GetConversationCameraCode();
+    if (cameraCode)
+        SetConversationStreamCameraCode(buffer.stream, cameraCode);
+}
+#else
+// @verified - d
+void ApplyConversationPacket(void *packet, ConversationBuffer &buffer) {
+    const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    HLib::Task *const scenarioTask = control->scenarioTask;
+    MapInfoChunk *const first = static_cast<MapInfoChunk *>(packet);
+    if (!buffer.speaker) {
+        const MapInfoChunk *const character = FindNativeChunk("CHID", first);
+        if (character)
+            buffer.speaker = *reinterpret_cast<const shen_name *>(character + 1);
+    }
+    buffer.speaker = ResolveConversationSpeaker(buffer.speaker);
+    const MapInfoChunk *const text = FindNativeChunk("STDL", first);
+    if (text) {
+        const std::int32_t speakerMode = ScenarioCharacterIsRyo(buffer.speaker) ? 1 : 0;
+        PrepareConversationPacketSubtitles(scenarioTask, reinterpret_cast<const char *>(text + 1), speakerMode);
+    }
+    const MapInfoChunk *const clip = FindNativeChunk("CLIP", first);
+    if (clip)
+        scenAssignFacialClip(scenarioTask, reinterpret_cast<const std::int16_t *>(clip + 1), buffer.speaker);
+    const std::int32_t cameraCode = GetConversationCameraCode();
+    if (cameraCode)
+        SetConversationStreamCameraCode(buffer.stream, cameraCode);
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ConversationFadeOutCallback(ConversationBuffer &buffer) {
+    buffer.fadeVolume = static_cast<std::int32_t>(static_cast<std::uint32_t>(buffer.fadeVolume) - static_cast<std::uint32_t>(buffer.fadeStep));
+    if (buffer.fadeVolume > -CONVERSATION_FADE_RANGE) {
+        if (GetConversationPlaybackEnabled()) {
+            SetConversationVolume(&buffer, buffer.fadeVolume);
+            UpdateConversationStream(buffer.stream);
+        }
+    } else {
+        StopConversationBuffers(&buffer);
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void scenAssignFacialClip(HLib::Task *scenarioTask, const std::int16_t *clip, shen_name speaker) {
+    Character *const character = scenFindChara(scenarioTask, speaker);
+    if (character)
+        AssignFacialClip(character, clip);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void PrepareConversationPacketSubtitles(HLib::Task *scenarioTask, const char *text, std::int32_t speakerMode) {
+    shenPrepareDialogue(scenarioTask, 1, text, speakerMode);
+}
+
+void cvsDestroySubtitles(HLib::Task *scenarioTask) {
+    scenDestroySubtitles(scenarioTask);
+}
+
+#else
+
+namespace {
+
+void PrepareConversationPacketSubtitles(HLib::Task *scenario, const char *text, shen_name speaker) {
+    const bool isRyo = ScenarioCharacterIsRyo(speaker);
+    subtitleDestroyFrames = 0;
+    shenPrepareDialogue(scenario, 1, text, isRyo);
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+const std::int16_t *FindConversationBuiltinFacialClip(const ConversationBuffer &buffer) {
+    const std::array<std::uint32_t, 3> code = std::bit_cast<std::array<std::uint32_t, 3>>(buffer.code);
+    const BuiltinFacialClip *found = nullptr;
+    for (const BuiltinFacialClip &clip : builtinFacialClips)
+        if (clip.first == code[1] && clip.second == code[2])
+            found = &clip;
+    return found ? builtinFacialData.data() + 2U * found->offset : nullptr;
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void PublishPacket(const std::uint32_t *packet, ConversationBuffer &buffer) {
+    HLib::Task *scenario = ScenarioTask();
+    const bool hasCharacter = packet[0] == SHEN_NAME(CHID);
+    if (!buffer.speaker.name && hasCharacter) {
+        const std::uint32_t *character = FindConversationIndexChunk(packet, SHEN_NAME(CHID));
+        if (character)
+            buffer.speaker = character[2];
+    }
+    buffer.speaker = ResolveSpeaker(buffer.speaker);
+    if (!buffer.subtitles) {
+        const char *text = nullptr;
+        if (hasCharacter && FindConversationIndexChunk(packet, SHEN_NAME(STDL))) {
+            text = FindSceneTextRemapped(buffer.code.data(), GetConversationAudioLanguage() == 1);
+        } else {
+            const std::array<std::uint32_t, 3> code = std::bit_cast<std::array<std::uint32_t, 3>>(buffer.code);
+            if (code[0] == SHEN_NAME(0001)) {
+                for (std::uint32_t index = 0; index != CONVERSATION_PACKET_FALLBACK_LABELS.size(); ++index) {
+                    if (code[1] != make_shen_name('B', '0', '0', static_cast<char>('1' + index)))
+                        continue;
+                    const std::string_view label = GetLocalizedSceneText(CONVERSATION_PACKET_FALLBACK_LABELS[index]);
+                    text = label.empty() ? " " : label.data();
+                    break;
+                }
+            }
+        }
+        if (text)
+            PrepareConversationPacketSubtitles(scenario, text, buffer.speaker);
+    }
+    if (hasCharacter) {
+        const std::uint32_t *clip = FindConversationIndexChunk(packet, SHEN_NAME(CLIP));
+        if (clip) {
+            Character *character = scenFindChara(scenario, buffer.speaker);
+            if (character)
+                AssignFacialClip(character, reinterpret_cast<const std::int16_t *>(clip + 2));
+        }
+    } else if (std::memcmp(buffer.code.data(), "F224", 4) == 0) {
+        const std::int16_t *clip = FindConversationBuiltinFacialClip(buffer);
+        if (clip) {
+            Character *character = scenFindChara(scenario, buffer.speaker);
+            if (character)
+                AssignFacialClip(character, clip);
+        }
+    }
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void UpdatePacket(ConversationBuffer &buffer) {
+    if (IsConversationPacketBusy(buffer.packetRequest))
+        return;
+    ReleaseConversationPacket(buffer.packetRequest);
+    buffer.packetRequest = nullptr;
+    ConversationPacketBuffer &packet = *buffer.packet;
+    if (*reinterpret_cast<const std::uint32_t *>(packet.data.data()) == SHEN_NAME(SEGA)) {
+        buffer.packetRequest = RequestConversationPacket(buffer.resource->archive, static_cast<std::int32_t>(packet.entry), packet.sector, packet.data.data());
+    } else {
+        packet.pending = 0;
+        const std::uint64_t offset = (static_cast<std::uint32_t>(buffer.packetOffset) >> 2U) * 4ULL;
+        PublishPacket(reinterpret_cast<const std::uint32_t *>(packet.data.data() + offset), buffer);
+        buffer.callback = UpdateStream;
+    }
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void UpdateFade(ConversationBuffer &buffer) {
+    buffer.fadeVolume -= buffer.fadeStep;
+    if (buffer.fadeVolume > -200)
+        SetConversationVolume(&buffer, buffer.fadeVolume);
+    else
+        scenCvsCtrlFree(&buffer);
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void UpdateDucking(ConversationBuffer &buffer) {
+    if (buffer.priority != 1)
+        return;
+    bool competing = false;
+    for (const auto &other : conversationData.buffers) {
+        if (other.callback && (other.priority & 6)) {
+            competing = true;
+            break;
+        }
+    }
+    if (!competing) {
+        if (buffer.duckVolume > 0)
+            return;
+        if (buffer.duckVolume >= buffer.volume)
+            buffer.duckVolume = 1;
+        else
+            ++buffer.duckVolume;
+    } else if (buffer.duckVolume <= 0 || buffer.volume <= -50) {
+        if (static_cast<std::uint32_t>(buffer.duckVolume) < 0xffffffcfU && buffer.duckVolume != 0)
+            return;
+        buffer.duckVolume -= 4;
+    } else {
+        buffer.duckVolume = buffer.volume;
+        buffer.duckState = 2;
+    }
+    if (buffer.duckVolume <= 0)
+        ApplyVolume(buffer, buffer.duckVolume + buffer.stream.baseAttenuation);
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+void SetCameraCode(ConversationBuffer &buffer, const std::array<char, 12> &voiceCode) {
+    if (!cameraCodesEnabled)
+        return;
+    Vector3 cameraPosition;
+    camCtrlGetNextCamPos(&cameraPosition);
+    std::int32_t code = (flddQueryCameraIntersection(cameraPosition) >> 16) & 15U;
+    if (!code && GetConversationAudioLanguage() == 1) {
+        const std::string_view prefix{voiceCode.data(), 4};
+        const std::string_view suffix{voiceCode.data() + 4, 4};
+        std::string_view choices;
+        if (prefix == "0549")
+            choices = "A001A002A006B001B002B003C001";
+        else if (prefix == "0511")
+            choices = "B001B002C001C002C003";
+        else if (prefix == "0275")
+            choices = "F001F002";
+        else if (prefix == "0276")
+            choices = "F001";
+        else if (prefix == "0509")
+            choices = "C001C002C003C004D001D002";
+        else if (prefix == "0500")
+            code = 15;
+        else if (prefix == "0064")
+            choices = "C001C002C003C004C005C006D001D002D003D004D005D006";
+        else if (prefix == "0278")
+            choices = "D001D002D003E001E002E003E004";
+        for (std::size_t offset = 0; offset + 4 <= choices.size(); offset += 4)
+            if (choices.substr(offset, 4) == suffix) {
+                code = 15;
+                break;
+            }
+    }
+    if (code)
+        buffer.stream.cameraCode = buffer.stream.pauseCategory ? code : std::min(code, 16);
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+bool cvsGet() {
+    const ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    std::int32_t count = 2;
+    do {
+        if (buffer->callback && (buffer->packetOffset & 0x80000000) == 0)
+            return true;
+        ++buffer;
+    } while (--count != 0);
+    return false;
+}
+#endif
+
+#else
+
+bool cvsGet() noexcept {
+    for (const auto &buffer : conversationData.buffers)
+        if (buffer.callback && buffer.packetOffset >= 0)
+            return true;
+    return false;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void PauseConversation(ConversationBuffer *buffer, std::int32_t paused) {
+    if (!buffer) {
+        ConversationBuffer *current = g_conversationTaskData->buffers;
+        std::int32_t remaining = 2;
+        do {
+            if (current->callback)
+                SetConversationStreamPauseState(&current->stream, paused);
+            ++current;
+        } while (--remaining);
+    } else {
+        SetConversationStreamPauseState(&buffer->stream, paused);
+    }
+}
+#else
+// @verified - d
+void PauseConversation(ConversationBuffer *buffer, std::int32_t paused) {
+    if (buffer) {
+        SetConversationStreamPauseState(&buffer->stream, paused);
+    } else {
+        for (std::int32_t index = 0; index < 2; ++index) {
+            ConversationBuffer &current = g_conversationTaskData->buffers[index];
+            if (current.callback)
+                SetConversationStreamPauseState(&current.stream, paused);
+        }
+    }
+}
+#endif
+
+#else
 
 void PauseConversation(ConversationBuffer *buffer, std::int32_t paused) {
     const auto apply = [paused](ConversationBuffer &target) {
@@ -12413,6 +14045,10 @@ void PauseConversation(ConversationBuffer *buffer, std::int32_t paused) {
             if (candidate.callback)
                 apply(candidate);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void PauseConversationCategories(bool paused) {
     for (auto &buffer : conversationData.buffers) {
@@ -12431,6 +14067,11 @@ void PauseConversationCategories(bool paused) {
         }
     }
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 std::uint8_t PauseOrDestroyAudioAndSubtitles(std::int32_t paused) {
     if (shenIsInIntro())
         return 1;
@@ -12445,9 +14086,17 @@ std::uint8_t PauseOrDestroyAudioAndSubtitles(std::int32_t paused) {
     return 0;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void SetConversationCameraCodesEnabled(std::int32_t enabled) noexcept {
     cameraCodesEnabled = enabled;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::uint64_t SCEN_ShowEventMessage(HLib::Task *task, std::int64_t, const char *message) {
     auto *scenario = ScenarioData(task);
@@ -12457,6 +14106,10 @@ std::uint64_t SCEN_ShowEventMessage(HLib::Task *task, std::int64_t, const char *
     ProcessSubtitleText(message);
     return ProcessVoiceFlags(2);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool shenPrepareDialogue(HLib::Task *task, std::int64_t, const char *message, std::int32_t speakerMode) {
     auto *scenario = ScenarioData(task);
@@ -12473,6 +14126,10 @@ bool shenPrepareDialogue(HLib::Task *task, std::int64_t, const char *message, st
     return published;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void scenDestroySubtitles(HLib::Task *task) {
     EndSubtitlePresentation();
     auto *scenario = ScenarioData(task);
@@ -12487,6 +14144,10 @@ void scenDestroySubtitles(HLib::Task *task) {
     }
     scenario->field0e4 = 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ForceScenarioSubtitles(HLib::Task *task) {
     auto *scenario = ScenarioData(task);
@@ -12505,11 +14166,17 @@ void ForceScenarioSubtitles(HLib::Task *task) {
         scenario->windowTextState.scenarioStateFlags |= 8U;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 ScenarioTalkPresentationState &GetScenarioTalkPresentationState() noexcept {
     return scenarioTalkPresentation;
 }
 
-ScenarioActionQueue *scenarioActionQueueStorage{};
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void InitializeScenarioConversation() {
     scenarioTalkPresentation.participants = {};
@@ -12523,21 +14190,41 @@ void InitializeScenarioConversation() {
     scenarioAcknowledgementQueue = AllocateScenarioActionQueue(SHEN_NAME(SCNF));
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void QueueScenarioCharacterAction(shen_name name, std::int32_t action) {
     WriteScenarioAction(scenarioActionQueue, {name, action});
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t ReadScenarioCharacterAction(ScenarioAction &action) {
     return ReadScenarioAction(scenarioActionQueue, action);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void AcknowledgeScenarioCharacterAction(shen_name name, std::int32_t action) {
     WriteScenarioAction(scenarioAcknowledgementQueue, {name, action});
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 std::int32_t ReadScenarioAcknowledgement(ScenarioAction &action) {
     return ReadScenarioAction(scenarioAcknowledgementQueue, action);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t DrainScenarioAcknowledgements() {
     ScenarioAction action;
@@ -12548,6 +14235,10 @@ std::int32_t DrainScenarioAcknowledgements() {
     return result;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void QueueScenarioRecordAction(ScenarioFreeTalkRecord &record, std::int32_t action) {
     // QueueScenarioRecordAction changes these flags before publishing the eight-byte command.
     if (action == 204)
@@ -12557,4 +14248,279 @@ void QueueScenarioRecordAction(ScenarioFreeTalkRecord &record, std::int32_t acti
     QueueScenarioCharacterAction(record.name, action);
 }
 
-} // namespace shenmue::s2
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+std::int32_t GetConversationPaused(const ConversationBuffer *buffer) {
+    const ConversationBuffer *candidate = g_conversationTaskData->buffers;
+    if (buffer)
+        return GetConversationStreamPauseState(&buffer->stream);
+    for (std::int32_t count = 2; count != 0; --count, ++candidate)
+        if (GetConversationStreamPauseState(&candidate->stream))
+            return 1;
+    return 0;
+}
+#endif
+
+#else
+
+// @verified - p
+std::uint64_t GetConversationPaused(const ConversationBuffer *buffer) noexcept {
+    if (buffer)
+        return buffer->stream.handle ? static_cast<std::uint32_t>(buffer->stream.paused) : 0U;
+    for (const ConversationBuffer &candidate : conversationData.buffers)
+        if (candidate.stream.handle && candidate.stream.paused)
+            return 1;
+    return 0;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+float GetConversationPlaybackSeconds(const ConversationBuffer *buffer) noexcept {
+    if (!buffer)
+        return 0.0f;
+    std::uint64_t samples = 0;
+    std::uint32_t rate = 0;
+    if (!GetDialogueVoicePosition(buffer->stream.handle, samples, rate))
+        return 0.0f;
+    return static_cast<float>(static_cast<std::int32_t>(samples)) / static_cast<float>(static_cast<std::int32_t>(rate));
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void SetConversationsPaused(std::int32_t paused) {
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    std::int32_t remaining = 2;
+    do {
+        if (buffer->callback && buffer->pauseEnabled) {
+            if (paused) {
+                ConversationStream *const stream = &buffer->stream;
+                if (!GetConversationStreamPauseState(stream)) {
+                    SetConversationStreamPauseState(stream, 1);
+                    buffer->pauseOwned = 1;
+                }
+            } else if (buffer->pauseOwned) {
+                ConversationStream *const stream = &buffer->stream;
+                if (GetConversationStreamPauseState(stream))
+                    SetConversationStreamPauseState(stream, 0);
+                buffer->pauseOwned = 0;
+            }
+        }
+        ++buffer;
+    } while (--remaining);
+}
+#else
+// @verified - d
+void SetConversationsPaused(std::int32_t paused) {
+    for (std::size_t rangeIndex200 = 0; rangeIndex200 < sizeof(g_conversationTaskData->buffers) / sizeof((g_conversationTaskData->buffers)[0]);
+        ++rangeIndex200) {
+        ConversationBuffer &buffer = (g_conversationTaskData->buffers)[rangeIndex200];
+
+        if (!buffer.callback || !buffer.pauseEnabled)
+            continue;
+        if (!paused) {
+            if (buffer.pauseOwned) {
+                if (GetConversationStreamPauseState(&buffer.stream))
+                    SetConversationStreamPauseState(&buffer.stream, 0);
+                buffer.pauseOwned = 0;
+            }
+        } else if (!GetConversationStreamPauseState(&buffer.stream)) {
+            SetConversationStreamPauseState(&buffer.stream, 1);
+            buffer.pauseOwned = 1;
+        }
+    }
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+ConversationBuffer *GetConverseDataForChara(shen_name speaker) {
+    ConversationBuffer *buffer = g_conversationTaskData->buffers;
+    std::int32_t count = 2;
+    do {
+        if (buffer->callback && buffer->speaker == speaker)
+            return buffer;
+        ++buffer;
+    } while (--count != 0);
+    return 0;
+}
+#endif
+
+#else
+
+ConversationBuffer *GetConverseDataForChara(shen_name speaker) noexcept {
+    for (auto &buffer : conversationData.buffers)
+        if (buffer.callback && buffer.speaker.name == speaker.name)
+            return &buffer;
+    return nullptr;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer) {
+    const ConversationBuffer *candidate = g_conversationTaskData->buffers;
+    std::int32_t remaining = 2;
+    do {
+        if (buffer == candidate && candidate->callback)
+            return candidate->speaker;
+        ++candidate;
+    } while (--remaining);
+    return shen_name();
+}
+#endif
+
+#else
+
+shen_name cvsFindVoiceDataFor(const ConversationBuffer *buffer) noexcept {
+    for (const auto &candidate : conversationData.buffers)
+        if (&candidate == buffer && candidate.callback)
+            return candidate.speaker;
+    return shen_name{};
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+shen_name ResolveConversationSpeaker(shen_name name) {
+    for (std::int32_t index = 0; index < 8; ++index) {
+        if (g_conversationSpeakerAliases[index].source == name) {
+            if (g_conversationSpeakerAliases[index].flags) {
+                const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+                if (!scenFindChara(control->scenarioTask, g_conversationSpeakerAliases[index].target))
+                    continue;
+            }
+            name = g_conversationSpeakerAliases[index].target;
+            break;
+        }
+    }
+    return name;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool RegisterConversationSpeakerAlias(shen_name target, shen_name source, std::uint32_t flags) {
+    for (std::int32_t index = 0; index < 8; ++index) {
+        if (!g_conversationSpeakerAliases[index].source) {
+            g_conversationSpeakerAliases[index].source = source;
+            g_conversationSpeakerAliases[index].target = target;
+            g_conversationSpeakerAliases[index].flags = flags;
+            return true;
+        }
+    }
+    return false;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+bool RemoveConversationSpeakerAlias(shen_name target) {
+    for (std::int32_t index = 0; index < 8; ++index) {
+        if (g_conversationSpeakerAliases[index].target == target) {
+            g_conversationSpeakerAliases[index].source = __typeof__(g_conversationSpeakerAliases[index].source)();
+            return true;
+        }
+    }
+    return false;
+}
+#endif
+
+#else
+
+// @verified - p
+bool RemoveConversationSpeakerAlias(shen_name target) {
+    for (std::size_t index = 0; index < speakerAliases.size(); ++index) {
+        if (speakerAliases[index].target.name == target.name) {
+            speakerAliases[index].source = {};
+            return true;
+        }
+    }
+    return false;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ResetConversationSpeakerAliases() {
+    for (std::int32_t index = 0; index < 8; ++index)
+        g_conversationSpeakerAliases[index].source = 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::uint16_t GetConversationIndexEntryCount(const std::uint32_t *index) {
+    return reinterpret_cast<const std::uint16_t *>(index)[4];
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void UpdateConversationDucking(ConversationBuffer &buffer) {
+    std::int32_t volume = 1;
+    if (buffer.priority != 1)
+        return;
+    if (FindConversationByPriority(6)) {
+        if (buffer.duckVolume > 0 && buffer.volume > -80) {
+            volume = buffer.volume;
+            buffer.duckVolume = volume;
+            buffer.duckState = 2;
+        } else if (buffer.duckVolume <= 0) {
+            if (buffer.duckVolume > -80)
+                volume = buffer.duckVolume = buffer.duckVolume - 4;
+        }
+    } else if (buffer.duckVolume <= 0) {
+        if (buffer.duckVolume < buffer.volume) {
+            volume = buffer.duckVolume = buffer.duckVolume + 1;
+        } else {
+            volume = buffer.duckVolume;
+            buffer.duckVolume = 1;
+        }
+    }
+    if (volume <= 0)
+        SetConversationStreamVolume(buffer.stream, volume);
+}
+
+#endif
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_ClearConversationTaskRegistration(std::uint32_t target) {
+    return shenmue::s2::RemoveConversationSpeakerAlias(shenmue::shen_name(target));
+}
+#endif
+#else
+#endif

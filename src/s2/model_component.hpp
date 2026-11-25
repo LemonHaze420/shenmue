@@ -21,7 +21,11 @@ struct MotionPose;
 struct MotionWork;
 inline constexpr shen_name AREA_PATTERN_MAZE{make_shen_name('K', 'M', 'Z', '?')};
 inline constexpr shen_name AREA_PATTERN_KOWLOON{make_shen_name('Q', '?', '?', '?')};
+#if SHENMUE_S2_GCC295
+std::int32_t MatchAreaNamePattern(shen_name area, shen_name pattern);
+#else
 bool MatchAreaNamePattern(shen_name area, shen_name pattern);
+#endif
 
 void *AllocateModelComponent(Character *character, shen_name token, std::uint32_t payloadSize, ModelComponentUpdate update,
     ModelComponentCleanup cleanup = nullptr, ModelComponentCore core = nullptr);

@@ -1,3 +1,19 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/lighting_dc.hpp"
+
+#include "platform/dc/sdk.hpp"
+#include "platform/dc/mt7.hpp"
+#include <math.h>
+#include <string.h>
+#define SHENMUE_LIGHT_DATA(name) name
+#define SHENMUE_LIGHT_COUNT(name) (sizeof(name) / sizeof(name[0]))
+#define SHENMUE_LIGHT_STORAGE(type, name, count) type name[count]
+#define SHENMUE_LIGHT_INITIALIZER = {}
+#define SHENMUE_LIGHT_MEMSET ::memset
+#define SHENMUE_LIGHT_FABS ::fabsf
+#define SHENMUE_LIGHT_NULL 0
+#else
 #include "enhancements/misc_mods.hpp"
 #include "s2/lighting.hpp"
 
@@ -37,42 +53,39 @@
 #include <cmath>
 #include <cstdint>
 #include <cstring>
+#endif
 
-    namespace shenmue::s2 {
-    std::array<SDSceneLight, 256> g_sdSceneLights{};
-    SDLightConstants g_sdLightConstants{};
-    Vector2 g_sdShadowAtlasSize{};
-    Vector3 g_sdCameraPosition{};
-    Vector3 g_sdSunDirection{0.0f, -1.0f, 0.0f};
-    std::int32_t g_sdNightTime{};
-    std::int32_t g_sdFillLightFlag = 1;
+namespace shenmue {
+namespace s2 {
 
-    // @verified - p
-    void PublishSDLights(const std::array<SDSceneLight, 256> &lights, const Vector3 &camera, std::uint8_t hour) {
-        g_sdLightConstants.shadowAtlasSize = g_sdShadowAtlasSize;
-        g_sdCameraPosition = camera;
-        g_sdLightConstants.environmentStrength = 1.0f;
-        g_sdLightConstants.irradianceStrength = 1.0f;
-        g_sdNightTime = static_cast<std::uint8_t>(hour - 2) > 16;
-        const float multiplier = GetLegacyParticleLightIntensity();
-        const float red = (multiplier * lights[0].colour.x) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
-        const float green = (multiplier * lights[0].colour.y) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
-        const float blue = (multiplier * lights[0].colour.z) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
-        g_sdLightConstants.fillLightOffsetScaler = g_sdFillLightFlag == 0;
-        g_sdLightConstants.ambient[0] = {red, green, blue, 1.0f};
-        g_sdLightConstants.ambient[1] = {red, green, blue, 1.0f};
-        g_sdLightConstants.lightIntensity = 1.0f;
-        g_sdLightConstants.ambient[2] = {red, green, blue, 1.0f};
-        g_sdSunDirection = lights[0].direction;
-        g_sdSceneLights = lights;
-    }
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::array<SDSceneLight, 256> g_sdSceneLights{};
+
+SDLightConstants g_sdLightConstants{};
+
+Vector2 g_sdShadowAtlasSize{};
+
+Vector3 g_sdCameraPosition{};
+
+Vector3 g_sdSunDirection{0.0f, -1.0f, 0.0f};
+
+std::int32_t g_sdNightTime{};
+
+std::int32_t g_sdFillLightFlag = 1;
+
 WeatherSunState g_weatherSunState{};
+
 Vector3 &g_sunDirectionVector = g_weatherSunState.direction;
+
 float &g_flareIntensity = g_weatherSunState.sourceIntensity;
+
 std::int32_t &g_hasComputedSun = g_weatherSunState.explicitDirection;
+
 namespace {
 
 constexpr std::uint32_t lghtToken = CHUNK_LGHT.name;
+
 std::array<MT7Model, 14> weatherLensModels;
 
 LightRuntimeEntry defaultLight{
@@ -86,27 +99,102 @@ LightRuntimeEntry defaultLight{
 };
 
 std::array<LightDefinitionEntry, 24> lightDefinitions{};
+
 std::array<LightRuntimeEntry, 256> lightRuntimeEntries{};
+
 const std::byte *lightChunkEnd = nullptr;
 
 std::array<const std::byte *, 24> lightDefinitionEnds{};
+
 Vector4 globalLighting{0.3f, 0.3f, 0.3f, 0.3f};
+
 Vector4 previousGlobalLighting{};
+
 Vector3 lightRootPosition{};
+
 float weatherLighting = std::bit_cast<float>(0xffffffffU);
+
 float weatherSceneLighting = std::bit_cast<float>(0xffffffffU);
+
 std::array<std::int16_t, 16> selectedLightIndices{};
+
 std::array<std::int16_t, 256> characterLightCandidates{};
+
 std::size_t characterLightCandidateCount{};
+
 std::int32_t previousActiveLight = 1;
+
 std::array<std::int16_t, 5> priorityLightIndices{};
+
 std::size_t priorityLightCount = 0;
+
 std::uint32_t rankedLightLimit = 12;
+
 std::int32_t currentActiveLight = 1;
+
 bool rankMapLights = false;
+
 std::array<MapLightingPlacement, 33> mapLightingPlacements{};
+
 Vector3 *savedLightPositions{};
+
 const Matrix4x4 *currentLightTransform{};
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t size);
+void UpdateSunForDateTime(const DateTime &date, float latitudeTilt, Vector3 &direction, float intensityScale);
+void UpdateGlobalLighting(const Vector4 &colour);
+void GetGlobalLighting(Vector4 *colour);
+void SetLightRuntimeColour(std::uint32_t index, const Vector4 &colour);
+void SetLightSceneIntensity(std::uint32_t index, float intensity);
+void SetLightRange(std::uint32_t index, float range);
+void SetLightFalloff(std::uint32_t index, const float *falloff);
+void SetLightRuntimePosition(std::uint32_t index, const Vector3 &position);
+std::uint64_t SetLightSunDirection(std::uint32_t index, const Vector3 &direction);
+void ResetLightRuntimeEntry(std::uint32_t index);
+void SetWeatherLighting(float value);
+void SetWeatherSceneLighting(float value);
+float GetWeatherLighting();
+float GetWeatherSceneLighting();
+std::int32_t GetCurrentActiveLight();
+void SetCurrentActiveLight(std::int32_t mode);
+void SetLightEntryIndex(std::uint32_t index, std::uint32_t value);
+void SetLightConeAngle(std::uint32_t index, std::int16_t angle);
+void SetLightFlagForIndex(std::uint32_t index, std::int32_t value);
+void ReinitializeLights(std::int32_t mode);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void PublishSDLights(const std::array<SDSceneLight, 256> &lights, const Vector3 &camera, std::uint8_t hour) {
+    g_sdLightConstants.shadowAtlasSize = g_sdShadowAtlasSize;
+    g_sdCameraPosition = camera;
+    g_sdLightConstants.environmentStrength = 1.0f;
+    g_sdLightConstants.irradianceStrength = 1.0f;
+    g_sdNightTime = static_cast<std::uint8_t>(hour - 2) > 16;
+    const float multiplier = GetLegacyParticleLightIntensity();
+    const float red = (multiplier * lights[0].colour.x) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
+    const float green = (multiplier * lights[0].colour.y) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
+    const float blue = (multiplier * lights[0].colour.z) * SD_AMBIENT_SCALE + SD_AMBIENT_OFFSET;
+    g_sdLightConstants.fillLightOffsetScaler = g_sdFillLightFlag == 0;
+    g_sdLightConstants.ambient[0] = {red, green, blue, 1.0f};
+    g_sdLightConstants.ambient[1] = {red, green, blue, 1.0f};
+    g_sdLightConstants.lightIntensity = 1.0f;
+    g_sdLightConstants.ambient[2] = {red, green, blue, 1.0f};
+    g_sdSunDirection = lights[0].direction;
+    g_sdSceneLights = lights;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 template <typename T> bool Read(const std::byte *address, T &value) {
     if (!address || !lightChunkEnd || address > lightChunkEnd || static_cast<std::size_t>(lightChunkEnd - address) < sizeof(T)) {
@@ -115,6 +203,14 @@ template <typename T> bool Read(const std::byte *address, T &value) {
     std::memcpy(&value, address, sizeof(value));
     return true;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 float F16toF32(std::int16_t value) {
     if (value == 0)
@@ -127,9 +223,25 @@ float F16toF32(std::int16_t value) {
     return std::bit_cast<float>(bits);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void PublishGlobalLighting() {
     SetLegacyGlobalLighting(globalLighting);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 std::uint64_t GetGeometryLightColour(Vector4 *colour) {
@@ -140,6 +252,14 @@ std::uint64_t GetGeometryLightColour(Vector4 *colour) {
     colour->w *= 1.4f;
     return 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void AllocateGeometryLightPositionScratch() {
     savedLightPositions = static_cast<Vector3 *>(HLib::AllocateTaskData(256 * sizeof(Vector3), TASK_LGTP));
@@ -156,6 +276,14 @@ void AllocateGeometryLightPositionScratch() {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 void RestoreGeometryLightPositionScratch() {
     if (!savedLightPositions)
@@ -166,19 +294,39 @@ void RestoreGeometryLightPositionScratch() {
     HLib::FreeTaskData(savedLightPositions);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void InitializeDefaultDirectionalLight() {
     LightRuntimeEntry &light = lightRuntimeEntries[0];
     ResetLightRuntimeEntry(0);
     light.indexes = {1, 2};
 }
 
+} // namespace
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+// Native shared post-update nullsub, retained at the lighting mode boundary.
 void LightModeNullsub(std::intptr_t) {
 }
 
 } // namespace
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// Native ImmediateLightWork publishes the global lighting and the 16 selected light slots.
 // @verified - p
 void ImmediateLightWork(void *) {
     currentActiveLight = previousActiveLight;
@@ -191,6 +339,11 @@ void ImmediateLightWork(void *) {
     }
     UpdateLegacyLightTransforms();
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void AssignMagicRoomLighting(const Vector3 &origin, float radius) {
     currentActiveLight = previousActiveLight;
@@ -216,6 +369,10 @@ void AssignMagicRoomLighting(const Vector3 &origin, float radius) {
     UpdateLegacyLightTransforms();
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void AssignLightParametersForMagicRoomEntity(std::uint32_t index, const MagicRoomEntityLight &light) {
     if (!light.enabled) {
@@ -232,6 +389,10 @@ void AssignLightParametersForMagicRoomEntity(std::uint32_t index, const MagicRoo
     SetLightConeAngle(index, static_cast<std::int16_t>(light.coneAngle));
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 bool BeginTemporaryGlobalLighting(const Vector4 &colour, TemporaryGlobalLightingState &saved) {
     if (saved.engaged)
         return false;
@@ -242,6 +403,10 @@ bool BeginTemporaryGlobalLighting(const Vector4 &colour, TemporaryGlobalLighting
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void EndTemporaryGlobalLighting(TemporaryGlobalLightingState &saved) {
     if (!saved.engaged)
         return;
@@ -250,6 +415,10 @@ void EndTemporaryGlobalLighting(TemporaryGlobalLightingState &saved) {
     saved.engaged = false;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 namespace {
 
 template <typename T> T GeometryRead(const std::byte *bytes, std::size_t offset = 0) {
@@ -257,12 +426,39 @@ template <typename T> T GeometryRead(const std::byte *bytes, std::size_t offset 
     std::memcpy(&value, bytes + offset, sizeof(value));
     return value;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 template <typename T> void GeometryWrite(std::byte *bytes, std::size_t offset, const T &value) {
     std::memcpy(bytes + offset, &value, sizeof(value));
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 float LightDot(const Vector3 &first, const Vector3 &second) {
     return (first.y * second.y + first.x * second.x) + first.z * second.z;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void NormalizeGeometryLight(Vector3 &value, bool threshold) {
     if (threshold && std::fabs(value.x) <= 0.00001f && std::fabs(value.y) <= 0.00001f && std::fabs(value.z) <= 0.00001f)
         return;
@@ -273,6 +469,15 @@ void NormalizeGeometryLight(Vector3 &value, bool threshold) {
     value.y /= length;
     value.z /= length;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::uint32_t PackGeometryColour(const Vector4 &colour) {
     const float *const components = &colour.x;
     std::uint32_t result = 0;
@@ -282,16 +487,43 @@ std::uint32_t PackGeometryColour(const Vector4 &colour) {
     }
     return result;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::uint32_t PackGeometryNormal(const Vector3 &normal, std::uint32_t marker) {
     return marker | (static_cast<std::uint32_t>(static_cast<std::uint8_t>(static_cast<std::int32_t>(normal.x * 127.0f))) << 16) |
         (static_cast<std::uint32_t>(static_cast<std::uint8_t>(static_cast<std::int32_t>(normal.y * 127.0f))) << 8) |
         static_cast<std::uint8_t>(static_cast<std::int32_t>(normal.z * 127.0f));
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 Vector3 UnpackGeometryNormal(std::uint32_t packed) {
     return {static_cast<float>(static_cast<double>(static_cast<std::int8_t>(packed >> 16)) / 127.0),
         static_cast<float>(static_cast<double>(static_cast<std::int8_t>(packed >> 8)) / 127.0),
         static_cast<float>(static_cast<double>(static_cast<std::int8_t>(packed)) / 127.0)};
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void SelectGeometryInfluences(const std::byte *mesh, GeometryLightTreeWork &work, bool xb01) {
     Vector3 centre = GeometryRead<Vector3>(mesh, 8);
     Matrix4x4::TransformPoint(centre, centre);
@@ -329,6 +561,15 @@ void SelectGeometryInfluences(const std::byte *mesh, GeometryLightTreeWork &work
             ++work.influenceCount;
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ShadeGeometryVertex(const Vector3 &position, const Vector3 &normal, const Vector4 &material, Vector4 &colour, const GeometryLightTreeWork &work) {
     for (std::uint32_t index = 0; index < work.influenceCount; ++index) {
         const GeometryLightInfluence &light = work.influences[index];
@@ -366,6 +607,15 @@ void ShadeGeometryVertex(const Vector3 &position, const Vector3 &normal, const V
         colour.w += (light.colour.w * material.w) * strength;
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 const std::byte *GetGeometrySourceBuffer(const std::byte *mesh, std::uint32_t buffer) {
     const std::byte *command = mesh + 28 + 4ULL * GeometryRead<std::uint32_t>(mesh, 28);
     for (; GeometryRead<std::uint32_t>(command); command += 4ULL * (GeometryRead<std::uint32_t>(command) >> 8)) {
@@ -382,6 +632,14 @@ const std::byte *GetGeometrySourceBuffer(const std::byte *mesh, std::uint32_t bu
     }
     return nullptr;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void ParseXB01GeometryLights(MT7Node &node, GeometryLightTreeWork *work, bool apply) {
     std::byte *const mesh = node.runtimeMesh;
@@ -474,6 +732,14 @@ void ParseXB01GeometryLights(MT7Node &node, GeometryLightTreeWork *work, bool ap
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ParseLegacyGeometryLights(std::byte *mesh, GeometryLightTreeWork *work, bool apply) {
     if (GeometryRead<std::int32_t>(mesh) < 0)
         return;
@@ -538,6 +804,14 @@ void ParseLegacyGeometryLights(std::byte *mesh, GeometryLightTreeWork *work, boo
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ResetGeometryLightTree(MT7Node *node) {
     for (; node; node = node->runtimeSibling) {
         if (node->runtimeMesh && !(node->id & 0x100000)) {
@@ -550,6 +824,14 @@ void ResetGeometryLightTree(MT7Node *node) {
             ResetGeometryLightTree(node->runtimeChild);
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void TraverseGeometryLightTree(MT7Node *node, float scale, GeometryLightTreeWork &work) {
     for (; node; node = node->runtimeSibling) {
@@ -600,6 +882,14 @@ void TraverseGeometryLightTree(MT7Node *node, float scale, GeometryLightTreeWork
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::uint32_t ApplyGeometryLightTree(MT7Node *root, const Vector4 &colour) {
     if (!root) {
         SetLegacyModelScale(1.0f);
@@ -628,12 +918,20 @@ std::uint32_t ApplyGeometryLightTree(MT7Node *root, const Vector4 &colour) {
 
 } // namespace
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void DrawPreparedVertexColours(const MT7Model *model, const MT7Node *node, float alpha) {
     const std::int32_t previous = GetLegacyVertexColourType();
     SetLegacyVertexColourType(0);
     charaPrepareNodesForDraw(model, node, alpha);
     SetLegacyVertexColourType(previous);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace {
 
@@ -753,6 +1051,15 @@ void LightTask_Callback(void *) {
     camCtrlGetNextCamPos(&camera);
     PublishSDLights(lights, camera, static_cast<std::uint8_t>(date.hour));
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ApplyWeatherLightStateInternal(std::uint32_t index, const Vector4 *colour, const float *sceneIntensity, const Vector3 *sunDirection) {
     if (colour)
         SetLightRuntimeColour(index, *colour);
@@ -762,6 +1069,14 @@ void ApplyWeatherLightStateInternal(std::uint32_t index, const Vector4 *colour, 
         SetLightSunDirection(index, *sunDirection);
     // Setters change runtime state; LGHT publishes it.
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void ApplyDefinitionLight(std::uint32_t index, LightRuntimeEntry light) {
@@ -781,6 +1096,14 @@ void ApplyDefinitionLight(std::uint32_t index, LightRuntimeEntry light) {
     SetLightEntryIndex(index, light.indexes[0]);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 const LightDefinitionEntry *ResolveDefinition(std::uint64_t identifier) {
     if (identifier < lightDefinitions.size()) {
         return &lightDefinitions[static_cast<std::size_t>(identifier)];
@@ -791,6 +1114,14 @@ const LightDefinitionEntry *ResolveDefinition(std::uint64_t identifier) {
     }
     return nullptr;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void ParseModernDefinition(const std::byte *block) {
@@ -819,6 +1150,14 @@ void ParseModernDefinition(const std::byte *block) {
         ApplyDefinitionLight(static_cast<std::uint32_t>(packed.index), light);
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void ParseLegacyDefinition(const std::byte *block) {
@@ -854,6 +1193,14 @@ void ParseLegacyDefinition(const std::byte *block) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void BuildDefinitionTable(const MapInfoChunk *chunk) {
     lightDefinitions.fill({nullptr, 0xffffffffU});
     lightDefinitionEnds.fill(nullptr);
@@ -884,6 +1231,10 @@ void BuildDefinitionTable(const MapInfoChunk *chunk) {
 
 } // namespace
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void LGHT_Parser_Internal(std::uint64_t identifier) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -903,6 +1254,704 @@ void LGHT_Parser_Internal(std::uint64_t identifier) {
     }
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+SHENMUE_LIGHT_STORAGE(LightDefinitionEntry, g_lightDefinitions, 24);
+
+SHENMUE_LIGHT_STORAGE(LightRuntimeEntry, g_lightRuntimeEntries, 256);
+
+SHENMUE_LIGHT_STORAGE(LightRuntimeEntry, g_selectedLights, 16);
+
+SHENMUE_LIGHT_STORAGE(Vector4, g_savedLightColours, 256);
+
+Vector4 g_globalLighting SHENMUE_LIGHT_INITIALIZER;
+
+float g_weatherLighting = 0.0f, g_weatherSceneLighting = 0.0f;
+
+std::int32_t g_currentActiveLight;
+
+LightRuntimeEntry disabledLight(0, 0, 0x071c, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 2.0f, 0.6f, 0.0f, 2.0f, 0.0f, 0.0f, -1.0f, 0.0f);
+
+typedef char LightRuntimeArraySizeCheck[sizeof(g_lightRuntimeEntries) == 0x3800 ? 1 : -1];
+
+typedef char SelectedLightArraySizeCheck[sizeof(g_selectedLights) == 0x380 ? 1 : -1];
+
+typedef char SavedLightColoursArraySizeCheck[sizeof(g_savedLightColours) == 0x1000 ? 1 : -1];
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t GetCurrentActiveLight() {
+    return g_currentActiveLight;
+}
+
+#else
+
+std::int32_t GetCurrentActiveLight() {
+    return currentActiveLight;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::span<const std::int16_t> GetCharacterLightCandidates() {
+    return {characterLightCandidates.data(), characterLightCandidateCount};
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+const LightRuntimeEntry *GetLightRuntimeEntry(std::uint32_t index) {
+    return index < lightRuntimeEntries.size() ? &lightRuntimeEntries[index] : nullptr;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint64_t GetLightRootPosition(Vector3 *position) {
+    *position = lightRootPosition;
+    return std::bit_cast<std::uint32_t>(lightRootPosition.z);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::int32_t GetPreviousActiveLight() {
+    return previousActiveLight;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void ResetMapLightingPlacements() {
+    mapLightingPlacements.fill({1, 0x7fff, {}, 0, 1});
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t GetMapLightingPlacementEnabled(std::int32_t index) {
+    return mapLightingPlacements[index].enabled;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t GetMagicRoomFlag(std::int32_t index) {
+    // The native selector stride carries past the 33 placements into the adjacent MAPE layer words.
+    if (index >= 33)
+        return static_cast<std::uint32_t>(mapEntryLayers[7 * (index - 33)]);
+    return mapLightingPlacements[index].mapSlot;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t GetMapLightingPlacementPosition(Vector3 *output, std::int32_t index) {
+    *output = mapLightingPlacements[index].position;
+    return std::bit_cast<std::uint32_t>(output->z);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t GetMapLightingPlacementRotation(std::int32_t index) {
+    return static_cast<std::uint32_t>(mapLightingPlacements[index].rotationY);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t GetMapLightingPlacementActive(std::int32_t index) {
+    return mapLightingPlacements[index].active;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+MapLightingPlacement *GetMapLightingPlacement(std::int32_t index) {
+    return &mapLightingPlacements[index];
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetMapLightingPlacementEnabled(std::int32_t value, std::int32_t index) {
+    if (index < 33)
+        mapLightingPlacements[index].enabled = static_cast<std::uint32_t>(value);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint32_t EV_SetMapLightingPlacementEnabled(std::int32_t index, std::int32_t enabled) {
+    const std::uint32_t previous = GetMapLightingPlacementEnabled(index);
+    SetMapLightingPlacementEnabled(enabled, index);
+    return previous;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index) {
+    if (index >= 33)
+        return 0;
+    mapLightingPlacements[index].position = *position;
+    return std::bit_cast<std::uint32_t>(position->z);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetMapLightingPlacementRotation(std::int32_t value, std::int32_t index) {
+    mapLightingPlacements[index].rotationY = value;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::int64_t AttachMapLightingPlacement(std::int32_t mapSlot, std::int32_t placement) {
+    const std::span<const MapModelRuntimeSlot, 33> slots = GetMapModelSlots();
+    const MT7Model *const model = mapSlot >= 0 ? slots[mapSlot].reader : nullptr;
+    if (!model || model->nodes.empty())
+        mapSlot = 0x7fff;
+    MapLightingPlacement &record = mapLightingPlacements[placement];
+    if (record.mapSlot != 0x7fff)
+        d3t::RetireObjectPlacement(&record);
+    record.mapSlot = static_cast<std::uint32_t>(mapSlot);
+    if (mapSlot == 0x7fff)
+        return placement;
+    d3t::RetireObjectPlacement(GetMT7ReaderData(model));
+    d3t::SetObjectSourceActiveFlag(GetMT7ReaderData(model), 1);
+    return d3t::RegisterObjectPlacement(GetMT7ReaderData(model), &record, 0);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::int64_t AssignLightForMapLayer(Vector3 *output, std::int32_t mapSlot) {
+    for (const MapLightingPlacement &record : mapLightingPlacements) {
+        if (record.mapSlot != static_cast<std::uint32_t>(mapSlot))
+            continue;
+        *output = record.position;
+        return 1;
+    }
+    *output = GetMapModelSlots()[mapSlot].position;
+    return 1;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void AssignLightProgram(std::uint32_t mapSlot) {
+    if (mapSlot > 32)
+        return;
+    Vector4 colour;
+    if (GetGeometryLightColour(&colour))
+        return;
+    AllocateGeometryLightPositionScratch();
+    const MT7Model *const model = GetMapModelSlots()[mapSlot].reader;
+    if (model && !model->nodes.empty()) {
+        Vector3 position;
+        AssignLightForMapLayer(&position, static_cast<std::int32_t>(mapSlot));
+        Matrix4x4_PushActiveTransform();
+        Matrix4x4::preTranslate(position.x, position.y, position.z);
+        Matrix4x4 transform;
+        Matrix4x4::GetTransformMatrix(&transform);
+        currentLightTransform = &transform;
+        const std::uint32_t result = ApplyGeometryLightTree(const_cast<MT7Node *>(&model->nodes.front()), colour);
+        currentLightTransform = nullptr;
+        Matrix4x4::Pop(1);
+        SetMapModelLightingTraversalResult(static_cast<std::int32_t>(mapSlot), result);
+    }
+    RestoreGeometryLightPositionScratch();
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void PushGlobalLightingProgram() {
+    Vector4 colour;
+    if (GetGeometryLightColour(&colour))
+        return;
+    AllocateGeometryLightPositionScratch();
+    const std::span<const MapModelRuntimeSlot, 33> slots = GetMapModelSlots();
+    for (std::int32_t index = 0; index < 33; ++index) {
+        const MT7Model *const model = slots[index].reader;
+        if (!model || model->nodes.empty())
+            continue;
+        Vector3 position{};
+        AssignLightForMapLayer(&position, index);
+        Matrix4x4_PushActiveTransform();
+        Matrix4x4::preTranslate(position.x, position.y, position.z);
+        Matrix4x4 transform;
+        Matrix4x4::GetTransformMatrix(&transform);
+        currentLightTransform = &transform;
+        const std::uint32_t result = ApplyGeometryLightTree(const_cast<MT7Node *>(&model->nodes.front()), colour);
+        currentLightTransform = nullptr;
+        Matrix4x4::Pop(1);
+        SetMapModelLightingTraversalResult(index, result);
+    }
+    if (MT7Node *const root = GetPropRoot()) {
+        Vector3 position{};
+        GetPropVector4(&position);
+        Matrix4x4_PushActiveTransform();
+        Matrix4x4::preTranslate(position.x, position.y, position.z);
+        const std::uint32_t result = ApplyGeometryLightTree(root, colour);
+        Matrix4x4::Pop(1);
+        SetPropLightingTraversalResult(result);
+    }
+    RestoreGeometryLightPositionScratch();
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// Owns only this translation frame; the model and image callback stay borrowed.
+void ApplyCharacterGeometryLighting(Character *character, std::int32_t replaceDrawCallback) {
+    Vector4 colour;
+    if (GetGeometryLightColour(&colour))
+        return;
+    const Vector3 position = GetCharacterWorldPosition(character);
+    Matrix4x4_PushActiveTransform();
+    Matrix4x4::preTranslate(position.x, position.y, position.z);
+    MT7Model *const model = static_cast<MT7Model *>(character->model);
+    MT7Node *const root = model && !model->nodes.empty() ? model->nodes.data() : nullptr;
+    (void)ApplyGeometryLightTree(root, colour);
+    Matrix4x4::Pop(1);
+    if (replaceDrawCallback)
+        imgmAssignUpdateCallback(character, DrawPreparedVertexColours);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetupLightConfig() {
+    Vector4 colour;
+    if (GetGeometryLightColour(&colour))
+        return;
+    AllocateGeometryLightPositionScratch();
+    MT7Node *const root = GetPropRoot();
+    if (root) {
+        Vector3 position;
+        GetPropVector4(&position);
+        Matrix4x4_Push(&transformMatrix_prePass);
+        Matrix4x4::preTranslate(position.x, position.y, position.z);
+        const std::uint32_t result = ApplyGeometryLightTree(root, colour);
+        Matrix4x4::Pop(1);
+        SetPropLightingTraversalResult(result);
+    }
+    RestoreGeometryLightPositionScratch();
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetupModelDataDefaultVS(MT7Node *root) {
+    if (!root)
+        return;
+    const std::int32_t vertexColourType = GetLegacyVertexColourType();
+    SetLegacyVertexColourType(1);
+    Matrix4x4_Push();
+    ResetGeometryLightTree(root);
+    Matrix4x4::Pop(1);
+    SetLegacyVertexColourType(vertexColourType);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetDefaultVS() {
+    MT7Node *const root = GetPropRoot();
+    if (!root)
+        return;
+    SetupModelDataDefaultVS(root);
+    SetPropLightingTraversalResult(0);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetCurrentActiveLight(std::int32_t mode) {
+    g_currentActiveLight = mode;
+    if (mode == 1)
+        dc::sdk::SetLightProcessingEnabled(0);
+    else
+        dc::sdk::SetLightProcessingEnabled(1);
+}
+
+#else
+
+// @verified - p
+void SetCurrentActiveLight(std::int32_t mode) {
+    currentActiveLight = mode;
+    LightModeNullsub(mode == 1 ? 0 : 1);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void ResetLightEntry(std::uint32_t slot) {
+    ResetLegacySelectedLight(slot, currentActiveLight, defaultLight);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetLightKind(std::uint32_t slot, std::int32_t kind) {
+    SetLegacySelectedLightKind(slot, kind);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetSelectedLightDirection(std::uint32_t slot, const Vector3 &direction) {
+    SetLegacySelectedLightDirection(slot, direction);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void shenSetLightColour(std::uint32_t slot, const Vector4 &colour) {
+    SetLegacySelectedLightColour(slot, colour);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool BeginTemporaryAttachedLight(std::uint32_t slot, const Vector3 &sourceOrigin, std::int16_t yaw, const Vector4 &colour, TemporaryAttachedLightState &saved) {
+    constexpr std::uint32_t nativeLightSlotCount = 16;
+    if (slot >= nativeLightSlotCount || saved.engaged || !g_cameraControl)
+        return false;
+
+    saved.slot = slot;
+    saved.activeLight = currentActiveLight;
+    saved.entry = lightRuntimeEntries[slot];
+    saved.selectedIndex = selectedLightIndices[slot];
+    saved.engaged = true;
+
+    currentActiveLight = 1;
+    LightRuntimeEntry &light = lightRuntimeEntries[slot];
+    light = defaultLight;
+    light.indexes = {1, 2};
+    light.vectors[0] = {colour.x, colour.y, colour.z};
+    light.vectors[1].x = colour.w;
+
+    const Vector3 &current = g_cameraControl->currentPosition;
+    const Vector3 &next = g_cameraControl->nextPosition;
+    const float deltaX = current.x - next.x;
+    const float deltaZ = current.z - next.z;
+    const float distance = std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
+    const std::int16_t relativeYaw = static_cast<std::int16_t>(yaw - g_cameraControl->nextRotation.yaw);
+    const Vector3 projected{
+        current.x - sin_fixed16(relativeYaw) * distance,
+        current.y,
+        current.z + sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(relativeYaw)))) * distance,
+    };
+    Vector3 origin = sourceOrigin;
+    if (std::fabs(origin.x) < 0.00001f)
+        origin.x = 0.0f;
+    if (std::fabs(origin.y) < 0.00001f)
+        origin.y = 0.0f;
+    if (std::fabs(origin.z) < 0.00001f)
+        origin.z = 0.0f;
+    Vector3 direction{
+        origin.x - projected.x,
+        origin.y - projected.y,
+        origin.z - projected.z,
+    };
+    const float length = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
+    if (length > 0.0f) {
+        direction.x /= length;
+        direction.y /= length;
+        direction.z /= length;
+    }
+    light.values2c = {direction.x, direction.y};
+    light.value34 = direction.z;
+    selectedLightIndices[slot] = static_cast<std::int16_t>(slot);
+    PublishGlobalLighting();
+    SetLegacyLight(slot, light);
+    UpdateLegacyLightTransforms();
+    return true;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void EndTemporaryAttachedLight(TemporaryAttachedLightState &saved) {
+    if (!saved.engaged || saved.slot >= selectedLightIndices.size())
+        return;
+    lightRuntimeEntries[saved.slot] = saved.entry;
+    currentActiveLight = saved.activeLight;
+    selectedLightIndices[saved.slot] = saved.selectedIndex;
+    ImmediateLightWork(nullptr);
+    saved.engaged = false;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetLightEntryIndex(std::uint32_t index, std::uint32_t value) {
+    if (index < lightRuntimeEntries.size() && value <= 1) {
+        lightRuntimeEntries[index].indexes[0] = static_cast<std::uint8_t>(value);
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint64_t GetLightEntryIndex(std::uint32_t index) {
+    return index < lightRuntimeEntries.size() ? static_cast<std::uint32_t>(static_cast<std::int8_t>(lightRuntimeEntries[index].indexes[0])) : 3;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetLightConeAngle(std::uint32_t index, std::int16_t angle) {
+    if (index < lightRuntimeEntries.size())
+        lightRuntimeEntries[index].unknown02 = angle;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void SetLightFlagForIndex(std::uint32_t index, std::int32_t value) {
+    if (index >= lightRuntimeEntries.size() || value >= 5)
+        return;
+    std::uint8_t &flags = lightRuntimeEntries[index].indexes[1];
+    const std::uint8_t retained = flags & 8U;
+    flags = static_cast<std::uint8_t>((value & 0xf7) | retained);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint64_t SetLightRootPosition(const Vector3 &position) {
+    lightRootPosition = position;
+    return std::bit_cast<std::uint32_t>(position.z);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void TranslateLightDefinition(std::uint32_t identifier, const Vector3 &translation) {
+    const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    if (!control || !FindMapInfoChunk("LGHT", control->mapInfo))
+        return;
+    const LightDefinitionEntry *const definition = ResolveDefinition(identifier);
+    if (definition)
+        lightChunkEnd = lightDefinitionEnds[static_cast<std::size_t>(definition - lightDefinitions.data())];
+    std::uint32_t tag;
+    if (!definition || !Read(definition->block, tag) || tag != lghtToken)
+        return;
+    for (std::uint32_t index = 0; index < lightRuntimeEntries.size(); ++index) {
+        const LightRuntimeEntry &light = lightRuntimeEntries[index];
+        if ((light.indexes[1] & 0xf7U) != 3U)
+            continue;
+        const Vector3 position{(lightRootPosition.x + light.vector20.x) + translation.x, (lightRootPosition.y + light.vector20.y) + translation.y,
+            (lightRootPosition.z + light.vector20.z) + translation.z};
+        SetLightRuntimePosition(index, position);
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void PrioritizeLight(std::int16_t index) {
+    if (priorityLightCount < priorityLightIndices.size()) {
+        priorityLightIndices[priorityLightCount++] = index;
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+std::uint64_t SetRankedLightLimit(std::uint32_t count) {
+    if (count <= 12U)
+        rankedLightLimit = count;
+    return rankedLightLimit;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void ConfigureDynamicLight(std::uint32_t slot, std::uint8_t kind, const Vector4 &colour, float scale) {
+    if (slot >= selectedLightIndices.size())
+        return;
+    LightRuntimeEntry &light = lightRuntimeEntries[slot];
+    light = defaultLight;
+    light.indexes = {0, kind};
+    light.vectors[0] = {colour.x, colour.y, colour.z};
+    light.vectors[1] = {colour.w, 1.0f, scale};
+    selectedLightIndices[slot] = static_cast<std::int16_t>(slot);
+    ImmediateLightWork(nullptr);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetDynamicLightPosition(std::uint32_t slot, const Vector3 &position) {
+    if (slot >= selectedLightIndices.size())
+        return;
+    lightRuntimeEntries[slot].vector20 = position;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void SetDynamicLightEnabled(std::uint32_t slot, bool enabled) {
+    SetLegacySelectedLightEnabled(slot, enabled);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void ReinitializeLights(std::int32_t mode) {
+    currentActiveLight = 0;
+    UpdateGlobalLighting({0.3f, 0.3f, 0.3f, 0.3f});
+    for (std::uint32_t index = 0; index < lightRuntimeEntries.size(); ++index)
+        ResetLightRuntimeEntry(index);
+    const LightRuntimeEntry &defaults = defaultLight;
+    for (std::uint32_t slot = 0; slot < selectedLightIndices.size(); ++slot)
+        ResetLegacySelectedLight(slot, 0, defaults);
+    UpdateLegacyLightTransforms();
+    currentActiveLight = mode;
+    if (mode == 1)
+        InitializeDefaultDirectionalLight();
+    LightModeNullsub(mode == 1 ? 0 : 1);
+    lightRootPosition = {};
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// Native SetupEffectTransforms, run by Initialization after InitEffect.
+void SetupEffectTransforms() {
+    lightRuntimeEntries.fill({});
+    ClearLegacySelectedLights();
+    SetupEffeTransform();
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::int64_t LightTask_Enqueue() {
+    rankMapLights = false;
+    currentActiveLight = 1;
+    previousActiveLight = 1;
+    characterLightCandidateCount = 0;
+    previousGlobalLighting = globalLighting;
+    lightRootPosition = {};
+    priorityLightCount = 0;
+    rankedLightLimit = 12;
+    lightChunkEnd = nullptr;
+    lightDefinitions.fill({nullptr, 0xffffffffU});
+    lightDefinitionEnds.fill(nullptr);
+    lightRuntimeEntries.fill(defaultLight);
+
+    const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    LoadSDLightMetadata(g_actNumber, g_currentMap);
+    InitializeSDLightFlags();
+    const MapInfoChunk *const chunk = control ? FindMapInfoChunk("LGHT", control->mapInfo) : nullptr;
+    if (chunk) {
+        BuildDefinitionTable(chunk);
+        LGHT_Parser_Internal(0);
+    } else {
+        ReinitializeLights(1);
+        lightRuntimeEntries[0].values2c = {0.0f, -0.70710701f};
+        lightRuntimeEntries[0].value34 = -0.70710701f;
+    }
+    previousActiveLight = currentActiveLight;
+    previousGlobalLighting = globalLighting;
+
+    HLib::EnqueueTaskWithoutParameter(LightTask_Callback, 0x0d, 2, static_cast<std::int32_t>(lghtToken));
+    return currentActiveLight;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t) {
+    std::int32_t index;
+    for (index = 0; index < 24; ++index) {
+        if (!g_lightDefinitions[index].block)
+            break;
+    }
+    if (index < 24) {
+        g_lightDefinitions[index].block = reinterpret_cast<const std::byte *>(block);
+        g_lightDefinitions[index].identifier = static_cast<std::uint32_t>(identifier);
+        return true;
+    }
+    return false;
+}
+
+#else
+
 bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t size) {
     std::size_t index = 0;
     while (index < lightDefinitions.size() && lightDefinitions[index].block)
@@ -914,6 +1963,10 @@ bool RegisterLightData(const void *block, std::int32_t identifier, std::size_t s
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void UnregisterLightData(std::int32_t identifier) {
     for (std::size_t index = 0; index < lightDefinitions.size(); ++index) {
         if (lightDefinitions[index].identifier != static_cast<std::uint32_t>(identifier))
@@ -924,19 +1977,35 @@ void UnregisterLightData(std::int32_t identifier) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void ApplyWeatherLightState(std::uint32_t index, const Vector4 *colour, const float *sceneIntensity, const Vector3 *sunDirection) {
     ApplyWeatherLightStateInternal(index, colour, sceneIntensity, sunDirection);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void ApplyWeatherGlobalLighting(float value) {
     UpdateGlobalLighting({value, value, value, value});
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void ReleaseLensflareHostResources() {
     for (MT7Model &model : weatherLensModels)
         if (!model.nodes.empty() || !model.source.empty())
             ReleaseModelFormat7(model);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void LoadLensflare() {
@@ -964,6 +2033,10 @@ void LoadLensflare() {
     HLib::FreeTaskData(allocation);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void shenSetLensflare() {
     for (const WeatherLensMaterialParameter &entry : WEATHER_LENS_MATERIAL_PARAMETERS) {
@@ -989,6 +2062,10 @@ void shenSetLensflare() {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void shenLoadSetLensflare() {
     LoadLensflare();
@@ -998,6 +2075,10 @@ void shenLoadSetLensflare() {
     g_weatherSunState.explicitDirection = 0;
     shenSetLensflare();
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void UpdateSunForDateTime(const DateTime &date, float latitudeTilt, Vector3 &direction, float intensityScale) {
@@ -1019,6 +2100,10 @@ void UpdateSunForDateTime(const DateTime &date, float latitudeTilt, Vector3 &dir
     direction.z = FixedAngleCos(angle) * cosine;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::int32_t SetWeatherSunControl(std::int32_t control) {
     const std::int32_t previous = g_weatherSunState.control;
@@ -1026,12 +2111,34 @@ std::int32_t SetWeatherSunControl(std::int32_t control) {
     return previous;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 namespace {
 
+// Native diagnostic annotation hooks are the shared PC nullsub.
 void BeginWeatherLensFlareAnnotation(const char *) {
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void EndWeatherLensFlareAnnotation() {
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void RotateLensflareAlignment(const Vector3 &direction) {
@@ -1045,6 +2152,14 @@ void RotateLensflareAlignment(const Vector3 &direction) {
     Matrix4x4_BuildRotationMatrix(axis, vertical);
     Matrix4x4::RotateAroundZ_Wrapper(49152);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void ScaleForTransformWithPosZ(std::int32_t index, float positionZ, float scale, float alpha) {
@@ -1066,6 +2181,14 @@ void ScaleForTransformWithPosZ(std::int32_t index, float positionZ, float scale,
     }
     Matrix4x4::Pop(1);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void UpdateWeatherEffectFromDirection(void *data) {
@@ -1198,7 +2321,12 @@ void UpdateWeatherEffectFromDirection(void *data) {
     Matrix4x4::Pop(1);
     EndWeatherLensFlareAnnotation();
 }
+
 } // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void PerformWeatherRenderPass() {
@@ -1223,6 +2351,10 @@ void PerformWeatherRenderPass() {
     HLib::ExecuteCallbackNow(UpdateWeatherEffectFromDirection, &g_sunDirectionVector);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetSunDirectionVector(const Vector3 *direction) {
     if (direction) {
@@ -1234,30 +2366,35 @@ void SetSunDirectionVector(const Vector3 *direction) {
     } else
         g_hasComputedSun = 0;
 }
-// @verified - p
-void UpdateGlobalLighting(const Vector4 &colour) {
-    globalLighting = colour;
-    PublishGlobalLighting();
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void InitializeLightRuntimeTables() {
+    SHENMUE_LIGHT_MEMSET(SHENMUE_LIGHT_DATA(g_lightRuntimeEntries), 0, sizeof(g_lightRuntimeEntries));
+    SHENMUE_LIGHT_MEMSET(SHENMUE_LIGHT_DATA(g_selectedLights), 0, sizeof(g_selectedLights));
+    SHENMUE_LIGHT_MEMSET(SHENMUE_LIGHT_DATA(g_savedLightColours), 0, sizeof(g_savedLightColours));
+    dc::sdk::InitializeLightState();
 }
 
-// @verified - p
-void GetGlobalLighting(Vector4 *colour) {
-    *colour = globalLighting;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetLightRuntimeColour(std::uint32_t index, const Vector4 &colour) {
+    if (index >= SHENMUE_LIGHT_COUNT(g_lightRuntimeEntries))
+        return;
+    LightRuntimeEntry &light = g_lightRuntimeEntries[index];
+    light.vectors[0].x = colour.x;
+    light.vectors[0].y = colour.y < 0.00001f ? 0.0f : colour.y;
+    light.vectors[0].z = colour.z < 0.00001f ? 0.0f : colour.z;
+    light.vectors[1].x = colour.w < 0.00001f ? 0.0f : colour.w;
 }
 
-// @verified - p: ExchangeRetainedGlobalLighting.
-void ExchangeRetainedGlobalLighting(const Vector4 &colour, Vector4 *saved) {
-    static Vector4 retainedColour{.x = 1, .y = .2f, .z = .2f, .w = .2f};
-    if (saved)
-        *saved = retainedColour;
-    retainedColour = colour;
-}
-
-// @verified - p
-void CopyLightRuntimeEntry(std::uint32_t destination, std::uint32_t source) {
-    if (destination < 256 && source < 256)
-        lightRuntimeEntries[destination] = lightRuntimeEntries[source];
-}
+#else
 
 // @verified - p
 void SetLightRuntimeColour(std::uint32_t index, const Vector4 &colour) {
@@ -1268,11 +2405,29 @@ void SetLightRuntimeColour(std::uint32_t index, const Vector4 &colour) {
     light.vectors[1].x = colour.w < 0.00001f ? 0.0f : colour.w;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetLightSceneIntensity(std::uint32_t index, float intensity) {
+    if (SHENMUE_LIGHT_FABS(intensity) < 0.0001f)
+        intensity = 0.0f;
+    if (index < SHENMUE_LIGHT_COUNT(g_lightRuntimeEntries))
+        g_lightRuntimeEntries[index].vectors[1].y = intensity;
+}
+
+#else
+
 // @verified - p
 void SetLightSceneIntensity(std::uint32_t index, float intensity) {
     if (index < lightRuntimeEntries.size())
         lightRuntimeEntries[index].vectors[1].y = std::fabs(intensity) < 0.0001f ? 0.0f : intensity;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetLightRange(std::uint32_t index, float range) {
@@ -1280,11 +2435,19 @@ void SetLightRange(std::uint32_t index, float range) {
         lightRuntimeEntries[index].vectors[1].z = range < 0.01f ? 0.01f : range;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetLightFalloff(std::uint32_t index, const float *falloff) {
     if (index < lightRuntimeEntries.size())
         lightRuntimeEntries[index].value1c = *falloff < 0.01f ? 0.01f : *falloff;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetLightRuntimePosition(std::uint32_t index, const Vector3 &position) {
@@ -1297,6 +2460,20 @@ void SetLightRuntimePosition(std::uint32_t index, const Vector3 &position) {
         light.vector20 = position;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetLightSunDirection(std::uint32_t index, const Vector3 &direction) {
+    if (index < SHENMUE_LIGHT_COUNT(g_lightRuntimeEntries)) {
+        LightRuntimeEntry *entries = g_lightRuntimeEntries;
+        *reinterpret_cast<Vector3 *>(entries[index].values2c) = direction;
+    }
+}
+
+#else
+
 // @verified - p
 std::uint64_t SetLightSunDirection(std::uint32_t index, const Vector3 &direction) {
     if (index >= lightRuntimeEntries.size())
@@ -1306,6 +2483,10 @@ std::uint64_t SetLightSunDirection(std::uint32_t index, const Vector3 &direction
     light.value34 = direction.z;
     return std::bit_cast<std::uint32_t>(direction.z);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetLightGeometryEnabled(std::uint32_t index, std::int32_t enabled) {
@@ -1317,6 +2498,10 @@ void SetLightGeometryEnabled(std::uint32_t index, std::int32_t enabled) {
     else
         flags &= 0xf7U;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void ResetLightRuntimeEntry(std::uint32_t index) {
@@ -1335,24 +2520,131 @@ void ResetLightRuntimeEntry(std::uint32_t index) {
     SetLightConeAngle(index, 1820);
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void UpdateGlobalLighting(const Vector4 &colour) {
+    g_globalLighting = colour;
+    const Vector4 scaled = {colour.x, colour.y * 1.4f, colour.z * 1.4f, colour.w * 1.4f};
+    dc::sdk::SetAmbientLight(&scaled);
+    dc::sdk::SetMT7AmbientIntensity(dc::sdk::g_ambientLight.x);
+}
+
+#else
+
+// @verified - p
+void UpdateGlobalLighting(const Vector4 &colour) {
+    globalLighting = colour;
+    PublishGlobalLighting();
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void GetGlobalLighting(Vector4 *colour) {
+    *colour = g_globalLighting;
+}
+
+#else
+
+// @verified - p
+void GetGlobalLighting(Vector4 *colour) {
+    *colour = globalLighting;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p: PC v1.07 RVA4456f0; this retained event colour is distinct from published globalLighting.
+void ExchangeRetainedGlobalLighting(const Vector4 &colour, Vector4 *saved) {
+    static Vector4 retainedColour{.x = 1, .y = .2f, .z = .2f, .w = .2f};
+    if (saved)
+        *saved = retainedColour;
+    retainedColour = colour;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// @verified - p
+void CopyLightRuntimeEntry(std::uint32_t destination, std::uint32_t source) {
+    if (destination < 256 && source < 256)
+        lightRuntimeEntries[destination] = lightRuntimeEntries[source];
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetWeatherLighting(float value) {
+    g_weatherLighting = value;
+}
+
+#else
+
 void SetWeatherLighting(float value) {
     weatherLighting = value;
 }
 
-void SetWeatherSceneLighting(float value) {
-    weatherSceneLighting = value;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+float GetWeatherLighting() {
+    return g_weatherLighting;
 }
+
+#else
 
 // @verified - p
 float GetWeatherLighting() {
     return weatherLighting;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetWeatherSceneLighting(float value) {
+    g_weatherSceneLighting = value;
+}
+
+#else
+
+void SetWeatherSceneLighting(float value) {
+    weatherSceneLighting = value;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+float GetWeatherSceneLighting() {
+    return g_weatherSceneLighting;
+}
+
+#else
+
 // @verified - p
 float GetWeatherSceneLighting() {
     return weatherSceneLighting;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+// The weather override saves selected light 0's intensity, not the runtime table's.
 bool BeginTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved) {
     if (saved.engaged)
         return false;
@@ -1367,6 +2659,10 @@ bool BeginTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved) {
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void EndTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved) {
     if (!saved.engaged)
         return;
@@ -1376,441 +2672,18 @@ void EndTemporaryMapWeatherLighting(TemporaryMapWeatherLightingState &saved) {
     saved.engaged = false;
 }
 
-std::int32_t GetCurrentActiveLight() {
-    return currentActiveLight;
-}
+#endif
 
-std::span<const std::int16_t> GetCharacterLightCandidates() {
-    return {characterLightCandidates.data(), characterLightCandidateCount};
-}
-const LightRuntimeEntry *GetLightRuntimeEntry(std::uint32_t index) {
-    return index < lightRuntimeEntries.size() ? &lightRuntimeEntries[index] : nullptr;
-}
-// @verified - p
-std::uint64_t GetLightRootPosition(Vector3 *position) {
-    *position = lightRootPosition;
-    return std::bit_cast<std::uint32_t>(lightRootPosition.z);
-}
-std::int32_t GetPreviousActiveLight() {
-    return previousActiveLight;
-}
+} // namespace s2
+} // namespace shenmue
 
-void ResetMapLightingPlacements() {
-    mapLightingPlacements.fill({1, 0x7fff, {}, 0, 1});
-}
-std::uint32_t GetMapLightingPlacementEnabled(std::int32_t index) {
-    return mapLightingPlacements[index].enabled;
-}
-std::uint32_t GetMagicRoomFlag(std::int32_t index) {
-
-    if (index >= 33)
-        return static_cast<std::uint32_t>(mapEntryLayers[7 * (index - 33)]);
-    return mapLightingPlacements[index].mapSlot;
-}
-std::uint32_t GetMapLightingPlacementPosition(Vector3 *output, std::int32_t index) {
-    *output = mapLightingPlacements[index].position;
-    return std::bit_cast<std::uint32_t>(output->z);
-}
-std::uint32_t GetMapLightingPlacementRotation(std::int32_t index) {
-    return static_cast<std::uint32_t>(mapLightingPlacements[index].rotationY);
-}
-std::uint32_t GetMapLightingPlacementActive(std::int32_t index) {
-    return mapLightingPlacements[index].active;
-}
-MapLightingPlacement *GetMapLightingPlacement(std::int32_t index) {
-    return &mapLightingPlacements[index];
-}
-void SetMapLightingPlacementEnabled(std::int32_t value, std::int32_t index) {
-    if (index < 33)
-        mapLightingPlacements[index].enabled = static_cast<std::uint32_t>(value);
-}
-// @verified - p
-std::uint32_t EV_SetMapLightingPlacementEnabled(std::int32_t index, std::int32_t enabled) {
-    const std::uint32_t previous = GetMapLightingPlacementEnabled(index);
-    SetMapLightingPlacementEnabled(enabled, index);
-    return previous;
-}
-std::uint32_t SetMapLightingPlacementPosition(const Vector3 *position, std::int32_t index) {
-    if (index >= 33)
-        return 0;
-    mapLightingPlacements[index].position = *position;
-    return std::bit_cast<std::uint32_t>(position->z);
-}
-void SetMapLightingPlacementRotation(std::int32_t value, std::int32_t index) {
-    mapLightingPlacements[index].rotationY = value;
-}
-std::int64_t AttachMapLightingPlacement(std::int32_t mapSlot, std::int32_t placement) {
-    const std::span<const MapModelRuntimeSlot, 33> slots = GetMapModelSlots();
-    const MT7Model *const model = mapSlot >= 0 ? slots[mapSlot].reader : nullptr;
-    if (!model || model->nodes.empty())
-        mapSlot = 0x7fff;
-    MapLightingPlacement &record = mapLightingPlacements[placement];
-    if (record.mapSlot != 0x7fff)
-        d3t::RetireObjectPlacement(&record);
-    record.mapSlot = static_cast<std::uint32_t>(mapSlot);
-    if (mapSlot == 0x7fff)
-        return placement;
-    d3t::RetireObjectPlacement(GetMT7ReaderData(model));
-    d3t::SetObjectSourceActiveFlag(GetMT7ReaderData(model), 1);
-    return d3t::RegisterObjectPlacement(GetMT7ReaderData(model), &record, 0);
-}
-std::int64_t AssignLightForMapLayer(Vector3 *output, std::int32_t mapSlot) {
-    for (const MapLightingPlacement &record : mapLightingPlacements) {
-        if (record.mapSlot != static_cast<std::uint32_t>(mapSlot))
-            continue;
-        *output = record.position;
-        return 1;
-    }
-    *output = GetMapModelSlots()[mapSlot].position;
-    return 1;
-}
-
-void AssignLightProgram(std::uint32_t mapSlot) {
-    if (mapSlot > 32)
-        return;
-    Vector4 colour;
-    if (GetGeometryLightColour(&colour))
-        return;
-    AllocateGeometryLightPositionScratch();
-    const MT7Model *const model = GetMapModelSlots()[mapSlot].reader;
-    if (model && !model->nodes.empty()) {
-        Vector3 position;
-        AssignLightForMapLayer(&position, static_cast<std::int32_t>(mapSlot));
-        Matrix4x4_PushActiveTransform();
-        Matrix4x4::preTranslate(position.x, position.y, position.z);
-        Matrix4x4 transform;
-        Matrix4x4::GetTransformMatrix(&transform);
-        currentLightTransform = &transform;
-        const std::uint32_t result = ApplyGeometryLightTree(const_cast<MT7Node *>(&model->nodes.front()), colour);
-        currentLightTransform = nullptr;
-        Matrix4x4::Pop(1);
-        SetMapModelLightingTraversalResult(static_cast<std::int32_t>(mapSlot), result);
-    }
-    RestoreGeometryLightPositionScratch();
-}
-
-void PushGlobalLightingProgram() {
-    Vector4 colour;
-    if (GetGeometryLightColour(&colour))
-        return;
-    AllocateGeometryLightPositionScratch();
-    const std::span<const MapModelRuntimeSlot, 33> slots = GetMapModelSlots();
-    for (std::int32_t index = 0; index < 33; ++index) {
-        const MT7Model *const model = slots[index].reader;
-        if (!model || model->nodes.empty())
-            continue;
-        Vector3 position{};
-        AssignLightForMapLayer(&position, index);
-        Matrix4x4_PushActiveTransform();
-        Matrix4x4::preTranslate(position.x, position.y, position.z);
-        Matrix4x4 transform;
-        Matrix4x4::GetTransformMatrix(&transform);
-        currentLightTransform = &transform;
-        const std::uint32_t result = ApplyGeometryLightTree(const_cast<MT7Node *>(&model->nodes.front()), colour);
-        currentLightTransform = nullptr;
-        Matrix4x4::Pop(1);
-        SetMapModelLightingTraversalResult(index, result);
-    }
-    if (MT7Node *const root = GetPropRoot()) {
-        Vector3 position{};
-        GetPropVector4(&position);
-        Matrix4x4_PushActiveTransform();
-        Matrix4x4::preTranslate(position.x, position.y, position.z);
-        const std::uint32_t result = ApplyGeometryLightTree(root, colour);
-        Matrix4x4::Pop(1);
-        SetPropLightingTraversalResult(result);
-    }
-    RestoreGeometryLightPositionScratch();
-}
-
-
-void ApplyCharacterGeometryLighting(Character *character, std::int32_t replaceDrawCallback) {
-    Vector4 colour;
-    if (GetGeometryLightColour(&colour))
-        return;
-    const Vector3 position = GetCharacterWorldPosition(character);
-    Matrix4x4_PushActiveTransform();
-    Matrix4x4::preTranslate(position.x, position.y, position.z);
-    MT7Model *const model = static_cast<MT7Model *>(character->model);
-    MT7Node *const root = model && !model->nodes.empty() ? model->nodes.data() : nullptr;
-    (void)ApplyGeometryLightTree(root, colour);
-    Matrix4x4::Pop(1);
-    if (replaceDrawCallback)
-        imgmAssignUpdateCallback(character, DrawPreparedVertexColours);
-}
-
-// @verified - p
-void SetupLightConfig() {
-    Vector4 colour;
-    if (GetGeometryLightColour(&colour))
-        return;
-    AllocateGeometryLightPositionScratch();
-    MT7Node *const root = GetPropRoot();
-    if (root) {
-        Vector3 position;
-        GetPropVector4(&position);
-        Matrix4x4_Push(&transformMatrix_prePass);
-        Matrix4x4::preTranslate(position.x, position.y, position.z);
-        const std::uint32_t result = ApplyGeometryLightTree(root, colour);
-        Matrix4x4::Pop(1);
-        SetPropLightingTraversalResult(result);
-    }
-    RestoreGeometryLightPositionScratch();
-}
-
-// @verified - p
-void SetupModelDataDefaultVS(MT7Node *root) {
-    if (!root)
-        return;
-    const std::int32_t vertexColourType = GetLegacyVertexColourType();
-    SetLegacyVertexColourType(1);
-    Matrix4x4_Push();
-    ResetGeometryLightTree(root);
-    Matrix4x4::Pop(1);
-    SetLegacyVertexColourType(vertexColourType);
-}
-
-// @verified - p
-void SetDefaultVS() {
-    MT7Node *const root = GetPropRoot();
-    if (!root)
-        return;
-    SetupModelDataDefaultVS(root);
-    SetPropLightingTraversalResult(0);
-}
-
-// @verified - p
-void SetCurrentActiveLight(std::int32_t mode) {
-    currentActiveLight = mode;
-    LightModeNullsub(mode == 1 ? 0 : 1);
-}
-
-void ResetLightEntry(std::uint32_t slot) {
-    ResetLegacySelectedLight(slot, currentActiveLight, defaultLight);
-}
-
-void SetLightKind(std::uint32_t slot, std::int32_t kind) {
-    SetLegacySelectedLightKind(slot, kind);
-}
-
-void SetSelectedLightDirection(std::uint32_t slot, const Vector3 &direction) {
-    SetLegacySelectedLightDirection(slot, direction);
-}
-
-void shenSetLightColour(std::uint32_t slot, const Vector4 &colour) {
-    SetLegacySelectedLightColour(slot, colour);
-}
-
-bool BeginTemporaryAttachedLight(std::uint32_t slot, const Vector3 &sourceOrigin, std::int16_t yaw, const Vector4 &colour, TemporaryAttachedLightState &saved) {
-    constexpr std::uint32_t nativeLightSlotCount = 16;
-    if (slot >= nativeLightSlotCount || saved.engaged || !g_cameraControl)
-        return false;
-
-    saved.slot = slot;
-    saved.activeLight = currentActiveLight;
-    saved.entry = lightRuntimeEntries[slot];
-    saved.selectedIndex = selectedLightIndices[slot];
-    saved.engaged = true;
-
-    currentActiveLight = 1;
-    LightRuntimeEntry &light = lightRuntimeEntries[slot];
-    light = defaultLight;
-    light.indexes = {1, 2};
-    light.vectors[0] = {colour.x, colour.y, colour.z};
-    light.vectors[1].x = colour.w;
-
-    const Vector3 &current = g_cameraControl->currentPosition;
-    const Vector3 &next = g_cameraControl->nextPosition;
-    const float deltaX = current.x - next.x;
-    const float deltaZ = current.z - next.z;
-    const float distance = std::sqrt(deltaX * deltaX + deltaZ * deltaZ);
-    const std::int16_t relativeYaw = static_cast<std::int16_t>(yaw - g_cameraControl->nextRotation.yaw);
-    const Vector3 projected{
-        current.x - sin_fixed16(relativeYaw) * distance,
-        current.y,
-        current.z + sin_fixed16(static_cast<std::int16_t>(fixed16_cosine_angle(static_cast<std::uint16_t>(relativeYaw)))) * distance,
-    };
-    Vector3 origin = sourceOrigin;
-    if (std::fabs(origin.x) < 0.00001f)
-        origin.x = 0.0f;
-    if (std::fabs(origin.y) < 0.00001f)
-        origin.y = 0.0f;
-    if (std::fabs(origin.z) < 0.00001f)
-        origin.z = 0.0f;
-    Vector3 direction{
-        origin.x - projected.x,
-        origin.y - projected.y,
-        origin.z - projected.z,
-    };
-    const float length = std::sqrt(direction.x * direction.x + direction.y * direction.y + direction.z * direction.z);
-    if (length > 0.0f) {
-        direction.x /= length;
-        direction.y /= length;
-        direction.z /= length;
-    }
-    light.values2c = {direction.x, direction.y};
-    light.value34 = direction.z;
-    selectedLightIndices[slot] = static_cast<std::int16_t>(slot);
-    PublishGlobalLighting();
-    SetLegacyLight(slot, light);
-    UpdateLegacyLightTransforms();
-    return true;
-}
-
-void EndTemporaryAttachedLight(TemporaryAttachedLightState &saved) {
-    if (!saved.engaged || saved.slot >= selectedLightIndices.size())
-        return;
-    lightRuntimeEntries[saved.slot] = saved.entry;
-    currentActiveLight = saved.activeLight;
-    selectedLightIndices[saved.slot] = saved.selectedIndex;
-    ImmediateLightWork(nullptr);
-    saved.engaged = false;
-}
-
-// @verified - p
-void SetLightEntryIndex(std::uint32_t index, std::uint32_t value) {
-    if (index < lightRuntimeEntries.size() && value <= 1) {
-        lightRuntimeEntries[index].indexes[0] = static_cast<std::uint8_t>(value);
-    }
-}
-
-// @verified - p
-std::uint64_t GetLightEntryIndex(std::uint32_t index) {
-    return index < lightRuntimeEntries.size() ? static_cast<std::uint32_t>(static_cast<std::int8_t>(lightRuntimeEntries[index].indexes[0])) : 3;
-}
-
-// @verified - p
-void SetLightConeAngle(std::uint32_t index, std::int16_t angle) {
-    if (index < lightRuntimeEntries.size())
-        lightRuntimeEntries[index].unknown02 = angle;
-}
-
-// @verified - p
-void SetLightFlagForIndex(std::uint32_t index, std::int32_t value) {
-    if (index >= lightRuntimeEntries.size() || value >= 5)
-        return;
-    std::uint8_t &flags = lightRuntimeEntries[index].indexes[1];
-    const std::uint8_t retained = flags & 8U;
-    flags = static_cast<std::uint8_t>((value & 0xf7) | retained);
-}
-
-// @verified - p
-std::uint64_t SetLightRootPosition(const Vector3 &position) {
-    lightRootPosition = position;
-    return std::bit_cast<std::uint32_t>(position.z);
-}
-
-// @verified - p
-void TranslateLightDefinition(std::uint32_t identifier, const Vector3 &translation) {
-    const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    if (!control || !FindMapInfoChunk("LGHT", control->mapInfo))
-        return;
-    const LightDefinitionEntry *const definition = ResolveDefinition(identifier);
-    if (definition)
-        lightChunkEnd = lightDefinitionEnds[static_cast<std::size_t>(definition - lightDefinitions.data())];
-    std::uint32_t tag;
-    if (!definition || !Read(definition->block, tag) || tag != lghtToken)
-        return;
-    for (std::uint32_t index = 0; index < lightRuntimeEntries.size(); ++index) {
-        const LightRuntimeEntry &light = lightRuntimeEntries[index];
-        if ((light.indexes[1] & 0xf7U) != 3U)
-            continue;
-        const Vector3 position{(lightRootPosition.x + light.vector20.x) + translation.x, (lightRootPosition.y + light.vector20.y) + translation.y,
-            (lightRootPosition.z + light.vector20.z) + translation.z};
-        SetLightRuntimePosition(index, position);
-    }
-}
-
-// @verified - p
-void PrioritizeLight(std::int16_t index) {
-    if (priorityLightCount < priorityLightIndices.size()) {
-        priorityLightIndices[priorityLightCount++] = index;
-    }
-}
-
-// @verified - p
-std::uint64_t SetRankedLightLimit(std::uint32_t count) {
-    if (count <= 12U)
-        rankedLightLimit = count;
-    return rankedLightLimit;
-}
-
-void ConfigureDynamicLight(std::uint32_t slot, std::uint8_t kind, const Vector4 &colour, float scale) {
-    if (slot >= selectedLightIndices.size())
-        return;
-    LightRuntimeEntry &light = lightRuntimeEntries[slot];
-    light = defaultLight;
-    light.indexes = {0, kind};
-    light.vectors[0] = {colour.x, colour.y, colour.z};
-    light.vectors[1] = {colour.w, 1.0f, scale};
-    selectedLightIndices[slot] = static_cast<std::int16_t>(slot);
-    ImmediateLightWork(nullptr);
-}
-
-void SetDynamicLightPosition(std::uint32_t slot, const Vector3 &position) {
-    if (slot >= selectedLightIndices.size())
-        return;
-    lightRuntimeEntries[slot].vector20 = position;
-}
-
-void SetDynamicLightEnabled(std::uint32_t slot, bool enabled) {
-    SetLegacySelectedLightEnabled(slot, enabled);
-}
-
-// @verified - p
-void ReinitializeLights(std::int32_t mode) {
-    currentActiveLight = 0;
-    UpdateGlobalLighting({0.3f, 0.3f, 0.3f, 0.3f});
-    for (std::uint32_t index = 0; index < lightRuntimeEntries.size(); ++index)
-        ResetLightRuntimeEntry(index);
-    const LightRuntimeEntry &defaults = defaultLight;
-    for (std::uint32_t slot = 0; slot < selectedLightIndices.size(); ++slot)
-        ResetLegacySelectedLight(slot, 0, defaults);
-    UpdateLegacyLightTransforms();
-    currentActiveLight = mode;
-    if (mode == 1)
-        InitializeDefaultDirectionalLight();
-    LightModeNullsub(mode == 1 ? 0 : 1);
-    lightRootPosition = {};
-}
-
-void SetupEffectTransforms() {
-    lightRuntimeEntries.fill({});
-    ClearLegacySelectedLights();
-    SetupEffeTransform();
-}
-
-std::int64_t LightTask_Enqueue() {
-    rankMapLights = false;
-    currentActiveLight = 1;
-    previousActiveLight = 1;
-    characterLightCandidateCount = 0;
-    previousGlobalLighting = globalLighting;
-    lightRootPosition = {};
-    priorityLightCount = 0;
-    rankedLightLimit = 12;
-    lightChunkEnd = nullptr;
-    lightDefinitions.fill({nullptr, 0xffffffffU});
-    lightDefinitionEnds.fill(nullptr);
-    lightRuntimeEntries.fill(defaultLight);
-
-    const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    LoadSDLightMetadata(g_actNumber, g_currentMap);
-    InitializeSDLightFlags();
-    const MapInfoChunk *const chunk = control ? FindMapInfoChunk("LGHT", control->mapInfo) : nullptr;
-    if (chunk) {
-        BuildDefinitionTable(chunk);
-        LGHT_Parser_Internal(0);
-    } else {
-        ReinitializeLights(1);
-        lightRuntimeEntries[0].values2c = {0.0f, -0.70710701f};
-        lightRuntimeEntries[0].value34 = -0.70710701f;
-    }
-    previousActiveLight = currentActiveLight;
-    previousGlobalLighting = globalLighting;
-
-    HLib::EnqueueTaskWithoutParameter(LightTask_Callback, 0x0d, 2, static_cast<std::int32_t>(lghtToken));
-    return currentActiveLight;
-}
-
-} // namespace shenmue::s2
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#undef SHENMUE_LIGHT_DATA
+#undef SHENMUE_LIGHT_COUNT
+#undef SHENMUE_LIGHT_STORAGE
+#undef SHENMUE_LIGHT_INITIALIZER
+#undef SHENMUE_LIGHT_MEMSET
+#undef SHENMUE_LIGHT_FABS
+#undef SHENMUE_LIGHT_NULL
+#else
+#endif

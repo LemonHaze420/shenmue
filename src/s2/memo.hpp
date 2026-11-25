@@ -1,9 +1,8 @@
 #pragma once
-
 #include "shenmue.h"
-
-
-#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/memo_dc.hpp"
+#else
 #include "common/math.hpp"
 
 #include <cstdint>
@@ -12,15 +11,16 @@
 
 namespace shenmue::s2 {
 enum class CameraState : std::int32_t;
-
-// MemoPageState is never rebound to the save buffer.
 inline constexpr float MEMO_PAGE_WIDTH = 512.0f, MEMO_PAGE_HEIGHT = 512.0f;
 inline constexpr std::array<float, 2> MEMO_TEXT_FIRST_Y{54.0f, 72.0f}, MEMO_TEXT_LINE_SPACING{1300.0f, 1114.0f}, MEMO_TEXT_FONT_SCALE{1.0f, 0.9f};
 inline constexpr std::array<std::int32_t, 5> MEMO_TITLE_PIECES{1, 1, 1, 1, 2};
 inline constexpr std::uint32_t MEMO_TEXT_COLOUR = 0xff081219U, MEMO_TITLE_COLOUR = 0xff0f2878U;
+// The notebook model's Writing_Area_N materials take their page target through this material parameter type.
 inline constexpr std::uint32_t MEMO_PAGE_TEXTURE_PARAMETER = 11;
 inline constexpr std::array<const char *, 3> MEMO_TITLE_PATHS{
     "/ui/notebookpages/NotebookTitleTop.tga", "/ui/notebookpages/NotebookTitleVertical.tga", "/ui/notebookpages/NotebookTitleBot.tga"};
+
+// MemoPageState is never rebound to the save buffer.
 struct MemoPageState {
     std::int16_t selectedPage;
     std::int16_t latestPage;
@@ -84,8 +84,8 @@ static_assert(sizeof(MemoCameraSave) == 0x34);
 static_assert(offsetof(MemoCameraSave, position) == 0x18);
 static_assert(offsetof(MemoCameraSave, weatherMode) == 0x30);
 
-// MEMO uses the selected platform WIND payload and only touches the final WNDT control word.
-
+// MEMO touches only WNDT's final control word; this view follows the selected
+// platform's WIND payload rather than SCEN or lighting state.
 struct MemoWindowTaskView {
 #if SHENMUE_IS_PC
     std::byte precedingFields[0x2b0];
@@ -104,8 +104,8 @@ static_assert(sizeof(MemoWindowTaskView) == 0x1e8);
 static_assert(offsetof(MemoWindowTaskView, customFlag) == 0x1e4);
 #endif
 
-// Bank zero borrows page-text pointers; bank one owns four 800-byte text buffers.
-// These eight entries are text targets.
+// InitializeMemoNotebookPages: bank zero borrows page-text pointers; bank one owns the
+// four 800-byte text buffers. These are eight targets, not copy textures.
 struct MemoPageRenderer {
     std::array<std::array<std::uint32_t, 4>, 2> targets{};
     std::array<std::array<bool, 4>, 2> dirty{};
@@ -130,14 +130,22 @@ void SetupNotebook();
 std::int64_t CreateMemoNotebookPages();
 void ReleaseNotebookPageTargets();
 std::int64_t DestroyMemoNotebookPages();
+// The Notebook Pages element's init state: the title-texture phase, 3 once loaded.
 std::int64_t GetMemoNotebookPagesInitState();
 void RenderMemoNotebookPages();
-
+// Native NotifyMemoFlag: called before the internal flag's first set, not afterwards.
 bool NotifyMemoFlag(std::int32_t flag, bool selected);
 std::uint16_t GetMemoPageState(std::int32_t selector) noexcept;
 void InitializeMemoPageState(std::int16_t page, std::int16_t flag) noexcept;
 void ResetMemoPageState() noexcept;
 
 void RequestMemoClose() noexcept;
+#if defined(SHENMUE_NULL_LIBRARY)
+#pragma region NullLibrary
+struct MT7Model;
+const MT7Model *GetNullMemoPresentation(const MemoPageRenderer **pages, float *translation);
+#pragma endregion
+#endif
 } // namespace shenmue::s2
 
+#endif

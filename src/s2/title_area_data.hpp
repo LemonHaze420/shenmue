@@ -1,5 +1,142 @@
 #pragma once
 #include "s2/area_names.hpp"
+
+#if SHENMUE_IS_DC
+#include <stddef.h>
+namespace shenmue { namespace s2 {
+#pragma pack(push, 1)
+struct __attribute__((packed)) TitleSceneEntry {
+    std::uint8_t act;
+    std::uint8_t area[4];
+    std::int8_t entry;
+};
+#pragma pack(pop)
+typedef char TitleAreaLayoutCheck0[(sizeof(TitleSceneEntry) == 6) ? 1 : -1];
+typedef char TitleAreaLayoutCheck1[(__alignof__(TitleSceneEntry) == 1) ? 1 : -1];
+typedef char TitleAreaLayoutCheck2[(offsetof(TitleSceneEntry, area) == 1) ? 1 : -1];
+typedef char TitleAreaLayoutCheck3[(offsetof(TitleSceneEntry, entry) == 5) ? 1 : -1];
+
+struct TitleSceneGroup {
+    std::uint8_t index;
+#if SHENMUE_IS_DC
+    std::byte reserved01[3];
+#else
+    std::byte reserved01[7];
+#endif
+    const TitleSceneEntry *scenes;
+};
+#if SHENMUE_IS_DC
+typedef char TitleAreaLayoutCheck4[(sizeof(TitleSceneGroup) == 8) ? 1 : -1];
+typedef char TitleAreaLayoutCheck5[(offsetof(TitleSceneGroup, scenes) == 4) ? 1 : -1];
+#else
+typedef char TitleAreaLayoutCheck6[(sizeof(TitleSceneGroup) == 0x10) ? 1 : -1];
+typedef char TitleAreaLayoutCheck7[(offsetof(TitleSceneGroup, scenes) == 8) ? 1 : -1];
+#endif
+
+
+#define TITLE_AREA_0000 SHEN_NAME(0000)
+#define TITLE_AREA_0004 SHEN_NAME(0004)
+#define TITLE_AREA_0005 SHEN_NAME(0005)
+#define TITLE_AREA_0200 SHEN_NAME(0200)
+#define TITLE_AREA_1000 SHEN_NAME(1000)
+#define TITLE_AREA_AB00 SHEN_NAME(AB00)
+#define TITLE_AREA_ABLB SHEN_NAME(ABLB)
+#define TITLE_AREA_AK00 SHEN_NAME(AK00)
+#define TITLE_AREA_AKS0 SHEN_NAME(AKS0)
+#define TITLE_AREA_AKS1 SHEN_NAME(AKS1)
+#define TITLE_AREA_AKT0 SHEN_NAME(AKT0)
+#define TITLE_AREA_ANAN SHEN_NAME(ANAN)
+#define TITLE_AREA_AR01 SHEN_NAME(AR01)
+#define TITLE_AREA_AR02 SHEN_NAME(AR02)
+#define TITLE_AREA_AR03 SHEN_NAME(AR03)
+#define TITLE_AREA_ARA0 SHEN_NAME(ARA0)
+#define TITLE_AREA_ARBT SHEN_NAME(ARBT)
+#define TITLE_AREA_ARKQ SHEN_NAME(ARKQ)
+#define TITLE_AREA_ARMW SHEN_NAME(ARMW)
+#define TITLE_AREA_BGSM SHEN_NAME(BGSM)
+#define TITLE_AREA_BKW0 SHEN_NAME(BKW0)
+#define TITLE_AREA_BOSY SHEN_NAME(BOSY)
+#define TITLE_AREA_CWON SHEN_NAME(CWON)
+#define TITLE_AREA_DABO SHEN_NAME(DABO)
+#define TITLE_AREA_DMAS SHEN_NAME(DMAS)
+#define TITLE_AREA_DUCK SHEN_NAME(DUCK)
+#define TITLE_AREA_GABT SHEN_NAME(GABT)
+#define TITLE_AREA_GD00 SHEN_NAME(GD00)
+#define TITLE_AREA_KMZ1 SHEN_NAME(KMZ1)
+#define TITLE_AREA_KMZ2 SHEN_NAME(KMZ2)
+#define TITLE_AREA_KMZ3 SHEN_NAME(KMZ3)
+#define TITLE_AREA_KMZ4 SHEN_NAME(KMZ4)
+#define TITLE_AREA_KNMN SHEN_NAME(KNMN)
+#define TITLE_AREA_KNW0 SHEN_NAME(KNW0)
+#define TITLE_AREA_KRC1 SHEN_NAME(KRC1)
+#define TITLE_AREA_KRF1 SHEN_NAME(KRF1)
+#define TITLE_AREA_KRH1 SHEN_NAME(KRH1)
+#define TITLE_AREA_KRK6 SHEN_NAME(KRK6)
+#define TITLE_AREA_KRM3 SHEN_NAME(KRM3)
+#define TITLE_AREA_KSH1 SHEN_NAME(KSH1)
+#define TITLE_AREA_KWA1 SHEN_NAME(KWA1)
+#define TITLE_AREA_KWA2 SHEN_NAME(KWA2)
+#define TITLE_AREA_KWM1 SHEN_NAME(KWM1)
+#define TITLE_AREA_KWQA SHEN_NAME(KWQA)
+#define TITLE_AREA_KWQB SHEN_NAME(KWQB)
+#define TITLE_AREA_KWQC SHEN_NAME(KWQC)
+#define TITLE_AREA_KWW1 SHEN_NAME(KWW1)
+#define TITLE_AREA_KWW4 SHEN_NAME(KWW4)
+#define TITLE_AREA_MAP0 SHEN_NAME(MAP0)
+#define TITLE_AREA_MFW0 SHEN_NAME(MFW0)
+#define TITLE_AREA_OMAK SHEN_NAME(OMAK)
+#define TITLE_AREA_Q100 SHEN_NAME(Q100)
+#define TITLE_AREA_Q300 SHEN_NAME(Q300)
+#define TITLE_AREA_Q7QB SHEN_NAME(Q7QB)
+#define TITLE_AREA_QA00 SHEN_NAME(QA00)
+#define TITLE_AREA_QC00 SHEN_NAME(QC00)
+#define TITLE_AREA_QC01 SHEN_NAME(QC01)
+#define TITLE_AREA_QD00 SHEN_NAME(QD00)
+#define TITLE_AREA_QD01 SHEN_NAME(QD01)
+#define TITLE_AREA_QEEC SHEN_NAME(QEEC)
+#define TITLE_AREA_QES1 SHEN_NAME(QES1)
+#define TITLE_AREA_QF00 SHEN_NAME(QF00)
+#define TITLE_AREA_QF02 SHEN_NAME(QF02)
+#define TITLE_AREA_QKBT SHEN_NAME(QKBT)
+#define TITLE_AREA_QLBT SHEN_NAME(QLBT)
+#define TITLE_AREA_QR00 SHEN_NAME(QR00)
+#define TITLE_AREA_QRC0 SHEN_NAME(QRC0)
+#define TITLE_AREA_SLOT SHEN_NAME(SLOT)
+#define TITLE_AREA_STEP SHEN_NAME(STEP)
+#define TITLE_AREA_TGLB SHEN_NAME(TGLB)
+#define TITLE_AREA_SYW0 SHEN_NAME(SYW0)
+#define TITLE_AREA_TEST SHEN_NAME(TEST)
+#define TITLE_AREA_TOFB SHEN_NAME(TOFB)
+#define TITLE_AREA_UEDE SHEN_NAME(UEDE)
+#define TITLE_AREA_VIEW SHEN_NAME(VIEW)
+#define TITLE_AREA_VSYB SHEN_NAME(VSYB)
+#define TITLE_AREA_WB00 SHEN_NAME(WB00)
+#define TITLE_AREA_WB01 SHEN_NAME(WB01)
+#define TITLE_AREA_WBSS SHEN_NAME(WBSS)
+#define TITLE_AREA_WEG0 SHEN_NAME(WEG0)
+#define TITLE_AREA_WEM1 SHEN_NAME(WEM1)
+#define TITLE_AREA_WK00 SHEN_NAME(WK00)
+#define TITLE_AREA_WKKT SHEN_NAME(WKKT)
+#define TITLE_AREA_WN00 SHEN_NAME(WN00)
+#define TITLE_AREA_WR00 SHEN_NAME(WR00)
+#define TITLE_AREA_WRS2 SHEN_NAME(WRS2)
+#define TITLE_AREA_WS00 SHEN_NAME(WS00)
+#define TITLE_AREA_WTKA SHEN_NAME(WTKA)
+#define TITLE_AREA_YTQB SHEN_NAME(YTQB)
+
+extern const TitleSceneEntry TITLE_SCENES_DEBUG[35];
+extern const TitleSceneEntry TITLE_SCENES_SCENE1[21];
+extern const TitleSceneEntry TITLE_SCENES_SCENE2[23];
+extern const TitleSceneEntry TITLE_SCENES_SCENE3[33];
+extern const TitleSceneEntry TITLE_SCENES_SCENE4[23];
+extern const TitleSceneEntry TITLE_SCENES_EVENT1[18];
+extern const TitleSceneEntry TITLE_SCENES_EVENT2[15];
+extern const TitleSceneEntry TITLE_SCENES_EVENT3[12];
+extern const TitleSceneEntry TITLE_SCENES_MOVIE[9];
+extern const TitleSceneEntry *const TITLE_SCENE_TABLES[9];
+extern TitleSceneGroup TITLE_SCENE_GROUPS[11];
+} } // namespace shenmue::s2
+#else
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -19,11 +156,21 @@ static_assert(offsetof(TitleSceneEntry, entry) == 5);
 
 struct TitleSceneGroup {
     std::uint8_t index;
+#if SHENMUE_IS_DC
+    std::byte reserved01[3];
+#else
     std::byte reserved01[7];
+#endif
     const TitleSceneEntry *scenes;
 };
+#if SHENMUE_IS_DC
+static_assert(sizeof(TitleSceneGroup) == 8);
+static_assert(offsetof(TitleSceneGroup, scenes) == 4);
+#else
 static_assert(sizeof(TitleSceneGroup) == 0x10);
 static_assert(offsetof(TitleSceneGroup, scenes) == 8);
+#endif
+
 inline constexpr shen_name TITLE_AREA_0000{SHEN_NAME(0000)};
 inline constexpr shen_name TITLE_AREA_0004{SHEN_NAME(0004)};
 inline constexpr shen_name TITLE_AREA_0005{SHEN_NAME(0005)};
@@ -93,6 +240,9 @@ inline constexpr shen_name TITLE_AREA_QR00{SHEN_NAME(QR00)};
 inline constexpr shen_name TITLE_AREA_QRC0{SHEN_NAME(QRC0)};
 inline constexpr shen_name TITLE_AREA_SLOT{SHEN_NAME(SLOT)};
 inline constexpr shen_name TITLE_AREA_STEP{SHEN_NAME(STEP)};
+#if SHENMUE_IS_DC
+inline constexpr shen_name TITLE_AREA_TGLB{SHEN_NAME(TGLB)};
+#endif
 inline constexpr shen_name TITLE_AREA_SYW0{SHEN_NAME(SYW0)};
 inline constexpr shen_name TITLE_AREA_TEST{SHEN_NAME(TEST)};
 inline constexpr shen_name TITLE_AREA_TOFB{SHEN_NAME(TOFB)};
@@ -145,8 +295,13 @@ inline constexpr std::array<TitleSceneEntry, 35> TITLE_SCENES_DEBUG{{
     {.act = 2, .area = TITLE_AREA_WK00, .entry = 1},
     {.act = 2, .area = TITLE_AREA_WS00, .entry = 1},
     {.act = 3, .area = AREA_QDTB, .entry = 0},
+#if SHENMUE_IS_DC
+    {.act = 3, .area = TITLE_AREA_STEP, .entry = 0},
+    {.act = 3, .area = TITLE_AREA_TGLB, .entry = 0},
+#else
     {.act = 3, .area = AREA_QFRR, .entry = 1},
     {.act = 3, .area = TITLE_AREA_STEP, .entry = 0},
+#endif
     {.act = 4, .area = TITLE_AREA_GD00, .entry = 1},
     {.act = 255, .area = shen_name{}, .entry = 0},
 }};
@@ -352,7 +507,11 @@ inline constexpr std::array<TitleSceneEntry, 20> TITLE_SCENES_EXTRAS{{
     {.act = 255, .area = shen_name{}, .entry = 0},
 }};
 
+#if SHENMUE_IS_DC
+inline constexpr std::array<const TitleSceneEntry *, 9> TITLE_SCENE_TABLES{
+#else
 inline constexpr std::array<const TitleSceneEntry *, 10> TITLE_SCENE_TABLES{
+#endif
     TITLE_SCENES_DEBUG.data(),
     TITLE_SCENES_SCENE1.data(),
     TITLE_SCENES_SCENE2.data(),
@@ -362,7 +521,9 @@ inline constexpr std::array<const TitleSceneEntry *, 10> TITLE_SCENE_TABLES{
     TITLE_SCENES_EVENT2.data(),
     TITLE_SCENES_EVENT3.data(),
     TITLE_SCENES_MOVIE.data(),
+#if !SHENMUE_IS_DC
     TITLE_SCENES_EXTRAS.data(),
+#endif
 };
 
 inline std::array<TitleSceneGroup, 11> TITLE_SCENE_GROUPS{{
@@ -375,7 +536,15 @@ inline std::array<TitleSceneGroup, 11> TITLE_SCENE_GROUPS{{
     {.scenes = TITLE_SCENES_EVENT2.data()},
     {.scenes = TITLE_SCENES_EVENT3.data()},
     {.scenes = TITLE_SCENES_MOVIE.data()},
+#if SHENMUE_IS_DC
+    {.scenes = reinterpret_cast<const TitleSceneEntry *>(static_cast<std::uintptr_t>(-1))},
+    {},
+#else
     {.scenes = TITLE_SCENES_EXTRAS.data()},
     {.scenes = reinterpret_cast<const TitleSceneEntry *>(static_cast<std::uintptr_t>(-1))},
+#endif
 }};
+
 } // namespace shenmue::s2
+
+#endif

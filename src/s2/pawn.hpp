@@ -17,7 +17,11 @@ struct PawnDataHeader {
 struct PawnShopRecord {
     shen_name name;
     std::uint32_t flags;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    char label[12];
+#else
     char label[24];
+#endif
     std::int32_t setCount;
     std::int32_t setsOffset;
     std::int32_t itemCount;
@@ -45,6 +49,16 @@ struct PawnStockCount {
 };
 #pragma pack(pop)
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+typedef char PawnDataSizeCheck[sizeof(PawnDataHeader) == 0x0c ? 1 : -1];
+typedef char PawnShopSizeCheck[sizeof(PawnShopRecord) == 0x24 ? 1 : -1];
+typedef char PawnShopSetsCheck[offsetof(PawnShopRecord, setsOffset) == 0x18 ? 1 : -1];
+typedef char PawnShopItemsCheck[offsetof(PawnShopRecord, itemsOffset) == 0x20 ? 1 : -1];
+typedef char PawnReferenceSizeCheck[sizeof(PawnSetReference) == 8 ? 1 : -1];
+typedef char PawnSetSizeCheck[sizeof(PawnSetRecord) == 0x1c ? 1 : -1];
+typedef char PawnItemSizeCheck[sizeof(PawnItemPrice) == 4 ? 1 : -1];
+typedef char PawnStockSizeCheck[sizeof(PawnStockCount) == 8 ? 1 : -1];
+#else
 static_assert(sizeof(PawnDataHeader) == 0x0c);
 static_assert(sizeof(PawnShopRecord) == 0x30);
 static_assert(offsetof(PawnShopRecord, setCount) == 0x20);
@@ -56,6 +70,7 @@ static_assert(sizeof(PawnSetRecord) == 0x1c);
 static_assert(sizeof(PawnItemPrice) == 4);
 static_assert(sizeof(PawnStockCount) == 8);
 
+#endif
 
 PawnDataHeader *LoadPawnFile(const char *filename);
 PawnDataHeader *LoadPawnData();

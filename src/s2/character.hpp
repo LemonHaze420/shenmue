@@ -209,7 +209,11 @@ const Matrix4x4 *GetCharacterMirrorMatrix();
 void ResetCharacterMirrorAdmission();
 void RetireCharacterMirrorStorage();
 void mtwkBindMirroredControllerMatricesToModelNodes(MotionWork *work, MT7Model *model);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsCharacterMirroredForDraw(const Character *character);
+#else
 bool IsCharacterMirroredForDraw(const Character *character);
+#endif
 float GetCharacterDisplayRadius(const Character *character);
 float SetScenarioCharacterRadius(shen_name character, float radius);
 void SetChildObjectFlagByIndex(Character *character, std::uint8_t mode);
@@ -254,7 +258,11 @@ bool charaForceVisibleCheck(const Character *character);
 std::uint32_t charaHasMirroredFlags(const Character *character);
 bool IsCharacterActive(const Character *character);
 bool IsCharacterUsingStoredShadowY(const Character *character);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t HasCharacterFacialModel(const Character *character);
+#else
 bool HasCharacterFacialModel(const Character *character);
+#endif
 void ClearCharacterFacialModel(Character *character);
 void charaSetDisplayEnabledFlag(Character *character, std::int32_t enabled);
 void charaSetFlags(Character *character, std::int32_t enabled);

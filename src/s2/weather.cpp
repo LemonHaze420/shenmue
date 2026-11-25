@@ -1,11 +1,26 @@
 #include "shenmue.h"
 
-
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/weather.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/weather_air_dc.hpp"
+#include "s2/weather_data_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/lens_flare_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/math.hpp"
 #include "s2/particle_effects.hpp"
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/date_time.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/fog.hpp"
 #include "s2/hlib.hpp"
 #include "s2/lighting.hpp"
@@ -26,13 +41,33 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#endif
 
-namespace shenmue::s2 {
+
+namespace shenmue {
+namespace s2 {
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+WeatherTableSample *GetInterpolatedWeatherValues() {
+    return &g_interpolatedWeatherSample;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void BeginWeatherRainTransition(float pressure, std::int32_t frames);
+
+void BeginWeatherRippleTransition(float pressure, std::int32_t frames);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float debugSampledWindSpeedOverride = 0.0f;
 WeatherFixcNode *g_secondaryWeatherWindList{};
 std::int32_t g_planetPreviousRotationDay = 20, g_planetCurrentRotationDay = 41, g_planetRotationCycleDays = 62;
-namespace {
+#endif
 
+namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr std::size_t weatherRowSize = 0x60;
 constexpr std::array<std::uint8_t, 32> weatherMonthDays1{0x09, 0x07, 0x07, 0x07, 0x08, 0x08, 0x07, 0x05, 0xb8, 0x0a, 0x09, 0xf9, 0xf9, 0x15, 0xf4, 0xa7, 0xbc,
     0x06, 0x08, 0x18, 0x15, 0x07, 0xab, 0xac, 0x0a, 0x07, 0x54, 0x53, 0xb7, 0x16, 0x19, 0x00};
@@ -59,8 +94,8 @@ constexpr std::array<WeatherYear, 3> weatherYears{{
     {.months = weatherMonths.data(), .monthCount = 12},
     {.months = weatherMonths.data(), .monthCount = 12},
 }};
-
-
+// Native WeibullTemplateA..E: per wind direction sector (row), the weight of each of the nine wind
+// speed bins (column). Weather setup accumulates it down the rows into the S2AT table.
 constexpr std::array<float, 144> windDirectionWeights{
     0.3f,
     6.0f,
@@ -214,7 +249,7 @@ std::array<WeatherTable, 4> sceneWeatherTables{{{.rows = nullptr, .count = 11, .
     {.rows = nullptr, .count = 10, .padding0c = 0}, {.rows = nullptr, .count = 10, .padding0c = 0}}};
 void *sceneWeatherData = nullptr;
 std::int32_t weatherTableMode = 0;
-
+// Native loader-zero cache, independent of WAIR task allocation/destruction and instruction flags.
 alignas(16) std::array<Vector4, kInterpolatedWeatherVectorCount> interpolatedWeatherValues{};
 WeatherData *weatherData = nullptr;
 WeatherAir *weatherAir = nullptr;
@@ -251,14 +286,21 @@ std::int32_t weatherPublishedDay = 0;
 std::int32_t weatherPublishedHour = 0;
 std::int32_t weatherPublishedMinute = 0;
 float minimumSunElevation{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float FlushSmall(float value) {
     return std::fabs(value) < std::numeric_limits<float>::epsilon() ? 0.0f : value;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float SinSubNinetyDegrees(float angle) {
     return std::sin(1.5707964f - std::fabs(angle));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 BuildWeatherSunDirection(const WeatherAir &air) {
     constexpr float nativePi = 3.1400001f;
     constexpr std::array<std::int32_t, 12> accumulatedDays{31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365};
@@ -270,8 +312,8 @@ Vector3 BuildWeatherSunDirection(const WeatherAir &air) {
     const float elevationAngle = 90.0f - (22.18f - SinSubNinetyDegrees(seasonalAngle) * 23.5f);
     const float elevation = std::fmax(minimumSunElevation, std::fabs(SinSubNinetyDegrees(sunAngle) * elevationAngle * 1.2f));
 
-
-
+    // Native PushActiveTransform starts from the reset basis, not the
+    // ambient camera/model transform left by the preceding task.
     Matrix4x4_PushActiveTransform();
     Matrix4x4::RotateAroundY(std::sin(sunAngle), std::cos(sunAngle));
     const float elevationRadians = -(elevation * nativePi / 180.0f);
@@ -294,20 +336,24 @@ Vector3 BuildWeatherSunDirection(const WeatherAir &air) {
     }
     return direction;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float InterpolateValue(float current, float next, float blend) {
     const float difference = next - current;
     if (std::fabs(difference) < std::numeric_limits<float>::epsilon())
         return current + 0.0f;
     return current + FlushSmall(difference * blend);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t InterpolateColour(std::uint32_t current, std::uint32_t next, float blend) {
     std::uint32_t result = 0;
     for (std::uint32_t shift = 0; shift < 32; shift += 8) {
         const auto first = static_cast<std::int32_t>((current >> shift) & 0xffU);
         const auto second = static_cast<std::int32_t>((next >> shift) & 0xffU);
-
+        // Native truncates the signed step before adding the integer channel.
         const float difference = static_cast<float>(second - first);
         const float scaled = std::fabs(difference) < std::numeric_limits<float>::epsilon() ? 0.0f : FlushSmall(difference * blend);
         const std::int32_t step = TruncateToInt32(scaled);
@@ -315,7 +361,9 @@ std::uint32_t InterpolateColour(std::uint32_t current, std::uint32_t next, float
     }
     return result;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t AddPackedColour(std::uint32_t first, std::uint32_t second) {
     std::uint32_t result = 0;
     for (std::uint32_t shift = 0; shift < 32; shift += 8) {
@@ -324,19 +372,26 @@ std::uint32_t AddPackedColour(std::uint32_t first, std::uint32_t second) {
     }
     return result;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherTableSample ReadWeatherSample(const std::byte *row) {
     WeatherTableSample sample{};
     std::memcpy(&sample, row, sizeof(sample));
     return sample;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AccumulateWeatherSample(WeatherTableSample &output, const WeatherTableSample &input, float weight);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherTableSample InterpolateWeatherSample(const WeatherTableSample &first, const WeatherTableSample &second, float blend, std::int32_t seconds) {
     WeatherTableSample result{};
     result.seconds = seconds;
     for (std::size_t index = 0; index < result.primaryValues.size(); ++index) {
-
+        // Native four-component light-colour lerp also gates the blend itself; other float groups do not.
         const bool skipBlend = index >= 3 && index <= 6 && std::fabs(blend) < std::numeric_limits<float>::epsilon();
         result.primaryValues[index] =
             skipBlend ? first.primaryValues[index] + 0.0f : InterpolateValue(first.primaryValues[index], second.primaryValues[index], blend);
@@ -352,7 +407,9 @@ WeatherTableSample InterpolateWeatherSample(const WeatherTableSample &first, con
     }
     return result;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherTableSample SampleWeatherTable(const WeatherTable &table, std::int32_t seconds) {
     if (table.count == 1) {
         WeatherTableSample result{};
@@ -374,7 +431,7 @@ WeatherTableSample SampleWeatherTable(const WeatherTable &table, std::int32_t se
         next += weatherRowSize;
     }
     if (index == table.count) {
-
+        // Native retains the last examined start time on the midnight arm.
         next = table.rows;
         endSeconds = 86400;
     }
@@ -383,7 +440,9 @@ WeatherTableSample SampleWeatherTable(const WeatherTable &table, std::int32_t se
     const float blend = static_cast<float>(elapsed) / static_cast<float>(duration);
     return InterpolateWeatherSample(ReadWeatherSample(current), ReadWeatherSample(next), blend, seconds);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AccumulateWeatherSample(WeatherTableSample &output, const WeatherTableSample &input, float weight) {
     const std::int32_t weightedSeconds = TruncateToInt32(FlushSmall(static_cast<float>(input.seconds) * weight));
     output.seconds = std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(output.seconds) + static_cast<std::uint32_t>(weightedSeconds));
@@ -400,7 +459,9 @@ void AccumulateWeatherSample(WeatherTableSample &output, const WeatherTableSampl
         output.environmentColours[index] = AddPackedColour(output.environmentColours[index], InterpolateColour(0, input.environmentColours[index], weight));
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherColourImmediate(WeatherColour &colour, std::uint32_t packed) {
     for (std::uint32_t index = 0; index < 4; ++index) {
         const std::uint32_t shift = 24U - index * 8U;
@@ -411,6 +472,9 @@ void SetWeatherColourImmediate(WeatherColour &colour, std::uint32_t packed) {
     }
     colour.frame = colour.frameCount = 0;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::array<float, 4> *GetWeatherColourVector(WeatherColour *colour, std::array<float, 4> *output) {
     for (std::size_t index = 0; index < output->size(); ++index) {
@@ -419,12 +483,17 @@ std::array<float, 4> *GetWeatherColourVector(WeatherColour *colour, std::array<f
     }
     return output;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t TruncateWeatherColourComponent(float value) {
     const std::int64_t integer =
         value >= -9223372036854775808.0f && value < 9223372036854775808.0f ? static_cast<std::int64_t>(value) : (std::numeric_limits<std::int64_t>::min)();
     return static_cast<std::uint32_t>(integer);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t wairPackRainColorRGBA(WeatherAir *air) {
     std::array<float, 4> colour;
@@ -432,7 +501,9 @@ std::uint32_t wairPackRainColorRGBA(WeatherAir *air) {
     return (((TruncateWeatherColourComponent(colour[0]) << 8U) | TruncateWeatherColourComponent(colour[1])) << 16U) |
         (TruncateWeatherColourComponent(colour[2]) << 8U) | TruncateWeatherColourComponent(colour[3]);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t wairPackRippleColorRGBA(WeatherAir *air) {
     std::array<float, 4> colour;
@@ -440,7 +511,9 @@ std::uint32_t wairPackRippleColorRGBA(WeatherAir *air) {
     return (((TruncateWeatherColourComponent(colour[0]) << 8U) | TruncateWeatherColourComponent(colour[1])) << 16U) |
         (TruncateWeatherColourComponent(colour[2]) << 8U) | TruncateWeatherColourComponent(colour[3]);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateFog(WeatherAir &air) {
     const float cloudWeight = std::fmin(1.0f, air.cloud * 4.0f);
     const float rainWeight = std::fmin(1.0f, air.rain * 3.0f);
@@ -457,8 +530,8 @@ void UpdateFog(WeatherAir &air) {
         }
     }
 
-
-
+    // Native copies the complete 0x60-byte stack sample before consulting the instruction mask. The port zero-initializes
+    // its undefined trailing twelve bytes instead of reading uninitialized C++ storage; no padding/register identity is claimed.
     std::memcpy(interpolatedWeatherValues.data(), &sample, sizeof(sample));
     const Vector4 lightColour{sample.primaryValues[3], sample.primaryValues[4], sample.primaryValues[5], sample.primaryValues[6]};
     if (weatherInstruction & 0x1U) {
@@ -500,7 +573,9 @@ void UpdateFog(WeatherAir &air) {
         SetCloudAndSkyColour(sample.environmentColours[3] | 0xff000000U, sample.environmentColours[4] | 0xff000000U);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReadTimeline(WeatherTimeline &timeline, std::uint32_t time) {
     const std::uint32_t *current = timeline.current;
     const std::uint32_t *next = current + 1;
@@ -517,9 +592,11 @@ void ReadTimeline(WeatherTimeline &timeline, std::uint32_t time) {
     timeline.blend = static_cast<float>(time - start) / static_cast<float>((*next & 0xffffffU) - start);
     timeline.intensity = InterpolateValue(static_cast<float>(*current >> 24U) / 255.0f, static_cast<float>(*next >> 24U) / 255.0f, timeline.blend);
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native WDAT::UpdateWeather ignores the caller's year and month. The calendar is December 86 unless the
+// day-update flag selects year 99 (days folded to 1-10) or year 101 (day 31), relative to the base year.
 void UpdateWeatherTimelines(std::int32_t day, std::int32_t hour, std::int32_t minute) {
     std::int32_t year = 86;
     if (weatherShouldUpdateDay != 0) {
@@ -566,8 +643,10 @@ void UpdateWeatherTimelines(std::int32_t day, std::int32_t hour, std::int32_t mi
     for (WeatherTimeline *timeline : weatherData->timelines)
         ReadTimeline(*timeline, time);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native WDAT::GetWeatherPhaseForCurrentDay.
 std::int32_t GetWeatherPhaseForCurrentDay(const WeatherData &data) {
     const WeatherYear &year = data.years[data.year < 0 ? 0 : data.year >= 3 ? 2 : data.year];
     std::int32_t month = data.month - 1;
@@ -583,8 +662,10 @@ std::int32_t GetWeatherPhaseForCurrentDay(const WeatherData &data) {
         day = static_cast<std::int32_t>(entry.dayCount) - 1;
     return ((*entry.days)[day] >> 4) << 12;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native WDAT::GetWeatherIntensityForCurrentDay.
 float GetWeatherIntensityForCurrentDay(const WeatherData &data) {
     const WeatherYear &year = data.years[data.year < 0 ? 0 : data.year >= 3 ? 2 : data.year];
     std::int32_t month = data.month - 1;
@@ -600,7 +681,9 @@ float GetWeatherIntensityForCurrentDay(const WeatherData &data) {
         day = static_cast<std::int32_t>(entry.dayCount) - 1;
     return static_cast<float>((*entry.days)[day] & 0xfU) * 0.125f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherWind *AllocateWIND() {
     auto *const wind = static_cast<WeatherWind *>(HLib::AllocateTaskData(sizeof(WeatherWind), SHEN_NAME(WIND)));
     if (!wind)
@@ -609,7 +692,9 @@ WeatherWind *AllocateWIND() {
     wind->windScaleDenominator = 55.651402f;
     return wind;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void BeginWindPhaseTransition(WeatherWind &wind, std::int32_t phase) {
     wind.cooldownFramesRemaining = 0;
@@ -617,7 +702,9 @@ void BeginWindPhaseTransition(WeatherWind &wind, std::int32_t phase) {
     wind.phaseFramesRemaining = 10;
     wind.phaseStep = static_cast<std::int32_t>(static_cast<std::uint32_t>(phase) - static_cast<std::uint32_t>(wind.targetPhase)) / 10;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void BeginWindSpeedTransition(WeatherWind &wind, float speed) {
     wind.cooldownFramesRemaining = 0;
@@ -625,8 +712,10 @@ void BeginWindSpeedTransition(WeatherWind &wind, float speed) {
     wind.windSpeedFramesRemaining = 1;
     wind.windSpeedStep = speed - wind.currentWindSpeed;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native generate_weibull_profile: an unnormalised Weibull density k*u^(k-1)*e^(-u^k) at u = scale*i/count.
 void GenerateWeibullProfile(float *samples, std::int32_t count, float shape, float scale) {
     constexpr float epsilon = std::numeric_limits<float>::epsilon();
     const float total = static_cast<float>(count);
@@ -651,9 +740,11 @@ void GenerateWeibullProfile(float *samples, std::int32_t count, float shape, flo
         *samples = result;
     }
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native AllocateTMP0_TMP1: 1/f noise from a fractional-integration filter over the shared PRNG stream.
+// It draws taps values up front and one more after each output sample.
 void AllocateTMP0_TMP1(float *output, std::uint32_t count, std::uint32_t taps) {
     auto *const coefficients = static_cast<float *>(HLib::AllocateTaskData(4ULL * taps, SHEN_NAME(TMP0)));
     auto *const history = static_cast<float *>(HLib::AllocateTaskData(4ULL * taps, SHEN_NAME(TMP1)));
@@ -680,9 +771,11 @@ void AllocateTMP0_TMP1(float *output, std::uint32_t count, std::uint32_t taps) {
     HLib::FreeTaskData(history);
     HLib::FreeTaskData(coefficients);
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native InitWeibullResources_AllocateWBLT_S2AT_WF1: the WBLT speed profile, the S2AT direction table
+// and the WF/1 impulse LUT that WIND::UpdateWithSpeed samples.
 void InitWeibullResources() {
     windProfileSamples = static_cast<float *>(HLib::AllocateTaskData(0xc0, SHEN_NAME(WBLT)));
     GenerateWeibullProfile(windProfileSamples, 48, 1.78f, 4.8f);
@@ -703,8 +796,10 @@ void InitWeibullResources() {
     windImpulseLut[0] = 0.0f;
     windImpulseLutIndex = 0;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native sample_wind_from_profile: picks a speed band from the Weibull profile with the next impulse LUT entry.
 float SampleWindFromProfile(float baseSpeed, const float *profile) {
     if (baseSpeed <= 0.0f)
         return 0.0f;
@@ -727,8 +822,10 @@ float SampleWindFromProfile(float baseSpeed, const float *profile) {
     const float overflow = (threshold - totalWindProfileWeight) / (range - totalWindProfileWeight) * 80.0f * baseSpeed * 0.1f;
     return 0.6666667f < overflow ? 0.6666667f : overflow;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native map_wind_to_impulse_index: one shared-PRNG draw picks the direction sector for the speed bin.
 std::int32_t MapWindToImpulseIndex(float sampledSpeed, const float *table) {
     std::int32_t bin = static_cast<std::int32_t>(sampledSpeed * 30.0f);
     if (bin > 8)
@@ -739,12 +836,16 @@ std::int32_t MapWindToImpulseIndex(float sampledSpeed, const float *table) {
         ++row;
     return (row << 12) - 0x1000;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// WIND::UpdateWithSpeed's trailing debug trace, compiled to the generic nullsub on PC.
 void WindDebugTrace(std::int32_t, float, float, float, float, float) {
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native WIND::UpdateWithSpeed.
 void UpdateWindWithSpeed(WeatherWind &wind) {
     if (wind.requestedPhase != wind.targetPhase) {
         if (wind.phaseFramesRemaining > 0) {
@@ -785,25 +886,33 @@ void UpdateWindWithSpeed(WeatherWind &wind) {
     WindDebugTrace(wind.cooldownFramesRemaining, wind.sampledWindSpeed, static_cast<float>(wind.outputPhase) / 182.04445f, wind.currentWindSpeed,
         static_cast<float>(wind.targetPhase) / 182.04445f, wind.windScaleDenominator);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float ReadWeatherChannel(std::size_t channel) {
     if (channel < overrideValues.size() && overrideGate && (activeOverrides & (1U << channel)))
         return overrideValues[channel];
     return FlushSmall(weatherData->timelines[channel]->intensity);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFloat *AllocateWeatherFloat() {
     auto *const value = static_cast<WeatherFloat *>(HLib::AllocateTaskData(sizeof(WeatherFloat), SHEN_NAME(LFLT)));
     std::memset(value, 0, sizeof(*value));
     return value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherColour *AllocateWeatherColour() {
     auto *const value = static_cast<WeatherColour *>(HLib::AllocateTaskData(sizeof(WeatherColour), SHEN_NAME(LRGB)));
     std::memset(value, 0, sizeof(*value));
     return value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BeginTransition(WeatherFloat &value, float target, std::int32_t frames) {
     if (frames < 1) {
         (void)lfltSetImmediate(&value, target);
@@ -814,7 +923,9 @@ void BeginTransition(WeatherFloat &value, float target, std::int32_t frames) {
     value.frame = 0;
     value.frameCount = frames;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void CopyWeatherTime(WeatherAir &air, const DateTime &time) {
     air.month = time.month;
     air.day = time.day;
@@ -823,7 +934,9 @@ void CopyWeatherTime(WeatherAir &air, const DateTime &time) {
     air.second = time.second;
     air.seconds = time.second + 60 * (time.minute + 60 * time.hour);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 WeatherAir *AllocateWeatherAir(std::uint32_t lightIndex, const WeatherTable *tables, std::int32_t tableCount) {
     WeatherAir *const air = static_cast<WeatherAir *>(HLib::AllocateTaskData(sizeof(WeatherAir), TASK_WAIR));
@@ -847,7 +960,9 @@ WeatherAir *AllocateWeatherAir(std::uint32_t lightIndex, const WeatherTable *tab
     air->colour88 = AllocateWeatherColour();
     return air;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void FreeWeatherAir(WeatherAir *air) {
     HLib::FreeTaskData(air->colour50);
@@ -860,25 +975,36 @@ void FreeWeatherAir(WeatherAir *air) {
     HLib::FreeTaskData(air->colour88);
     HLib::FreeTaskData(air);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The WAIR field setters tail-jump into the shared native nullsub after the store.
 void WairSetterNullsub(WeatherAir *) {
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void wairSetCloud(WeatherAir *air, float value) {
     air->cloud = value;
     WairSetterNullsub(air);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void wairSetRain(WeatherAir *air, float value) {
     air->rain = value;
     WairSetterNullsub(air);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void wairSetAuxiliary(WeatherAir *air, float value) {
     air->auxiliary = value;
     WairSetterNullsub(air);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void PublishWeatherAir(bool initial = false) {
     wairSetCloud(weatherAir, cloud->current = FlushSmall(cloud->current));
     wairSetRain(weatherAir, GetWeatherPressure());
@@ -896,7 +1022,9 @@ void PublishWeatherAir(bool initial = false) {
         SetWeatherParticleRippleColour(wairPackRippleColorRGBA(weatherAir));
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ProcessNewWeatherData() {
     if (!weatherAir)
         return;
@@ -907,7 +1035,9 @@ void ProcessNewWeatherData() {
     CopyWeatherTime(*weatherAir, time);
     PublishWeatherAir();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateSunOrWindRotationVector() {
     const float speed = std::fmax(GetWeatherPressure() * 0.00099999993f, GetWeatherWindVector() * 0.00050000002f) + 0.00050000002f;
     DateTime time{};
@@ -922,7 +1052,9 @@ void UpdateSunOrWindRotationVector() {
     shenUpdatePlanetByLayer(x, 0, 1);
     shenUpdatePlanetByLayer(y, 1, 1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AdvanceOverride(std::size_t channel) {
     WeatherOverride &value = overrides[channel];
     const std::uint32_t mask = 1U << channel;
@@ -944,13 +1076,17 @@ void AdvanceOverride(std::size_t channel) {
     activeOverrides |= mask;
     overrideValues[channel] = std::fmax(0.0f, std::fmin(1.0f, value.current));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BeginWeatherRainTransition(float target, std::int32_t frames) {
     BeginRainPressureTransitionForWeatherEffects(target, frames);
     BeginTransition(*rain, target, frames);
     ComputeCloudVisibility(target, frames);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherForCurrentTimeImmediate() {
     weatherUpdateTime = 1;
     DateTime time;
@@ -969,7 +1105,9 @@ void UpdateWeatherForCurrentTimeImmediate() {
     weatherPublishedHour = time.hour;
     weatherPublishedMinute = time.minute;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ExecuteWeather_Callback(void *) {
     if (weatherUpdateEnabled == 0)
@@ -1032,9 +1170,10 @@ void ExecuteWeather_Callback(void *) {
     UpdateWeatherParticleGroups();
     SetWeatherParticleDrawingEnabled(IsWorldDrawingEnabled() ? 1 : 0);
 }
+#endif
 
 } // namespace
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ApplyPlanetRotForCurrentDateTime() {
     DateTime date;
@@ -1057,11 +1196,15 @@ void ApplyPlanetRotForCurrentDateTime() {
     const Vector3i rotation{0, FloatToShort(phase), 0};
     SetPlanetRotByIndex(rotation, 0);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void BeginWeatherFloatTransition(WeatherFloat *value, float target, std::int32_t frames) {
     BeginTransition(*value, target, frames);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t AdvanceWeatherFloat(WeatherFloat *value) {
     if (value->frame == value->frameCount)
@@ -1074,25 +1217,35 @@ std::int32_t AdvanceWeatherFloat(WeatherFloat *value) {
     value->current = FlushSmall(value->step + value->current);
     return 1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFloat *GetWeatherPressureLflt() {
     return rain;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherFloat *GetWeatherRippleLflt() {
     return rippleCount;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t lfltGetFramesRemaining(const WeatherFloat *value) {
     return static_cast<std::int32_t>(static_cast<std::uint32_t>(value->frameCount) - static_cast<std::uint32_t>(value->frame));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 bool lfltIsInterpolating(const WeatherFloat *value) {
     return value->frame != value->frameCount;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t lfltSetImmediate(WeatherFloat *value, float target) {
     value->current = value->target = target;
@@ -1100,7 +1253,9 @@ std::int32_t lfltSetImmediate(WeatherFloat *value, float target) {
     value->frame = value->frameCount = 0;
     return 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t lrgbSetImmediate(WeatherColour *value, const Vector4 *target) {
     value->current = value->target = {target->x, target->y, target->z, target->w};
@@ -1108,7 +1263,9 @@ std::int32_t lrgbSetImmediate(WeatherColour *value, const Vector4 *target) {
     value->frame = value->frameCount = 0;
     return 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t shenClearData(void *start, const void *end) {
     std::byte *cursor = static_cast<std::byte *>(start);
@@ -1118,20 +1275,26 @@ std::int32_t shenClearData(void *start, const void *end) {
     } while (reinterpret_cast<std::uintptr_t>(cursor) <= reinterpret_cast<std::uintptr_t>(end));
     return 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t SetWeatherLightManager(std::int32_t enabled) {
     const std::int32_t previous = g_weatherSunState.enabled;
     g_weatherSunState.enabled = enabled;
     return previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherMinimumSunElevation(float elevation) {
-
+    // SetTexUVZ accepts only the native 35..90 degree profile range.
     if (elevation >= 35.0f && elevation <= 90.0f) {
         minimumSunElevation = elevation;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint64_t WSCN_LoadWeatherData(const char *directory, const char *filename) {
     sceneWeatherData = LoadLegacySceneFile(directory, filename, WEATHER_SCENE_DATA);
     sceneWeatherTables[0].rows = static_cast<const std::byte *>(sceneWeatherData);
@@ -1147,7 +1310,9 @@ std::uint64_t WSCN_LoadWeatherData(const char *directory, const char *filename) 
     }
     return 64;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int64_t WSCN_DeleteWeatherData() {
     weatherTableMode = 1;
@@ -1163,7 +1328,9 @@ std::int64_t WSCN_DeleteWeatherData() {
     }
     return result;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 WeatherData *SetupWeatherData(std::int32_t baseYear) {
     WeatherData *const data = static_cast<WeatherData *>(HLib::AllocateTaskData(sizeof(WeatherData), TASK_WDTA));
@@ -1186,7 +1353,9 @@ WeatherData *SetupWeatherData(std::int32_t baseYear) {
     data->flags = 0;
     return data;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void QueueWeatherExecution(const MapInfoChunk *weatherChunk) {
     weatherRippleLifetimeScale = 1.0f;
@@ -1245,7 +1414,9 @@ void QueueWeatherExecution(const MapInfoChunk *weatherChunk) {
     }
     shenLoadSetLensflare();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeWAIR() {
     if (!weatherAir)
         return;
@@ -1253,7 +1424,9 @@ void FreeWAIR() {
     weatherAir = nullptr;
     weatherUpdateWind = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeather() {
     if (weatherAir)
         return;
@@ -1269,7 +1442,9 @@ void UpdateWeather() {
     SetWeatherRainPressureImmediate(ReadWeatherChannel(1));
     PublishWeatherAir(true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int64_t RefreshWeatherForCurrentTime(std::int32_t frames) {
     weatherUpdateTime = 1;
     DateTime time;
@@ -1296,7 +1471,9 @@ std::int64_t RefreshWeatherForCurrentTime(std::int32_t frames) {
     weatherPublishedMinute = time.minute;
     return static_cast<std::uint32_t>(time.minute);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateWeatherForMinute(std::int32_t mode, std::int32_t enable, std::int32_t frames, float value) {
     DateTime time;
     shenGetCurrentDateTime(time);
@@ -1329,7 +1506,9 @@ void UpdateWeatherForMinute(std::int32_t mode, std::int32_t enable, std::int32_t
         BeginWeatherRainTransition(state.current, 0);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int64_t ResetWeatherOverrides() {
     activeOverrides = 0;
@@ -1340,29 +1519,39 @@ std::int64_t ResetWeatherOverrides() {
     reservedWeatherOverrideState = {};
     return 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherInstruction(std::uint32_t instruction, bool enabled) {
     if (enabled)
         weatherInstruction |= instruction;
     else
         weatherInstruction &= ~instruction;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t GetCurrentWeatherInstruction() {
     return weatherInstruction;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherShouldUpdateDay(std::int32_t flag) {
     weatherShouldUpdateDay = flag;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetWeatherPressure() {
     if (!rain)
         return 0.0f;
     rain->current = FlushSmall(rain->current);
     return rain->current;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 float UpdateWeatherAndTime(std::int32_t minutes) {
     DateTime time;
@@ -1384,23 +1573,31 @@ float UpdateWeatherAndTime(std::int32_t minutes) {
     }
     return maximum;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetWeatherWindVector() {
     if (!cloud)
         return 0.0f;
     cloud->current = FlushSmall(cloud->current);
     return cloud->current;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetWeatherUpdateEnabledTo(std::int32_t enabled) {
     weatherUpdateEnabled = enabled;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint64_t GetWeatherUpdateEnabled() {
     return static_cast<std::uint32_t>(weatherUpdateEnabled);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t GetCurrentWeather() {
     DateTime time;
@@ -1410,7 +1607,9 @@ std::int32_t GetCurrentWeather() {
         return 2;
     return ReadWeatherChannel(0) > 0.0f ? 1 : 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetNewWindPhaseAndSpeed(std::int32_t phase, float speed) {
     WeatherWind *const wind = weatherWind;
@@ -1420,7 +1619,9 @@ void SetNewWindPhaseAndSpeed(std::int32_t phase, float speed) {
     BeginWindSpeedTransition(*wind, speed);
     SetWindFreezeFlag(wind, 1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SyncWindWithWDATWeatherState() {
     WeatherWind *const wind = weatherWind;
@@ -1433,46 +1634,64 @@ void SyncWindWithWDATWeatherState() {
     BeginWindSpeedTransition(*wind, GetWeatherIntensityForCurrentDay(*weatherData) / 30.0f);
     SetWindFreezeFlag(wind, 0);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 WeatherWind *GetWind() {
     return weatherWind;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 float GetCurrentWindSpeed() {
     return weatherWind ? weatherWind->currentWindSpeed : 0.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void windGetDirectionVector(const WeatherWind *wind, Vector3 *out) {
     *out = wind->windDirection;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetWindFreezeFlag(WeatherWind *wind, std::int32_t enabled) {
     wind->holdPreviousOutput = enabled;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetEffectiveWindSpeed(const WeatherWind *wind) {
     if (debugSampledWindSpeedOverride > 0.0f)
         return debugSampledWindSpeedOverride;
     return wind ? wind->sampledWindSpeed : 0.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetCurrentWindPhaseAccumulator(const WeatherWind *wind) {
     if (debugCustomWindPhaseAccum)
         return static_cast<std::uint16_t>(static_cast<std::int32_t>(static_cast<float>(debugCustomWindPhaseAccum) * 8192.0f / 45.0f));
     return wind ? wind->outputPhase : 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector4 *GetInterpolatedWeatherValues() {
     return interpolatedWeatherValues.data();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::array<std::uint32_t, 2> GetWeatherWaveColours() {
-    // Wave consumers share this buffer and may modify it until the next update.
+    // The existing typed wave consumer reads the same borrowed publication, including consumer mutations until the next update.
     return {std::bit_cast<std::uint32_t>(interpolatedWeatherValues[4].z), std::bit_cast<std::uint32_t>(interpolatedWeatherValues[5].x)};
 }
+#endif
 
-} // namespace shenmue::s2
 
+} // namespace s2
+} // namespace shenmue

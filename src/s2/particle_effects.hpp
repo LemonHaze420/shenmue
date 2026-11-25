@@ -2,7 +2,254 @@
 
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hlib.hpp"
+#include "s2/effect_fft.hpp"
+#include "platform/dc/particle_simulation.hpp"
+#include "platform/dc/particle_effects.hpp"
+
+#define SHENMUE_PARTICLE_LAYOUT_NAME_(line) ShenmueParticleLayoutCheck##line
+#define SHENMUE_PARTICLE_LAYOUT_NAME(line) SHENMUE_PARTICLE_LAYOUT_NAME_(line)
+#define SHENMUE_PARTICLE_LAYOUT(condition) typedef char SHENMUE_PARTICLE_LAYOUT_NAME(__LINE__)[(condition) ? 1 : -1]
+namespace shenmue {
+namespace dc {
+namespace sdk {
+void InitializeFftEffect(FftEffect *effect);
+}
+} // namespace dc
+} // namespace shenmue
+namespace shenmue {
+namespace s2 {
+#define EFFECT_CONTROLLER_TASK shen_name(SHEN_NAME(EFFE))
+#define PARTICLE_EFFECT_TASK shen_name(SHEN_NAME(EFPT))
+#define PARTICLE_FFT_TASK shen_name(SHEN_NAME(PUFY))
+#define FIRE_EFFECT_TASK shen_name(SHEN_NAME(FIRE))
+#define FIRE_TRAIL_TASK shen_name(SHEN_NAME(FIRB))
+#define FIRE_INSTANCE_TASK shen_name(SHEN_NAME(FIRC))
+struct Character;
+struct FireTrailEntry {
+    std::int16_t age, heightOffset;
+    Vector3 position;
+};
+SHENMUE_PARTICLE_LAYOUT(sizeof(FireTrailEntry) == 0x10);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireTrailEntry, age) == 0);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireTrailEntry, heightOffset) == 2);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireTrailEntry, position) == 4);
+static const std::int32_t FIRE_TRAIL_INITIAL_AGES[10] = {7, 20, 18, 10, 12, 5, 3, 1, 4, 7};
+struct FireInstance {
+    std::uint16_t enabled;
+    std::int16_t bone;
+    Vector3 localPosition, worldPosition;
+    float alpha, width, height;
+    Character *character;
+    float cameraOffset;
+};
+SHENMUE_PARTICLE_LAYOUT(sizeof(FireInstance) == 0x30);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, bone) == 2);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, localPosition) == 4);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, worldPosition) == 0x10);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, alpha) == 0x1c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, width) == 0x20);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, height) == 0x24);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, character) == 0x28);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireInstance, cameraOffset) == 0x2c);
+struct SmokeTextureOwner {
+    std::int32_t slot;
+    std::byte *pixels;
+    std::uint32_t colour;
+    std::int16_t references;
+    std::uint16_t activeEmitters;
+};
+struct SmokeEffect {
+    std::int32_t slot, count;
+    dc::sdk::Particle *particles;
+    Vector3 position, spawnVariance, velocity, velocityVariance;
+    shen_name flags;
+    float width, height, birthRate, initialScale, fadeFactor, expansion;
+    std::uint32_t retained58;
+    SmokeTextureOwner *texture;
+    std::int32_t profile;
+    float floorHeight;
+};
+struct FireEffect {
+    std::int32_t slot;
+    std::uint32_t drawFlags;
+    std::uint16_t flags;
+    std::int16_t bone;
+    std::byte *pixels;
+    Vector3 localPosition, worldPosition;
+    float width, height, alpha;
+    std::uint32_t retained34;
+    Character *character;
+    float cameraOffset;
+    FireTrailEntry *trail;
+    FireInstance *instances;
+};
+struct ParticleEmitterReference {
+    std::uint32_t active;
+    Vector3 position, localPosition;
+    Vector3i rotation;
+};
+SHENMUE_PARTICLE_LAYOUT(sizeof(ParticleEmitterReference) == 0x28);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEmitterReference, position) == 4);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEmitterReference, localPosition) == 0x10);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEmitterReference, rotation) == 0x1c);
+struct ParticleEffectSlot {
+    std::uint32_t retained00;
+    std::int32_t link, textureSlot, state;
+    HLib::TaskCallback callback;
+    void *data;
+    shen_name token;
+    std::uint32_t retained1c;
+};
+SHENMUE_PARTICLE_LAYOUT(sizeof(SmokeTextureOwner) == 0x10);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeTextureOwner, pixels) == 4);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeTextureOwner, references) == 0x0c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeTextureOwner, activeEmitters) == 0x0e);
+SHENMUE_PARTICLE_LAYOUT(sizeof(SmokeEffect) == 0x68);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, position) == 0x0c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, spawnVariance) == 0x18);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, velocity) == 0x24);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, velocityVariance) == 0x30);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, flags) == 0x3c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, width) == 0x40);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, texture) == 0x5c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(SmokeEffect, profile) == 0x60);
+SHENMUE_PARTICLE_LAYOUT(sizeof(FireEffect) == 0x48);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireEffect, pixels) == 0x0c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireEffect, localPosition) == 0x10);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireEffect, width) == 0x28);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireEffect, character) == 0x38);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireEffect, trail) == 0x40);
+SHENMUE_PARTICLE_LAYOUT(offsetof(FireEffect, instances) == 0x44);
+SHENMUE_PARTICLE_LAYOUT(sizeof(ParticleEffectSlot) == 0x20);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEffectSlot, state) == 0x0c);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEffectSlot, callback) == 0x10);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEffectSlot, data) == 0x14);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ParticleEffectSlot, token) == 0x18);
+// Ship-spray anchor and parameters.
+struct ShipSprayAnchor {
+    std::uint32_t flags;
+    std::int32_t state;
+    Vector3 position;
+    Vector3i rotation;
+};
+struct ShipSprayParameters {
+    std::uint32_t flags;
+    std::int32_t state;
+    std::int32_t slot;
+    std::int32_t frames;
+    std::uint32_t retained10;
+    Vector3 position;
+    float positionSpread;
+    Vector3 velocity;
+    float velocitySpread;
+    float width, height;
+    std::uint32_t colour;
+    float birthRate;
+    float growth[3];
+    float fade, drift, lift;
+};
+SHENMUE_PARTICLE_LAYOUT(sizeof(ShipSprayAnchor) == 0x20);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ShipSprayParameters, position) == 0x14);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ShipSprayParameters, velocity) == 0x24);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ShipSprayParameters, width) == 0x34);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ShipSprayParameters, birthRate) == 0x40);
+SHENMUE_PARTICLE_LAYOUT(offsetof(ShipSprayParameters, lift) == 0x58);
+extern SmokeEffect *g_smokeEffects[16], *g_splashEffects[16], *g_reservedParticleEffects[8], *g_fallingEffects[16];
+extern FireEffect *g_fireEffects[8];
+extern SmokeTextureOwner *g_smokeTextures[2];
+extern dc::sdk::FftEffect *g_smokeFftData[2];
+extern ParticleEffectSlot g_particleEffectSlots[16], g_smokeEffectSlots[2], g_fireEffectSlots[8];
+extern FireFftPrefix *g_fireFftOwners[8];
+extern std::uint16_t *g_splashTemporaryPixels;
+extern float g_stationarySmokeAlpha;
+extern HLib::Task *g_particleControllerTask;
+extern std::uint32_t g_particleControllerRequests;
+extern std::int32_t g_particleEffectsSuspended;
+extern ParticleEmitterReference g_particleEmitterReferences[16];
+extern std::int32_t g_dropEmitterSlots[5];
+extern float g_smokeInitialScale0, g_smokeInitialScale2, g_smokeInitialScale3, g_smokeInitialScale4;
+extern float g_smokeRadialVelocity3, g_smokeRadialDecay3, g_smokeRadialVelocity4, g_smokeRadialDecay4;
+void EffectControlCallback(void *data);
+void EF_Callback_EffectCtrl_Enqueue();
+void QueueParticleEmitterDraws(void *data);
+std::int32_t AllocateParticleEffectSlot(std::int32_t type, std::int32_t textureSlot, HLib::TaskCallback callback, void *data, shen_name token);
+std::int32_t CreateFireEffect(const Vector3 *position, float width, float height, std::int32_t drawMode, std::int32_t flags);
+std::int32_t CreateSmokeEffect(
+    const Vector3 *position, const Vector3 *spawnVolume, std::int32_t particleCount, float birthRate, std::uint32_t flags, std::int32_t profile);
+std::uint32_t ConfigureSmokeEffect(std::int32_t profile, std::uint32_t index, const Vector3 *position, const Vector3 *spawnVolume, std::int32_t particleCount,
+    float birthRate, std::uint32_t flags);
+std::int32_t CreateSplashEffect(const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags,
+    float floorHeight, const char *textureArchive, const char *textureName);
+std::int32_t CreateFallingParticleEffect(const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags,
+    const char *textureArchive, const char *textureName, float floorHeight);
+void SetFallingParticleFloor(float floorHeight);
+void FireControlCallback(void *data);
+void InitializeFireFft(std::int32_t index, FireFftPrefix *effect);
+void SetFireFftOutput(std::int32_t index, std::uint16_t *pixels);
+void UpdateFireOwner(FireEffect *effect);
+void UpdateFireFft(std::int32_t index, std::int32_t flags);
+void InitEffectPoints();
+void InitEffectControlTaskData();
+void CacheCurrentParticleEffects(std::int32_t suspended);
+void InitializeDropParticles();
+std::int32_t AssignParticleEmitterReferences(std::int32_t index, const Vector3 &position, const Vector3 &localPosition, std::int32_t yaw);
+void ResetDropParticleAdmission();
+void ReleaseDropParticles();
+void ResumeParticleEffect(std::int32_t type, std::uint32_t index);
+void SuspendParticleEffect(std::int32_t type, std::uint32_t index);
+void FreeParticleEffect(std::int32_t type, std::uint32_t index);
+std::int32_t GetParticleEffectVisibility(std::int32_t type, std::uint32_t index);
+void SetParticleEffectPosition(std::int32_t type, std::uint32_t index, const Vector3 *position, const Vector3 *variance);
+void SetParticleEffectVelocity(std::int32_t type, std::uint32_t index, const Vector3 *velocity, const Vector3 *variance);
+void SetParticleEffectUniformSize(std::int32_t type, std::uint32_t index, float size);
+void SetParticleEffectSize(std::int32_t type, std::uint32_t index, float width, float height);
+void SetParticleEffectColour(std::int32_t type, std::uint32_t index, std::int32_t alpha, std::int32_t red, std::int32_t green, std::int32_t blue);
+void TranslateParticleEffectParticles(std::int32_t type, std::uint32_t index, const Vector3 *delta);
+void SetStationarySmokeAlpha(std::uint32_t index, std::int32_t alpha);
+void SetParticleEffectInitialScale(std::int32_t type, std::uint32_t index, float scale);
+void InitializeShipSprayAnchor(ShipSprayAnchor *anchor);
+std::int32_t SetShipSprayParameters(ShipSprayParameters *parameters, std::int32_t mode, std::int32_t side);
+void UpdateSakuraParticleTuning();
+std::int32_t CreateSakuraEffect(const Vector3 *position, const Vector3 *spawnVolume, std::int32_t count, float birthRate, std::uint32_t flags);
+void InitializeSakuraEffects();
+void SetParticleEffectBirthRate(std::int32_t type, std::uint32_t index, float fraction);
+void SetSmokeEffectRadialMotion(std::uint32_t index, float velocity, float decay);
+void SetFireAlpha(std::uint32_t index, float alpha);
+FireInstance *SetFirePosition(std::uint32_t index, std::int32_t instance, const Vector3 *position);
+void SetFireInstanceAlpha(std::uint32_t index, std::int32_t instance, float alpha);
+void SetFireInstanceSize(std::uint32_t index, std::int32_t instance, float width, float height);
+void SetFirePalette(std::uint32_t index, const std::uint16_t *palette);
+extern Vector3 g_smokePosition;
+extern std::uint32_t g_smokeParameters[4];
+extern float g_smokeExpansion0, g_smokeExpansion2, g_smokeExpansion3, g_smokeExpansion4;
+extern float g_smokeFadeFactor0, g_smokeFadeFactor2, g_smokeFadeFactor3, g_smokeFadeFactor4;
+extern std::int32_t g_smokeAlphaStep3, g_smokeAlphaStep4;
+extern float g_smokeOpacityScale3, g_smokeOpacityScale4;
+void SetSmokePosition(const Vector3 *position);
+void SetSmokeParameter(std::uint32_t parameter, std::uint32_t value);
+void SetSmokeEffectFalloff(std::uint32_t index, std::int32_t value);
+void SetSmokeEffectFadeFactor(std::uint32_t index, std::int32_t value);
+void SetSmokeEffectPhaseRate(std::uint32_t index, float rate);
+void SetSmokeEffectFalloffCurve(std::uint32_t index, float exponent, float scale);
+void SetSmokeEffectSpread(std::uint32_t index, float falloff, float opacity);
+void SetFireFalloff(std::uint32_t index, float radiusX, float radiusY, float gain);
+void SetFireFalloffScalar(std::uint32_t index, float scalar);
+void AttachFireEffect(std::uint32_t index, shen_name name, std::int32_t bone, float offset);
+void AttachFireInstance(std::uint32_t index, std::int32_t instance, shen_name name, std::int32_t bone, float offset);
+} // namespace s2
+} // namespace shenmue
+#undef SHENMUE_PARTICLE_LAYOUT
+#undef SHENMUE_PARTICLE_LAYOUT_NAME
+#undef SHENMUE_PARTICLE_LAYOUT_NAME_
+#endif
+
+#else
+
+#include "s2/weather_particles_data.hpp"
 
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -36,24 +283,6 @@ inline constexpr std::uint32_t weatherRippleDefaultColour = 0xa0ffffffU;
 inline constexpr shen_name weatherClipEntryName{SHEN_NAME(WCCP)};
 inline constexpr shen_name weatherSphereVisibilityMap{SHEN_NAME(QD00)};
 
-struct WeatherClipEntry {
-    std::uint32_t enabled;
-    std::array<Vector2, 4> points;
-    float clipY0;
-    float clipY1;
-    Vector3 center;
-    float scale;
-};
-struct WeatherClipSet {
-    std::int32_t enabled;
-    std::int32_t count;
-    WeatherClipEntry *entries;
-};
-static_assert(sizeof(WeatherClipEntry) == 60);
-static_assert(offsetof(WeatherClipEntry, points) == 4);
-static_assert(offsetof(WeatherClipEntry, center) == 44);
-static_assert(offsetof(WeatherClipEntry, scale) == 56);
-static_assert(sizeof(WeatherClipSet) == 16);
 extern std::array<WeatherClipSet, 2> weatherClipSets;
 struct Character;
 struct LegacyEffectTexture;
@@ -94,19 +323,6 @@ struct WeatherRippleParticle {
     float age;
     float lifetime;
 };
-struct WeatherClipQuadPlanes {
-    float clipY1;
-    float clipY0;
-    std::array<float, 4> x;
-    std::array<float, 4> z;
-    std::array<float, 4> edgeZ;
-    std::array<float, 4> edgeX;
-};
-
-static_assert(sizeof(WeatherClipQuadPlanes) == 0x48);
-static_assert(offsetof(WeatherClipQuadPlanes, x) == 0x08);
-static_assert(offsetof(WeatherClipQuadPlanes, edgeZ) == 0x28);
-
 struct WeatherParticleGroup {
     WeatherParticleGroup *next;
     WeatherParticleGroup *previous;
@@ -176,8 +392,8 @@ struct WeatherParticleGroup {
     float boundsMinZ;
     float frustumDistance;
     float frustumSpan;
-    WeatherClipQuadPlanes clipA;
-    WeatherClipQuadPlanes clipB;
+    WeatherClipQuadPlanes clipA; // Native WTHR/WCCP set 0 copied into each live group.
+    WeatherClipQuadPlanes clipB; // Native WTHR/WCCP set 1 copied into each live group.
     std::uint32_t reserved24c;
 };
 
@@ -208,7 +424,7 @@ struct WeatherRainOwner {
     void *storageEntry18;
     WeatherParticleGroup *rippleGroup;
     WeatherParticleGroup *rippleGroup1;
-    std::int32_t frustumFov;
+    std::int32_t frustumFov; // native CARA +0x30 input used by span calculations
     std::int32_t reserved34;
 };
 
@@ -299,12 +515,12 @@ void EnqueueEffectControlTask();
 void InitializeEffectPoints();
 // CacheCurrentParticleEffects freezes/unfreezes all sixteen emitter callbacks.
 void CacheCurrentParticleEffects(std::int32_t suspended);
-
+// Native g_CurrentWeatherForceFlag; rain and ripple group flags track pause.
 extern std::int32_t g_currentWeatherForceFlag;
 void SetRainAndRippleFlagsTo(std::int32_t paused);
 
-
-
+// Native families 0/1/2/3/4 are smoke/splash/reserved/falling/fire.
+// Except the -1 sentinel, effect and instance indices are native unchecked indices.
 std::uint64_t CreateSplashEffect(const Vector3 &position, const Vector3 &spawnVolume, std::int32_t particleCount, float birthRate, shen_name flags,
     std::int32_t floorHeightBits, const char *textureArchive, const char *textureName);
 std::uint64_t CreateFallingParticleEffect(const Vector3 &position, const Vector3 &spawnVolume, std::int32_t particleCount, float birthRate, shen_name flags,
@@ -350,3 +566,4 @@ void SetFireInstanceSize(std::uint32_t effect, std::int32_t instance, float widt
 
 } // namespace shenmue::s2
 
+#endif

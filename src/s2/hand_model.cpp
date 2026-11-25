@@ -1,3 +1,33 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/hand_dc.hpp"
+
+#include "s2/file_loader_dc.hpp"
+#include "s2/model_dc.hpp"
+#include "s2/pak_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include <cstdio>
+#include <cstring>
+#include "s2/player_readiness_dc.hpp"
+#include "s2/screen_film_dc.hpp"
+#include "s2/ui_state_dc.hpp"
+#include "s2/scenario_control_dc.hpp"
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/player_model_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#endif
+#include <float.h>
+#include <cmath>
+#define SHENMUE_HAND_NULL 0
+#define SHENMUE_HAND_INITIALIZE =
+#define SHENMUE_HAND_MAX_FLOAT FLT_MAX
+#define SHENMUE_HAND_FMA(a, b, c) ((a) * (b) + (c))
+#include "platform/dc/matrix.hpp"
+#include "shenmue.h"
+#include "s2/character_transparency_dc.hpp"
+#include "s2/math.hpp"
+#include "platform/dc/sdk.hpp"
+#else
 #include "s2/model_component.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -54,9 +84,31 @@
 #include <vector>
 #include "s2/area_names.hpp"
 #include "s2/model_component_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 using namespace model_component_detail;
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+namespace model_component_detail {
+
+MT7Model *QueryHandModelCacheNullsub(const char *);
+std::uint8_t AllocateHandModels(Character *character, HandParams &hand);
+void CleanupHand(Character *character, void *payload);
+
+} // namespace model_component_detail
+
+std::uint64_t StageImmediateHandPose(HandParams *hand, const Matrix4x4 *parent);
+std::uint64_t StageImmediateHandPose(HandParams *hand);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace model_component_detail {
 
@@ -114,7 +166,7 @@ bool BindHandPoseResource(HandModelResource &resource, std::uint32_t side) {
             return false;
         std::size_t cursor = base + 8;
         const std::size_t vertexHeader = base + vertexOffset;
-
+        // Native Recursive_Search reads each 96-byte joint in place; the final joint matrix tail overlaps the vertex header's first eight bytes.
         if (!ReadHandJointTree(resource, cursor, sourceSize, -1) || !ReadHandValue(resource, vertexHeader + 12, count) || count > sourceSize / 48U)
             return false;
         for (HandPoseJoint &joint : resource.joints) {
@@ -164,7 +216,7 @@ bool BindHandPoseResource(HandModelResource &resource, std::uint32_t side) {
         if (!ReadHandValue(resource, cursor + 4, resource.normalizedNormalCount) || resource.normalizedNormalCount > count ||
             !ReadHandValue(resource, cursor + 16, remapCount) || !ReadHandValue(resource, cursor + 20, vertex) || remapCount > sourceSize / 8U)
             return false;
-
+        // PC's four-record unroll includes one trailing record when the authored count is a multiple of four.
         if (resource.normalizedNormalCount && !(resource.normalizedNormalCount & 3U))
             ++resource.normalizedNormalCount;
         if (resource.normalizedNormalCount > count)
@@ -197,6 +249,10 @@ Vector3 TransformHandVector(const Vector3 &value, const Matrix4x4 &matrix, bool 
 
 } // namespace model_component_detail
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 HandModelResource *GetHandModelResource(const HandParams &hand) {
     PresentationState *const state = FindPresentation(hand.owner);
     if (!state || hand.selector < 1 || hand.selector > 4)
@@ -207,6 +263,10 @@ HandModelResource *GetHandModelResource(const HandParams &hand) {
     return nullptr;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void LoadHandModels() {
     for (std::size_t side = 0; side < 2; ++side) {
         void *allocation =
@@ -215,12 +275,16 @@ void LoadHandModels() {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void InitializeHandWork() {
     g_temporaryHNDL = g_temporaryHNDR = nullptr;
     handPoseMatrices = static_cast<Matrix4x4 *>(HLib::AllocateStaticOrDynamicBlock(0x1200, HAND_MATRIX_MEMORY));
     handJointMatrices = static_cast<Matrix4x4 *>(HLib::AllocateStaticOrDynamicBlock(0x1200, HAND_MATRIX_MEMORY));
     handRelativeMatrices = static_cast<Matrix4x4 *>(HLib::AllocateStaticOrDynamicBlock(0x1200, HAND_MATRIX_MEMORY));
-
+    // No matrix is pushed; the trailing Pop affects the caller.
     Matrix4x4::SetPrePassToTempTransform();
     for (std::size_t index = 0; index < 71; ++index) {
         if (handJointMatrices)
@@ -233,6 +297,10 @@ void InitializeHandWork() {
     handCalculationWork = HLib::AllocateStaticOrDynamicBlock(0x18000, HAND_CALCULATION_MEMORY);
     handProbeWork = HLib::AllocateStaticOrDynamicBlock(0xa0, HAND_CALCULATION_MEMORY);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void *LoadHandPoseBank(std::int32_t act, shen_name area, const char *filename) {
     if (!handPoseMatrices || !handCalculationWork)
@@ -284,6 +352,10 @@ void *LoadHandPoseBank(std::int32_t act, shen_name area, const char *filename) {
     return data;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::uint64_t ReleaseHandPoseBank(void *data) {
     if (!data)
@@ -302,6 +374,10 @@ std::uint64_t ReleaseHandPoseBank(void *data) {
     HLib::FreeTaskData(bank);
     return 1;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace model_component_detail {
 
@@ -359,6 +435,10 @@ std::int16_t ParseHandPoseFrame(HandParams &hand, std::int32_t frame) {
 
 } // namespace model_component_detail
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 std::int16_t ConfigureHandPoseSequence(
     HandParams &hand, std::int16_t pose, std::int16_t first, std::int16_t last, std::int16_t start, std::uint8_t flags, float step, std::int16_t ticks) {
     hand.poseFlags = flags & static_cast<std::uint8_t>(~HandPoseInactive);
@@ -403,6 +483,786 @@ std::int16_t ConfigureHandPoseSequence(
     hand.secondaryPoseWork = nullptr;
     return result;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsCharacterHandRegionEnabled(const CharacterHandComponent *hand);
+MT7Model *QueryHandModelCacheNullsub(const char *);
+std::uint32_t GetNumHandModelChunks(const HandMeshHeader *mesh);
+std::int32_t PlayerBusyCheckNullsub();
+std::int32_t HandModelUnusedNullsubA();
+std::int32_t HandModelUnusedNullsubB();
+std::int32_t HandModelUnusedNullsubC();
+std::int32_t HandModelUnusedNullsubD();
+std::int32_t HandModelUnusedNullsubE();
+std::int32_t HandModelUnusedNullsubF();
+std::int32_t HandModelUnusedNullsubG();
+std::int32_t HandModelUnusedNullsubH();
+std::int32_t HandModelUnusedNullsubI();
+std::int32_t HandModelUnusedNullsubJ();
+std::int32_t HandModelUnusedNullsubK();
+std::int32_t HandModelUnusedNullsubL();
+std::int32_t HandModelUnusedNullsubM();
+void HandModelUnusedNullsubN();
+void SetHandPrimaryRotation(CharacterHandComponent *hand, std::int32_t x, std::int32_t y, std::int32_t z);
+void CleanupHand(Character *character, void *payload);
+void GetHandPrimaryNodeRotation(const CharacterHandComponent &hand, Vector3i &rotation);
+#else
+namespace model_component_detail {
+
+PresentationState *FindPresentation(const Character *character);
+template <class T> bool ReadHandValue(const HandModelResource &resource, std::size_t offset, T &value);
+bool ReadHandJointTree(HandModelResource &resource, std::size_t &cursor, std::size_t end, std::int32_t parent);
+bool BindHandPoseResource(HandModelResource &resource, std::uint32_t side);
+Vector3 TransformHandVector(const Vector3 &value, const Matrix4x4 &matrix, bool point);
+std::int16_t InterpolateHandPoseChannel(std::int32_t count, const HandCubicKeyframe *keys, std::int32_t frame);
+std::int16_t ParseHandPoseJoint(HandParams &hand, const std::byte *&joint, const std::byte *&channels, std::int32_t frame);
+std::int16_t ParseHandPoseFrame(HandParams &hand, std::int32_t frame);
+MT7Model *QueryHandModelCacheNullsub(const char *);
+std::uint32_t ReadHandMeshWord(std::span<const std::byte> bytes, std::size_t offset);
+std::uint64_t GetNumHandModelChunks(std::span<const std::byte> bytes);
+MT7Model *ReadOwnedHandModel(const char *directory, const char *filename, shen_name token, std::byte *&file);
+void ReleaseHandReader(MT7Model *reader, std::byte *file);
+std::uint8_t AllocateHandModels(Character *character, HandParams &hand);
+std::uint8_t RetireHandModels(Character *character, HandParams &hand);
+void StageHandJoint(
+    HandParams &hand, const HandPoseModelJoint *&cursor, const std::int32_t *&channels, HandModelResource *resource, std::int32_t frame, bool publishMatrices);
+RuntimeHandStaging BuildHandPoseCpuStaging(HandParams &hand);
+bool CalculateHandScaleRatios(HandParams &hand);
+std::int32_t HandAttachmentKind(std::uint8_t selector);
+void FinalizeHandMatrices(const d3t::HandMatrixAttachment &hand);
+void FinalizeMatchingHandAttachments(d3t::ModelRuntimeState &state, std::int32_t kind, std::int32_t childrenOnly);
+void GenerateHandJointRelativeMatrices(
+    const HandPoseModelJoint *&cursor, const Matrix4x4 *parent, const float *scales, std::int32_t bodyKind, HandModelResource *resource);
+void GenerateHandRelativeMatrices(HandParams &hand, const Matrix4x4 *parent, std::int32_t bodyKind);
+void RotateHandPrimaryRelativeMatrix(HandParams &hand);
+void ApplyHandNodeTransform(const MT7Node &node);
+void ApplyHandBodyTransform(Character &character, const HandParams &hand);
+void ComputeHandTransformedProbes(const HandParams &hand);
+void ApplyHandRenderParent(const MT7Model &model, std::size_t index);
+void ComposeHandRenderMatrices(HandModelResource &resource);
+void BindHandRenderMatrices(HandModelResource &resource, bool bind);
+void ReleaseHandModel(HandModelResource &resource);
+std::string DeriveHandFilename(const char *modelImage, bool left);
+HandParams *ResolveCharacterHandForDraw(std::uint16_t nodeId);
+void CharacterHandDrawClosure(Character *character);
+void CharacterHandDirectCore(Character *character);
+void UpdateHand(Character *character, void *payload);
+void CleanupHand(Character *character, void *payload);
+int HandDrawNullsub();
+bool DrawPrimaryHandModel(HandParams &hand, float alpha);
+bool DrawSecondaryHandModel(HandParams &hand, float alpha);
+
+} // namespace model_component_detail
+
+HandModelResource *GetHandModelResource(const HandParams &hand);
+void LoadHandModels();
+void InitializeHandWork();
+void *LoadHandPoseBank(std::int32_t act, shen_name area, const char *filename);
+std::uint64_t ReleaseHandPoseBank(void *data);
+std::int16_t ConfigureHandPoseSequence(
+    HandParams &hand, std::int16_t pose, std::int16_t first, std::int16_t last, std::int16_t start, std::uint8_t flags, float step, std::int16_t ticks);
+std::uint64_t SetLowQualityHands(Character *character);
+std::uint8_t hndlSetFlags(Character *character);
+CharacterCoreCallback assignBlurFigurePoseCallback(Character *character, CharacterCoreCallback callback);
+void StageHandPose(HandParams &hand, std::int32_t frame);
+void StageHandGripProbes(HandParams &hand);
+std::uint64_t PublishHandModelAttachment(HandParams &hand, Character *character, MT7Model *model, std::int32_t childrenOnly, std::uint32_t flags);
+std::uint64_t StageImmediateHandPose(HandParams *hand, const Matrix4x4 *parent);
+std::uint64_t StageImmediateHandPose(HandParams *hand);
+std::uint32_t DrawCharacterHandReplacement(std::uint16_t nodeId, float *originalAlphaScale, float alpha, const MT7Node *originalNode);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t PlayerBusyCheckNullsub() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubA() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubB() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubC() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubD() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubE() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubF() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubG() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubH() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubI() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubJ() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubK() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubL() {
+    return -1;
+}
+
+std::int32_t HandModelUnusedNullsubM() {
+    return -1;
+}
+
+void HandModelUnusedNullsubN() {
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void CleanupHand(Character *character, void *payload) {
+    CharacterHandComponent &hand = *static_cast<CharacterHandComponent *>(payload);
+    if (!character)
+        return;
+    HandPoseState &pose = hand.pose;
+    if (hand.primaryNode && pose.meshCopy && pose.meshBackup) {
+        HLib::FreeTaskData(pose.meshCopy);
+        hand.primaryNode->mesh = const_cast<std::uint32_t *>(pose.meshBackup);
+        pose.meshBackup = 0;
+        pose.meshCopy = 0;
+    }
+    if (static_cast<std::uint8_t>(pose.selector - 1U) < 2) {
+        if (hand.primaryFile && hand.primaryModel)
+            ReleaseMT7Model(hand.primaryModel);
+        if (hand.secondaryFile && hand.secondaryModel)
+            ReleaseMT7Model(hand.secondaryModel);
+    }
+    hand.primaryNode = 0;
+    hand.primaryModel = 0;
+    hand.primaryFile = 0;
+    hand.secondaryNode = 0;
+    hand.secondaryModel = 0;
+    hand.secondaryFile = 0;
+    if (hand.pose.extendedPoseWork) {
+        HLib::FreeTaskData(hand.pose.extendedPoseWork);
+        hand.pose.extendedPoseWork = 0;
+    }
+    hand.pose.modelData = 0;
+}
+
+#else
+
+namespace model_component_detail {
+
+// The six MHND measurements are ratios against RYO_'s same hand.
+bool CalculateHandScaleRatios(HandParams &hand) {
+    for (float &value : hand.retainedUnitValues)
+        value = 1.0f;
+    const auto *const measurements = static_cast<const MhndComponent *>(FindModelComponent(hand.owner, kHandPoseToken));
+    Character *const ryo = ctrlGetScenarioChara(SHEN_NAME(RYO_));
+    const auto *const reference = ryo ? static_cast<const MhndComponent *>(FindModelComponent(ryo, kHandPoseToken)) : nullptr;
+    if (!measurements || !reference)
+        return false;
+    const std::size_t side = hand.selector == 2 || hand.selector == 4 ? 0 : 1;
+    for (std::size_t index = 0; index < 6; ++index) {
+        const float value = measurements->hands[side].measurements[index];
+        const float base = reference->hands[side].measurements[index];
+        if (value > 0.0f && base > 0.0f)
+            hand.retainedUnitValues[index] = value / base;
+    }
+    return true;
+}
+
+std::int32_t HandAttachmentKind(std::uint8_t selector) {
+    constexpr std::int32_t kinds[]{0, -66, -65, 69, 68};
+    return selector < std::size(kinds) ? kinds[selector] : 0;
+}
+
+// Select HNDP_1 indices and transpose exactly once,
+// and publish the authored hashes. No reader-derived cache/descriptor fallback.
+void FinalizeHandMatrices(const d3t::HandMatrixAttachment &hand) {
+    if (!hand.enabled || !hand.ready || !hand.node)
+        return;
+    for (std::uint32_t index = 0; index < hand.matrixCount; ++index) {
+        if (index > 20 || !hand.cacheHandle)
+            continue;
+        std::uint32_t hash;
+        // Native index 20 deliberately aliases the first four selection bytes.
+        std::memcpy(&hash, reinterpret_cast<const std::byte *>(&hand) + 40 + index * 4, sizeof(hash));
+        if (!hash)
+            continue;
+        const Matrix4x4 &source = hand.matrices[hand.matrixIndices[index]];
+        Matrix4x4 transposed;
+        for (std::size_t row = 0; row < 4; ++row)
+            for (std::size_t column = 0; column < 4; ++column)
+                transposed.rows[row][column] = source.rows[column][row];
+        d3t::SetModelCacheTransform((static_cast<std::uint64_t>(hash) << 32) | hand.cacheHandle, transposed);
+    }
+}
+
+void FinalizeMatchingHandAttachments(d3t::ModelRuntimeState &state, std::int32_t kind, std::int32_t childrenOnly) {
+    for (const auto &attachment : state.hands)
+        if (attachment.node && attachment.nodeKind == kind && (!childrenOnly || attachment.hasChildren))
+            FinalizeHandMatrices(attachment);
+}
+
+void GenerateHandJointRelativeMatrices(
+    const HandPoseModelJoint *&cursor, const Matrix4x4 *parent, const float *scales, std::int32_t bodyKind, HandModelResource *resource) {
+    const auto &joint = *cursor++;
+    const Matrix4x4 *const absolute = handJointMatrices + joint.id;
+    if (joint.id <= 19) {
+        Matrix4x4_Push(absolute);
+        Matrix4x4_Push(parent);
+        Matrix4x4 inverse;
+        if (Matrix4x4::invertMatrix(&workTransformMatrix, &inverse))
+            Matrix4x4::SetActiveTransform(&inverse);
+        Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.top.stack - 1);
+        constexpr std::int32_t scalePairs[15][2]{
+            {29, 1}, {30, 1}, {31, 1}, {45, 3}, {46, 5}, {47, 5}, {41, 3}, {42, 5}, {43, 5}, {37, 3}, {38, 5}, {39, 5}, {33, 2}, {34, 4}, {35, 4}};
+        float scale = scales[0];
+        if (bodyKind > 5)
+            for (const auto &pair : scalePairs)
+                if (pair[0] == joint.id) {
+                    scale = scales[pair[1]];
+                    break;
+                }
+        if (scale <= 0.0f)
+            scale = 1.0f;
+        workTransformMatrix.rows[3].x *= scale;
+        workTransformMatrix.rows[3].y *= scale;
+        workTransformMatrix.rows[3].z *= scale;
+        Matrix4x4::GetTransformMatrix(handRelativeMatrices + joint.id);
+        if (resource)
+            resource->relativeMatrices[joint.id] = workTransformMatrix;
+        Matrix4x4::Pop(2);
+        parent = absolute;
+    }
+    for (std::int32_t child = 0; child < joint.childCount; ++child)
+        GenerateHandJointRelativeMatrices(cursor, parent, scales, bodyKind, resource);
+}
+
+// Produces HNDP_1 only; the caller publishes it later.
+void GenerateHandRelativeMatrices(HandParams &hand, const Matrix4x4 *parent, std::int32_t bodyKind) {
+    if (!hand.poseModelData)
+        return;
+    if (!hand.calculationEnabled)
+        hand.calculationEnabled = CalculateHandScaleRatios(hand);
+    if (bodyKind < 0)
+        bodyKind = static_cast<std::int32_t>(GetModelBodyKind(hand.owner->model));
+    constexpr float unitScale[6]{1, 1, 1, 1, 1, 1};
+    const float *const scales = hand.calculationEnabled ? hand.retainedUnitValues : unitScale;
+    const auto *cursor = reinterpret_cast<const HandPoseModelJoint *>(hand.poseModelData + 8);
+    GenerateHandJointRelativeMatrices(cursor, parent, scales, bodyKind, GetHandModelResource(hand));
+}
+
+void RotateHandPrimaryRelativeMatrix(HandParams &hand) {
+    Matrix4x4_PushActiveTransform();
+    const Vector3i rotation = hand.primaryNode ? hand.primaryNode->rotation : Vector3i{};
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(rotation.z));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation.y));
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(rotation.x));
+    Matrix4x4_Push(handRelativeMatrices);
+    Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.top.stack - 1);
+    Matrix4x4::GetTransformMatrix(handRelativeMatrices);
+    if (auto *const resource = GetHandModelResource(hand))
+        resource->relativeMatrices[0] = workTransformMatrix;
+    Matrix4x4::Pop(2);
+}
+
+void ApplyHandNodeTransform(const MT7Node &node) {
+    Matrix4x4::preTranslate(node.position.x, node.position.y, node.position.z);
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node.rotation.z));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(node.rotation.y));
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(node.rotation.x));
+    Matrix4x4::Scale(node.scale.x, node.scale.y, node.scale.z);
+}
+
+// Body bone selectors, or the model's child chain through FFBE/FFBF.
+void ApplyHandBodyTransform(Character &character, const HandParams &hand) {
+    if (hand.selector == 1 || hand.selector == 2) {
+        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(&character), hand.selector == 1 ? 21 : 14));
+        if (hand.primaryNode)
+            ApplyHandNodeTransform(*hand.primaryNode);
+        return;
+    }
+    Matrix4x4::SetPrePassToTempTransform();
+    const Vector3 position = GetCharacterWorldPosition(&character);
+    const Vector3i rotation = GetCharacterWorldRotation(&character);
+    Matrix4x4::preTranslate(position.x, position.y, position.z);
+    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(rotation.z));
+    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation.y));
+    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(rotation.x));
+    const auto *const model = static_cast<const MT7Model *>(character.model);
+    if (!model || model->nodes.empty())
+        return;
+    const std::uint16_t target = hand.selector == 3 ? 0xffbeU : 0xffbfU;
+    for (const MT7Node *node = model->nodes.data(); node;) {
+        ApplyHandNodeTransform(*node);
+        if (static_cast<std::uint16_t>(node->id) == target)
+            break;
+        node = node->firstChild < 0 ? nullptr : &model->nodes[static_cast<std::size_t>(node->firstChild)];
+    }
+}
+
+// The ten probes share HNDC_0.
+void ComputeHandTransformedProbes(const HandParams &hand) {
+    Vector3 world[72];
+    for (std::size_t joint = 0; joint < 72; ++joint)
+        Matrix4x4::TransformPoint(hand.jointPositions[joint], world[joint]);
+    constexpr struct {
+        std::uint8_t first, second;
+        float firstWeight, secondWeight, radius;
+    } probes[10]{{69, 70, 0.29660001f, 0.70340002f, 0.0057000001f}, {69, 70, 1.0f, 0.0f, 0.0106f}, {59, 60, 0.25529999f, 0.74470001f, 0.0093f},
+        {59, 60, 1.0f, 0.0f, 0.0114f}, {45, 46, 0.28549999f, 0.71450001f, 0.0091000004f}, {45, 46, 1.0f, 0.0f, 0.0121f}, {37, 38, 0.0f, 1.0f, 0.0097000003f},
+        {37, 38, 0.80000001f, 0.19999999f, 0.0106f}, {29, 30, 0.3073f, 0.69270003f, 0.0098999999f}, {29, 30, 0.84560001f, 0.15439999f, 0.011f}};
+    HandGripProbe *const output = static_cast<HandGripProbe *>(handProbeWork);
+    if (!output)
+        return;
+    for (std::size_t index = 0; index < 10; ++index) {
+        const auto &probe = probes[index];
+        const Vector3 &first = world[probe.first];
+        const Vector3 &second = world[probe.second];
+        output[index] = {{first.x * probe.firstWeight + second.x * probe.secondWeight, first.y * probe.firstWeight + second.y * probe.secondWeight,
+                             first.z * probe.firstWeight + second.z * probe.secondWeight},
+            probe.radius};
+    }
+}
+
+// Adapt HNDP_1 to the existing legacy absolute-override contract. Authored
+// non-hand parents and live body overrides retain their original ownership.
+void ApplyHandRenderParent(const MT7Model &model, std::size_t index) {
+    const MT7Node &node = model.nodes[index];
+    if (const Matrix4x4 *const transform = GetMT7NodeTransformOverride(node)) {
+        Matrix4x4::SetActiveTransform(transform);
+    } else {
+        if (node.parent >= 0)
+            ApplyHandRenderParent(model, static_cast<std::size_t>(node.parent));
+        ApplyHandNodeTransform(node);
+    }
+}
+
+void ComposeHandRenderMatrices(HandModelResource &resource) {
+    if (resource.joints.empty())
+        return;
+    Matrix4x4_Push();
+    const Matrix4x4 identity{{{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}};
+    Matrix4x4::SetActiveTransform(&identity);
+    ApplyHandRenderParent(*resource.reader, resource.poseNode);
+    Matrix4x4 parent;
+    Matrix4x4::GetTransformMatrix(&parent);
+    for (const HandPoseJoint &joint : resource.joints) {
+        if (joint.id > 19)
+            continue;
+        const Matrix4x4 *const inherited =
+            joint.relativeParent < 0 ? &parent : &resource.renderMatrices[resource.joints[static_cast<std::size_t>(joint.relativeParent)].id];
+        Matrix4x4::SetActiveTransform(inherited);
+        Matrix4x4::MultiplyWithPrePassMatrix(&resource.relativeMatrices[joint.id]);
+        Matrix4x4::GetTransformMatrix(&resource.renderMatrices[joint.id]);
+    }
+    Matrix4x4::Pop(1);
+}
+
+void BindHandRenderMatrices(HandModelResource &resource, bool bind) {
+    if (bind)
+        ComposeHandRenderMatrices(resource);
+    for (HandPoseJoint &joint : resource.joints) {
+        if (joint.id > 19 || !joint.renderNode)
+            continue;
+        if (bind) {
+            joint.previousRenderTransform = GetMT7NodeTransformOverride(*joint.renderNode);
+            SetMT7NodeTransformOverride(*joint.renderNode, &resource.renderMatrices[joint.id]);
+        } else {
+            SetMT7NodeTransformOverride(*joint.renderNode, joint.previousRenderTransform);
+        }
+    }
+}
+
+void ReleaseHandModel(HandModelResource &resource) {
+    resource.reader = nullptr;
+    resource.joints.clear();
+    resource.poseVertices.clear();
+    resource.influences.clear();
+    resource.mappings.clear();
+}
+
+std::string DeriveHandFilename(const char *modelImage, bool left) {
+    std::string_view image = modelImage ? modelImage : "";
+    const std::size_t slash = image.find_last_of("/\\");
+    if (slash != std::string_view::npos)
+        image.remove_prefix(slash + 1);
+    const std::size_t prefixLength = std::min<std::size_t>(3, image.size());
+    std::string filename(image.substr(0, prefixLength));
+    filename += left ? "_TL.MT7" : "_TR.MT7";
+    return filename;
+}
+
+void CharacterHandDrawClosure(Character *character);
+
+void CharacterHandDirectCore(Character *character);
+
+// Native hmdlGetDrawAlphaScaleEffect reads only the hands CharacterHandDrawClosure publishes around the core.
+HandParams *ResolveCharacterHandForDraw(std::uint16_t nodeId) {
+    if (nodeId == 0xffbeU)
+        return g_temporaryHNDL;
+    return nodeId == 0xffbfU ? g_temporaryHNDR : nullptr;
+}
+
+// @verified - p
+void CharacterHandDrawClosure(Character *character) {
+    g_temporaryHNDL = static_cast<HandParams *>(FindModelComponent(character, kLeftHandToken));
+    g_temporaryHNDR = static_cast<HandParams *>(FindModelComponent(character, kRightHandToken));
+    HandParams *const hand = g_temporaryHNDR ? g_temporaryHNDR : g_temporaryHNDL;
+    if (character->model && hand && hand->previousCore)
+        hand->previousCore(character);
+    g_temporaryHNDL = g_temporaryHNDR = nullptr;
+}
+
+void CharacterHandDirectCore(Character *character) {
+    HandParams *hand = static_cast<HandParams *>(FindModelComponent(character, kLeftHandToken));
+    if (!hand)
+        hand = static_cast<HandParams *>(FindModelComponent(character, kRightHandToken));
+    if (!hand)
+        return;
+    HandModelResource *const resource = GetHandModelResource(*hand);
+    const bool posed = resource && (hand->regionState || hand->previousRegionState);
+    const bool legacyPose = posed && !d3t::GetModelRuntimeState(GetMT7ReaderData(static_cast<const MT7Model *>(character->model)));
+    if (hand->primaryNode)
+        hand->primaryNode->commandOverride = legacyPose ? &resource->meshCommand : nullptr;
+    if (legacyPose)
+        BindHandRenderMatrices(*resource, true);
+    if (hand->previousCore)
+        hand->previousCore(character);
+    if (legacyPose)
+        BindHandRenderMatrices(*resource, false);
+}
+
+// HNDL/HNDR update. The pose frame wraps and clamps in 16-bit arithmetic, as native.
+// @verified - p
+void UpdateHand(Character *character, void *payload) {
+    HandParams &hand = *static_cast<HandParams *>(payload);
+    if (hand.immediatePoseResult == 0) {
+        MT7Model *const source = GetImageModuleSource(character);
+        if (source && !source->nodes.empty() && d3t::IsObjectModelRuntime(source->nodes.data()))
+            hand.poseRefreshRequested = 1;
+    }
+    if ((hand.regionState <= 0 && hand.previousRegionState <= 0) || !hand.poseModelData) {
+        hand.poseFlags |= 8U;
+        return;
+    }
+    hand.previousPoseFrame = hand.currentPoseFrame;
+    bool wristChanged = false;
+    if (hand.primaryNode) {
+        const std::int16_t *const angles = g_characterHandWristAngles;
+        const std::size_t wrist = hand.selector == 1 || hand.selector == 3 ? 2 : 0;
+        const std::int16_t current[3] = {static_cast<std::int16_t>(hand.primaryNode->rotation.x),
+            static_cast<std::int16_t>(static_cast<std::int16_t>(hand.primaryNode->rotation.y) + angles[wrist]),
+            static_cast<std::int16_t>(static_cast<std::int16_t>(hand.primaryNode->rotation.z) + angles[wrist + 1])};
+        for (std::size_t axis = 0; axis < 3; ++axis) {
+            wristChanged = wristChanged || hand.wristAngles[axis] != current[axis];
+            hand.wristAngles[axis] = current[axis];
+        }
+    }
+    if (gripDisabled) {
+        hand.poseFlags |= 8U;
+        return;
+    }
+    if (wristChanged || !hand.poseMode || hand.poseTicks >= 1 || hand.poseRefreshRequested) {
+        hand.poseRefreshRequested = 0;
+        StageHandPose(hand, hand.currentPoseFrame * 2);
+        hand.immediatePoseResult = static_cast<std::uint8_t>(StageImmediateHandPose(&hand, handJointMatrices));
+        Matrix4x4_Push();
+        ApplyHandBodyTransform(*character, hand);
+        ComputeHandTransformedProbes(hand);
+        Matrix4x4::Pop(1);
+        if (hand.secondaryPoseWork && hand.poseMode)
+            UpdateHandGripBounds(hand);
+    }
+    hand.poseFlags &= ~8U;
+    if (!hand.poseMode) {
+        if (!(hand.poseFlags & 4U)) {
+            hand.poseFrame = hand.poseFlags & 2U ? hand.poseFrame - hand.poseStep : hand.poseStep + hand.poseFrame;
+            const double frame = static_cast<double>(hand.poseFrame) + 0.5;
+            const std::int32_t rounded =
+                frame >= -2147483648.0 && frame < 2147483648.0 ? static_cast<std::int32_t>(frame) : std::numeric_limits<std::int32_t>::min();
+            hand.currentPoseFrame = static_cast<std::int16_t>(rounded);
+            if (hand.poseFlags & 1U) {
+                const std::int16_t duration = static_cast<std::int16_t>(hand.lastPoseFrame - hand.firstPoseFrame + 1);
+                while (hand.currentPoseFrame < hand.firstPoseFrame)
+                    hand.currentPoseFrame = static_cast<std::int16_t>(hand.currentPoseFrame + duration);
+                while (hand.currentPoseFrame > hand.lastPoseFrame)
+                    hand.currentPoseFrame = static_cast<std::int16_t>(hand.currentPoseFrame - duration);
+            } else {
+                if (hand.currentPoseFrame < hand.firstPoseFrame)
+                    hand.currentPoseFrame = hand.firstPoseFrame;
+                if (hand.currentPoseFrame > hand.lastPoseFrame)
+                    hand.currentPoseFrame = hand.lastPoseFrame;
+            }
+            if (hand.currentPoseFrame != static_cast<std::int16_t>(rounded))
+                hand.poseFrame = static_cast<float>(hand.currentPoseFrame);
+        }
+        if (hand.poseFlags & 2U) {
+            if (hand.currentPoseFrame <= hand.firstPoseFrame || hand.currentPoseFrame > hand.previousPoseFrame)
+                hand.poseFlags |= 8U;
+        } else if (hand.currentPoseFrame >= hand.lastPoseFrame || hand.currentPoseFrame < hand.previousPoseFrame) {
+            hand.poseFlags |= 8U;
+        }
+    } else {
+        if (hand.poseTicks > 0)
+            AdvanceGripAngles(hand, hand.secondaryPoseWork != nullptr, 0);
+        if (hand.poseMode && hand.poseTicks < 1)
+            hand.poseFlags |= 8U;
+    }
+}
+
+// HNDL/HNDR cleanup. The mesh-copy draw resources, pose sidecar and HD attachment reset are the port's renderer
+// bridging; the rest follows native order and ownership.
+void CleanupHand(Character *character, void *payload) {
+    if (!character)
+        return;
+    HandParams &hand = *static_cast<HandParams *>(payload);
+    HandModelResource *const resource = GetHandModelResource(hand);
+    if (auto *const state = d3t::GetModelRuntimeState(GetMT7ReaderData(hand.owner ? static_cast<const MT7Model *>(hand.owner->model) : nullptr))) {
+        // Remove the borrowed matrix owner before either hand resource is retired.
+        state->hands[0] = state->hands[1] = {};
+        state->nodeCount = state->nodeTableAvailable = state->nodesAssigned = state->recordCount = 0;
+        for (auto &node : state->nodes)
+            node = {};
+    }
+    if (resource)
+        ReleaseLegacyDrawResources(resource->meshResources);
+    if (hand.primaryNode && hand.meshCopy && hand.meshBackup) {
+        HLib::FreeTaskData(hand.meshCopy);
+        hand.primaryNode->commandOverride = nullptr;
+        hand.meshBackup = nullptr;
+        hand.meshCopy = nullptr;
+    }
+    if (hand.selector == 1 || hand.selector == 2) {
+        // A file whose ReadModelFormat7 failed has no reader, so it stays allocated, as native leaves it.
+        if (hand.primaryFile && hand.primaryReader)
+            ReleaseHandReader(hand.primaryReader, hand.primaryFile);
+        if (hand.secondaryFile && hand.secondaryReader)
+            ReleaseHandReader(hand.secondaryReader, hand.secondaryFile);
+    }
+    hand.primaryNode = nullptr;
+    hand.primaryReader = nullptr;
+    hand.primaryFile = nullptr;
+    hand.secondaryNode = nullptr;
+    hand.secondaryReader = nullptr;
+    hand.secondaryFile = nullptr;
+    hand.owner = nullptr;
+    if (hand.extendedPoseWork) {
+        HLib::FreeTaskData(hand.extendedPoseWork);
+        hand.extendedPoseWork = nullptr;
+    }
+    hand.poseModelData = nullptr;
+    if (resource) {
+        ReleaseHandModel(*resource);
+        if (resource->state) {
+            HandModelResource **link = &resource->state->handResources[(hand.selector - 1) & 1];
+            while (*link && *link != resource)
+                link = &(*link)->next;
+            if (*link)
+                *link = resource->next;
+        }
+        delete resource;
+    }
+}
+
+} // namespace model_component_detail
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void StageHandGripProbes(HandParams &hand) {
+    hand.previousPoseFrame = hand.currentPoseFrame;
+    const HandPoseModelJoint *cursor = reinterpret_cast<const HandPoseModelJoint *>(hand.poseModelData + 8);
+    const std::int32_t *channels = reinterpret_cast<const std::int32_t *>(hand.poseFrames);
+    Matrix4x4_Push();
+    Matrix4x4::SetPrePassToTempTransform();
+    StageHandJoint(hand, cursor, channels, nullptr, 2 * hand.currentPoseFrame, false);
+    Matrix4x4::Pop(1);
+    ComputeHandTransformedProbes(hand);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint64_t PublishHandModelAttachment(HandParams &hand, Character *character, MT7Model *model, std::int32_t childrenOnly, std::uint32_t flags) {
+    UpdateModelFrame(static_cast<MT7Model *>(character->model), character, 0, flags | 4U);
+    auto *const state = d3t::GetModelRuntimeState(GetMT7ReaderData(model));
+    if (!state || !state->nodeTableAvailable || !state->nodesAssigned)
+        return 0;
+    constexpr std::int32_t kinds[]{-66, -65, 69, 68};
+    const auto selector = static_cast<std::int8_t>(hand.selector);
+    const auto kind = selector >= 1 && selector <= 4 ? kinds[selector - 1] : 0;
+    FinalizeMatchingHandAttachments(*state, kind, childrenOnly);
+    return 1;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint64_t StageImmediateHandPose(HandParams *hand, const Matrix4x4 *parent) {
+    if (!hand || !hand->owner || !hand->poseModelData)
+        return 0;
+    GenerateHandRelativeMatrices(*hand, parent, static_cast<std::int32_t>(GetModelBodyKind(hand->owner->model)));
+    if (static_cast<std::uint8_t>(hand->selector - 3) > 1U)
+        RotateHandPrimaryRelativeMatrix(*hand);
+    if (!GetImageModuleSource(hand->owner))
+        return 0;
+    return PublishHandModelAttachment(*hand, hand->owner, static_cast<MT7Model *>(hand->owner->model), 0, 8);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint64_t StageImmediateHandPose(HandParams *hand) {
+    return StageImmediateHandPose(hand, handJointMatrices);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace model_component_detail {
+
+// @verified - p
+int HandDrawNullsub() {
+    return 0;
+}
+
+// @verified - p
+bool DrawPrimaryHandModel(HandParams &hand, float alpha) {
+    if (!hand.primaryNode)
+        return false;
+    HandModelResource *const resource = GetHandModelResource(hand);
+    if (resource)
+        hand.primaryNode->commandOverride = &resource->meshCommand;
+    MT7Model *const reader = hand.primaryReader;
+    Matrix4x4_Push(nullptr);
+    HandDrawNullsub();
+    if (static_cast<double>(alpha) <= 0.999999) {
+        if (static_cast<double>(alpha) > 0.000001) {
+            if (resource)
+                BindHandRenderMatrices(*resource, true);
+            PrepareProceduralObjects(*reader, &reader->nodes.front(), alpha);
+            if (resource)
+                BindHandRenderMatrices(*resource, false);
+        }
+    } else {
+        if (resource)
+            BindHandRenderMatrices(*resource, true);
+        ConstructMatricesForObjectRecursive(*reader, &reader->nodes.front());
+        if (resource)
+            BindHandRenderMatrices(*resource, false);
+    }
+    Matrix4x4::Pop(1);
+    HandDrawNullsub();
+    return true;
+}
+
+// @verified - p
+bool DrawSecondaryHandModel(HandParams &hand, float alpha) {
+    if (!hand.secondaryNode)
+        return false;
+    Matrix4x4_Push(nullptr);
+    HandDrawNullsub();
+    if (static_cast<double>(alpha) <= 0.999999) {
+        if (static_cast<double>(alpha) > 0.000001)
+            PrepareProceduralObjects(*hand.secondaryReader, hand.secondaryNode, alpha);
+    } else {
+        ConstructMatricesForObjectRecursive(*hand.secondaryReader, hand.secondaryNode);
+    }
+    Matrix4x4::Pop(1);
+    HandDrawNullsub();
+    return true;
+}
+
+} // namespace model_component_detail
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+std::uint32_t DrawCharacterHandReplacement(std::uint16_t nodeId, float *originalAlphaScale, float alpha, const MT7Node *originalNode) {
+    *originalAlphaScale = 1.0f;
+    HandParams *const hand = ResolveCharacterHandForDraw(nodeId);
+    float replacementAlpha = 0.0f;
+    std::uint32_t draws = 0;
+    if (hand) {
+        const std::int8_t state = AdvanceHandDrawState(*hand);
+        replacementAlpha = hand->modelAlpha;
+        if (state > 0) {
+            const bool admitted = DrawPrimaryHandModel(*hand, replacementAlpha * alpha);
+            if (!admitted)
+                replacementAlpha = 0.0f;
+            else
+                ++draws;
+        }
+        if (state < 0) {
+            const bool admitted = DrawSecondaryHandModel(*hand, replacementAlpha * alpha);
+            if (!admitted)
+                replacementAlpha = 0.0f;
+            else
+                ++draws;
+        }
+    }
+    *originalAlphaScale = 1.0f - replacementAlpha;
+    // The typed body-hand callback applies this after the caller's node transform; matrix-frame draws bypass it.
+    if (originalNode && static_cast<double>(replacementAlpha) < 0.00001) {
+        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(originalNode->rotation.z));
+        Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(originalNode->rotation.y));
+        Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(originalNode->rotation.x));
+    }
+    return draws;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t IsCharacterHandRegionEnabled(const CharacterHandComponent *hand) {
+    if (hand)
+        return (*reinterpret_cast<const std::uint32_t *>(&hand->pose.region) & 0xffff) != 0;
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+MT7Model *QueryHandModelCacheNullsub(const char *) {
+    return 0;
+}
+
+#else
 
 namespace model_component_detail {
 
@@ -554,15 +1414,15 @@ std::uint8_t AllocateHandModels(Character *character, HandParams &hand) {
     }
     if (hand.meshWordCount > 0 && hand.meshBackup && hand.meshCopy) {
         const std::size_t size = 4U * static_cast<std::uint16_t>(hand.meshWordCount);
-
-
+        // The count's trailing slack runs a dword past the end of the retail hand files; native copies whatever follows the
+        // file there, after the stream's zero terminator.
         const std::span<const std::byte> source = resource->reader->source;
         const std::size_t available = static_cast<std::size_t>(source.data() + source.size() - reinterpret_cast<const std::byte *>(hand.meshBackup));
         std::memcpy(hand.meshCopy, hand.meshBackup, size < available ? size : available);
         if (size > available)
             std::memset(reinterpret_cast<std::byte *>(hand.meshCopy) + available, 0, size - available);
         const std::span<const std::byte> commands{reinterpret_cast<const std::byte *>(hand.meshCopy), size};
-
+        // The copy keeps the texture handles native patched into the retail stream at load: the source node's bindings.
         const LegacyDrawResources &sourceResources =
             hand.primaryNode->borrowedMesh ? hand.primaryNode->borrowedMesh->drawResources : hand.primaryNode->drawResources;
         if (!resource->meshResources.prepared) {
@@ -636,6 +1496,10 @@ std::uint8_t RetireHandModels(Character *character, HandParams &hand) {
 
 } // namespace model_component_detail
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::uint64_t SetLowQualityHands(Character *character) {
     std::uint8_t result = 0;
@@ -645,6 +1509,10 @@ std::uint64_t SetLowQualityHands(Character *character) {
     HandParams *const right = static_cast<HandParams *>(FindModelComponent(character, kRightHandToken));
     return right ? AllocateHandModels(character, *right) : result;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 std::uint8_t hndlSetFlags(Character *character) {
@@ -656,6 +1524,10 @@ std::uint8_t hndlSetFlags(Character *character) {
     return right ? RetireHandModels(character, *right) : result;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 CharacterCoreCallback assignBlurFigurePoseCallback(Character *character, CharacterCoreCallback callback) {
     ReflectorBoardParams *const reflector = FindReflectorBoard(character);
@@ -666,8 +1538,9 @@ CharacterCoreCallback assignBlurFigurePoseCallback(Character *character, Charact
     return previous;
 }
 
-// @verified - p
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 namespace model_component_detail {
 
@@ -731,7 +1604,7 @@ void StageHandJoint(
 RuntimeHandStaging BuildHandPoseCpuStaging(HandParams &hand) {
     std::int32_t descriptorOffset, count;
     std::memcpy(&descriptorOffset, hand.poseModelData + 4, sizeof(descriptorOffset));
-
+    // Native MDH pose storage is borrowed writable task/package memory.
     auto *const descriptor = const_cast<std::byte *>(hand.poseModelData) + descriptorOffset;
     std::memcpy(&count, descriptor + 12, sizeof(count));
     auto *const vertices = reinterpret_cast<RuntimeHandVertex *>(descriptor + 16);
@@ -791,6 +1664,10 @@ RuntimeHandStaging BuildHandPoseCpuStaging(HandParams &hand) {
 
 } // namespace model_component_detail
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void StageHandPose(HandParams &hand, std::int32_t frame) {
     if (!hand.poseModelData)
         return;
@@ -843,552 +1720,71 @@ void StageHandPose(HandParams &hand, std::int32_t frame) {
     resource.poseDirty = false;
 }
 
-namespace model_component_detail {
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-bool CalculateHandScaleRatios(HandParams &hand) {
-    for (float &value : hand.retainedUnitValues)
-        value = 1.0f;
-    const auto *const measurements = static_cast<const MhndComponent *>(FindModelComponent(hand.owner, kHandPoseToken));
-    Character *const ryo = ctrlGetScenarioChara(SHEN_NAME(RYO_));
-    const auto *const reference = ryo ? static_cast<const MhndComponent *>(FindModelComponent(ryo, kHandPoseToken)) : nullptr;
-    if (!measurements || !reference)
-        return false;
-    const std::size_t side = hand.selector == 2 || hand.selector == 4 ? 0 : 1;
-    for (std::size_t index = 0; index < 6; ++index) {
-        const float value = measurements->hands[side].measurements[index];
-        const float base = reference->hands[side].measurements[index];
-        if (value > 0.0f && base > 0.0f)
-            hand.retainedUnitValues[index] = value / base;
-    }
-    return true;
-}
-
-std::int32_t HandAttachmentKind(std::uint8_t selector) {
-    constexpr std::int32_t kinds[]{0, -66, -65, 69, 68};
-    return selector < std::size(kinds) ? kinds[selector] : 0;
-}
-
-
-
-void FinalizeHandMatrices(const d3t::HandMatrixAttachment &hand) {
-    if (!hand.enabled || !hand.ready || !hand.node)
-        return;
-    for (std::uint32_t index = 0; index < hand.matrixCount; ++index) {
-        if (index > 20 || !hand.cacheHandle)
-            continue;
-        std::uint32_t hash;
-
-        std::memcpy(&hash, reinterpret_cast<const std::byte *>(&hand) + 40 + index * 4, sizeof(hash));
-        if (!hash)
-            continue;
-        const Matrix4x4 &source = hand.matrices[hand.matrixIndices[index]];
-        Matrix4x4 transposed;
-        for (std::size_t row = 0; row < 4; ++row)
-            for (std::size_t column = 0; column < 4; ++column)
-                transposed.rows[row][column] = source.rows[column][row];
-        d3t::SetModelCacheTransform((static_cast<std::uint64_t>(hash) << 32) | hand.cacheHandle, transposed);
-    }
-}
-
-void FinalizeMatchingHandAttachments(d3t::ModelRuntimeState &state, std::int32_t kind, std::int32_t childrenOnly) {
-    for (const auto &attachment : state.hands)
-        if (attachment.node && attachment.nodeKind == kind && (!childrenOnly || attachment.hasChildren))
-            FinalizeHandMatrices(attachment);
-}
-
-void GenerateHandJointRelativeMatrices(
-    const HandPoseModelJoint *&cursor, const Matrix4x4 *parent, const float *scales, std::int32_t bodyKind, HandModelResource *resource) {
-    const auto &joint = *cursor++;
-    const Matrix4x4 *const absolute = handJointMatrices + joint.id;
-    if (joint.id <= 19) {
-        Matrix4x4_Push(absolute);
-        Matrix4x4_Push(parent);
-        Matrix4x4 inverse;
-        if (Matrix4x4::invertMatrix(&workTransformMatrix, &inverse))
-            Matrix4x4::SetActiveTransform(&inverse);
-        Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.top.stack - 1);
-        constexpr std::int32_t scalePairs[15][2]{
-            {29, 1}, {30, 1}, {31, 1}, {45, 3}, {46, 5}, {47, 5},
-            {41, 3}, {42, 5}, {43, 5}, {37, 3}, {38, 5}, {39, 5},
-            {33, 2}, {34, 4}, {35, 4}};
-        float scale = scales[0];
-        if (bodyKind > 5)
-            for (const auto &pair : scalePairs)
-                if (pair[0] == joint.id) {
-                    scale = scales[pair[1]];
-                    break;
-                }
-        if (scale <= 0.0f)
-            scale = 1.0f;
-        workTransformMatrix.rows[3].x *= scale;
-        workTransformMatrix.rows[3].y *= scale;
-        workTransformMatrix.rows[3].z *= scale;
-        Matrix4x4::GetTransformMatrix(handRelativeMatrices + joint.id);
-        if (resource)
-            resource->relativeMatrices[joint.id] = workTransformMatrix;
-        Matrix4x4::Pop(2);
-        parent = absolute;
-    }
-    for (std::int32_t child = 0; child < joint.childCount; ++child)
-        GenerateHandJointRelativeMatrices(cursor, parent, scales, bodyKind, resource);
-}
-
-
-void GenerateHandRelativeMatrices(HandParams &hand, const Matrix4x4 *parent, std::int32_t bodyKind) {
-    if (!hand.poseModelData)
-        return;
-    if (!hand.calculationEnabled)
-        hand.calculationEnabled = CalculateHandScaleRatios(hand);
-    if (bodyKind < 0)
-        bodyKind = static_cast<std::int32_t>(GetModelBodyKind(hand.owner->model));
-    constexpr float unitScale[6]{1, 1, 1, 1, 1, 1};
-    const float *const scales = hand.calculationEnabled ? hand.retainedUnitValues : unitScale;
-    const auto *cursor = reinterpret_cast<const HandPoseModelJoint *>(hand.poseModelData + 8);
-    GenerateHandJointRelativeMatrices(cursor, parent, scales, bodyKind, GetHandModelResource(hand));
-}
-
-void RotateHandPrimaryRelativeMatrix(HandParams &hand) {
-    Matrix4x4_PushActiveTransform();
-    const Vector3i rotation = hand.primaryNode ? hand.primaryNode->rotation : Vector3i{};
-    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(rotation.z));
-    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation.y));
-    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(rotation.x));
-    Matrix4x4_Push(handRelativeMatrices);
-    Matrix4x4::MultiplyWithPrePassMatrix(g_matrixStack.top.stack - 1);
-    Matrix4x4::GetTransformMatrix(handRelativeMatrices);
-    if (auto *const resource = GetHandModelResource(hand))
-        resource->relativeMatrices[0] = workTransformMatrix;
-    Matrix4x4::Pop(2);
-}
-
-void ApplyHandNodeTransform(const MT7Node &node) {
-    Matrix4x4::preTranslate(node.position.x, node.position.y, node.position.z);
-    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(node.rotation.z));
-    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(node.rotation.y));
-    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(node.rotation.x));
-    Matrix4x4::Scale(node.scale.x, node.scale.y, node.scale.z);
-}
-
-
-void ApplyHandBodyTransform(Character &character, const HandParams &hand) {
-    if (hand.selector == 1 || hand.selector == 2) {
-        Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(&character), hand.selector == 1 ? 21 : 14));
-        if (hand.primaryNode)
-            ApplyHandNodeTransform(*hand.primaryNode);
-        return;
-    }
-    Matrix4x4::SetPrePassToTempTransform();
-    const Vector3 position = GetCharacterWorldPosition(&character);
-    const Vector3i rotation = GetCharacterWorldRotation(&character);
-    Matrix4x4::preTranslate(position.x, position.y, position.z);
-    Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(rotation.z));
-    Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(rotation.y));
-    Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(rotation.x));
-    const auto *const model = static_cast<const MT7Model *>(character.model);
-    if (!model || model->nodes.empty())
-        return;
-    const std::uint16_t target = hand.selector == 3 ? 0xffbeU : 0xffbfU;
-    for (const MT7Node *node = model->nodes.data(); node;) {
-        ApplyHandNodeTransform(*node);
-        if (static_cast<std::uint16_t>(node->id) == target)
-            break;
-        node = node->firstChild < 0 ? nullptr : &model->nodes[static_cast<std::size_t>(node->firstChild)];
-    }
-}
-
-
-void ComputeHandTransformedProbes(const HandParams &hand) {
-    Vector3 world[72];
-    for (std::size_t joint = 0; joint < 72; ++joint)
-        Matrix4x4::TransformPoint(hand.jointPositions[joint], world[joint]);
-    constexpr struct {
-        std::uint8_t first, second;
-        float firstWeight, secondWeight, radius;
-    } probes[10]{{69, 70, 0.29660001f, 0.70340002f, 0.0057000001f}, {69, 70, 1.0f, 0.0f, 0.0106f}, {59, 60, 0.25529999f, 0.74470001f, 0.0093f},
-        {59, 60, 1.0f, 0.0f, 0.0114f}, {45, 46, 0.28549999f, 0.71450001f, 0.0091000004f}, {45, 46, 1.0f, 0.0f, 0.0121f}, {37, 38, 0.0f, 1.0f, 0.0097000003f},
-        {37, 38, 0.80000001f, 0.19999999f, 0.0106f}, {29, 30, 0.3073f, 0.69270003f, 0.0098999999f}, {29, 30, 0.84560001f, 0.15439999f, 0.011f}};
-    HandGripProbe *const output = static_cast<HandGripProbe *>(handProbeWork);
-    if (!output)
-        return;
-    for (std::size_t index = 0; index < 10; ++index) {
-        const auto &probe = probes[index];
-        const Vector3 &first = world[probe.first];
-        const Vector3 &second = world[probe.second];
-        output[index] = {{first.x * probe.firstWeight + second.x * probe.secondWeight, first.y * probe.firstWeight + second.y * probe.secondWeight,
-                             first.z * probe.firstWeight + second.z * probe.secondWeight},
-            probe.radius};
-    }
-}
-
-// Adapt HNDP_1 to the existing legacy absolute-override contract. Authored
-// non-hand parents and live body overrides retain their original ownership.
-void ApplyHandRenderParent(const MT7Model &model, std::size_t index) {
-    const MT7Node &node = model.nodes[index];
-    if (const Matrix4x4 *const transform = GetMT7NodeTransformOverride(node)) {
-        Matrix4x4::SetActiveTransform(transform);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void GetHandPrimaryNodeRotation(const CharacterHandComponent &hand, Vector3i &rotation) {
+    MT7Node *const node = hand.primaryNode;
+    if (!node) {
+        rotation.z = 0;
+        rotation.y = 0;
+        rotation.x = 0;
     } else {
-        if (node.parent >= 0)
-            ApplyHandRenderParent(model, static_cast<std::size_t>(node.parent));
-        ApplyHandNodeTransform(node);
+        rotation.x = node->rotation.x;
+        rotation.y = node->rotation.y;
+        rotation.z = node->rotation.z;
     }
 }
+#endif
 
-void ComposeHandRenderMatrices(HandModelResource &resource) {
-    if (resource.joints.empty())
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetHandPrimaryRotation(CharacterHandComponent *hand, std::int32_t x, std::int32_t y, std::int32_t z) {
+    MT7Node *const node = hand->primaryNode;
+    if (!node)
         return;
-    Matrix4x4_Push();
-    const Matrix4x4 identity{{{1.0f, 0.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f, 0.0f},
-                             {0.0f, 0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 0.0f, 1.0f}}};
-    Matrix4x4::SetActiveTransform(&identity);
-    ApplyHandRenderParent(*resource.reader, resource.poseNode);
-    Matrix4x4 parent;
-    Matrix4x4::GetTransformMatrix(&parent);
-    for (const HandPoseJoint &joint : resource.joints) {
-        if (joint.id > 19)
-            continue;
-        const Matrix4x4 *const inherited =
-            joint.relativeParent < 0 ? &parent : &resource.renderMatrices[resource.joints[static_cast<std::size_t>(joint.relativeParent)].id];
-        Matrix4x4::SetActiveTransform(inherited);
-        Matrix4x4::MultiplyWithPrePassMatrix(&resource.relativeMatrices[joint.id]);
-        Matrix4x4::GetTransformMatrix(&resource.renderMatrices[joint.id]);
-    }
-    Matrix4x4::Pop(1);
+    node->rotation.x = x;
+    node->rotation.y = y;
+    node->rotation.z = z;
 }
 
-void BindHandRenderMatrices(HandModelResource &resource, bool bind) {
-    if (bind)
-        ComposeHandRenderMatrices(resource);
-    for (HandPoseJoint &joint : resource.joints) {
-        if (joint.id > 19 || !joint.renderNode)
-            continue;
-        if (bind) {
-            joint.previousRenderTransform = GetMT7NodeTransformOverride(*joint.renderNode);
-            SetMT7NodeTransformOverride(*joint.renderNode, &resource.renderMatrices[joint.id]);
-        } else {
-            SetMT7NodeTransformOverride(*joint.renderNode, joint.previousRenderTransform);
-        }
-    }
-}
+#endif
 
-void ReleaseHandModel(HandModelResource &resource) {
-    resource.reader = nullptr;
-    resource.joints.clear();
-    resource.poseVertices.clear();
-    resource.influences.clear();
-    resource.mappings.clear();
-}
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
-std::string DeriveHandFilename(const char *modelImage, bool left) {
-    std::string_view image = modelImage ? modelImage : "";
-    const std::size_t slash = image.find_last_of("/\\");
-    if (slash != std::string_view::npos)
-        image.remove_prefix(slash + 1);
-    const std::size_t prefixLength = std::min<std::size_t>(3, image.size());
-    std::string filename(image.substr(0, prefixLength));
-    filename += left ? "_TL.MT7" : "_TR.MT7";
-    return filename;
-}
-
-void CharacterHandDrawClosure(Character *character);
-
-void CharacterHandDirectCore(Character *character);
-
-
-HandParams *ResolveCharacterHandForDraw(std::uint16_t nodeId) {
-    if (nodeId == 0xffbeU)
-        return g_temporaryHNDL;
-    return nodeId == 0xffbfU ? g_temporaryHNDR : nullptr;
-}
-
-// @verified - p
-void CharacterHandDrawClosure(Character *character) {
-    g_temporaryHNDL = static_cast<HandParams *>(FindModelComponent(character, kLeftHandToken));
-    g_temporaryHNDR = static_cast<HandParams *>(FindModelComponent(character, kRightHandToken));
-    HandParams *const hand = g_temporaryHNDR ? g_temporaryHNDR : g_temporaryHNDL;
-    if (character->model && hand && hand->previousCore)
-        hand->previousCore(character);
-    g_temporaryHNDL = g_temporaryHNDR = nullptr;
-}
-
-void CharacterHandDirectCore(Character *character) {
-    HandParams *hand = static_cast<HandParams *>(FindModelComponent(character, kLeftHandToken));
-    if (!hand)
-        hand = static_cast<HandParams *>(FindModelComponent(character, kRightHandToken));
-    if (!hand)
-        return;
-    HandModelResource *const resource = GetHandModelResource(*hand);
-    const bool posed = resource && (hand->regionState || hand->previousRegionState);
-    const bool legacyPose = posed && !d3t::GetModelRuntimeState(GetMT7ReaderData(static_cast<const MT7Model *>(character->model)));
-    if (hand->primaryNode)
-        hand->primaryNode->commandOverride = legacyPose ? &resource->meshCommand : nullptr;
-    if (legacyPose)
-        BindHandRenderMatrices(*resource, true);
-    if (hand->previousCore)
-        hand->previousCore(character);
-    if (legacyPose)
-        BindHandRenderMatrices(*resource, false);
-}
-
-
-// @verified - p
-void UpdateHand(Character *character, void *payload) {
-    HandParams &hand = *static_cast<HandParams *>(payload);
-    if (hand.immediatePoseResult == 0) {
-        MT7Model *const source = GetImageModuleSource(character);
-        if (source && !source->nodes.empty() && d3t::IsObjectModelRuntime(source->nodes.data()))
-            hand.poseRefreshRequested = 1;
-    }
-    if ((hand.regionState <= 0 && hand.previousRegionState <= 0) || !hand.poseModelData) {
-        hand.poseFlags |= 8U;
-        return;
-    }
-    hand.previousPoseFrame = hand.currentPoseFrame;
-    bool wristChanged = false;
-    if (hand.primaryNode) {
-        const std::int16_t *const angles = g_characterHandWristAngles;
-        const std::size_t wrist = hand.selector == 1 || hand.selector == 3 ? 2 : 0;
-        const std::int16_t current[3] = {static_cast<std::int16_t>(hand.primaryNode->rotation.x),
-            static_cast<std::int16_t>(static_cast<std::int16_t>(hand.primaryNode->rotation.y) + angles[wrist]),
-            static_cast<std::int16_t>(static_cast<std::int16_t>(hand.primaryNode->rotation.z) + angles[wrist + 1])};
-        for (std::size_t axis = 0; axis < 3; ++axis) {
-            wristChanged = wristChanged || hand.wristAngles[axis] != current[axis];
-            hand.wristAngles[axis] = current[axis];
-        }
-    }
-    if (gripDisabled) {
-        hand.poseFlags |= 8U;
-        return;
-    }
-    if (wristChanged || !hand.poseMode || hand.poseTicks >= 1 || hand.poseRefreshRequested) {
-        hand.poseRefreshRequested = 0;
-        StageHandPose(hand, hand.currentPoseFrame * 2);
-        hand.immediatePoseResult = static_cast<std::uint8_t>(StageImmediateHandPose(&hand, handJointMatrices));
-        Matrix4x4_Push();
-        ApplyHandBodyTransform(*character, hand);
-        ComputeHandTransformedProbes(hand);
-        Matrix4x4::Pop(1);
-        if (hand.secondaryPoseWork && hand.poseMode)
-            UpdateHandGripBounds(hand);
-    }
-    hand.poseFlags &= ~8U;
-    if (!hand.poseMode) {
-        if (!(hand.poseFlags & 4U)) {
-            hand.poseFrame = hand.poseFlags & 2U ? hand.poseFrame - hand.poseStep : hand.poseStep + hand.poseFrame;
-            const double frame = static_cast<double>(hand.poseFrame) + 0.5;
-            const std::int32_t rounded =
-                frame >= -2147483648.0 && frame < 2147483648.0 ? static_cast<std::int32_t>(frame) : std::numeric_limits<std::int32_t>::min();
-            hand.currentPoseFrame = static_cast<std::int16_t>(rounded);
-            if (hand.poseFlags & 1U) {
-                const std::int16_t duration = static_cast<std::int16_t>(hand.lastPoseFrame - hand.firstPoseFrame + 1);
-                while (hand.currentPoseFrame < hand.firstPoseFrame)
-                    hand.currentPoseFrame = static_cast<std::int16_t>(hand.currentPoseFrame + duration);
-                while (hand.currentPoseFrame > hand.lastPoseFrame)
-                    hand.currentPoseFrame = static_cast<std::int16_t>(hand.currentPoseFrame - duration);
-            } else {
-                if (hand.currentPoseFrame < hand.firstPoseFrame)
-                    hand.currentPoseFrame = hand.firstPoseFrame;
-                if (hand.currentPoseFrame > hand.lastPoseFrame)
-                    hand.currentPoseFrame = hand.lastPoseFrame;
-            }
-            if (hand.currentPoseFrame != static_cast<std::int16_t>(rounded))
-                hand.poseFrame = static_cast<float>(hand.currentPoseFrame);
-        }
-        if (hand.poseFlags & 2U) {
-            if (hand.currentPoseFrame <= hand.firstPoseFrame || hand.currentPoseFrame > hand.previousPoseFrame)
-                hand.poseFlags |= 8U;
-        } else if (hand.currentPoseFrame >= hand.lastPoseFrame || hand.currentPoseFrame < hand.previousPoseFrame) {
-            hand.poseFlags |= 8U;
-        }
-    } else {
-        if (hand.poseTicks > 0)
-            AdvanceGripAngles(hand, hand.secondaryPoseWork != nullptr, 0);
-        if (hand.poseMode && hand.poseTicks < 1)
-            hand.poseFlags |= 8U;
-    }
-}
-
-
-
-void CleanupHand(Character *character, void *payload) {
-    if (!character)
-        return;
-    HandParams &hand = *static_cast<HandParams *>(payload);
-    HandModelResource *const resource = GetHandModelResource(hand);
-    if (auto *const state = d3t::GetModelRuntimeState(GetMT7ReaderData(hand.owner ? static_cast<const MT7Model *>(hand.owner->model) : nullptr))) {
-        // Remove the borrowed matrix owner before either hand resource is retired.
-        state->hands[0] = state->hands[1] = {};
-        state->nodeCount = state->nodeTableAvailable = state->nodesAssigned = state->recordCount = 0;
-        for (auto &node : state->nodes)
-            node = {};
-    }
-    if (resource)
-        ReleaseLegacyDrawResources(resource->meshResources);
-    if (hand.primaryNode && hand.meshCopy && hand.meshBackup) {
-        HLib::FreeTaskData(hand.meshCopy);
-        hand.primaryNode->commandOverride = nullptr;
-        hand.meshBackup = nullptr;
-        hand.meshCopy = nullptr;
-    }
-    if (hand.selector == 1 || hand.selector == 2) {
-
-        if (hand.primaryFile && hand.primaryReader)
-            ReleaseHandReader(hand.primaryReader, hand.primaryFile);
-        if (hand.secondaryFile && hand.secondaryReader)
-            ReleaseHandReader(hand.secondaryReader, hand.secondaryFile);
-    }
-    hand.primaryNode = nullptr;
-    hand.primaryReader = nullptr;
-    hand.primaryFile = nullptr;
-    hand.secondaryNode = nullptr;
-    hand.secondaryReader = nullptr;
-    hand.secondaryFile = nullptr;
-    hand.owner = nullptr;
-    if (hand.extendedPoseWork) {
-        HLib::FreeTaskData(hand.extendedPoseWork);
-        hand.extendedPoseWork = nullptr;
-    }
-    hand.poseModelData = nullptr;
-    if (resource) {
-        ReleaseHandModel(*resource);
-        if (resource->state) {
-            HandModelResource **link = &resource->state->handResources[(hand.selector - 1) & 1];
-            while (*link && *link != resource)
-                link = &(*link)->next;
-            if (*link)
-                *link = resource->next;
-        }
-        delete resource;
-    }
-}
-
-} // namespace model_component_detail
-
-void StageHandGripProbes(HandParams &hand) {
-    hand.previousPoseFrame = hand.currentPoseFrame;
-    const HandPoseModelJoint *cursor = reinterpret_cast<const HandPoseModelJoint *>(hand.poseModelData + 8);
-    const std::int32_t *channels = reinterpret_cast<const std::int32_t *>(hand.poseFrames);
-    Matrix4x4_Push();
-    Matrix4x4::SetPrePassToTempTransform();
-    StageHandJoint(hand, cursor, channels, nullptr, 2 * hand.currentPoseFrame, false);
-    Matrix4x4::Pop(1);
-    ComputeHandTransformedProbes(hand);
-}
-
-std::uint64_t PublishHandModelAttachment(HandParams &hand, Character *character, MT7Model *model, std::int32_t childrenOnly, std::uint32_t flags) {
-    UpdateModelFrame(static_cast<MT7Model *>(character->model), character, 0, flags | 4U);
-    auto *const state = d3t::GetModelRuntimeState(GetMT7ReaderData(model));
-    if (!state || !state->nodeTableAvailable || !state->nodesAssigned)
+// @verified - d
+std::uint32_t GetNumHandModelChunks(const HandMeshHeader *mesh) {
+    if (static_cast<std::int32_t>(mesh->flags) < 0)
         return 0;
-    constexpr std::int32_t kinds[]{-66, -65, 69, 68};
-    const auto selector = static_cast<std::int8_t>(hand.selector);
-    const auto kind = selector >= 1 && selector <= 4 ? kinds[selector - 1] : 0;
-    FinalizeMatchingHandAttachments(*state, kind, childrenOnly);
-    return 1;
-}
-
-std::uint64_t StageImmediateHandPose(HandParams *hand, const Matrix4x4 *parent) {
-    if (!hand || !hand->owner || !hand->poseModelData)
+    if (!reinterpret_cast<const MT7MeshMaterialCommand *>(mesh + 1)->flags)
         return 0;
-    GenerateHandRelativeMatrices(*hand, parent, static_cast<std::int32_t>(GetModelBodyKind(hand->owner->model)));
-    if (static_cast<std::uint8_t>(hand->selector - 3) > 1U)
-        RotateHandPrimaryRelativeMatrix(*hand);
-    if (!GetImageModuleSource(hand->owner))
-        return 0;
-    return PublishHandModelAttachment(*hand, hand->owner, static_cast<MT7Model *>(hand->owner->model), 0, 8);
-}
-
-std::uint64_t StageImmediateHandPose(HandParams *hand) {
-    return StageImmediateHandPose(hand, handJointMatrices);
-}
-
-namespace model_component_detail {
-
-// @verified - p
-int HandDrawNullsub() {
-    return 0;
-}
-
-// @verified - p
-bool DrawPrimaryHandModel(HandParams &hand, float alpha) {
-    if (!hand.primaryNode)
-        return false;
-    HandModelResource *const resource = GetHandModelResource(hand);
-    if (resource)
-        hand.primaryNode->commandOverride = &resource->meshCommand;
-    MT7Model *const reader = hand.primaryReader;
-    Matrix4x4_Push(nullptr);
-    HandDrawNullsub();
-    if (static_cast<double>(alpha) <= 0.999999) {
-        if (static_cast<double>(alpha) > 0.000001) {
-            if (resource)
-                BindHandRenderMatrices(*resource, true);
-            PrepareProceduralObjects(*reader, &reader->nodes.front(), alpha);
-            if (resource)
-                BindHandRenderMatrices(*resource, false);
-        }
-    } else {
-        if (resource)
-            BindHandRenderMatrices(*resource, true);
-        ConstructMatricesForObjectRecursive(*reader, &reader->nodes.front());
-        if (resource)
-            BindHandRenderMatrices(*resource, false);
+    const std::byte *cursor = reinterpret_cast<const std::byte *>(mesh + 1);
+    while (reinterpret_cast<const MT7MeshMaterialCommand *>(cursor)->flags) {
+        const MT7MeshMaterialCommand *const command = reinterpret_cast<const MT7MeshMaterialCommand *>(cursor);
+        cursor += sizeof(*command);
+        cursor += command->vertexBytes;
     }
-    Matrix4x4::Pop(1);
-    HandDrawNullsub();
-    return true;
+    cursor += 8;
+    const std::uint32_t bytes = static_cast<std::uint32_t>(cursor - reinterpret_cast<const std::byte *>(mesh));
+    return bytes >> 2;
 }
 
-// @verified - p
-bool DrawSecondaryHandModel(HandParams &hand, float alpha) {
-    if (!hand.secondaryNode)
-        return false;
-    Matrix4x4_Push(nullptr);
-    HandDrawNullsub();
-    if (static_cast<double>(alpha) <= 0.999999) {
-        if (static_cast<double>(alpha) > 0.000001)
-            PrepareProceduralObjects(*hand.secondaryReader, hand.secondaryNode, alpha);
-    } else {
-        ConstructMatricesForObjectRecursive(*hand.secondaryReader, hand.secondaryNode);
-    }
-    Matrix4x4::Pop(1);
-    HandDrawNullsub();
-    return true;
+#endif
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_hndlSetFlags(shenmue::s2::Character *character) {
+    return shenmue::s2::hndlSetFlags(character);
 }
-
-} // namespace model_component_detail
-
-std::uint32_t DrawCharacterHandReplacement(std::uint16_t nodeId, float *originalAlphaScale, float alpha, const MT7Node *originalNode) {
-    *originalAlphaScale = 1.0f;
-    HandParams *const hand = ResolveCharacterHandForDraw(nodeId);
-    float replacementAlpha = 0.0f;
-    std::uint32_t draws = 0;
-    if (hand) {
-        const std::int8_t state = AdvanceHandDrawState(*hand);
-        replacementAlpha = hand->modelAlpha;
-        if (state > 0) {
-            const bool admitted = DrawPrimaryHandModel(*hand, replacementAlpha * alpha);
-            if (!admitted)
-                replacementAlpha = 0.0f;
-            else
-                ++draws;
-        }
-        if (state < 0) {
-            const bool admitted = DrawSecondaryHandModel(*hand, replacementAlpha * alpha);
-            if (!admitted)
-                replacementAlpha = 0.0f;
-            else
-                ++draws;
-        }
-    }
-    *originalAlphaScale = 1.0f - replacementAlpha;
-    // The typed body-hand callback applies this after the caller's node transform; matrix-frame draws bypass it.
-    if (originalNode && static_cast<double>(replacementAlpha) < 0.00001) {
-        Matrix4x4::RotateAroundZ_Wrapper(static_cast<std::uint16_t>(originalNode->rotation.z));
-        Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(originalNode->rotation.y));
-        Matrix4x4::RotateAroundX_Wrapper(static_cast<std::uint16_t>(originalNode->rotation.x));
-    }
-    return draws;
-}
-
-} // namespace shenmue::s2
+#endif
+#else
+#endif

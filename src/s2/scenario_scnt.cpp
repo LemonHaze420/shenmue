@@ -1,21 +1,68 @@
 #include "s2/scenario_scnt.hpp"
-#include "s2/scenario_internal.hpp"
 
-namespace shenmue::s2 {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/scenario_flags_dc.hpp"
+#include "s2/story_state.hpp"
+#include "platform/dc/runtime_arithmetic.hpp"
+#include "s2/scenario_control_dc.hpp"
+#include "s2/scenario_actions_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/scenario_character_query_dc.hpp"
+#include "s2/camera_conversation_dc.hpp"
+#include "s2/conversation_playback_dc.hpp"
+#include "s2/character_pose_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "s2/face_controller_dc.hpp"
+#include "s2/event_character_model_dc.hpp"
+#include "s2/frame_dc.hpp"
+#include "s2/hand_dc.hpp"
+#include "s2/input_dc.hpp"
+#include "s2/map_event_character_dc.hpp"
+#include "s2/npc_data_dc.hpp"
+#include "s2/pad_control_dc.hpp"
+#include "s2/player_config_dc.hpp"
+#include "s2/player_control_state_dc.hpp"
+#include "s2/player_readiness_dc.hpp"
+#include "s2/player_model_dc.hpp"
+#include "s2/button_mediation_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/speak_icon_setup_dc.hpp"
+#include "s2/speak_icon_state_dc.hpp"
+#include "s2/search_commands_dc.hpp"
+#include "s2/scene_assets_dc.hpp"
+#include "s2/sound_program.hpp"
+#include "platform/dc/sdk.hpp"
+#include <cstring>
+#include <cmath>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+#include "s2/scenario_internal.hpp"
+#endif
+
+
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 using namespace event_runtime_detail;
+#endif
 
 namespace event_runtime_detail {
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float ScenarioLineClock() {
     return static_cast<float>(scenarioLineStartTicks - static_cast<std::int32_t>(GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta))) /
         12500000.0f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t ScenarioFrameTicks() {
     return static_cast<std::int32_t>(GetAccumulatedFrameTimes(FrameTimerSlot::MainLoop, FrameTimeOp::Delta));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Character *ResolveScenarioTalkCharacter(shen_name name) {
     if (!activeScenarioEventRuntime)
         return nullptr;
@@ -25,11 +72,15 @@ Character *ResolveScenarioTalkCharacter(shen_name name) {
     }
     return scenFindChara(activeScenarioEventRuntime->task, name);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint8_t ScntByte(std::span<const std::byte> bytes, std::size_t offset) {
     return std::to_integer<std::uint8_t>(bytes[offset]);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool FreeTalkProgram(const ScenarioFreeTalkRecord &record, std::span<const std::byte> &program) {
     if (!record.sourceRecord || !record.script)
         return false;
@@ -42,7 +93,9 @@ bool FreeTalkProgram(const ScenarioFreeTalkRecord &record, std::span<const std::
     program = {record.script, header.size - static_cast<std::size_t>(scriptOffset)};
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ResolveScntGameDataOperand(std::int32_t index, std::int32_t &value) {
     DateTime dateTime{};
     if (index >= 0 && index <= 5) {
@@ -95,7 +148,9 @@ bool ResolveScntGameDataOperand(std::int32_t index, std::int32_t &value) {
     value = 0;
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool AssignScntGameDataOperand(std::int32_t index, std::int32_t value) {
     DateTime dateTime{};
     if (index >= 0 && index <= 5) {
@@ -148,7 +203,9 @@ bool AssignScntGameDataOperand(std::int32_t index, std::int32_t value) {
     }
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ResolveScenarioExpressionOperand(const ScenarioExpressionOperand &operand, std::int32_t &value) {
     switch (operand.mode) {
     case 1:
@@ -195,7 +252,9 @@ bool ResolveScenarioExpressionOperand(const ScenarioExpressionOperand &operand, 
         return false;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool AssignScenarioExpressionOperand(const ScenarioExpressionOperand &operand, std::int32_t value) {
     switch (operand.mode) {
     case 2:
@@ -223,7 +282,9 @@ bool AssignScenarioExpressionOperand(const ScenarioExpressionOperand &operand, s
         return true;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool DecodeScntExpression(
     std::span<const std::byte> program, std::size_t offset, std::size_t &nextOffset, ScenarioFreeTalkRecord &record, std::int32_t &result) {
     std::array<ScenarioExpressionOperand, 64> stack{};
@@ -332,7 +393,7 @@ bool DecodeScntExpression(
             if (!pop(rightOperand) || !pop(leftOperand) || !ResolveScenarioExpressionOperand(leftOperand, left)) {
                 return false;
             }
-
+            // ResolveScenarioExpressionOperand skips the right operand getter for native && and ||.
             const bool shortCircuit = (opcode == 0x85 && left == 0) || (opcode == 0x86 && left != 0);
             if (!shortCircuit && !ResolveScenarioExpressionOperand(rightOperand, right)) {
                 return false;
@@ -435,11 +496,15 @@ bool DecodeScntExpression(
     }
     return false;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t ScntSignedOffset(std::uint32_t value, std::uint32_t signBit) {
     return static_cast<std::int32_t>((value ^ signBit) - signBit);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ScntBranch(std::size_t &cursor, std::int32_t displacement, std::size_t size) {
     const std::int64_t destination = static_cast<std::int64_t>(cursor) + displacement;
     if (destination < 0 || static_cast<std::uint64_t>(destination) >= size)
@@ -447,9 +512,11 @@ bool ScntBranch(std::size_t &cursor, std::int32_t displacement, std::size_t size
     cursor = static_cast<std::size_t>(destination);
     return true;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// FindScenarioConversationRoot explores the actual conditional root with a temporary STEP.
+// Unlike the old selector scanner, this does not execute or activate a talk.
 const std::byte *FindScenarioConversationRoot(ScenarioFreeTalkRecord &record, std::int32_t step) {
     std::span<const std::byte> program{};
     if (!FreeTalkProgram(record, program))
@@ -569,8 +636,10 @@ const std::byte *FindScenarioConversationRoot(ScenarioFreeTalkRecord &record, st
     }
     return result;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native SolveRyoMatrix: the second character's position in the frame of the first, turned by yaw.
 void SolveRyoMatrix(shen_name origin, shen_name other, std::uint16_t yaw, Vector3 *result) {
     Character *const originCharacter = ResolveScenarioTalkCharacter(origin);
     if (!originCharacter)
@@ -592,6 +661,9 @@ void SolveRyoMatrix(shen_name origin, shen_name other, std::uint16_t yaw, Vector
     Matrix4x4::TransformPoint(position, *result);
     Matrix4x4::Pop(1);
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EndScenarioPlayerPresentation(std::int32_t mode) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     ScenarioTalkPresentationState &presentation = GetScenarioTalkPresentationState();
@@ -616,6 +688,9 @@ void EndScenarioPlayerPresentation(std::int32_t mode) {
         presentation.participantCount = 0;
     }
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ConsumeScenarioCameraRestoreRequest() {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     if (!(scenario.flags & 0x400U))
@@ -624,15 +699,19 @@ void ConsumeScenarioCameraRestoreRequest() {
         RetireConversationCamera();
     scenario.flags &= ~0x400U;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native ryoCheckBusyFlags: Ryo is free to answer a talk prompt.
 bool ryoCheckBusyFlags() {
     const std::uint32_t flags = activeScenarioEventRuntime->flags;
     return (!plymIsSearchBlocked() || (flags & 0x40U)) && (GetParentMenu() == static_cast<std::uint8_t>(UIElement::GameBackground) || (flags & 0x40U)) &&
         !IsItemSelectable() && !IsAnyItemSelectActive() && (!IsWristwatchOpenable() || (flags & 0x40U)) && !srchHasActiveLockonTarget();
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenClearSpeakerPresentation: the subtitles and the presented speaker's face sequence.
 void scenClearSpeakerPresentation() {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     if (scenario.flags & 0x1000U) {
@@ -645,17 +724,23 @@ void scenClearSpeakerPresentation() {
         AssignFacialClip(character, SCEN_DEFAULT_FACE_SEQUENCE.data());
     scenario.faceResetCharacter = {};
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native SetScenarioActivationCount and SetScenarioCompletionCount: the record's counters, clamped to 0-100.
 void SetScenarioActivationCount(ScenarioFreeTalkRecord &record, std::int32_t count) {
     record.control->activationCount = static_cast<std::uint8_t>(count < 0 ? 0 : count > 100 ? 100 : count);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetScenarioCompletionCount(ScenarioFreeTalkRecord &record, std::int32_t count) {
     record.control->completedCount = static_cast<std::uint8_t>(count < 0 ? 0 : count > 100 ? 100 : count);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native CaptureScenarioTalkInput: SCEN takes the pad, except for SY records whose name does not end in '_'.
 void CaptureScenarioTalkInput() {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     if (scenario.flags & 2U)
@@ -666,7 +751,9 @@ void CaptureScenarioTalkInput() {
         scenario.inputState = BindPadControlEntry(scenario.padControlData);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseScenarioTalkInput() {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     if (!(scenario.flags & 2U))
@@ -674,8 +761,10 @@ void ReleaseScenarioTalkInput() {
     scenario.flags &= ~2U;
     BindPadControlEntry(scenario.inputState);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native BuildScenarioLipSequence: the speaker's random mouth sequence, sized from the line's time or text length.
 void BuildScenarioLipSequence(const ScenarioFreeTalkRecord &record) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     const auto *const line = reinterpret_cast<const std::int32_t *>(record.firstDialogueLine);
@@ -707,16 +796,20 @@ void BuildScenarioLipSequence(const ScenarioFreeTalkRecord &record) {
     scenario.faceSequence[cursor + 1] = 10;
     scenario.faceSequence[cursor + 2] = -1;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native IsScenarioFollowPromptAvailable: the follow-me prompt is offered only before any companion joins, from story
+// step 4.0000 to 37.0000.
 bool IsScenarioFollowPromptAvailable() {
     return !EV_GetShenmueFlag(0x305) && !EV_GetShenmueFlag(0x342) && !EV_GetShenmueFlag(0x375) && !EV_GetShenmueFlag(0x377) && !EV_GetShenmueFlag(0x115) &&
         EV_GetPlayerFlag(PlayerFlagReadMode::Internal, 1348) && static_cast<std::int32_t>(GetCurrentStep()) >= 40000 &&
         static_cast<std::int32_t>(GetCurrentStep()) < 370000;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native IsScenarioActiveRecordIdle: no talk is running or the active record waits for no acknowledgement.
 bool IsScenarioActiveRecordIdle() {
     const ScenarioFreeTalkRecord *const record = FindMutableScenarioFreeTalkRecord(activeScenarioEventRuntime->activeCharacter);
     if (!record)
@@ -725,13 +818,17 @@ bool IsScenarioActiveRecordIdle() {
         return false;
     return (record->flags & (ScenarioTalkWaitStart | ScenarioTalkWaitFollow | ScenarioTalkWaitEnd)) == 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const shen_name *ScenarioParticipants(const ScenarioFreeTalkRecord &record) {
     return reinterpret_cast<const shen_name *>(record.participants);
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native ResolveScenarioParticipant: EXTR names the record's own character; other NPCs stand for it unless the record has a
+// voice group.
 shen_name ResolveScenarioParticipant(shen_name participant, const ScenarioFreeTalkRecord &record) {
     shen_name name = participant;
     if (name.name == SHEN_NAME(EXTR))
@@ -740,8 +837,10 @@ shen_name ResolveScenarioParticipant(shen_name participant, const ScenarioFreeTa
         return name;
     return record.name;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native AreScenarioParticipantsPresent: a record that waits for its cast proceeds only once every NPC participant is admitted.
 bool AreScenarioParticipantsPresent(const ScenarioFreeTalkRecord &record) {
     if (!record.participants || !(record.control->flags & TalkWaitForCast))
         return true;
@@ -763,8 +862,10 @@ bool AreScenarioParticipantsPresent(const ScenarioFreeTalkRecord &record) {
     }
     return true;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native SCEN_TrackVisitedBranchTarget: the backward-branch history; a revisit latches the loop flag for the program walk.
 std::int32_t SCEN_TrackVisitedBranchTarget(const std::byte *target) {
     std::int32_t count = scenarioBranchCount;
     for (std::int32_t index = 0; index < scenarioBranchCount; ++index) {
@@ -782,18 +883,24 @@ std::int32_t SCEN_TrackVisitedBranchTarget(const std::byte *target) {
     scenarioBranchTargets[static_cast<std::size_t>(count)] = target;
     return scenarioBranchLoop;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t ScntBe12(const std::byte *cursor, std::uint8_t opcode) {
     const std::int32_t value = static_cast<std::uint8_t>(cursor[0]) | ((opcode & 0x0f) << 8);
     return (value & 0x800) ? value | static_cast<std::int32_t>(0xfffff000U) : value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t ScntBe20(const std::byte *cursor, std::uint8_t opcode) {
     const std::int32_t value = static_cast<std::uint8_t>(cursor[1]) + ((((opcode & 0x0f) << 8) + static_cast<std::uint8_t>(cursor[0])) << 8);
     return (value & 0x80000) ? value | static_cast<std::int32_t>(0xfff00000U) : value;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native Interpreter: the F0 expression at the cursor is evaluated into scntExpressionResult; the cursor after it is returned.
 const std::byte *Interpreter(const std::byte *cursor, ScenarioFreeTalkRecord &record) {
     std::span<const std::byte> program{};
     std::size_t next{};
@@ -803,9 +910,11 @@ const std::byte *Interpreter(const std::byte *cursor, ScenarioFreeTalkRecord &re
         return nullptr;
     return program.data() + next;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native SCEN_AdvanceCharacterCommandStream: walks the program from its start through conditions, face looks and branches
+// to the first section marker, returning the cursor after it, or null when the walk meets anything else.
 const std::byte *SCEN_AdvanceCharacterCommandStream(ScenarioFreeTalkRecord &record) {
     ScenarioTalkPresentationState &talk = GetScenarioTalkPresentationState();
     const std::byte *cursor = record.script;
@@ -875,9 +984,11 @@ const std::byte *SCEN_AdvanceCharacterCommandStream(ScenarioFreeTalkRecord &reco
         }
     }
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenBuildDialogueCues: turns one line block into the dialogue cue list and the conversation-camera packets, from
+// the first line or cue opcode to the first terminator, and returns the cursor on that terminator.
 const std::byte *scenBuildDialogueCues(ScenarioFreeTalkRecord &record, const std::byte *cursor) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     ScenarioTalkPresentationState &talk = GetScenarioTalkPresentationState();
@@ -909,7 +1020,7 @@ const std::byte *scenBuildDialogueCues(ScenarioFreeTalkRecord &record, const std
         cue.speaker = shen_name{code};
         return cue;
     };
-
+    // Native leaves the cursor on the opcode that ended the block, or on a revisited branch target.
     std::ptrdiff_t rewind = 1;
     for (;;) {
         const std::uint8_t opcode = static_cast<std::uint8_t>(*cursor++);
@@ -1016,7 +1127,7 @@ const std::byte *scenBuildDialogueCues(ScenarioFreeTalkRecord &record, const std
                 }
                 merge = true;
             }
-
+            // Native merges into the previous packet; with no packet yet the merge has nothing to extend.
             if (merge && packet) {
                 scenarioCameraRecords[packet - 1].flags |= lineFlags;
                 scenarioCameraRecords[packet - 1].duration += duration;
@@ -1212,8 +1323,10 @@ const std::byte *scenBuildDialogueCues(ScenarioFreeTalkRecord &record, const std
         scenario.flags |= 4U;
     return cursor;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenExecuteLineOpcode: section markers, line blocks, cue actions, conditions, branches and flag sets.
 const std::byte *scenExecuteLineOpcode(ScenarioFreeTalkRecord &record, const std::byte *cursor, std::int32_t &stop) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     const std::uint8_t opcode = static_cast<std::uint8_t>(cursor[0]);
@@ -1284,8 +1397,10 @@ lineBlock:
     stop = 1;
     return next;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenExecuteStreamOpcode: calls, resume markers, face looks, follow requests, settings and long branches.
 const std::byte *scenExecuteStreamOpcode(ScenarioFreeTalkRecord &record, const std::byte *cursor, std::int32_t &stop) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     const std::uint8_t opcode = static_cast<std::uint8_t>(cursor[0]);
@@ -1358,7 +1473,9 @@ const std::byte *scenExecuteStreamOpcode(ScenarioFreeTalkRecord &record, const s
         return next;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // The E1/E2/E5 prompts settle the same way once the speak icon is up.
 const std::byte *SettleScenarioPrompt(ScenarioFreeTalkRecord &record, const std::byte *next, std::int32_t &stop) {
     record.executionState = 6;
@@ -1373,9 +1490,11 @@ const std::byte *SettleScenarioPrompt(ScenarioFreeTalkRecord &record, const std:
     }
     return next;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native E5 prompt of scenExecuteChoiceOpcode: every link whose F0 condition holds offers its flag, best rank first; two
+// offers take the middle slots, and the 98 and 99 buckets pin their offer to the first and last free slot.
 const std::byte *ExecuteScenarioLinkedChoice(ScenarioFreeTalkRecord &record, const std::byte *header, std::int32_t &stop) {
     record.dialogueTimeout = 10800;
     for (ScenarioChoiceCandidate &candidate : scenarioChoiceCandidates)
@@ -1551,8 +1670,10 @@ const std::byte *ExecuteScenarioLinkedChoice(ScenarioFreeTalkRecord &record, con
     record.flags |= ScenarioTalkLinkedPrompt;
     return SettleScenarioPrompt(record, header, stop);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenExecuteChoiceOpcode: random sections and the three choice prompts.
 const std::byte *scenExecuteChoiceOpcode(ScenarioFreeTalkRecord &record, const std::byte *cursor, std::int32_t &stop) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     const std::uint8_t opcode = static_cast<std::uint8_t>(cursor[0]);
@@ -1628,8 +1749,10 @@ const std::byte *scenExecuteChoiceOpcode(ScenarioFreeTalkRecord &record, const s
         return next + length;
     }
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenExecuteControlOpcode: expressions, prompts, the talk start, section ends, returns and the yield points.
 const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const std::byte *cursor, std::int32_t &stop) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     const std::uint8_t opcode = static_cast<std::uint8_t>(cursor[0]);
@@ -1809,7 +1932,9 @@ const std::byte *scenExecuteControlOpcode(ScenarioFreeTalkRecord &record, const 
         return next;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // The answered prompt's flag selects its one-based slot, or zero when it was not offered.
 std::uint16_t ResolveScenarioChoiceSlot(ScenarioFreeTalkRecord &record, std::uint16_t answer) {
     std::size_t slot = 0;
@@ -1825,8 +1950,10 @@ std::uint16_t ResolveScenarioChoiceSlot(ScenarioFreeTalkRecord &record, std::uin
     }
     return record.dialogueFlagId;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenSelectRecordStart: where the program resumes, then the answer to a pending prompt.
 const std::byte *scenSelectRecordStart(ScenarioFreeTalkRecord &record) {
     const std::uint32_t flags = record.flags;
     const std::byte *cursor{};
@@ -1898,8 +2025,10 @@ const std::byte *scenSelectRecordStart(ScenarioFreeTalkRecord &record) {
     record.flags &= ~(ScenarioTalkResumeAfterSection | ScenarioTalkRestartSection);
     return cursor;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenStepRecordProgram: runs the program from its resume point to the next yield, then posts the state's SCNA request.
 void scenStepRecordProgram(ScenarioFreeTalkRecord &record) {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     if (!record.name.name) {
@@ -1960,8 +2089,10 @@ void scenStepRecordProgram(ScenarioFreeTalkRecord &record) {
     QueueScenarioCharacterAction(record.name, -2);
     EndScenarioTalkSession(record);
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenEndConversation: the talk is dropped; the cue clock restarts and the pad, camera and player presentation return.
 void scenEndConversation() {
     ScenarioEventRuntime &scenario = *activeScenarioEventRuntime;
     RetireScenarioFreeTalkRecord(FindMutableScenarioFreeTalkRecord(scenario.activeCharacter));
@@ -1983,14 +2114,18 @@ void scenEndConversation() {
     scenario.activeCharacter = {};
     scenarioLineStartTicks = ScenarioFrameTicks();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 const char *ScenarioLineText(const ScenarioFreeTalkRecord &record, std::int32_t offset) {
     return GetLocalizedSceneText(reinterpret_cast<const char *>(record.sourceRecord) + offset).data();
 }
+#endif
 
-
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native scenExecuteRecord: one frame of the active record. Prompt answers are collected, SCNF acknowledgements and their
+// timeouts are consumed, the dialogue cues of the running line block are played against the line clock, and between
+// blocks the program steps to its next yield or waits for Ryo's talk and follow presses.
 void scenExecuteRecord(ScenarioFreeTalkRecord *recordPointer) {
     if (!recordPointer)
         return;
@@ -2061,7 +2196,7 @@ void scenExecuteRecord(ScenarioFreeTalkRecord *recordPointer) {
         camCtrlHoldConversationShot((scenario.flags >> 4) & 1U);
     if (record.flags & (ScenarioTalkWaitAction | ScenarioTalkWaitStart | ScenarioTalkWaitFollow | ScenarioTalkWaitEnd))
         goto acknowledgements;
-lineFrame : {
+lineFrame: {
     const std::int32_t hold = scenarioLineHoldFrames;
     if ((record.flags & ScenarioTalkLineBlock) && (ctrlGetPadInputBuffer0(scenario.padControlData)->pressedPriority & 0x200U) &&
         static_cast<std::uint8_t>(GetS2DialogueMode()) && hold <= 0)
@@ -2314,7 +2449,7 @@ blockEnded:
             EndConversationCameraStream();
         scenario.flags &= 0xffffffe7U;
     }
-stepProgram : {
+stepProgram: {
     ScenarioFreeTalkControl &control = *record.control;
     const std::uint32_t controlFlags = control.flags;
     if (controlFlags & 4U) {
@@ -2510,7 +2645,9 @@ acknowledgements:
             goto lineFrame;
     }
 }
+#endif
+
 } // namespace event_runtime_detail
 
-
-} // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

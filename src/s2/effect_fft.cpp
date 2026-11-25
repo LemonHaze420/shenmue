@@ -1,18 +1,59 @@
+#include "shenmue.h"
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/effect_fft.hpp"
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/event_matrix_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/particle_effects.hpp"
 
 #include "s2/motion_work.hpp"
-#include "common/math.hpp"
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+#include "common/math.hpp"
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "platform/dc/particle_effects.hpp"
+#include "platform/dc/matrix.hpp"
+#include "s2/modifier_volume_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <algorithm>
 #include <array>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cmath>
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include <cstring>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstddef>
 #include <cstdint>
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+
+namespace s2 {
+
 namespace {
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+void BuildFireSpectrum(const float *phases, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff);
+void UpdateFireSpectrum(float *phases, const float *phaseRates, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff);
+void InitializeFirePhases(float *phases);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr float kPi = 3.1415927f;
 constexpr float kTau = 6.2831855f;
 constexpr float kMinimumFloat = 0.00000011920929f;
@@ -22,15 +63,8 @@ constexpr std::size_t kSmokeOutputOffset = 0x80;
 constexpr std::array<std::uint16_t, 16> kDefaultFirePalette{
     0x0311, 0x0311, 0x0411, 0x0511, 0x0612, 0x0712, 0x0a32, 0x0b32, 0x0b42, 0x0c50, 0x0d70, 0x0e70, 0x0e80, 0x0fa0, 0x0fc3, 0x0fd6};
 
-constexpr std::array<std::uint8_t, 64> kSmokePhaseControl{
-    0, 1, 1, 1, 2, 2, 2, 2,
-    1, 2, 2, 2, 2, 2, 2, 2,
-    1, 2, 2, 2, 2, 2, 2, 2,
-    1, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2,
-    2, 2, 2, 2, 2, 2, 2, 2};
+constexpr std::array<std::uint8_t, 64> kSmokePhaseControl{0, 1, 1, 1, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
 
 struct Complex {
     float real{};
@@ -202,6 +236,7 @@ void PrepareSpectrum(const float *phases, const float *falloff, float *real, flo
         std::fill_n(real, Padded * Padded, 0.0f);
         std::fill_n(imaginary, Padded * Padded, 0.0f);
     }
+
     const auto store = [real, imaginary](std::size_t y, std::size_t x, float amplitude, float phase, bool conjugate) {
         const std::size_t destination = y * Padded + x;
         real[destination] = NativeCosine(phase) * amplitude;
@@ -367,8 +402,59 @@ std::uint32_t ExpandArgb4444(std::uint16_t packed) noexcept {
     return static_cast<std::uint32_t>(packed & 0x000fU) * 17U | static_cast<std::uint32_t>((packed >> 4U) & 0x000fU) * 17U << 8U |
         static_cast<std::uint32_t>((packed >> 8U) & 0x000fU) * 17U << 16U | static_cast<std::uint32_t>((packed >> 12U) & 0x000fU) * 17U << 24U;
 }
+#endif
 
 } // namespace
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace
+
+void SetFireFftPalette(std::int32_t index, const std::uint16_t *palette);
+void GenerateFirePhaseRates(float *steps, float scalar);
+
+FireFftPrefix *g_fireFftData[8] = {};
+
+// @verified - d
+void ResetFireFftChannels() {
+    for (std::int32_t rangeIndex57 = 0; rangeIndex57 < 8; ++rangeIndex57) {
+        FireFftPrefix *&effect = (g_fireFftData)[rangeIndex57];
+        effect = 0;
+    }
+}
+
+
+// @verified - d
+void InitializeFireFft(std::int32_t index, FireFftPrefix *effect) {
+    g_fireFftData[index] = effect;
+    if (!effect)
+        return;
+    effect->flags &= 0x7fffffffU;
+    effect->phaseParameter = 3.0f;
+    effect->outputScale = 1.0f;
+    effect->falloffScalar = -0.699999988079071f;
+    effect->tick = 0;
+    effect->width = 1.0f;
+    effect->height = 1.0f;
+    InitializeFirePhases(effect->phases);
+    GenerateFirePhaseRates(effect->phaseRates, effect->falloffScalar);
+    BuildFireSpectrum(effect->phases, effect->real, effect->imaginary, effect->phaseParameter, effect->falloff);
+    dc::sdk::InitializeFftTwiddles32();
+    SetFireFftPalette(index, kFireFftDefaultPalette);
+}
+
+
+// @verified - d
+void SetFireFftActive(std::int32_t index, std::int32_t active) {
+    std::uint32_t &flags = g_fireFftData[index]->flags;
+    if (active)
+        flags |= 0x80000000U;
+    else
+        flags &= 0x7fffffffU;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+ // namespace
 
 void InitializeSmokeFft(SmokeFftData &data) noexcept {
     data.flags &= ~activeFlag;
@@ -534,5 +620,424 @@ void UpdateFireFft(FireFftData &data, std::uint16_t flags) noexcept {
         }
     }
 }
+#endif
 
-} // namespace shenmue::s2
+namespace {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+std::uint32_t FireTextureSize(std::uint32_t size) {
+    switch (size) {
+    case 8:
+        return 0;
+    case 16:
+        return 1;
+    case 32:
+        return 2;
+    case 64:
+        return 3;
+    case 128:
+        return 4;
+    case 256:
+        return 5;
+    case 512:
+        return 6;
+    case 1024:
+        return 7;
+    default:
+        return size;
+    }
+}
+#endif
+
+} // namespace
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace
+
+// @verified - d
+void SetFireFftOutput(std::int32_t index, std::uint16_t *pixels) {
+    FireFftPrefix &effect = *g_fireFftData[index];
+    std::uint32_t textures[2] = {0, 0};
+    effect.pixels = pixels;
+    FireFftSurface *entry = effect.surfaces;
+    std::uint32_t size;
+    std::uint32_t *texture = textures;
+    for (std::int32_t surfaceIndex = 0; surfaceIndex < 2; ++surfaceIndex) {
+        kmCreateTextureSurface(&entry->surface, 32, 32, static_cast<KMTEXTURETYPE>(0x102));
+        size = FireTextureSize(entry->surface.Width) << 3;
+        size |= FireTextureSize(entry->surface.Height);
+        *texture = (*texture & 0x7fffffffU) | (entry->surface.fSurfaceFlags << 31);
+        *texture = (*texture & 0xbfffffffU) | ((entry->surface.fSurfaceFlags & 8U) << 27);
+        *texture = (*texture & 0xc7ffffffU) | (entry->surface.PixelFormat & 0x38000000U);
+        *texture = (*texture & 0xfbffffffU) | ((~(entry->surface.fSurfaceFlags & 4U) & 4U) << 24);
+        *texture = (*texture & 0xfdffffffU) | ((entry->surface.fSurfaceFlags & 0x10U) << 21);
+        *texture = (*texture & 0xfeffffffU) | ((entry->surface.fSurfaceFlags & 2U) << 23);
+        *texture = (*texture & 0xff800000U) | (reinterpret_cast<std::uintptr_t>(entry->surface.pSurface) >> 3);
+        ++entry;
+        ++texture;
+    }
+    std::uint32_t *context = effect.context;
+    *context = 0x8200000eU;
+    ++context;
+    *context = 0xca800000U;
+    ++context;
+    *context = 0x941024c0U | size;
+    ++context;
+    *context = textures[0];
+    ++context;
+    *context = textures[1];
+}
+
+
+// @verified - d
+void SetFireFftPalette(std::int32_t index, const std::uint16_t *palette) {
+    g_fireFftData[index]->palette = palette;
+}
+
+
+// @verified - d
+void SetFireFftSize(std::int32_t index, float width, float height) {
+    FireFftPrefix *const effect = g_fireFftData[index];
+    effect->width = width;
+    effect->height = height;
+}
+
+
+// @verified - d
+float *GenerateFireFalloff(float radiusX, float radiusY, float *falloff) {
+    float (*grid)[16] = reinterpret_cast<float (*)[16]>(falloff);
+    std::int32_t row, column;
+    falloff[0] = radiusY * -200.0f;
+    for (row = 1; row < 16; ++row)
+        grid[row][0] = 400.0f / fast_powf_approx(static_cast<float>(row), radiusX * 0.5f);
+    for (column = 1; column < 16; ++column)
+        grid[0][column] = 400.0f / fast_powf_approx(static_cast<float>(column), radiusX * 0.5f);
+    for (row = 1; row < 16; ++row) {
+        for (column = 1; column < 16; ++column)
+            grid[row][column] = 100.0f / fast_powf_approx(::sqrtf(static_cast<float>(row * row + column * column)), radiusX * 0.5f);
+    }
+    return falloff;
+}
+
+
+// @verified - d
+float *ScaleFireFalloff(float gain, float *falloff) {
+    float *value = falloff;
+    const float first = *falloff;
+    for (std::int32_t row = 0; row < 16; ++row)
+        for (std::int32_t column = 0; column < 16; ++column) {
+            *value *= gain;
+            ++value;
+        }
+    *falloff = first;
+    return falloff;
+}
+
+
+// @verified - d
+void SetFireFftFalloff(std::int32_t index, const float *falloff) {
+    float *destination = g_fireFftData[index]->falloff;
+    for (std::int32_t row = 0; row < 16; ++row)
+        for (std::int32_t column = 0; column < 16; ++column) {
+            *destination = *falloff++;
+            ++destination;
+        }
+}
+
+
+// @verified - d
+void SetFireFftScalar(std::int32_t index, float scalar) {
+    FireFftPrefix *effect;
+    effect = g_fireFftData[index];
+    effect->falloffScalar = scalar;
+    GenerateFirePhaseRates(effect->phaseRates, scalar);
+}
+#endif
+
+namespace {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+void TwiddleFirePixels(std::uint16_t *pixels) {
+    std::uint32_t columnStep = 0x55555556U, rowStep = 0xaaaaaaabU, columnMask = 0xaaaaaaaaU, rowMask = 0x55555555U;
+    std::uint16_t twiddled[1024];
+    const std::uint16_t *rowPixels = pixels;
+    std::uint32_t rowBits = 0;
+    std::int32_t index;
+    for (index = 0; index < 32; ++index) {
+        std::uint32_t columnBits = 0;
+        const std::uint16_t *source = rowPixels;
+        for (std::int32_t column = 0; column < 32; ++column) {
+            twiddled[columnBits | rowBits] = *source++;
+            columnBits = (columnBits + columnStep) & columnMask;
+        }
+        rowPixels += 32;
+        rowBits = (rowBits + rowStep) & rowMask;
+    }
+    for (index = 0; index < 1024; ++index) {
+        *pixels = twiddled[index];
+        ++pixels;
+    }
+}
+
+
+// @verified - d
+void ResetFireBillboardAxes() {
+    Matrix4x4 matrix;
+    matrix_stack::GetMatrix(&matrix);
+    matrix.rows[0].x = 1.0f;
+    matrix.rows[0].y = 0.0f;
+    matrix.rows[0].z = 0.0f;
+    matrix.rows[1].x = 0.0f;
+    matrix.rows[1].y = 1.0f;
+    matrix.rows[1].z = 0.0f;
+    matrix.rows[2].x = 0.0f;
+    matrix.rows[2].y = 0.0f;
+    matrix.rows[2].z = 1.0f;
+    matrix_stack::LoadMatrix(&matrix);
+}
+#endif
+
+} // namespace
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace
+
+// @verified - d
+void ProjectFireFftPoint(const Vector3 &point, Vector3 &output) {
+    Vector4 position;
+    matrix_stack::TransformPosition(&point, &position);
+    const float inverse = 1.0f / position.w;
+    output.x = position.x * inverse;
+    output.y = position.y * inverse;
+    output.z = inverse;
+}
+
+
+// @verified - d
+void UpdateFireFft(std::int32_t index, std::int32_t flags) {
+    FireFftPrefix *const effect = g_fireFftData[index];
+    if (!effect || !(effect->flags & 0x80000000U))
+        return;
+    std::uint16_t *const pixels = effect->pixels;
+    std::uint16_t *cursor = pixels;
+    ++effect->tick;
+    UpdateFireSpectrum(effect->phases, effect->phaseRates, effect->real, effect->imaginary, effect->phaseParameter, effect->falloff);
+    for (std::int32_t row = 0; row < 32; ++row) {
+        for (std::int32_t column = 0; column < 32; ++column) {
+            const std::int32_t sourceRow = flags & 2 ? row / 2 + 16 : row;
+            float intensity = effect->real[sourceRow][column] * effect->outputScale + static_cast<float>(32 - row) * 0.03125f * 2.0f;
+            if (intensity > 1.0f)
+                intensity = 1.0f;
+            if (intensity < 0.0f)
+                intensity = 0.0f;
+            const std::int32_t colour = static_cast<std::int32_t>(15.0f * intensity);
+            *cursor++ = static_cast<std::uint16_t>((static_cast<std::uint32_t>(colour) << 12) | effect->palette[colour]);
+        }
+    }
+    TwiddleFirePixels(pixels);
+    kmLoadTexture(&effect->surfaces[~effect->tick & 1U].surface, reinterpret_cast<std::uint32_t *>(effect->pixels), 0, 0);
+}
+
+
+// @verified - d
+void DrawFireFft(std::int32_t index, float alpha) {
+    FireFftPrefix *const effect = g_fireFftData[index];
+    if (!effect || !(effect->flags & 0x80000000U))
+        return;
+    const Vector3 points[4] = {{-0.5f, 0.0f, 0.0f}, {-0.5f, 1.0f, 0.0f}, {0.5f, 0.0f, 0.0f}, {0.5f, 1.0f, 0.0f}};
+    if (alpha < 0.0f)
+        alpha = 0.0f;
+    const float scaledAlpha = alpha * 255.0f;
+    std::uint32_t opacity = scaledAlpha < 2147483648.0f ? static_cast<std::uint32_t>(TruncateToInt32(scaledAlpha)) :
+                                                          static_cast<std::uint32_t>(TruncateToInt32(scaledAlpha - 2147483648.0f)) + 0x80000000U;
+    if (opacity > 255U)
+        opacity = 255U;
+    const std::uint32_t colour = (opacity << 24) | 0xffffffU;
+    std::uint32_t *const buffers = dc::sdk::g_sdkVertexBufferPointers;
+    if (effect->tick & 1U) {
+        std::memcpy(reinterpret_cast<void *>(buffers[2]), effect->context, 16);
+        buffers[2] += 32;
+    } else {
+        std::memcpy(reinterpret_cast<void *>(buffers[2]), effect->context, 12);
+        buffers[2] += 12;
+        std::memcpy(reinterpret_cast<void *>(buffers[2]), effect->context + 4, 4);
+        buffers[2] += 20;
+    }
+    matrix_stack::Matrix4x4_Push(0);
+    ResetFireBillboardAxes();
+    Matrix4x4::Scale(effect->width, effect->height, 1.0f);
+    PrepareShadowVolumeProjection();
+    std::uint32_t *cursor = reinterpret_cast<std::uint32_t *>(buffers[2]);
+    for (std::int32_t index = 0; index < 4; ++index) {
+        Vector3 point;
+        ProjectFireFftPoint(points[index], point);
+        cursor[0] = index == 3 ? 0xf0000000U : 0xe0000000U;
+        std::memcpy(cursor + 1, &point, 12);
+        const float u = index >= 2 ? 1.0f : 0.0f;
+        const float v = index & 1 ? 0.949999988079071f : 0.0f;
+        std::memcpy(cursor + 4, &u, 4);
+        std::memcpy(cursor + 5, &v, 4);
+        cursor[6] = colour;
+        cursor[7] = 0;
+        cursor += 8;
+    }
+    buffers[2] = reinterpret_cast<std::uintptr_t>(cursor);
+    PopCurrentMatrix(1);
+}
+#endif
+
+namespace {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+void UpdateFireSpectrum(float *phases, const float *phaseRates, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff) {
+    for (std::int32_t row = 0; row < 16; ++row) {
+        for (std::int32_t column = 0; column < 16; ++column) {
+            float &first = phases[row * 32 + column], &second = phases[row * 32 + 32 - column];
+            if (row >= 8 || column >= 8 || (!row && !column)) {
+                first = 0.0f;
+                second = 0.0f;
+            } else if (!row || !column) {
+                first = dc::sdk::kFftPhasePi;
+                second = dc::sdk::kFftPhasePi;
+            } else {
+                first += phaseRates[row * 32 + column];
+                second += phaseRates[row * 32 + 32 - column];
+            }
+        }
+    }
+    BuildFireSpectrum(phases, real, imaginary, phaseParameter, falloff);
+    Vector2 values[32];
+    for (std::int32_t row = 0; row < 32; ++row) {
+        for (std::int32_t column = 0; column < 32; ++column) {
+            values[column].x = real[row][column];
+            values[column].y = imaginary[row][column];
+        }
+        dc::sdk::FftInverse32(values);
+        for (std::int32_t column = 0; column < 32; ++column) {
+            real[row][column] = values[column].x;
+            imaginary[row][column] = values[column].y;
+        }
+    }
+    for (std::int32_t column = 0; column < 32; ++column) {
+        for (std::int32_t row = 0; row < 32; ++row) {
+            values[row].x = real[row][column];
+            values[row].y = imaginary[row][column];
+        }
+        dc::sdk::FftInverse32(values);
+        for (std::int32_t row = 0; row < 32; ++row) {
+            real[row][column] = values[row].x;
+            imaginary[row][column] = values[row].y;
+        }
+    }
+}
+
+
+// @verified - d
+void InitializeFirePhases(float *phases) {
+    float (*grid)[32] = reinterpret_cast<float (*)[32]>(phases);
+    for (std::int32_t row = 0; row < 16; ++row) {
+        for (std::int32_t column = 0; column < 16; ++column) {
+            if (!row && !column)
+                continue;
+            grid[row][column] = dc::sdk::RandomFloat() * dc::sdk::kFftPhaseTurn;
+            grid[row][32 - column] = dc::sdk::RandomFloat() * dc::sdk::kFftPhaseTurn;
+        }
+    }
+}
+#endif
+
+} // namespace
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace
+
+// @verified - d
+void GenerateFirePhaseRates(float *steps, float scalar) {
+    float (*grid)[32] = reinterpret_cast<float (*)[32]>(steps);
+    for (std::int32_t row = 0; row < 16; ++row) {
+        for (std::int32_t column = 0; column < 16; ++column) {
+            float distance = ::sqrtf(static_cast<float>(row * row + column * column));
+            grid[row][column] = distance * scalar;
+            distance = ::sqrtf(static_cast<float>(row * row + column * column));
+            grid[row][32 - column] = distance * scalar;
+        }
+    }
+}
+#endif
+
+namespace {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+void BuildFireSpectrum(const float *phases, float (*real)[33], float (*imaginary)[33], float phaseParameter, const float *falloff) {
+    real[0][0] = falloff[0];
+    imaginary[0][0] = 0.0f;
+    real[0][32] = falloff[0];
+    imaginary[0][32] = 0.0f;
+    real[32][0] = falloff[0];
+    imaginary[32][0] = 0.0f;
+    real[32][32] = falloff[0];
+    imaginary[32][32] = 0.0f;
+    for (std::int32_t column = 1; column < 16; ++column) {
+        Vector2 values;
+        const float amplitude = falloff[column];
+        CalculateFixedSinCos(TruncateToInt32((phases[column] * 65536.0f) / dc::sdk::kFftPhaseTurn), &values);
+        float realPart = values.y * amplitude, imaginaryPart = values.x * amplitude;
+        real[0][column] = realPart;
+        imaginary[0][column] = imaginaryPart;
+        real[32][32 - column] = realPart;
+        imaginary[32][32 - column] = -imaginaryPart;
+        CalculateFixedSinCos(TruncateToInt32((phases[32 - column] * 65536.0f) / dc::sdk::kFftPhaseTurn), &values);
+        realPart = values.y * amplitude;
+        imaginaryPart = values.x * amplitude;
+        real[0][32 - column] = realPart;
+        imaginary[0][32 - column] = imaginaryPart;
+        real[32][column] = realPart;
+        imaginary[32][column] = -imaginaryPart;
+    }
+    for (std::int32_t row = 1; row < 16; ++row) {
+        Vector2 values;
+        const float amplitude = falloff[row * 16];
+        CalculateFixedSinCos(TruncateToInt32((phases[row * 32] * 65536.0f) / dc::sdk::kFftPhaseTurn), &values);
+        float realPart = values.y * amplitude, imaginaryPart = values.x * amplitude;
+        real[row][0] = realPart;
+        imaginary[row][0] = imaginaryPart;
+        real[32 - row][32] = realPart;
+        imaginary[32 - row][32] = -imaginaryPart;
+        CalculateFixedSinCos(TruncateToInt32((phases[row * 32 + 32] * 65536.0f) / dc::sdk::kFftPhaseTurn), &values);
+        realPart = values.y * amplitude;
+        imaginaryPart = values.x * amplitude;
+        real[row][32] = realPart;
+        imaginary[row][32] = imaginaryPart;
+        real[32 - row][0] = realPart;
+        imaginary[32 - row][0] = -imaginaryPart;
+    }
+    for (std::int32_t row = 1; row < 16; ++row) {
+        for (std::int32_t column = 1; column < 16; ++column) {
+            Vector2 values;
+            const float amplitude = falloff[row * 16 + column];
+            CalculateFixedSinCos(TruncateToInt32((phases[row * 32 + column] * 65536.0f) / dc::sdk::kFftPhaseTurn), &values);
+            float realPart = values.y * amplitude, imaginaryPart = values.x * amplitude;
+            real[row][column] = realPart;
+            imaginary[row][column] = imaginaryPart;
+            real[32 - row][32 - column] = realPart;
+            imaginary[32 - row][32 - column] = -imaginaryPart;
+            CalculateFixedSinCos(TruncateToInt32((phases[row * 32 + 32 - column] * 65536.0f) / dc::sdk::kFftPhaseTurn), &values);
+            realPart = values.y * amplitude;
+            imaginaryPart = values.x * amplitude;
+            real[row][32 - column] = realPart;
+            imaginary[row][32 - column] = imaginaryPart;
+            real[32 - row][column] = realPart;
+            imaginary[32 - row][column] = -imaginaryPart;
+        }
+    }
+}
+#endif
+
+} // namespace
+
+} // namespace s2
+
+} // namespace shenmue

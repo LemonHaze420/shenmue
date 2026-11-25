@@ -1,6 +1,7 @@
 #pragma once
 
 #include "s2/legacy_sprite_slot.hpp"
+#include "s2/legacy_sprite_types.hpp"
 
 #include "s2/ui.hpp"
 #include "s2/map_assets.hpp"
@@ -30,13 +31,6 @@ inline constexpr std::array<std::array<std::uint16_t, 2>, 21> TITLE_SPRITE_DIMEN
 extern std::int32_t titleGTextTexture, titleCTextTexture, titleKeyImageTexture, titleContinueTexture, titleEsrbTexture;
 void InitShotsImages();
 void InitWarnLogos();
-struct TempTextureEntry {
-    std::int32_t texture;
-    std::uint16_t width, height;
-};
-static_assert(sizeof(TempTextureEntry) == 8);
-static_assert(offsetof(TempTextureEntry, width) == 4);
-static_assert(offsetof(TempTextureEntry, height) == 6);
 struct TempTextureDefinition {
     const char *file;
     std::int32_t textureCount;
@@ -48,16 +42,6 @@ inline constexpr std::array<TempTextureDefinition, 39> TEMP_TEXTURE_DEFINITIONS{
     {"A12", 2, 0}, {"A26", 2, 0}, {"A27", 2, 0}, {"A28", 2, 0}, {"A30", 2, 0}, {"A31", 2, 0}, {"A32", 2, 0}, {"A33", 2, 0}, {"A34", 2, 0}, {"A35", 2, 0},
     {"A36", 2, 0}, {"A38", 2, 0}, {"A39", 2, 0}, {"A40", 2, 0}, {"A41", 2, 0}, {"A42", 2, 0}, {"A43", 2, 0}, {"A45", 2, 0}, {nullptr, 0, 0}, {nullptr, 0, 0},
     {nullptr, 0, 0}, {nullptr, 0, 0}, {nullptr, 0, 0}, {nullptr, 0, 0}, {nullptr, 0, 0}}};
-enum TempTextureFlag : std::uint16_t { TTF_Loaded = 1, TTF_Region = 2 };
-struct TempTextureWork {
-    std::uint16_t flags;
-    std::int16_t texture;
-    std::uint16_t width, height;
-    std::array<float, 4> uv;
-};
-static_assert(sizeof(TempTextureWork) == 0x18);
-static_assert(offsetof(TempTextureWork, uv) == 8);
-static_assert(offsetof(TempTextureWork, texture) == 2);
 inline constexpr std::array<std::uint16_t, 8> TITLE_COMMON_TEMP_RECTANGLES{0, 0, 255, 128, 0, 128, 255, 128};
 inline constexpr std::array<std::array<std::uint32_t, 4>, 2> TITLE_CONFIRM_CHOICES{{{37, 0, 36, 1}, {36, 0, 37, 1}}};
 extern float legacySpriteSlotScaleX, legacySpriteSlotScaleY, legacySpriteSlotPulse;
@@ -75,15 +59,6 @@ bool BindTempSprite(std::int32_t index, std::int32_t texture, std::uint16_t slot
 void DrawTempSpriteSlot(std::uint32_t icon, std::uint32_t position, float depth, std::uint8_t flags);
 void DrawTempSpriteDigit(std::uint32_t icon, std::uint32_t position, float depth, std::int32_t digit);
 
-enum class ScreenAlignment : std::int32_t {
-    VerticalCenter = 1,
-    HorizontalCenter = 2,
-    BothCentered = 3,
-    VerticalStretch = 4,
-    HorizontalStretch = 5,
-    FullStretch = 6,
-};
-enum class ScreenMode : std::int32_t { Centered = 1, Stretched = 2, Adjusted = 3, AdjustedWithOffset = 4 };
 inline constexpr std::array<std::uint16_t, 4> itemWindowEdgeIcons{1025, 1026, 1027, 1028};
 inline constexpr std::array<float, 2> itemWindowEdgeOffsets{11.0f, -11.0f};
 inline constexpr MapRenderProfile initialSpriteAreaConfiguration{.areaPattern = 0,
@@ -99,41 +74,13 @@ inline constexpr MapRenderProfile initialSpriteAreaConfiguration{.areaPattern = 
     .textureDistanceW = 0.0f,
     .textureDistanceZ = 0.0f};
 
-
+// SetTempMapIDs publishes the retail area table after the startup-only profile.
 void SetSpriteAreaConfigurations();
 void InitializeSprites(std::int32_t useCurrentArea, std::int32_t initializeCommonTextures);
 std::int64_t ReloadSpriteResources();
 std::int64_t ResetUnusedReloadState();
 std::uint32_t InitializeSpriteBuffersNullsub(std::int32_t mode, std::int32_t firstCapacity, std::int32_t secondCapacity, std::int32_t flags);
 std::uint32_t EnsureSpriteWorkInitialized();
-
-struct LegacyScreenQuad {
-    std::uint32_t flags;
-    std::array<float, 8> corners;
-};
-static_assert(sizeof(LegacyScreenQuad) == 0x24);
-static_assert(offsetof(LegacyScreenQuad, corners) == 4);
-struct LegacyColourQuad {
-    LegacyScreenQuad quad;
-    std::uint32_t colour;
-    std::array<std::uint32_t, 3> alternateColours;
-};
-static_assert(sizeof(LegacyColourQuad) == 0x34);
-
-
-struct LegacySpritePacket {
-    LegacyScreenQuad quad;
-    std::uint32_t colour;
-    std::array<std::byte, 12> reservedColour;
-    std::uint32_t secondaryColour;
-    std::array<std::byte, 12> reservedUv;
-    std::array<float, 4> uv;
-    std::uint32_t reservedTail;
-};
-static_assert(sizeof(LegacySpritePacket) == 0x58);
-static_assert(offsetof(LegacySpritePacket, colour) == 0x24);
-static_assert(offsetof(LegacySpritePacket, secondaryColour) == 0x34);
-static_assert(offsetof(LegacySpritePacket, uv) == 0x44);
 
 struct LegacySolidRect {
     float x, y, scaleX, scaleY, depth;
@@ -145,19 +92,7 @@ static_assert(offsetof(LegacySolidRect, depth) == 16);
 static_assert(offsetof(LegacySolidRect, colour) == 20);
 static_assert(offsetof(LegacySolidRect, width) == 24);
 bool DrawLegacySolidRect(const LegacySolidRect &rect);
-
-struct LegacyColourRect {
-    float x, y, scaleX, scaleY, depth;
-    std::uint32_t colour;
-    std::int16_t width, height;
-    std::int32_t rotation;
-    std::uint8_t alignment;
-    std::array<std::byte, 3> reserved21;
-};
-static_assert(sizeof(LegacyColourRect) == 0x24);
-static_assert(offsetof(LegacyColourRect, colour) == 0x14);
-static_assert(offsetof(LegacyColourRect, rotation) == 0x1c);
-static_assert(offsetof(LegacyColourRect, alignment) == 0x20);
+// Native solid-colour rectangle record placed through TransformScreenSpace (WRN frames, WAZA row markers).
 bool DrawLegacyColourRect(const LegacyColourRect &rect);
 inline constexpr std::array<std::int32_t, 3> TITLE_HINT_MASKS{0, 4, 8};
 void DrawTitleHints(std::int32_t flags);
@@ -175,11 +110,11 @@ void TransformScreenSpace(LegacyScreenQuad &quad, ScreenAlignment alignment, std
     float scaleX, float scaleY, std::int32_t rotation, ScreenMode mode);
 void PrepareDrawSimple(const LegacyIconSprite &sprite, std::uint32_t colour, ScreenMode mode);
 void PrepareDrawWithMode(const LegacyIconSprite &sprite, ScreenMode mode);
-
+// Native PrepareDrawSimple_0: PrepareDrawSimple with the colour's alpha forced opaque.
 void PrepareDrawSimpleOpaque(const LegacyIconSprite &sprite, std::uint32_t colour, ScreenMode mode);
 void PrepareDrawTextureWithMode(const LegacyIconSprite &sprite, ScreenMode mode);
-
-
+// Native indexed-texture sprite submissions: the sprite's icon is a signed TEXN slot drawn with full UVs.
+// PrepareDrawIndexedTexture keeps the sprite flags as given; the other two add 0x400.
 void PrepareDrawIndexedTexture(const LegacyIconSprite &sprite, ScreenMode mode);
 void shenTransformScreenCoors(const LegacyIconSprite &sprite, std::uint32_t colour, ScreenMode mode);
 void PrepareDrawIndexedTextureWithSecondary(const LegacyIconSprite &sprite, std::uint32_t secondaryColour, ScreenMode mode);
@@ -194,8 +129,6 @@ void DrawLegacyWindowTiles(float x, float y, std::int32_t columns, std::int32_t 
 bool shenSubmitQuad(const LegacyColourQuad &packet, float depth);
 bool shenSubmitQuadsUI(float x, float y, std::uint32_t fill, std::uint32_t border, std::int32_t width, std::int32_t height, float depth);
 void LegacySpriteNullsub(const LegacySpritePacket &packet, std::uint32_t texture, float depth);
-bool RegisterBorrowedLegacySpriteSlot(std::int16_t texture, std::int32_t width, std::int32_t height, std::uint16_t slot, const std::uint16_t *rectangles);
-void ReleaseBorrowedLegacySpriteSlot(std::uint16_t slot);
 void DrawBorrowedLegacySprite(std::uint32_t icon, std::int32_t x, std::int32_t y, float scaleX, float scaleY, std::int32_t rotation, std::uint32_t colour);
 bool vfSubmitQuad(std::uint32_t colour, float depth);
 void DrawLegacyIconSprite(const LegacyIconSprite &sprite, std::uint32_t colour, ScreenMode mode);

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "s2/map_render_profile.hpp"
-
 #include "common/types.hpp"
 #include "common/math.hpp"
+#include "s2/map_render_profile.hpp"
 
 #include <array>
 #include <cstddef>
@@ -15,7 +14,6 @@ namespace shenmue::s2 {
 struct MapInfoChunk;
 struct MT7Model;
 struct MT7Node;
-const MapRenderProfile &MatchMapRenderProfile(shen_name area);
 
 struct MainMapProjectionAngles {
     std::int32_t fixedAngle{};
@@ -29,16 +27,16 @@ static_assert(sizeof(MainMapProjectionAngles) == 0x10);
 // AllocateCLIP_WALL_WALC_DANG builds these from MT7 nodes,
 // using the authored XB01 sphere at +0x08/+0x14, not a file CLIP chunk.
 struct MapModelClipRecord {
-    Vector3 centre{};
+    Vector3 centre{};     // +0x00
     float radius{};       // +0x0c, scaled by max node scale
-    std::int16_t cellX{};
-    std::int16_t cellZ{};
+    std::int16_t cellX{}; // +0x10
+    std::int16_t cellZ{}; // +0x12
     std::uint32_t reserved14{};
-
-
-    const void *object{};
-    std::uint32_t commandType{};
-    float modelScale{};
+    // Native MT7Node* for slots 0..31; MT7Node** into the LoadMainMap
+    // projected-model table for slot 32 (GetMainMapProjectedModelEntry).
+    const void *object{};        // +0x18
+    std::uint32_t commandType{}; // +0x20
+    float modelScale{};          // +0x24
 };
 
 struct MapCellOffset {
@@ -68,20 +66,20 @@ struct MapFieldDepthWall {
     Vector3 second{};
 };
 
-
-
+// Native mapFieldDepthSlots owner, separate from the 0x90 map slots.
+// DANG/DAPH/WALL/WALC allocations are released by FreeMapFieldDepthSlot.
 struct MapFieldDepthSlot {
     Vector4 *dangerSpheres{};       // +0x00 (DANG)
-    std::int32_t dangerCount{};
-    std::uint32_t enabled{};
-    std::int32_t dangerCellCount{};
+    std::int32_t dangerCount{};     // +0x08
+    std::uint32_t enabled{};        // +0x0c
+    std::int32_t dangerCellCount{}; // +0x10
     std::uint32_t reserved14{};
     MapModelCommandCell *dangerCells{}; // +0x18 (DAPH)
     MapFieldDepthWall *walls{};         // +0x20 (WALL)
-    std::int32_t wallCount{};
+    std::int32_t wallCount{};           // +0x28
     std::uint32_t reserved2c{};
     MapFieldDepthWall *cameraWalls{}; // +0x30 (WALC)
-    std::int32_t cameraWallCount{};
+    std::int32_t cameraWallCount{};   // +0x38
     std::uint32_t reserved3c{};
 };
 
@@ -93,40 +91,40 @@ static_assert(offsetof(MapFieldDepthSlot, dangerCells) == 0x18);
 static_assert(offsetof(MapFieldDepthSlot, walls) == 0x20);
 static_assert(offsetof(MapFieldDepthSlot, cameraWalls) == 0x30);
 
-
-
-
-
+// The native map renderer owns 33 model slots at a 0x90-byte stride.  This
+// source-facing description names only fields whose offsets and accessors are
+// established in Shenmue2_v1.07. CLIP/ACPH/ACPD are separate task allocations;
+// +0x08 is not a second model/reader pointer.
 struct MapModelRuntimeSlot {
-    std::uint32_t enabled{1};
+    std::uint32_t enabled{1}; // +0x00
     std::uint32_t reserved04{};
     MapModelClipRecord *clipRecords{}; // +0x08 (CLIP allocation)
     std::uint32_t ownsReader{};        // +0x10 (mtMarkFree on teardown)
     std::uint32_t reserved14{};
     const MT7Model *reader{};         // +0x18 (MT7_Reader_Struct*)
-    std::uint32_t commandCellCount{};
+    std::uint32_t commandCellCount{}; // +0x20
     std::uint32_t reserved24{};
     MapModelCommandCell *commandCells{};       // +0x28 (ACPH allocation)
     MapModelClipRecord **commandRouting{};     // +0x30 (ACPD allocation)
-    Vector3 position{};
-    std::uint32_t rotationY{};
-    std::uint32_t usesCommandRouting{1};
+    Vector3 position{};                        // +0x38
+    std::uint32_t rotationY{};                 // +0x44
+    std::uint32_t usesCommandRouting{1};       // +0x48
     std::uint32_t alternateTraversalEnabled{}; // +0x4c, IsMapModelAlternateTraversalActive
-    std::uint32_t gridCullingEnabled{1};
+    std::uint32_t gridCullingEnabled{1};       // +0x50
     std::uint32_t drawableRecordCount{};       // +0x54, excludes 240/244/255
     std::uint32_t screenSpaceRecordCount{};    // +0x58, command type 16
     std::uint32_t nearRecordCount{};           // +0x5c, command type 8
     std::uint32_t dangerRecordCount{};         // +0x60, command type 255
     std::uint32_t farRecordCount{};            // +0x64, command type 12
-    std::uint32_t type4RecordCount{};
+    std::uint32_t type4RecordCount{};          // +0x68
     std::uint32_t wallRecordCount{};           // +0x6c, command type 240
     std::uint32_t wallCRecordCount{};          // +0x70, command type 244
     std::uint32_t reserved74{};
     void *auxiliaryAllocation{};             // +0x78, freed by FreeMapModelSlot
-    std::uint32_t forceLambertShader{};
-    std::uint32_t vertexShaderType{};
-    float alpha{1.0f};
-    std::uint32_t weatherLightingOverride{};
+    std::uint32_t forceLambertShader{};      // +0x80
+    std::uint32_t vertexShaderType{};        // +0x84
+    float alpha{1.0f};                       // +0x88
+    std::uint32_t weatherLightingOverride{}; // +0x8c
 };
 
 static_assert(sizeof(MapModelRuntimeSlot) == 0x90);
@@ -148,22 +146,22 @@ static_assert(offsetof(MapModelRuntimeSlot, vertexShaderType) == 0x84);
 static_assert(offsetof(MapModelRuntimeSlot, weatherLightingOverride) == 0x8c);
 static_assert(offsetof(MapModelRuntimeSlot, alpha) == 0x88);
 
-
-
+// Borrowed mutable binding into the active map-model owner. Bindings remain
+// valid until FreeMapAssets; DOOR uses them for native PROP leaf animation.
 struct LoadedMapNodeBinding {
     MT7Model *model{};
     MT7Node *node{};
     std::size_t slotIndex{};
     std::size_t nodeIndex{};
 };
-
-
+// Native PROP reader list: slot zero is a sentinel, slots 1..16 borrow readers.
+// Removal unlinks the graph but does not release readers or their HLib storage.
 struct PropReaderSlot {
-    std::int16_t previous{-1};
-    std::int16_t next{-1};
+    std::int16_t previous{-1}; // +0x00
+    std::int16_t next{-1};     // +0x02
     std::uint32_t reserved04{};
-    MT7Model *reader{};
-    MT7Node *lastSibling{};
+    MT7Model *reader{};     // +0x08
+    MT7Node *lastSibling{}; // +0x10
 };
 
 static_assert(sizeof(PropReaderSlot) == 0x18);
@@ -171,23 +169,23 @@ static_assert(offsetof(PropReaderSlot, reader) == 0x08);
 static_assert(offsetof(PropReaderSlot, lastSibling) == 0x10);
 
 void GetPropVector4(Vector3 *output);
-
+// The prop lighting traversal result word; nonzero selects the Lambert prop dispatch.
 std::uint32_t GetPropLightingTraversalResult();
-
+// Writes the lighting/placement global's YZW, preserving X.
 void SetPropVector3(const Vector3 *position);
 MT7Node *GetPropRoot();
 std::span<const PropReaderSlot, 17> GetPropReaderSlots();
 std::uint64_t RegisterPropReader(MT7Model *reader);
 void RemovePropReader(std::uint32_t index);
-
+// Package wrappers also rebuild FLAG/search publication.
 std::uint64_t RegisterPackagePropReader(MT7Model *reader);
 void RemovePackagePropReader(std::uint32_t index);
 void SetupModelForImageModule(MT7Node *root);
 void InitializeObject(MT7Node *root);
 void AllocatePropFlagObject();
 void LoadPROPs(std::int32_t actNumber, shen_name areaName);
-
-
+// Decoded adapter retirement immediately before the native HLib arena sweep.
+// Raw PORP and FLAG allocations are released by that sweep, not this leaf.
 void RetirePropAssets();
 
 inline std::array<std::int32_t, 34> mapEntryLayers{
@@ -205,8 +203,8 @@ void SetMainMapMinimumModelHeight(float height);
 const MainMapProjectionAngles &GetMainMapProjectionAngles();
 void SetMainMapProjectionDirection(const Vector3 &direction);
 bool AlignMainMap();
-
-
+// Native projected-only queue/consumer leaves. Their caller owns gameplay,
+// timer and pass-callback admission before submitting selected ACPD cell runs.
 void SetMainMapProjectedShadowDepth(float distance);
 void SetProjectedShadowLightDirection(float distance);
 void SetProjectedShadowDirection(Vector3 *direction, float distance);
@@ -223,7 +221,7 @@ void camCtrlCacheUtil(std::int32_t operation);
 float GetMapCellScale();
 std::span<const MapCellOffset> GetMapVisibleCellOffsets(std::uint32_t direction, std::uint32_t tier);
 std::int32_t SetMapModelSlotEnabled(std::int32_t index, std::int32_t enabled);
-
+// Native SetMapModelCommandRoutingEnabled writes slot +0x48, independent of shader state.
 void SetMapModelCommandRoutingEnabled(std::int32_t value, std::int32_t index);
 std::uint64_t GetMapModelCommandRoutingEnabled(std::int32_t index);
 std::uint64_t GetMapModelGridCullingEnabled(std::int32_t index);
@@ -234,8 +232,8 @@ MT7Node *GetMapModelRoot(std::int32_t index);
 std::uint64_t GetMapModelReaderMask();
 std::uint64_t HasPropCharacterZeroUpperSignature(shen_name name);
 void SetDisplayFlagForProp(shen_name name, std::uint32_t enabled);
-
-
+// Position rejects only signed indices >=33; rotation has no native index gate.
+// Rotation/transform return the borrowed slot-zero rotation field, not the selected slot.
 void SetMapModelSlotPosition(const Vector3 *position, std::int32_t index);
 std::uint32_t *SetMapModelSlotRotation(std::int32_t rotationY, std::int32_t index);
 std::uint32_t *SetMapModelSlotTransform(std::int32_t index, const Vector3 *position, std::int32_t rotationY);
@@ -251,7 +249,7 @@ void FreeMainMap();
 bool LoadMainMapByFilepath(const char *folder);
 MT7Model *GetMapsModel();
 void SetMapModelReader(MT7Model *model, std::int32_t index);
-
+// Native MAPS-only retirement; ordinary map slots and packages remain live.
 void ResetMapsData();
 void FreeMapAssets();
 inline constexpr shen_name MAP_VERTEX_CACHE_STORAGE{SHEN_NAME(VXPC)};

@@ -115,7 +115,7 @@
 #include <vector>
 #include "s2/area_names.hpp"
 
-    namespace shenmue::s2 {
+namespace shenmue::s2 {
 using namespace ui_detail;
 
 std::array<std::array<char, 256>, 3> g_moveLearnedUiText{};

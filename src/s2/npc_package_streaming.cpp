@@ -1,7 +1,58 @@
 #include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
-
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/npc_data_dc.hpp"
+#include "s2/npc_area_route.hpp"
+#include "s2/character_dc.hpp"
+#include "s2/event_character_model_dc.hpp"
+#include "s2/pak_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/motion_registry_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/hand_dc.hpp"
+#include "s2/character_alpha_dc.hpp"
+#include "s2/character_control_dc.hpp"
+#include "s2/character_state_flags_dc.hpp"
+#include "s2/model_dc.hpp"
+#include "s2/model_image_component_dc.hpp"
+#include "s2/party_companion.hpp"
+#include "s2/math.hpp"
+#include <cmath>
+#include "platform/dc/sdk.hpp"
+#include "platform/dc/am2_vector.hpp"
+#define SHENMUE_NPC_NULL 0
+#define SHENMUE_NPC_NOEXCEPT
+#define SHENMUE_NPC_SIGNED(value) static_cast<std::int32_t>(value)
+#include "s2/player_state_dc.hpp"
+#include "s2/player_ground_state_dc.hpp"
+#include "s2/door_control_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/weather_dc.hpp"
+#include "s2/date_time.hpp"
+#include "s2/scenario_flags_dc.hpp"
+#include "s2/motion_ground_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "s2/qron_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "common/matrix_stack.hpp"
+#include <cfloat>
+#include <cstring>
+#include "s2/file_loader_dc.hpp"
+#include "s2/hlib.hpp"
+#include "s2/startup_assets_dc.hpp"
+#include <cstdio>
+#include "s2/frame_dc.hpp"
+#include "s2/load_title_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include "s2/texture_dc.hpp"
+#include "s2/field_collision_dc.hpp"
+#include "s2/field_query_dc.hpp"
+#define SHENMUE_NPC_EPSILON FLT_EPSILON
+#include "s2/motion_node_dc.hpp"
+#else
+#include "enhancements/misc_mods.hpp"
 #include "s2/npc_package.hpp"
 
 #include "s2/archive_data.hpp"
@@ -46,9 +97,730 @@
 #include <vector>
 
 #include "s2/npc_package_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 using namespace npc_package_detail;
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+namespace npc_package_detail {
+
+std::int32_t npcLoadFromPak(shen_name name);
+void ReleaseNpcTransitionHumanPackages();
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, bool fromHumans);
+void NpcRegistryTask_Callback(void *);
+std::uint32_t ReadU32(const std::byte *source);
+void npcSetupHumans();
+void ReleaseNpcRouteStream(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime, bool clearPackageAlias);
+void BeginNpcRouteStreamOut(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime);
+bool IsInsideNpcNoSpawnRadius(const Vector3 &position, float radius);
+bool RequestNpcStreamLoad(NpcRouteLiveEntry &entry);
+std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry &entry, bool reload);
+void UpdateNpcStreamFade(NpcRouteLiveEntry &entry);
+
+} // namespace npc_package_detail
+
+std::uint64_t IsNpcRouteLoadedOrVisible(shen_name character);
+std::int32_t QueryNpcRouteLiveState(shen_name character);
+bool CanNpcEnterScenario(shen_name character);
+bool BeginNpcSpecialMotion(shen_name character);
+bool EndNpcSpecialMotion(shen_name character);
+bool RequestNpcSpecialMotionTarget(shen_name character, const Vector3 *target);
+bool ResetNpcSpecialMotionTarget(shen_name character);
+bool RequestNpcSpecialMotionLookTarget(shen_name character, const Vector3 *target);
+bool ResetNpcSpecialMotionLookTarget(shen_name character);
+bool QueryNpcSceneCheck(shen_name character);
+std::uint64_t IsNpcSceneMotionPlaying(shen_name character);
+std::uint64_t QueryNpcSceneMotionPlaying(shen_name character);
+std::uint64_t QueryNpcCameraMotionProfile(shen_name character, std::uint8_t mask);
+bool NpcWait();
+std::int32_t npcGetPosFor(shen_name character, Vector3 *position);
+NpcRouteLiveEntry *WarmStartNpcRoute(shen_name character);
+std::int64_t EV_CheckWarmStartNpcRoute(shen_name character);
+std::int64_t EV_ForceLoadNpc(shen_name character);
+std::uint64_t EV_npcStreamOrLoadHuman(shen_name character);
+void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry);
+std::int64_t EV_npcLockUnlock(shen_name character);
+std::int64_t EV_npcFree(shen_name character);
+void EVT_UTL_LoadNPCChara_Callback_1(void *);
+void EVT_UTL_LoadNPCChara_Callback_2(void *taskData);
+shen_name npcFindAreaPointOccupant(shen_name owner);
+std::int64_t EV_ResetFreeTalkFlags();
+std::uint64_t CountNpcLiveStreams();
+std::uint64_t IsNpcLoadedOrVisible(shen_name character);
+std::uint64_t SetNpcRouteControlHold(shen_name character, std::int32_t enabled);
+std::int64_t EV_npcUnknownFunc(shen_name character);
+std::int64_t EV_npcUpdateFlags(shen_name character);
+std::uint32_t GetNpcScriptRouteCompletion(shen_name character);
+std::int32_t npcReleaseUnusedStreams();
+std::int32_t PrepareNpcAllFromArray();
+std::uint64_t GetNpcNewLoadState();
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void CoreNPCTask();
+
+bool IsPlayerControlEnabled();
+
+Character *ctrlGetRootNode();
+
+std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry *entry);
+
+std::int32_t MeasureNpcReloadStreamCost(NpcRouteLiveEntry *entry);
+
+std::int32_t RequestNpcStreamLoad(NpcRouteLiveEntry *entry);
+
+void BindNpcRouteCharacter(NpcRouteLiveEntry *entry);
+
+std::int32_t BeginNpcRouteStreamOut(NpcRouteLiveEntry *entry, std::int32_t forced);
+
+std::int32_t UpdateNpcStreamFade(NpcRouteLiveEntry *entry);
+
+void ReleaseNpcRouteStream(NpcRouteLiveEntry *entry);
+
+void UpdateStreamedNpcMotion(NpcRouteLiveEntry *entry);
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+
+void TickNpcRouteSlices(std::int32_t currentTime);
+
+void SetNpcSavedDateTimeFlag();
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+
+void TickNpcRouteSlices(std::int32_t currentTime);
+
+void SetNpcSavedDateTimeFlag();
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+
+void TickNpcRouteSlices(std::int32_t currentTime);
+
+void SetNpcSavedDateTimeFlag();
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void SetNpcSavedDateTimeFlag();
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+
+void TickNpcRouteSlices(std::int32_t currentTime);
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+bool IsNpcRouteContextMoving(const NpcRouteStateContextPrefix *context);
+
+void ResetNpcRouteContext(NpcRouteStateContextPrefix *context);
+
+bool IsNpcRouteContextMoving(const NpcRouteStateContextPrefix *context);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+
+bool IsInsideNpcNoSpawnRadius(const Vector3 *position, float radius);
+
+void TickNpcRouteSlices(std::int32_t currentTime);
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+void SetNpcRouteMotionState(NpcRouteStateContextPrefix *context, shen_name name, std::int32_t operation);
+
+void RestartNpcAreaRouteContext(Character *character, NpcRouteStateContextPrefix *context);
+
+bool RequestNpcRouteMotion(Character *character, NpcRouteStateContextPrefix *context, std::int32_t explicitRequest);
+
+void BindNpcRouteMotionWork(NpcRouteStateContextPrefix *context, shen_name name, MotionWork *work);
+
+void BindNpcRouteAppliedMovement(NpcRouteStateContextPrefix *context, shen_name name);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+void ReleaseNpcTransitionHumanPackages();
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+void ReleaseNpcTransitionHumanPackages();
+
+bool IsOfThisVisibilityType(const Character *character, CharaVisibilityMode mode);
+
+void EV_SetCharDisplay(Character *character, CharaVisibilityMode mode, std::int32_t enabled);
+
+std::int32_t NpcAreaCompletionCallback(NpcRouteLiveEntry *entry);
+
+std::int32_t InterpretNpcAreaCommand(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+void SetNpcRouteMotionState(NpcRouteStateContextPrefix *context, shen_name name, std::int32_t operation);
+
+void RestartNpcAreaRouteContext(Character *character, NpcRouteStateContextPrefix *context);
+
+bool RequestNpcRouteMotion(Character *character, NpcRouteStateContextPrefix *context, std::int32_t explicitRequest);
+
+void BindNpcRouteMotionWork(NpcRouteStateContextPrefix *context, shen_name name, MotionWork *work);
+
+void BindNpcRouteAppliedMovement(NpcRouteStateContextPrefix *context, shen_name name);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+void SetNpcRouteScenePosition(NpcRouteStateContextPrefix *context, shen_name name, const Vector3 *position);
+
+bool IsInsideNpcNoSpawnRadius(const Vector3 *position, float radius);
+
+void TickNpcRouteSlices(std::int32_t currentTime);
+
+std::int32_t TickNpcRouteStateContext(NpcRouteStateContextPrefix *state);
+
+bool FindNpcIntersectionInScene(Vector3 &position, std::uint32_t moveFlags);
+
+bool MoveForNpcInData(NpcRouteLiveEntry *entry, shen_name area, std::int32_t apply);
+
+std::int32_t TickNpcRouteStair(Character *character, NpcRouteStateContextPrefix *context);
+
+NpcAreaRouteState *GetNpcAreaPointRouteState(std::int32_t point);
+
+shen_name GetNpcAreaPointOwnerName(std::int32_t point);
+
+shen_name GetNpcAreaPointAreaName(std::int32_t point);
+
+void ResumeNpcScheduleMotion(NpcRouteLiveEntry *entry);
+
+const Vector3 *GetNpcAreaPointPosition(std::int32_t point);
+
+std::uint32_t GetNpcAreaPointMoveFlags(std::int32_t point);
+
+std::int32_t ResumeNpcRouteAfterSceneChange(shen_name name);
+
+std::int32_t UpdateNpcSpecialRouteQueryState(NpcRouteLiveEntry *entry);
+
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, std::uint32_t flags);
+
+void SetNpcRouteMotionState(NpcRouteStateContextPrefix *context, shen_name name, std::int32_t operation);
+
+bool ResumeNpcTimedMotion(NpcRouteLiveEntry *entry);
+
+void NpcRouteCollisionNullsub(void *);
+
+std::uint16_t RemapNpcMotionForRig(std::int32_t rig, std::uint16_t motion);
+
+std::int32_t npcPositionQueryMode = 0;
+
+std::int32_t UpdateNpcSpecialRouteQueryState(NpcRouteLiveEntry *entry);
+
+static const std::uint16_t npcWalkingMotions[16] = {
+    0xa0b, 0xf03e, 0xf05e, 0xf07e, 0xf084, 0xf09e, 0xf0d1, 0xf060, 0xf086, 0xf084, 0xf078, 0xf058, 0xf084, 0xf084, 0xf0a4, 0xf0a6};
+
+static const std::uint16_t npcRunningMotions[16] = {
+    0xf0a6, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006, 0xf006};
+
+static const std::uint16_t npcSeatedMotions[6][3][3] = {0xe108, 0x803d, 0xe108, 0x803d, 0xe108, 0xe391, 0xe392, 0xe392, 0xe391, 0x8012, 0xe0f1, 0x8009, 0xe101,
+    0xe101, 0xe101, 0x8024, 0xe0df, 0xe0f2, 0xe0e3, 0xe0e3, 0xe0e3, 0xe108, 0xe0f5, 0xe0f5, 0xe0e4, 0xe0e4, 0xe392, 0xe0e3, 0xe0e3, 0xe0e3, 0xe0f5, 0xe0f5,
+    0xe0f5, 0xe0e4, 0xe0e4, 0xe0e4, 0xe0f7, 0xe107, 0xe108, 0xe392, 0xe391, 0xe392, 0xe107, 0xe0f7, 0xe107, 0xe101, 0xe101, 0xe0f2, 0xe0f0, 0xe0f0, 0xe0f0,
+    0xe0f6, 0xe0f6, 0xe0f6};
+
+static const std::uint16_t npcLeaningMotions[6][3][3] = {0x8033, 0x8032, 0x802e, 0x8034, 0x802f, 0x8034, 0x8030, 0x8030, 0x8031, 0x8001, 0x8001, 0x8004, 0x8004,
+    0x8004, 0x8003, 0x8003, 0x8002, 0x8002, 0x8034, 0x8034, 0x8034, 0x8031, 0x8031, 0x8031, 0x8030, 0x8030, 0x8030, 0x8034, 0x8034, 0x8034, 0x8031, 0x8031,
+    0x8031, 0x8030, 0x8030, 0x8030, 0x8034, 0x8034, 0x8034, 0x8034, 0x8034, 0x8034, 0x8018, 0x8018, 0x8018, 0x8003, 0x8003, 0x8003, 0x8003, 0x8003, 0x8003,
+    0x8018, 0x8018, 0x8018};
+
+std::int32_t npcLastHumanLoadResult;
+
+void ResumeNpcScheduleMotion(NpcRouteLiveEntry *entry);
+
+std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState *state, NpcRouteLiveEntry *entry);
+
+void ApplyNpcAreaMotion(NpcRouteLiveEntry *entry, std::uint16_t motion);
+
+void NpcRouteCollisionNullsub(void *);
+
+extern std::int32_t npcCloudyState;
+
+std::uint16_t RemapNpcMotionForRig(std::int32_t rig, std::uint16_t motion);
+
+std::int32_t TickNpcRouteStateContext(NpcRouteStateContextPrefix *context);
+
+std::int32_t TickNpcAreaRouteState(NpcRouteLiveEntry *entry);
+
+std::int32_t ResumeNpcRouteAfterSceneChange(shen_name name);
+
+const Vector3 *GetNpcAreaPointPosition(std::int32_t point);
+
+std::uint32_t GetNpcAreaPointMoveFlags(std::int32_t point);
+
+bool InitializeNpcAreaRoute(NpcRouteLiveEntry *entry);
+
+bool mtwkSetDrawOverrideData(MotionWork *work, const Matrix4x4 *frame);
+
+void RestartNpcAreaRouteContext(Character *character, NpcRouteStateContextPrefix *context);
+
+bool RequestNpcRouteMotion(Character *character, NpcRouteStateContextPrefix *context, std::int32_t explicitRequest);
+
+std::int32_t TickNpcRouteStair(Character *character, NpcRouteStateContextPrefix *context);
+
+std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState *state, NpcRouteLiveEntry *entry);
+
+void ApplyNpcAreaMotion(NpcRouteLiveEntry *entry, std::uint16_t motion);
+
+extern DateTime npcCurrentDateTime;
+
+extern std::uint32_t npcCurrentSeconds, npcRouteBuildCount;
+
+extern std::int32_t npcCrowdPhase, npcReloadPassStarted;
+
+extern float npcStreamThrottle, npcStreamThrottleWithBias, npcHalfHourWeatherForecast;
+
+extern Vector3 npcPlayerPosition;
+
+Vector3 npcPlayerCenter = {};
+
+float npcPlayerDisplacement = 0.0f, npcPlayerRadius = 0.0f, npcCurrentRain = 0.0f;
+
+std::int32_t npcPlayerSearchRequested = 0, npcCloudyState = 0;
+
+shen_name npcNearbyDoor;
+
+void mtwkSetEnvironmentEnabled(MotionWork *work, std::uint32_t enabled);
+
+void PrepareNpcAreaRoutes();
+
+void DrawNpcTransitions();
+
+std::uint32_t hasPendingNpcScheduleSeeds;
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+const std::byte *pendingNpcScheduleSeeds = 0;
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+DateTime npcSavedDateTime;
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+std::int32_t UpdateNpcViewVisibility(NpcRouteLiveEntry *entry);
+NpcRouteLiveEntry *GetNpcRouteEntryByIndex(std::int32_t index);
+shen_name npcFindAreaPointOccupant(shen_name owner);
+std::int32_t AcquireNpcTimedMotionSlot(NpcRouteLiveEntry *entry);
+std::int32_t IsNpcRegistryTaskActive() SHENMUE_NPC_NOEXCEPT;
+std::uint32_t GetNpcNewLoadState() SHENMUE_NPC_NOEXCEPT;
+CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDrawCallback callback);
+std::int32_t ReplaceNpcStateCallback(NpcRouteLiveEntry *entry, std::int32_t (*callback)(NpcRouteLiveEntry *));
+bool npcExists(shen_name name);
+bool IsNpcRouteMoving(shen_name name);
+std::int32_t GetNpcRouteAvoidanceSide(shen_name name);
+std::int32_t QueryNpcRouteLiveState(shen_name name);
+bool QueryNpcSceneCheck(shen_name name);
+std::int32_t AcquireNpcRuntimeEntryForScript(shen_name name, NpcRouteLiveEntry **result);
+bool BeginNpcSpecialMotion(shen_name name);
+std::int32_t BeginNpcFollowingMotion(shen_name name);
+std::int32_t StopNpcFollowingMotion(shen_name name);
+std::int32_t SetNpcSpecialRouteQueryPaused(shen_name name, std::int32_t enabled);
+bool IsNpcSpecialTargetWithinRange(Character *character, const NpcRouteLiveEntry *entry);
+bool CheckNpcSpecialMotionTarget(shen_name name, Character *character);
+bool EndNpcSpecialMotion(shen_name name);
+bool RequestNpcSpecialMotionTarget(shen_name name, const Vector3 *target);
+bool ResetNpcSpecialMotionTarget(shen_name name);
+bool RequestNpcSpecialMotionLookTarget(shen_name name, const Vector3 *target);
+bool ResetNpcSpecialMotionLookTarget(shen_name name);
+std::int32_t npcGetPosFor(shen_name name, Vector3 *position);
+std::int32_t GetNpcRestingMotion(const Character *character);
+std::uint16_t SelectNpcWalkingMotion(const Character *character);
+std::uint16_t SelectNpcRunningMotion(const Character *character);
+std::uint16_t SelectNpcStairDescendingMotion(Character *character);
+std::uint16_t SelectNpcStairAlternateMotion(Character *character);
+std::int32_t GetNpcProfileImageType(Character *character, std::int32_t age, std::int32_t sex, std::int32_t *type);
+std::uint16_t SelectNpcProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile);
+std::uint16_t SelectNpcLeaningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile);
+std::uint16_t SelectNpcRecliningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile);
+std::int32_t GetNpcRunCapability(Character *character);
+bool QueryNpcCameraMotionProfile(shen_name name, std::uint32_t flags);
+bool IsNpcSceneMotionPlaying(shen_name name);
+std::uint32_t EV_NPC_NewLoadSw(std::uint32_t state) SHENMUE_NPC_NOEXCEPT;
+bool QueryNpcSceneMotionPlaying(shen_name name);
+std::int32_t GetScenarioFollowEligibility(shen_name name);
+std::uint32_t IsNpcRouteActive(shen_name name);
+NpcRouteLiveEntry *WarmStartNpcRoute(shen_name name);
+std::int32_t EV_CheckWarmStartNpcRoute(shen_name name);
+std::int32_t PrepareNpcRouteReload(shen_name name);
+std::int32_t IsNpcRouteReloadPrepared(shen_name name);
+void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry *entry);
+std::int32_t EV_npcLockUnlock(shen_name name);
+std::int32_t EV_npcUpdateFlags(shen_name name);
+std::int32_t EV_npcUnknownFunc(shen_name name);
+std::uint32_t SetNpcRouteControlHold(shen_name name, std::int32_t enabled);
+std::int32_t GetNpcScriptRouteCompletion(shen_name name);
+void NpcRegistryTask_Callback(void *);
+std::int32_t npcReleasePak(shen_name name);
+std::int32_t EV_ResetFreeTalkFlags();
+std::int32_t npcReleaseUnusedStreams();
+std::int32_t PrepareNpcAllFromArray();
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT;
+std::int32_t EV_ForceLoadNpc(shen_name name);
+std::int32_t EV_npcStreamOrLoadHuman(shen_name name);
+std::int32_t ReleaseNpcForRouteReload(shen_name name);
+std::int32_t ReleaseNpcForRouteReloadAndStoreCount(shen_name name);
+std::int32_t IsNpcRouteLoadedOrVisible(shen_name name) SHENMUE_NPC_NOEXCEPT;
+std::int32_t EV_npcFree(shen_name name);
+std::int32_t NpcWait() SHENMUE_NPC_NOEXCEPT;
+std::int32_t CountNpcLiveStreams() SHENMUE_NPC_NOEXCEPT;
+bool CanNpcEnterScenario(shen_name name);
+void SaveNpcDateTime();
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT;
+bool SetNpcRouteYaw(shen_name name, std::int32_t yaw);
+void PlaceNpcOutsideDoor(NpcRouteLiveEntry *entry);
+void CoreNPCTask();
+std::int32_t ReleaseNpcScriptRouteSlot(shen_name name);
+std::int32_t CreateScriptNpcRouteSlot(shen_name name);
+void ResetNpcEntryToAreaPoint(NpcRouteLiveEntry *entry);
+void BeginNpcAreaRoute(NpcRouteLiveEntry *entry, std::int32_t currentTime);
+std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry *entry);
+std::int32_t MeasureNpcReloadStreamCost(NpcRouteLiveEntry *entry);
+std::int32_t RequestNpcStreamLoad(NpcRouteLiveEntry *entry);
+void BindNpcRouteCharacter(NpcRouteLiveEntry *entry);
+std::int32_t BeginNpcRouteStreamOut(NpcRouteLiveEntry *entry, std::int32_t forced);
+std::int32_t UpdateNpcStreamFade(NpcRouteLiveEntry *entry);
+void ReleaseNpcRouteStream(NpcRouteLiveEntry *entry);
+void ComputeNpcTargetRotation(const Vector3 *position, const Vector3 *target, Vector3i *rotation);
+std::int32_t TickNpcSpecialMotion(NpcRouteLiveEntry *entry);
+void ReleaseNpcTimedMotion(NpcRouteLiveEntry *entry);
+void UpdateStreamedNpcMotion(NpcRouteLiveEntry *entry);
+void ApplyNpcCommandMotion(NpcRouteLiveEntry *entry, std::int32_t opcode);
+std::int32_t QueueNpcMotionAttachment(NpcRouteLiveEntry *entry, std::uint16_t motion, std::int32_t flags, std::int32_t slot);
+void ClearNpcMotionAttachment(NpcRouteLiveEntry *entry, std::int32_t slot);
+void CaptureNpcMotionAttachmentFrame(NpcRouteLiveEntry *entry, NpcMotionAttachment *attachment);
+void RequestNpcMotionAttachmentRegion(NpcRouteLiveEntry *entry, const NpcMotionAttachment *attachment, std::uint32_t region);
+void EvaluateNpcMotionAttachments(NpcRouteLiveEntry *entry);
+std::uint32_t SelectNpcRandomMotionAttachment();
+void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry);
+NpcRouteStateContextPrefix *FindNpcRouteStateContext(shen_name name);
+std::int32_t BranchNpcIfWeekday(NpcRouteLiveEntry *entry);
+std::int32_t BranchNpcIfWeekend(NpcRouteLiveEntry *entry);
+void ClearNpcScheduleSeeds();
+bool IsNpcScheduleSeedName(shen_name name);
+void RestoreNpcScheduleSeedPayload(const void *payload);
+#else
+shen_name npcFindAreaPointOccupant(shen_name owner);
+std::int64_t npcSetDoorAnswerMode(shen_name character, std::int32_t enabled);
+std::uint64_t GetNpcNewLoadState();
+std::int32_t QueryNpcRouteLiveState(shen_name character);
+bool QueryNpcSceneCheck(shen_name character);
+bool BeginNpcSpecialMotion(shen_name character);
+bool EndNpcSpecialMotion(shen_name character);
+bool RequestNpcSpecialMotionTarget(shen_name character, const Vector3 *target);
+bool ResetNpcSpecialMotionTarget(shen_name character);
+bool RequestNpcSpecialMotionLookTarget(shen_name character, const Vector3 *target);
+bool ResetNpcSpecialMotionLookTarget(shen_name character);
+std::int32_t npcGetPosFor(shen_name character, Vector3 *position);
+std::int64_t MarkNpcRoutePartyControl(shen_name character);
+std::int64_t ClearNpcRoutePartyControl(shen_name character);
+std::uint64_t QueryNpcCameraMotionProfile(shen_name character, std::uint8_t mask);
+void NpcRegistryTask_Nullsub(void *);
+bool EnqueueNpcRegistryTask(std::uint8_t nextFunctionIndex);
+bool PublishNpcRegistryTask();
+bool npcIsNpcTaskActive();
+std::uint64_t IsNpcSceneMotionPlaying(shen_name character);
+std::uint64_t QueryNpcSceneMotionPlaying(shen_name character);
+NpcRouteLiveEntry *WarmStartNpcRoute(shen_name character);
+std::int64_t EV_CheckWarmStartNpcRoute(shen_name character);
+std::int64_t npcWarmStartHumanRoute(shen_name character);
+void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry);
+std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion);
+std::int64_t EV_npcLockUnlock(shen_name character);
+std::int64_t EV_ReleaseNpcLockPreservingMotion(shen_name character);
+std::int64_t EV_npcUpdateFlags(shen_name character);
+std::int64_t EV_npcUnknownFunc(shen_name character);
+std::uint64_t SetNpcRouteControlHold(shen_name character, std::int32_t enabled);
+std::uint32_t GetNpcScriptRouteCompletion(shen_name character);
+std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry &entry, std::int32_t mode);
+bool RequestNpcStreamOut(NpcRouteLiveEntry &entry, std::int32_t type);
+bool CanRevealNpcStream(const NpcRouteLiveEntry &entry);
+bool HasNpcRuntimeEntry(shen_name character);
+std::int64_t EV_ResetFreeTalkFlags();
+std::int64_t ResetNpcColdStreams();
+std::uint64_t SetNpcColdResetMode(std::uint32_t mode);
+std::int32_t npcReleaseUnusedStreams();
+std::int32_t PrepareNpcAllFromArray();
+void EV_ReconfigureNpcRoutesForStoryStep();
+std::int64_t EV_ForceLoadNpc(shen_name character);
+std::uint64_t EV_npcStreamOrLoadHuman(shen_name character);
+std::uint64_t IsNpcRouteLoadedOrVisible(shen_name character);
+std::int64_t EV_npcFree(shen_name character);
+void EV_SetAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask, bool visible, bool lowQualityHands);
+void SetAreaNpcLowQualityHands(bool enabled);
+void SetAreaNpcCharactersVisible(bool enabled);
+void AssignAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask);
+void ResetConditionalNpcLoads();
+std::uint32_t AreConditionalNpcLoadsPending();
+HLib::Task *QueueConditionalNpcLoads(const ConditionalNpcLoadEntry *entries);
+void AssignGenericNpcLoadContext(const shen_name *characters, HLib::Task *startupTask);
+void SetGenericNpcLowQualityHands(bool enabled);
+void ResetGenericEventNpcLoadState();
+HLib::Task *Queue_EVT_UTL_LoadNPCChara(const shen_name *characters, HLib::Task *startupTask);
+void ResetCompiledEventNpcLoadState();
+HLib::Task *Queue_EVT_UTL_LoadNPCChara_3(const shen_name *characters, HLib::Task *startupTask);
+void EVT_UTL_LoadNPCChara_Callback_1(void *);
+void EnableAuthoredCharacterFlagsAndDisplay(shen_name character);
+void EVT_UTL_LoadNPCChara_Callback_2(void *taskData);
+std::uint32_t npcReleaseStreamsNearDoor(const Vector3 *point, float radius);
+bool NpcWait();
+void FreeNpcRegistryTask();
+std::int32_t npcSetAreaName(shen_name area, const Vector3 *center, float radius, std::int32_t enabled);
+std::uint64_t CountNpcLiveStreams();
+std::uint64_t IsNpcLoadedOrVisible(shen_name character);
+std::uint64_t IsNpcUsingHumansAfs(shen_name character);
+std::int64_t EV_ForceLoadNpcFromHumans(shen_name character);
+std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character);
+bool CanNpcEnterScenario(shen_name character);
+
+namespace npc_package_detail {
+
+std::int32_t npcLoadFromPak(shen_name name);
+bool npcReleasePak(shen_name name);
+bool npcReleaseReadyPak(shen_name name);
+void ReleaseNpcTransitionHumanPackages();
+void ReleaseReadyNpcTransitionHumanPackages();
+bool IsNpcGloballyBlocked(const NpcRouteLiveEntry &entry);
+std::int32_t npcLoadHuman(shen_name packageName, shen_name characterName, bool fromHumans);
+void NpcRegistryTask_Callback(void *);
+std::uint16_t ReadU16(const std::byte *source);
+std::uint32_t ReadU32(const std::byte *source);
+void ReleaseNativeNpcHumanPackages();
+void FreeNativeNpcHumans();
+bool AllocateNPCH();
+void npcSetupHumans();
+std::int16_t FindNpcHumanPackageIndex(shen_name name);
+void ReleaseNpcRouteStream(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime, bool clearPackageAlias);
+void BeginNpcRouteStreamOut(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime);
+bool PublishExistingNpcCharacter(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime, Character *character);
+bool EnsureNpcRouteStreamReady(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime);
+float NpcDistanceXZ(const Vector3 &first, const Vector3 &second);
+bool IsInsideNpcNoSpawnRadius(const Vector3 &position, float radius);
+std::int32_t AdjustedNpcStreamTarget();
+bool RequestNpcStreamLoad(NpcRouteLiveEntry &entry);
+std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry &entry, bool reload);
+void RankNpcStreamEntry(NpcRouteLiveEntry &entry, std::uint8_t &slotFlags, const Vector3 &cameraPosition);
+void UpdateNpcStreamFade(NpcRouteLiveEntry &entry);
+void EvaluateNpcMotionAttachments(NpcRouteLiveEntry &entry);
+void UpdateNpcMotionAttachments(NpcRouteLiveEntry &entry);
+bool CheckNpcCachedVisibility(NpcRouteLiveEntry &entry, const Vector3 &position, float radius);
+void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry);
+std::int32_t FindConditionalNpcLoadSlot(shen_name name);
+void ConditionalNpcLoadCheckCallback(void *data);
+void ConditionalNpcLoadCallback(void *data);
+
+} // namespace npc_package_detail
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDrawCallback callback) {
+    if (character) {
+        const CharacterDrawCallback previous = character->collisionCheck;
+        character->collisionCheck = callback;
+        return previous;
+    }
+    return 0;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t IsNpcRegistryTaskActive() SHENMUE_NPC_NOEXCEPT {
+    return npcRegistryTask != SHENMUE_NPC_NULL;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t GetNpcNewLoadState() SHENMUE_NPC_NOEXCEPT {
+    return npcNewLoadState;
+}
+
+#else
+
+std::uint64_t GetNpcNewLoadState() {
+    return npcNewLoadState;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t EV_NPC_NewLoadSw(std::uint32_t state) SHENMUE_NPC_NOEXCEPT {
+    npcNewLoadState = state;
+    return state;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool QueryNpcSceneMotionPlaying(shen_name name) {
+    return IsNpcRegistryTaskActive() ? IsNpcSceneMotionPlaying(name) : false;
+}
+
+std::int32_t NpcRegistryUnusedQueryA() {
+    if (IsNpcRegistryTaskActive())
+        return 0;
+    return 0;
+}
+
+std::int32_t NpcRegistryUnusedQueryB() {
+    if (IsNpcRegistryTaskActive())
+        return 0;
+    return 0;
+}
+
+#else
+
+// @verified - p
+std::uint64_t QueryNpcSceneMotionPlaying(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    return IsNpcSceneMotionPlaying(character);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void NpcRegistryTask_Callback(void *) {
+    npcHumansInUse = 1;
+    npcHasCachedPak = 0;
+    PrepareNpcAreaRoutes();
+    CoreNPCTask();
+    DrawNpcTransitions();
+    npcHumansInUse = 0;
+}
+#endif
+
+#else
 
 namespace npc_package_detail {
 
@@ -249,7 +1021,7 @@ void FreeNativeNpcHumans() {
     npcHasCachedPak = false;
 }
 
-
+// Native AllocateNPCH (npcInitData): HUMANS.idx and one pack slot per human, kept for the act.
 bool AllocateNPCH() {
     char directory[32];
     std::snprintf(directory, sizeof(directory), "scene/%02d/npc", g_loadedActNumber);
@@ -281,7 +1053,7 @@ bool AllocateNPCH() {
     return true;
 }
 
-
+// Native npcSetupHumans (npc_Callback_Enqueue): each map mounts HUMANS.afs and empties every pack slot.
 void npcSetupHumans() {
     if (!npcHumanSlots)
         return;
@@ -349,7 +1121,13 @@ void BeginNpcRouteStreamOut(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &run
 bool PublishExistingNpcCharacter(NpcRouteLiveEntry &entry, NpcRouteRuntimeRecord &runtime, Character *character) {
     if (!character)
         return false;
-    MotionWork *const motionWork = FindMotionWork(character);
+    MotionWork *const motionWork =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(character);
     if (!motionWork)
         return false;
     const std::uint32_t streamFlags = entry.flags;
@@ -708,6 +1486,10 @@ void UpdateNpcFrameCulling(NpcRouteLiveEntry &entry) {
 }
 } // namespace npc_package_detail
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry &entry, std::int32_t mode) {
     if (entry.loadHumanResult < 0)
         entry.loadHumanResult = 8;
@@ -736,6 +1518,10 @@ std::int32_t SetNpcStreamLifecycleState(NpcRouteLiveEntry &entry, std::int32_t m
     return pending;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 bool RequestNpcStreamOut(NpcRouteLiveEntry &entry, std::int32_t type) {
     if (!(entry.flags & 2U) || (entry.flags & 0x18U))
         return false;
@@ -747,6 +1533,11 @@ bool RequestNpcStreamOut(NpcRouteLiveEntry &entry, std::int32_t type) {
     entry.field335 = 0;
     return true;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 bool CanRevealNpcStream(const NpcRouteLiveEntry &entry) {
     if (entry.streamRadius + npcPlayerRadius > NpcDistanceXZ(npcPlayerCenter, entry.streamCenter))
         return false;
@@ -767,36 +1558,302 @@ bool CanRevealNpcStream(const NpcRouteLiveEntry &entry) {
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 bool HasNpcRuntimeEntry(shen_name character) {
     return FindActiveNpcEntry(character) != nullptr;
 }
 
-// @verified - p
-std::uint64_t IsNpcRouteLoadedOrVisible(shen_name character) {
-    if (!npcRegistryTask.current)
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t npcReleasePak(shen_name name) {
+    const std::int32_t index = npcLoadFromPak(name);
+    if (index < 0)
         return 0;
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        const NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (entry.name.name == character.name)
-            return (entry.flags >> 3) & 1U;
+    switch (npcHumanSlots[index].state) {
+    case NpcHumanPakState::Empty:
+    case NpcHumanPakState::Requested:
+        npcHumanSlots[index].state = NpcHumanPakState::Empty;
+        return 0;
+    case NpcHumanPakState::Ready:
+    case NpcHumanPakState::Attached: {
+        CancelPakSlot(npcHumanSlots[index].pak);
+        NpcHumanPakSlot *const slots = npcHumanSlots;
+        slots[index].pak = SHENMUE_NPC_NULL;
+        slots[index].state = NpcHumanPakState::Empty;
+        return 1;
+    }
     }
     return 0;
 }
 
-std::int32_t QueryNpcRouteLiveState(shen_name character) {
-    const NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
-    if (!entry || !entry->node)
-        return -1;
-    const std::uint32_t flags = entry->flags;
-    if (!(flags & 2U) || entry->liveState == 7 || (flags & 0x140U))
-        return -1;
-    if (flags & 8U) {
-        if (!(flags & 0x80U))
-            return -1;
-    } else if (flags & 0x80000U)
-        return -1;
-    return entry->eyeControlMode ? static_cast<std::int32_t>(entry->eyeControlMode) : static_cast<std::int32_t>(entry->routeDirectionMode);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t npcLoadFromPak(shen_name name) SHENMUE_NPC_NOEXCEPT {
+    const std::uint32_t *names = reinterpret_cast<const std::uint32_t *>(npcHumanIndex);
+    const std::int32_t count = static_cast<std::int32_t>(*names++);
+    for (std::int32_t index = 0; index < count; ++index)
+        if (name == *names++)
+            return index;
+    return -1;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t npcViewCullingEnabled = 0;
+
+bool SelectNpcScheduleBranch(NpcRouteLiveEntry *entry, std::int32_t index);
+
+std::int32_t UpdateNpcViewVisibility(NpcRouteLiveEntry *entry) {
+    if (entry->node) {
+        SetCharacterUnknownFlag(entry->node, 0);
+        if (!npcViewCullingEnabled)
+            return 1;
+        if (entry->flags & 0x1058U)
+            return 1;
+        Vector3 position;
+        GetCharacterWorldPosition(entry->node, &position);
+        if (camCtrlIsInsideDepthScaledRect(position, 1.6f))
+            return 1;
+        SetCharacterUnknownFlag(entry->node, 1);
+    }
+    return 0;
+}
+
+NpcRouteLiveEntry *GetNpcRouteEntryByIndex(std::int32_t index) {
+    return reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage) + index;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool SetNpcRouteYaw(shen_name name, std::int32_t yaw) {
+    NpcRouteLiveEntry *entry;
+    if ((entry = FindNpcRouteEntry(name)) == 0)
+        return false;
+    entry->rotation.y = yaw;
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+shen_name npcFindAreaPointOccupant(shen_name owner) {
+    const std::uint32_t area = npcLoadedArea & 0xffffU;
+    for (std::int32_t point = 0; point < npcScheduleAreaPointCount; ++point) {
+        if (GetNpcAreaPointOwnerName(point) != owner || static_cast<std::uint16_t>(GetNpcAreaPointAreaName(point)) != area)
+            continue;
+        const NpcRouteLiveEntry *entry = reinterpret_cast<const NpcRouteLiveEntry *>(npcEntryStorage);
+        for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+            if ((entry->flags & 0x800U) && entry->currentAreaPoint == point)
+                return entry->name;
+    }
+    return shen_name();
+}
+
+#else
+
+// The NPC standing at one of the owner's area points in the loaded area, on the current
+// floor.
+shen_name npcFindAreaPointOccupant(shen_name owner) {
+    for (std::uint16_t point = 0; point < npcSchedule.areaPointCount; ++point) {
+        const std::byte *const record = GetNpcAreaPoint(point);
+        if (!record || ReadU32(record + 0x30) != owner.name || static_cast<std::uint16_t>(ReadU32(record)) != static_cast<std::uint16_t>(npcLoadedArea.name))
+            continue;
+        for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+            const NpcRouteLiveEntry &entry = npcRouteEntries[index];
+            if (!(entry.flags & 0x800U) || entry.currentAreaPoint != point)
+                continue;
+            if (npcSchedule.floor != -1000 && npcSchedule.floor != static_cast<std::int8_t>(entry.packedMoveFlags >> 8U))
+                continue;
+            return entry.name;
+        }
+    }
+    return {};
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t AcquireNpcTimedMotionSlot(NpcRouteLiveEntry *entry) {
+    if (npcTimedMotionCount == 2)
+        return 0;
+    for (std::int32_t index = 0; index < 2; ++index) {
+        if (static_cast<std::int16_t>(npcTimedMotionSlots[index].occupied) != 1) {
+            npcTimedMotionSlots[index].occupied = 1;
+            entry->timedMotionHandle = &npcTimedMotionSlots[index];
+            entry->timedMotionHandle->character = 0;
+            ++npcTimedMotionCount;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// Parks (1) or restores (0) an answering NPC's eye-control or route-direction mode, saving
+// the other in +0x338 (negated for an eye mode).
+std::int64_t npcSetDoorAnswerMode(shen_name character, std::int32_t enabled) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (NpcRouteLiveEntry &entry : npcRouteEntries) {
+        if (entry.name.name != character.name)
+            continue;
+        const std::uint32_t flags = entry.flags;
+        if (!enabled) {
+            if (flags & 0x200000U) {
+                const auto saved = static_cast<std::int8_t>(entry.field338);
+                if (saved >= 0)
+                    entry.routeDirectionMode = saved;
+                else
+                    entry.eyeControlMode = static_cast<std::int8_t>(-saved);
+                entry.flags = flags & ~0x200000U;
+            }
+        } else if (!(flags & 0x200000U)) {
+            const auto eye = static_cast<std::uint8_t>(entry.eyeControlMode);
+            if (eye) {
+                entry.eyeControlMode = 13;
+                entry.field338 = static_cast<std::uint8_t>(-eye);
+            } else {
+                entry.field338 = static_cast<std::uint8_t>(entry.routeDirectionMode);
+                entry.routeDirectionMode = 13;
+            }
+            entry.flags = flags | 0x200000U;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void ReleaseNpcTimedMotion(NpcRouteLiveEntry *entry) {
+    if (!entry->timedMotionHandle)
+        return;
+    if (entry->timedMotionHandle->character)
+        EV_SetCharDisplay(entry->timedMotionHandle->character, CVM_DisplayEnabled, 0);
+    entry->flags &= ~0x400U;
+    entry->timedMotionHandle->occupied = 0;
+    --npcTimedMotionCount;
+    entry->timedMotionHandle = 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ReplaceNpcStateCallback(NpcRouteLiveEntry *entry, std::int32_t (*callback)(NpcRouteLiveEntry *)) {
+    if (!callback)
+        return 0;
+    entry->stateCallback = callback;
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+bool npcExists(shen_name name) {
+    if (FindNpcRouteEntry(name))
+        return true;
+    return false;
+}
+
+std::int32_t HasHiddenNpcWithoutRoute() {
+    const NpcRouteLiveEntry *entry = reinterpret_cast<const NpcRouteLiveEntry *>(npcEntryStorage);
+    for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+        if ((entry->flags & 0x40U) && ((&entry->stateContext)->flags & 1U) == 0)
+            return 1;
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool IsNpcRouteMoving(shen_name name) {
+    const NpcRouteLiveEntry *entry;
+    if ((entry = FindNpcRouteEntry(name)) == 0)
+        return false;
+    if (entry->liveState != 1)
+        return false;
+    return IsNpcRouteContextMoving(&entry->stateContext);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t GetNpcRouteAvoidanceSide(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry) {
+        const NpcRouteStateContextPrefix *const context = &entry->stateContext;
+        if ((context->flags & 3U) == 3U) {
+            const std::int8_t result = static_cast<std::int8_t>(context->avoidanceResult);
+            if (result != 3 && result <= 5)
+                return 0;
+            if (static_cast<std::int8_t>(context->retained88) == 1)
+                return context->avoidanceAuxiliary;
+        }
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+bool CanNpcEnterScenario(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return false;
+    if (!entry->node)
+        return false;
+    if ((entry->flags & 2U) == 0)
+        return false;
+    if (entry->flags & 0x10U)
+        return true;
+    if (static_cast<std::int8_t>(entry->liveState) == 8)
+        return false;
+    if (entry->flags & 0x40U)
+        return false;
+    const std::uint32_t restrictedFlags = entry->flags;
+    if (restrictedFlags & 0x100U)
+        return false;
+    if (restrictedFlags & 0x80000U)
+        return false;
+    if ((entry->flags & 0x88U) == 8U)
+        return false;
+    if ((GetNpcAreaSpecialMotionFlags(*entry) & 0x80U) == 0)
+        return true;
+    return false;
+}
+
+#else
 
 bool CanNpcEnterScenario(shen_name character) {
     const NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
@@ -817,6 +1874,126 @@ bool CanNpcEnterScenario(shen_name character) {
     const PartyCompanion *const party = FindPartyCompanion(ctrlGetScenarioChara(character));
     return !party || !(party->flags & 2U) || party->behaviorState != 8;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool CheckNpcSpecialMotionTarget(shen_name name, Character *character) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !entry->node)
+        return false;
+    if (!(entry->flags & 2U))
+        return false;
+    if (!(entry->flags & 0x10U))
+        return false;
+    return IsNpcSpecialTargetWithinRange(character, entry);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t QueryNpcRouteLiveState(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !entry->node || !(entry->flags & 2U) || static_cast<std::int8_t>(entry->liveState) == 8 || (entry->flags & 0x80100U))
+        return -1;
+    if (entry->pendingRouteQueryState)
+        return entry->pendingRouteQueryState;
+    return entry->routeQueryState;
+}
+
+#else
+
+std::int32_t QueryNpcRouteLiveState(shen_name character) {
+    const NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
+    if (!entry || !entry->node)
+        return -1;
+    const std::uint32_t flags = entry->flags;
+    if (!(flags & 2U) || entry->liveState == 7 || (flags & 0x140U))
+        return -1;
+    if (flags & 8U) {
+        if (!(flags & 0x80U))
+            return -1;
+    } else if (flags & 0x80000U)
+        return -1;
+    return entry->eyeControlMode ? static_cast<std::int32_t>(entry->eyeControlMode) : static_cast<std::int32_t>(entry->routeDirectionMode);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool QueryNpcSceneCheck(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    return entry && MoveForNpcInData(entry, shen_name(), 0);
+}
+
+#else
+
+bool QueryNpcSceneCheck(shen_name character) {
+    NpcRouteLiveEntry *const entry = character.name ? FindActiveNpcEntry(character) : nullptr;
+    return entry && MoveForNpcInData(*entry, 0, false);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t AcquireNpcRuntimeEntryForScript(shen_name name, NpcRouteLiveEntry **result) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !entry->node)
+        return 0;
+    *result = entry;
+    if (entry->flags & 0x10U)
+        return -1;
+    entry->flags |= 0x10U;
+    entry->previousLiveState = entry->liveState;
+    entry->animationFrame = static_cast<std::int16_t>(static_cast<std::int32_t>(mtwkGetFrame(entry->motionWork, LowerBody)));
+    GetCharacterWorldPosition(entry->node, &entry->specialMotionRestorePosition);
+    UpdateNpcSpecialRouteQueryState(entry);
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool BeginNpcSpecialMotion(shen_name name) {
+    NpcRouteLiveEntry *entry;
+    const std::int32_t acquired = AcquireNpcRuntimeEntryForScript(name, &entry);
+    if (!acquired)
+        return false;
+    if (acquired == -1)
+        return true;
+    PausePartyConversation(name);
+    entry->specialMotionPhase = 0;
+    switch (static_cast<std::int8_t>(entry->previousLiveState)) {
+    case 4:
+        mtwkSetSpeed(entry->motionWork, 0.0f, LowerBody);
+        break;
+    case 9:
+        if (GetNpcAreaSpecialMotionFlags(*entry) & 2U)
+            mtwkSetSpeed(entry->motionWork, 0.0f, LowerBody);
+        entry->commandFlags |= 0x40U;
+        break;
+    case 1:
+        break;
+    default:
+        mtwkSetSpeed(entry->motionWork, 1.0f, LowerBody);
+        break;
+    }
+    entry->liveState = 2;
+    entry->flags &= ~0x800000U;
+    return true;
+}
+
+#else
 
 bool BeginNpcSpecialMotion(shen_name character) {
     if (!npcRegistryTask.current)
@@ -841,6 +2018,106 @@ bool BeginNpcSpecialMotion(shen_name character) {
     return true;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t BeginNpcFollowingMotion(shen_name name) {
+    NpcRouteLiveEntry *entry;
+    const std::int32_t acquired = AcquireNpcRuntimeEntryForScript(name, &entry);
+    if (!acquired)
+        return 0;
+    if (acquired == -1)
+        return 1;
+    entry->specialMotionPhase = 0;
+    entry->liveState = 13;
+    entry->flags &= ~0x800000U;
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t SetNpcSpecialRouteQueryPaused(shen_name name, std::int32_t enabled) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (enabled) {
+        if (entry->flags & 0x200000U)
+            return 1;
+        if (entry->pendingRouteQueryState) {
+            entry->retained312[0] = static_cast<std::byte>(-entry->pendingRouteQueryState);
+            entry->pendingRouteQueryState = 13;
+        } else {
+            entry->retained312[0] = static_cast<std::byte>(entry->routeQueryState);
+            entry->routeQueryState = 13;
+        }
+        entry->flags |= 0x200000U;
+    } else {
+        if (!(entry->flags & 0x200000U))
+            return 1;
+        if (static_cast<std::int8_t>(entry->retained312[0]) < 0)
+            entry->pendingRouteQueryState = -static_cast<std::int8_t>(entry->retained312[0]);
+        else
+            entry->routeQueryState = static_cast<std::int8_t>(entry->retained312[0]);
+        entry->flags &= ~0x200000U;
+    }
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool IsNpcSpecialTargetWithinRange(Character *character, const NpcRouteLiveEntry *entry) {
+    if (!character || static_cast<std::int8_t>(entry->stateContext.phase) != 7)
+        return false;
+    Vector3 position;
+    GetCharacterWorldPosition(character, &position);
+    position.x = entry->localPosition.x - position.x;
+    position.z = entry->localPosition.z - position.z;
+    if (CalculatePlanarMagnitude(position.x, position.z) > 2.0f)
+        return false;
+    Vector3i rotation;
+    GetCharacterWorldRotation(character, &rotation);
+    if (static_cast<std::int16_t>(rotation.y - entry->rotation.y) > 0x2000)
+        return false;
+    if (std::abs(position.x) < 0.001f && std::abs(position.z) < 0.001f)
+        return false;
+    const std::int32_t magnitude =
+        static_cast<std::int32_t>(std::abs(static_cast<float>(static_cast<std::int16_t>(InverseFixedAtan2(position.x, position.z) - entry->rotation.y))));
+    if (static_cast<std::uint32_t>(magnitude - 0x2000) > 0x3c71U)
+        return false;
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool EndNpcSpecialMotion(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->flags & 0x10U))
+        return false;
+    ResumePartyConversation(name);
+    mtwkUpdateWithPosition(entry->motionWork, 0, 0);
+    mtwkRequestTargetFacing(entry->motionWork, 0, 0);
+    if (entry->flags & 8U) {
+        entry->liveState = entry->previousLiveState;
+        entry->specialMotionPhase = 0;
+    } else {
+        entry->flags |= 0x4000U;
+    }
+    return true;
+}
+
+#else
+
 bool EndNpcSpecialMotion(shen_name character) {
     NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
     if (!entry || !(entry->flags & 0x10U))
@@ -861,6 +2138,49 @@ bool EndNpcSpecialMotion(shen_name character) {
     return true;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t StopNpcFollowingMotion(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (!(entry->flags & 0x10U))
+        return 0;
+    entry->liveState = 2;
+    entry->specialMotionPhase = 0;
+    mtwkCopyTransition(entry->motionWork, 0, entry->rotation.y, 13, 0);
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool RequestNpcSpecialMotionTarget(shen_name name, const Vector3 *target) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->flags & 0x10U))
+        return false;
+    if (!(entry->flags & 0x200000U)) {
+        entry->specialMotionPhase = 3;
+        entry->specialMotionTarget = *target;
+    }
+    return true;
+}
+
+bool ApplyNpcSpecialMotionTarget(shen_name name, const Vector3 *target) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->flags & 0x10U))
+        return false;
+    mtwkUpdateWithPosition(entry->motionWork, target, 1);
+    return true;
+}
+
+#else
+
 bool RequestNpcSpecialMotionTarget(shen_name character, const Vector3 *target) {
     NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
     if (!entry || !(entry->flags & 0x10U))
@@ -872,6 +2192,24 @@ bool RequestNpcSpecialMotionTarget(shen_name character, const Vector3 *target) {
     return true;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool ResetNpcSpecialMotionTarget(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->flags & 0x10U))
+        return false;
+    if (!(entry->flags & 0x200000U)) {
+        entry->specialMotionPhase = 4;
+        mtwkUpdateWithPosition(entry->motionWork, 0, 0);
+    }
+    return true;
+}
+
+#else
+
 bool ResetNpcSpecialMotionTarget(shen_name character) {
     NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
     if (!entry || !(entry->flags & 0x10U))
@@ -882,6 +2220,25 @@ bool ResetNpcSpecialMotionTarget(shen_name character) {
     }
     return true;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool RequestNpcSpecialMotionLookTarget(shen_name name, const Vector3 *target) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->flags & 0x10U))
+        return false;
+    if (!(entry->flags & 0x200000U)) {
+        entry->specialMotionPhase = 5;
+        mtwkUpdateWithPosition(entry->motionWork, 0, 2);
+        entry->specialMotionTarget = *target;
+    }
+    return true;
+}
+
+#else
 
 bool RequestNpcSpecialMotionLookTarget(shen_name character, const Vector3 *target) {
     NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
@@ -895,6 +2252,22 @@ bool RequestNpcSpecialMotionLookTarget(shen_name character, const Vector3 *targe
     return true;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool ResetNpcSpecialMotionLookTarget(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->flags & 0x10U))
+        return false;
+    if (!(entry->flags & 0x200000U))
+        entry->specialMotionPhase = 6;
+    return true;
+}
+
+#else
+
 bool ResetNpcSpecialMotionLookTarget(shen_name character) {
     NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
     if (!entry || !(entry->flags & 0x10U))
@@ -903,31 +2276,65 @@ bool ResetNpcSpecialMotionLookTarget(shen_name character) {
         entry->specialMotionPhase = 7;
     return true;
 }
-bool QueryNpcSceneCheck(shen_name character) {
-    NpcRouteLiveEntry *const entry = character.name ? FindActiveNpcEntry(character) : nullptr;
-    return entry && MoveForNpcInData(*entry, 0, false);
-}
 
-// @verified - p
-std::uint64_t IsNpcSceneMotionPlaying(shen_name character) {
-    NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
-    if (!entry || !entry->node)
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t GetNpcRunCapability(Character *character) {
+    if (!character)
+        return -1;
+    switch (charGetMotionRigType(character)) {
+    case 3:
+    case 4:
+    case 5:
         return 0;
-    for (std::uint32_t region = 1; region < 5; ++region) {
-        if (mtwkSetRegionFlag(entry->motionWork, 72, 1, static_cast<MotionRegion>(region)) &&
-            mtwkGetAnimationId(entry->motionWork, static_cast<MotionRegion>(region)) ==
-                RemapNpcMotionForRig(GetCharacterBoneId(entry->node), NPC_SCENE_MOTION))
-            return 1;
     }
-    return 0;
+    return 1;
 }
 
-// @verified - p
-std::uint64_t QueryNpcSceneMotionPlaying(shen_name character) {
-    if (!npcRegistryTask.current)
-        return 0;
-    return IsNpcSceneMotionPlaying(character);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool QueryNpcCameraMotionProfile(shen_name name, std::uint32_t flags) {
+    static const std::uint16_t profilesA[] = {0x8066, 0x8065, 0x8064, 0x802a, 0x805e, 0x802d, 0x804b, 0x9504, 0};
+    static const std::uint16_t profilesB[] = {0x805f, 0x8060, 0x8061, 0};
+    static const std::uint16_t profilesC[] = {0x804b, 0xe393, 0xe14a, 0};
+    bool result = false;
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return false;
+    if (flags & 1U)
+        for (std::int32_t index = 0; profilesA[index]; ++index)
+            if (entry->currentMotionId == profilesA[index]) {
+                result = true;
+                break;
+            }
+    if (flags & 2U)
+        for (std::int32_t index = 0; profilesB[index]; ++index)
+            if (entry->currentMotionId == profilesB[index]) {
+                result = true;
+                break;
+            }
+    if (flags & 4U) {
+        if (entry->routeMotionState != 23 && !GetNpcRunCapability(entry->node)) {
+            if (GetNpcAreaSpecialMotionFlags(*entry) & 1U)
+                result = true;
+        } else {
+            for (std::int32_t index = 0; profilesC[index]; ++index)
+                if (entry->currentMotionId == profilesC[index]) {
+                    result = true;
+                    break;
+                }
+        }
+    }
+    return result;
 }
+
+#else
 
 // @verified - p
 std::uint64_t QueryNpcCameraMotionProfile(shen_name character, std::uint8_t mask) {
@@ -972,12 +2379,20 @@ std::uint64_t QueryNpcCameraMotionProfile(shen_name character, std::uint8_t mask
     return result;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void NpcRegistryTask_Nullsub(void *) {
 }
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
-
+// Native npc_Callback_Enqueue: always forgets the previous NPC task (the
+// module switch released it) and queues NPCT; areas without NPC routes keep
+// the task alive as a nullsub and drop the pending pointer.
 bool EnqueueNpcRegistryTask(std::uint8_t nextFunctionIndex) {
     npcLoadedArea = g_currentMap;
     npcNewLoadState = 0;
@@ -992,6 +2407,10 @@ bool EnqueueNpcRegistryTask(std::uint8_t nextFunctionIndex) {
     }
     return npcRegistryTask.pending != nullptr;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 bool PublishNpcRegistryTask() {
     if (!npcRegistryTask.pending)
@@ -1008,111 +2427,56 @@ bool PublishNpcRegistryTask() {
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 bool npcIsNpcTaskActive() {
     return npcRegistryTask.current != nullptr;
 }
 
-// @verified - p
-bool NpcWait() {
-    if (!npcRegistryTask.current)
-        return false;
-    if (!npcReloadPassStarted || npcWaitBypassActive)
-        return true;
-    if (npcWaitSawLoadFailure || static_cast<std::int32_t>(++npcWaitFrames) > 150)
-        return false;
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        const NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (!(entry.flags & NRSF_AbstractActive) && (entry.flags & NRSF_Requested))
-            return true;
-    }
-    return false;
-}
+#endif
 
-void FreeNpcRegistryTask() {
-    FreeNpcRouteLiveEntries();
-    areaNpcLoadCharacters = nullptr;
-    areaNpcLoadStartupTask = nullptr;
-    areaNpcLoadPhase = 0;
-    HLib::Task *const pending = npcRegistryTask.pending;
-    HLib::Task *const current = npcRegistryTask.current;
-    npcRegistryTask = {};
-    if (pending)
-        HLib::DestroyTask(pending);
-    if (current && current != pending)
-        HLib::DestroyTask(current);
-}
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 
-std::int32_t npcSetAreaName(shen_name area, const Vector3 *center, float radius, std::int32_t enabled) {
-    if (!npcRegistryTask.current)
+// @verified - d
+std::int32_t GetScenarioFollowEligibility(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || !(entry->scriptRecord[11] & 4U))
         return 0;
-
-    if (enabled == 1) {
-        for (NpcNoSpawnArea &slot : npcRegistryTask.areas) {
-            if (slot.name.name != 0)
-                continue;
-            ++npcRegistryTask.areaCount;
-            slot = NpcNoSpawnArea{area, *center, radius};
-            return 1;
-        }
-        return 0;
-    }
-
-    for (NpcNoSpawnArea &slot : npcRegistryTask.areas) {
-        if (slot.name.name != area.name)
-            continue;
-        --npcRegistryTask.areaCount;
-        slot.name = {};
-        return 1;
-    }
-    return 0;
+    return 1;
 }
 
-std::int32_t npcGetPosFor(shen_name character, Vector3 *position) {
-    if (!npcRegistryTask.current)
-        return 0;
-    for (const NpcRouteLiveEntry &entry : npcRouteEntries) {
-        if (entry.name.name != character.name)
-            continue;
-        if (!npcPositionQueryMode) {
-            if (!entry.node)
-                return 0;
-            npcPositionQueryMode = 1;
-        }
-        *position = entry.worldPosition;
-        position->x -= npcSchedule.areaOrigin.x;
-        position->z -= npcSchedule.areaOrigin.z;
-        return 1;
-    }
-    return 0;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t IsNpcRouteActive(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    return entry ? entry->stateContext.flags & 1U : 0;
 }
 
-std::int64_t MarkNpcRoutePartyControl(shen_name character) {
-    if (!npcRegistryTask.current)
-        return 0;
-    for (NpcRouteLiveEntry &entry : npcRouteEntries) {
-        if (entry.name.name != character.name)
-            continue;
-        if (!(entry.flags & NRSF_AbstractActive))
-            return 0;
-        entry.flags |= NRSF_Unknown80;
-        return 1;
-    }
-    return 0;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+NpcRouteLiveEntry *WarmStartNpcRoute(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return SHENMUE_NPC_NULL;
+    if (!(entry->flags & 8U))
+        npcPoolTarget =
+            static_cast<std::int32_t>(static_cast<std::uint32_t>(npcPoolTarget) - static_cast<std::uint32_t>(static_cast<std::int32_t>(entry->streamCost)));
+    entry->flags |= 0x88U;
+    entry->controlFlags |= 2U;
+    if (entry->node)
+        SelectCharacterFacialNode(entry->node, 1);
+    return entry;
 }
 
-std::int64_t ClearNpcRoutePartyControl(shen_name character) {
-    if (!npcRegistryTask.current)
-        return 0;
-    for (NpcRouteLiveEntry &entry : npcRouteEntries) {
-        if (entry.name.name != character.name)
-            continue;
-        if (!(entry.flags & NRSF_AbstractActive))
-            return 0;
-        entry.flags &= ~NRSF_Unknown80;
-        return 1;
-    }
-    return 0;
-}
+#else
 
 // @verified - p
 NpcRouteLiveEntry *WarmStartNpcRoute(shen_name character) {
@@ -1130,7 +2494,13 @@ NpcRouteLiveEntry *WarmStartNpcRoute(shen_name character) {
         entry.flags |= NRSF_AbstractActive | NRSF_Unknown80;
         entry.controlFlags |= 2U;
         if (entry.node) {
-            FindMotionWork(entry.node)->runtime.callbackFlags &= ~8U;
+
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(entry.node)->runtime.callbackFlags &= ~8U;
             SetFaceFlagsForChara_0(entry.node, FacialNodeReplacement);
         }
         return &entry;
@@ -1138,9 +2508,26 @@ NpcRouteLiveEntry *WarmStartNpcRoute(shen_name character) {
     return nullptr;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_CheckWarmStartNpcRoute(shen_name name) {
+    if (WarmStartNpcRoute(name))
+        return 1;
+    return 0;
+}
+
+#else
+
 std::int64_t EV_CheckWarmStartNpcRoute(shen_name character) {
     return WarmStartNpcRoute(character) != nullptr;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 // Warm-starts the route and selects the HUMANS AFS load path.
 std::int64_t npcWarmStartHumanRoute(shen_name character) {
@@ -1151,33 +2538,74 @@ std::int64_t npcWarmStartHumanRoute(shen_name character) {
     return 1;
 }
 
-std::int64_t EV_ForceLoadNpc(shen_name character) {
-    if (npcRegistryTask.current) {
-        for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
-            NpcRouteLiveEntry &entry = npcRouteEntries[index];
-            if (entry.name.name != character.name)
-                continue;
-            entry.flags &= ~NRSF_StartHidden;
-            return RequestNpcStreamLoad(entry);
-        }
-    }
-    return npcLoadHuman(character, character, false) > 0;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t PrepareNpcRouteReload(shen_name name) {
+    NpcRouteLiveEntry *const entry = WarmStartNpcRoute(name);
+    if (!entry)
+        return 0;
+    entry->flags |= 0x40000000U;
+    return 1;
 }
 
-std::uint64_t EV_npcStreamOrLoadHuman(shen_name character) {
-    if (npcRegistryTask.current) {
-        for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
-            NpcRouteLiveEntry &entry = npcRouteEntries[index];
-            if (entry.name.name != character.name)
-                continue;
-            entry.flags &= ~NRSF_StartHidden;
-            RequestNpcStreamLoad(entry);
-            return static_cast<std::uint32_t>(npcLastHumanLoadResult);
-        }
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry *entry) {
+    if (!entry->node)
+        return;
+    mtwkRequestRegionDetach(entry->motionWork, LowerBody);
+    mtwkSetRequestedRootMode(entry->motionWork, 1);
+    mtwkSetFrameTime(entry->motionWork, 20, LowerBody);
+    switch (static_cast<std::int8_t>(entry->liveState)) {
+    case 1: {
+        NpcRouteStateContextPrefix *const context = &entry->stateContext;
+        if (context->flags & 0x10U)
+            entry->currentMotionId = SelectNpcRunningMotion(entry->node);
+        else
+            entry->currentMotionId = SelectNpcWalkingMotion(entry->node);
+        break;
     }
-    npcLastHumanLoadResult = npcLoadHuman(character, character, false);
-    return static_cast<std::uint32_t>(npcLastHumanLoadResult);
+    case 2:
+        return;
+    case 6:
+        entry->currentMotionId = SelectNpcLeaningProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+            static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        break;
+    case 5:
+        ResumeNpcScheduleMotion(entry);
+        break;
+    case 4: {
+        Character *const node = entry->node;
+        AssignCharacterControlFlags(node, ccmGetFlags(node) & ~6U);
+    }
+    case 3:
+    case 7:
+        SetCharacterWorldPosition(entry->node, &entry->localPosition);
+        break;
+    case 9: {
+        NpcAreaRouteState *const state = GetNpcAreaPointRouteState(entry->currentAreaPoint);
+        entry->currentMotionId = ResolveNpcAreaAnimation(state, entry);
+        if (!entry->currentMotionId)
+            entry->currentMotionId = SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+                static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        ApplyNpcAreaMotion(entry, entry->currentMotionId);
+        break;
+    }
+    default:
+        entry->currentMotionId = SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+            static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        break;
+    }
+    mtwkRequestMotion(entry->motionWork, entry->currentMotionId, LowerBody);
+    charaSetWorldRot(entry->node, entry->rotation);
 }
+
+#else
 
 void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
     if (!entry.node)
@@ -1238,6 +2666,10 @@ void ResumeNpcMotionAfterUnlock(NpcRouteLiveEntry &entry) {
     charaSetWorldRot(entry.node, rotation);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // @verified - p
 std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion) {
     if (!npcRegistryTask.current)
@@ -1262,13 +2694,519 @@ std::int64_t npcSetLock(shen_name character, std::int32_t preserveMotion) {
     return 0;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_npcLockUnlock(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry || *reinterpret_cast<const std::uint32_t *>(entry->scriptRecord) == SHEN_NAME4('M', 'O', 'V', 'E'))
+        return 0;
+    if (!(entry->flags & 8U))
+        return 1;
+    npcPoolTarget += entry->streamCost;
+    entry->flags &= 0xbffffff7U;
+    entry->controlFlags &= ~2U;
+    ResumeNpcMotionAfterUnlock(entry);
+    if (entry->node)
+        SelectCharacterFacialNode(entry->node, 0);
+    return 1;
+}
+
+#else
+
 std::int64_t EV_npcLockUnlock(shen_name character) {
     return npcSetLock(character, 0);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::int64_t EV_ReleaseNpcLockPreservingMotion(shen_name character) {
     return npcSetLock(character, 1);
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t IsNpcRouteLoadedOrVisible(shen_name name) SHENMUE_NPC_NOEXCEPT {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (entry->flags & 8U)
+        return 1;
+    return 0;
+}
+
+#else
+
+// @verified - p
+std::uint64_t IsNpcRouteLoadedOrVisible(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        const NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        if (entry.name.name == character.name)
+            return (entry.flags >> 3) & 1U;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t IsNpcRouteReloadPrepared(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (entry->flags & 0x40000000U)
+        return 1;
+    return 0;
+}
+
+std::int32_t PinNpcRouteStream(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (!(entry->flags & 0x200U)) {
+        entry->flags |= 0x200U;
+        EV_ResetFreeTalkFlags();
+        npcCrowdPhase = 0;
+    }
+    return 1;
+}
+
+std::int32_t UnpinNpcRouteStream(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    entry->flags &= ~0x200U;
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_npcUpdateFlags(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry && (entry->flags & 8U)) {
+        entry->flags |= 0x80U;
+        return 1;
+    }
+    return 0;
+}
+
+#else
+
+// @verified - p
+std::int64_t EV_npcUpdateFlags(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        if (entry.name.name != character.name)
+            continue;
+        if (!(entry.flags & 8U))
+            return 0;
+        entry.flags |= 0x80U;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_npcUnknownFunc(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry && (entry->flags & 8U)) {
+        entry->flags &= ~0x80U;
+        return 1;
+    }
+    return 0;
+}
+
+#else
+
+// @verified - p
+std::int64_t EV_npcUnknownFunc(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        if (entry.name.name != character.name)
+            continue;
+        if (!(entry.flags & 8U))
+            return 0;
+        entry.flags &= ~0x80U;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t GetNpcScriptRouteCompletion(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (!(entry->flags & 8U))
+        return 0;
+    if (!(entry->flags & 0x80U))
+        return 0;
+    if (!(GetNpcAreaSpecialMotionFlags(*entry) & 0x80U))
+        return 1;
+    return 0;
+}
+
+#else
+
+// @verified - p
+std::uint32_t GetNpcScriptRouteCompletion(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        const NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        if (entry.name.name != character.name)
+            continue;
+        if ((entry.flags & 0x88U) != 0x88U)
+            return 0;
+        return (GetNpcAreaSpecialMotionFlags(entry) ^ 0x80U) >> 7;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_ResetFreeTalkFlags() {
+    if (IsNpcRegistryTaskActive()) {
+        ReleaseNpcTransitionHumanPackages();
+        NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+        for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+            if (!(entry->flags & 8U)) {
+                if (!(entry->flags & 0x200U) && (entry->flags & 7U))
+                    ReleaseNpcRouteStream(entry);
+            }
+    }
+    return 1;
+}
+
+#else
+
+std::int64_t EV_ResetFreeTalkFlags() {
+    if (!npcRegistryTask.current)
+        return 1;
+    FlushQueuedLegacyDrawPasses();
+    FlushQueuedStripType3Batches();
+    ReleaseNpcTransitionHumanPackages();
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        NpcRouteRuntimeRecord &runtime = npcRouteRuntimeRecords[index];
+        if (entry.loadHumanResult < 0) {
+            entry.loadHumanResult = 8;
+            if (runtime.streamState == NpcHumanStreamState::Missing)
+                runtime.streamState = NpcHumanStreamState::Inactive;
+        }
+        if (!(entry.flags & (NRSF_AbstractActive | NRSF_Pinned)) && (entry.flags & 7U)) {
+            FlushQueuedLegacyDrawPasses();
+            ReleaseNpcRouteStream(entry, runtime, false);
+        }
+    }
+    return 1;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// @verified - p
+std::int64_t ResetNpcColdStreams() {
+    if (!npcRegistryTask.current)
+        return 1;
+    FlushQueuedLegacyDrawPasses();
+    FlushQueuedStripType3Batches();
+    ReleaseNpcTransitionHumanPackages();
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        if (entry.stateContext.flags & 1U) {
+            if ((entry.stateContext.flags & 0x300U) || (entry.stateContext.routeFlags & 0x10U))
+                continue;
+            if (!(entry.flags & 0x4000000U)) {
+                SetNpcStreamLifecycleState(entry, 1);
+                continue;
+            }
+        }
+        if (static_cast<std::uint8_t>(entry.recordBase[0x0b]) & 0x10U)
+            SetNpcStreamLifecycleState(entry, 1);
+    }
+    return 1;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// @verified - p
+std::uint64_t SetNpcColdResetMode(std::uint32_t mode) {
+    if (!mode)
+        ResetNpcColdStreams();
+    npcColdResetMode = mode;
+    return mode;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t PrepareNpcAllFromArray() {
+    std::int32_t released = 1;
+    if (IsNpcRegistryTaskActive()) {
+        EV_NPC_NewLoadSw(0);
+        ReleaseNpcTransitionHumanPackages();
+        NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+        for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry) {
+            const std::uint32_t flags = entry->flags;
+            if (flags & 8U)
+                continue;
+            if ((flags & 0x200U) || !(flags & 7U))
+                continue;
+            if (flags & 1U)
+                ReleaseNpcRouteStream(entry);
+            else
+                released = 0;
+            if (entry->flags & 2U)
+                BeginNpcRouteStreamOut(entry, 0);
+            if (entry->flags & 4U)
+                UpdateNpcStreamFade(entry);
+        }
+    }
+    return released;
+}
+
+#else
+
+// Returns 1 once no unpinned, non-abstract stream is still live or fading out.
+std::int32_t PrepareNpcAllFromArray() {
+    std::int32_t released = 1;
+    if (!npcRegistryTask.current)
+        return released;
+    if (GetNpcNewLoadState() != 0)
+        EV_NPC_NewLoadSw(0);
+    FlushQueuedLegacyDrawPasses();
+    FlushQueuedStripType3Batches();
+    ReleaseNpcTransitionHumanPackages();
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        NpcRouteRuntimeRecord &runtime = npcRouteRuntimeRecords[index];
+        if (ReadNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset) < 0) {
+            WriteNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset, 8);
+            if (runtime.streamState == NpcHumanStreamState::Missing)
+                runtime.streamState = NpcHumanStreamState::Inactive;
+        }
+        std::uint32_t pending = 4;
+        if ((entry.flags & NRSF_AbstractActive) != 0) {
+            pending = 2;
+        } else if ((entry.flags & NRSF_Pinned) != 0) {
+            pending = 3;
+        } else if ((entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) != 0) {
+            FlushQueuedLegacyDrawPasses();
+            pending = entry.flags & NRSF_Requested;
+            if (pending != 0)
+                ReleaseNpcRouteStream(entry, runtime, false);
+            if ((entry.flags & (NRSF_Live | NRSF_AbstractActive | 0x10U)) == NRSF_Live) {
+                entry.field335 = 0;
+                entry.flags = (entry.flags & ~(NRSF_Live | NRSF_FadeOut)) | NRSF_FadeOut;
+            }
+            if ((entry.flags & NRSF_FadeOut) != 0)
+                UpdateNpcStreamFade(entry);
+        }
+        if (pending == 0)
+            released = 0;
+    }
+    return released;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// @verified - p
+void EV_ReconfigureNpcRoutesForStoryStep() {
+    if (!npcRegistryTask.current)
+        return;
+    EV_ResetFreeTalkFlags();
+    WarmBootstrapNpcRoutes();
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void ReleaseLoadedNpcTransitionPackages();
+
+// @verified - d
+std::int32_t npcReleaseUnusedStreams() {
+    GetNpcNewLoadState();
+    ReleaseLoadedNpcTransitionPackages();
+    NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+    for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+        if (!(entry->flags & 8U)) {
+            if (!(entry->flags & 0x200U) && (entry->flags & 1U))
+                ReleaseNpcRouteStream(entry);
+        }
+    return 1;
+}
+
+#else
+
+// Releases every unpinned, non-abstract stream that is still only requested.
+std::int32_t npcReleaseUnusedStreams() {
+    if (!npcRegistryTask.current)
+        return 1;
+    ReleaseReadyNpcTransitionHumanPackages();
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        NpcRouteRuntimeRecord &runtime = npcRouteRuntimeRecords[index];
+        if (ReadNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset) < 0) {
+            WriteNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset, 8);
+            if (runtime.streamState == NpcHumanStreamState::Missing)
+                runtime.streamState = NpcHumanStreamState::Inactive;
+        }
+        if ((entry.flags & (NRSF_AbstractActive | NRSF_Pinned)) == 0 && (entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) != 0) {
+            FlushQueuedLegacyDrawPasses();
+            if (entry.flags & NRSF_Requested)
+                ReleaseNpcRouteStream(entry, runtime, false);
+        }
+    }
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_ForceLoadNpc(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry) {
+        entry->flags &= ~0x1000U;
+        return RequestNpcStreamLoad(entry);
+    }
+    if (npcLoadHuman(name, name, 0) > 0)
+        return 1;
+    return 0;
+}
+
+#else
+
+std::int64_t EV_ForceLoadNpc(shen_name character) {
+    if (npcRegistryTask.current) {
+        for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
+            NpcRouteLiveEntry &entry = npcRouteEntries[index];
+            if (entry.name.name != character.name)
+                continue;
+            entry.flags &= ~NRSF_StartHidden;
+            return RequestNpcStreamLoad(entry);
+        }
+    }
+    return npcLoadHuman(character, character, false) > 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ReleaseNpcForRouteReload(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry) {
+        entry->flags &= ~0x1000U;
+        return RequestNpcStreamLoad(entry);
+    }
+    if (npcLoadHuman(name, name, 0x40000000U) > 0)
+        return 1;
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_npcStreamOrLoadHuman(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry) {
+        entry->flags &= ~0x1000U;
+        RequestNpcStreamLoad(entry);
+    } else
+        npcLastHumanLoadResult = npcLoadHuman(name, name, 0);
+    return npcLastHumanLoadResult;
+}
+
+#else
+
+std::uint64_t EV_npcStreamOrLoadHuman(shen_name character) {
+    if (npcRegistryTask.current) {
+        for (std::size_t index = 0; index < npcRouteEntries.size(); ++index) {
+            NpcRouteLiveEntry &entry = npcRouteEntries[index];
+            if (entry.name.name != character.name)
+                continue;
+            entry.flags &= ~NRSF_StartHidden;
+            RequestNpcStreamLoad(entry);
+            return static_cast<std::uint32_t>(npcLastHumanLoadResult);
+        }
+    }
+    npcLastHumanLoadResult = npcLoadHuman(character, character, false);
+    return static_cast<std::uint32_t>(npcLastHumanLoadResult);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ReleaseNpcForRouteReloadAndStoreCount(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry) {
+        entry->flags &= ~0x1000U;
+        RequestNpcStreamLoad(entry);
+    } else
+        npcLastHumanLoadResult = npcLoadHuman(name, name, 0x40000000U);
+    return npcLastHumanLoadResult;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t EV_npcFree(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return npcReleasePak(name);
+    if (entry->flags & 7U)
+        ReleaseNpcRouteStream(entry);
+    return 1;
+}
+
+#else
 
 std::int64_t EV_npcFree(shen_name character) {
     if (npcRegistryTask.current) {
@@ -1285,6 +3223,10 @@ std::int64_t EV_npcFree(shen_name character) {
     return npcReleasePak(character);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void EV_SetAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask, bool visible, bool lowQualityHands) {
     areaNpcLoadPhase = 0;
     g_usingCustomAuthorCharacterList = 0;
@@ -1293,17 +3235,37 @@ void EV_SetAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTa
     areaNpcLoadCharactersVisible = visible;
     areaNpcLoadLowQualityHands = lowQualityHands;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void SetAreaNpcLowQualityHands(bool enabled) {
     areaNpcLoadLowQualityHands = enabled;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void SetAreaNpcCharactersVisible(bool enabled) {
     areaNpcLoadCharactersVisible = enabled;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void AssignAreaNpcLoadContext(const shen_name *characters, HLib::Task *startupTask) {
     areaNpcLoadPhase = 0;
     areaNpcLoadCharacters = characters;
     areaNpcLoadStartupTask = startupTask;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 namespace npc_package_detail {
 
 std::int32_t FindConditionalNpcLoadSlot(shen_name name) {
@@ -1388,20 +3350,39 @@ void ConditionalNpcLoadCallback(void *data) {
         EV_AT_SetAngY(entry->character, EventTransformFlags::World | EventTransformFlags::AllAxes, Vector3i{0, entry->yaw, 0});
         if (entry->motion != 0xffffffffU)
             mtwkRequestMotion(
-                FindMotionWork(ctrlGetScenarioChara(entry->character)), static_cast<std::uint16_t>(entry->motion), MotionRegion::LowerBody);
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(ctrlGetScenarioChara(entry->character)), static_cast<std::uint16_t>(entry->motion), MotionRegion::LowerBody);
         work.admitted[work.entryIndex++] = 1;
         work.phase = 1;
     }
 }
 } // namespace npc_package_detail
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void ResetConditionalNpcLoads() {
     conditionalNpcLoadsReady = 0;
     conditionalNpcLoadSlots.fill({});
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::uint32_t AreConditionalNpcLoadsPending() {
     return conditionalNpcLoadsReady == 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 HLib::Task *QueueConditionalNpcLoads(const ConditionalNpcLoadEntry *entries) {
     HLib::Task *const task = HLib::EnqueueTaskWithParameter(ConditionalNpcLoadCheckCallback, 4, 0x0b, sizeof(ConditionalNpcLoadWork), SHEN_NAME(EVNT));
     auto *const work = static_cast<ConditionalNpcLoadWork *>(HLib::GetTaskParameter(task));
@@ -1415,15 +3396,27 @@ HLib::Task *QueueConditionalNpcLoads(const ConditionalNpcLoadEntry *entries) {
     return task;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void AssignGenericNpcLoadContext(const shen_name *characters, HLib::Task *startupTask) {
     genericNpcLoadPhase = 0;
     genericNpcLoadCharacters = characters;
     genericNpcLoadStartupTask = startupTask;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void SetGenericNpcLowQualityHands(bool enabled) {
     genericNpcLoadLowQualityHands = enabled;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 void ResetGenericEventNpcLoadState() {
     genericNpcLoadCharacters = nullptr;
@@ -1432,6 +3425,10 @@ void ResetGenericEventNpcLoadState() {
     genericNpcLoadCharactersVisible = 1;
     genericNpcLoadStartupTask = nullptr;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 HLib::Task *Queue_EVT_UTL_LoadNPCChara(const shen_name *characters, HLib::Task *startupTask) {
     AssignGenericNpcLoadContext(characters, startupTask);
@@ -1442,6 +3439,10 @@ HLib::Task *Queue_EVT_UTL_LoadNPCChara(const shen_name *characters, HLib::Task *
     return HLib::EnqueueTaskWithoutParameter(EVT_UTL_LoadNPCChara_Callback_1, 6, 0x0b, static_cast<std::int32_t>(TASK_NPC_LOAD.name));
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void ResetCompiledEventNpcLoadState() {
     areaNpcLoadPhase = 0;
     g_usingCustomAuthorCharacterList = 0;
@@ -1450,6 +3451,10 @@ void ResetCompiledEventNpcLoadState() {
     areaNpcLoadStartupTask = nullptr;
     areaNpcLoadCharacters = nullptr;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 HLib::Task *Queue_EVT_UTL_LoadNPCChara_3(const shen_name *characters, HLib::Task *startupTask) {
     areaNpcLoadCharacters = characters;
@@ -1462,6 +3467,10 @@ HLib::Task *Queue_EVT_UTL_LoadNPCChara_3(const shen_name *characters, HLib::Task
         HLib::SetupTimedTask(startupTask, 0);
     return HLib::EnqueueTaskWithoutParameter(EVT_UTL_LoadNPCChara_Callback_2, 6, 0x0b, static_cast<std::int32_t>(TASK_NPC_LOAD.name));
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 // @verified - p
 void EVT_UTL_LoadNPCChara_Callback_1(void *) {
@@ -1496,6 +3505,10 @@ void EVT_UTL_LoadNPCChara_Callback_1(void *) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // @verified - p
 void EnableAuthoredCharacterFlagsAndDisplay(shen_name character) {
     EV_EnableCharacterDisplay(character);
@@ -1505,6 +3518,10 @@ void EnableAuthoredCharacterFlagsAndDisplay(shen_name character) {
     EV_SetRefBoardParamsFor(character, 1);
     EV_SetCharacterAlphaEnabled(character, false);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 void EVT_UTL_LoadNPCChara_Callback_2(void *taskData) {
     (void)taskData;
@@ -1545,8 +3562,12 @@ void EVT_UTL_LoadNPCChara_Callback_2(void *taskData) {
     areaNpcLoadPhase = 1;
 }
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
+// Before a door entry, sends every streamed NPC within the radius of the point (XZ) back to
+// its abstract route; 0 when one refused.
 std::uint32_t npcReleaseStreamsNearDoor(const Vector3 *point, float radius) {
     std::uint32_t released = 1;
     if (!npcRegistryTask.current)
@@ -1570,111 +3591,105 @@ std::uint32_t npcReleaseStreamsNearDoor(const Vector3 *point, float radius) {
     return released;
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 
-shen_name npcFindAreaPointOccupant(shen_name owner) {
-    for (std::uint16_t point = 0; point < npcSchedule.areaPointCount; ++point) {
-        const std::byte *const record = GetNpcAreaPoint(point);
-        if (!record || ReadU32(record + 0x30) != owner.name || static_cast<std::uint16_t>(ReadU32(record)) != static_cast<std::uint16_t>(npcLoadedArea.name))
-            continue;
-        for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-            const NpcRouteLiveEntry &entry = npcRouteEntries[index];
-            if (!(entry.flags & 0x800U) || entry.currentAreaPoint != point)
-                continue;
-            if (npcSchedule.floor != -1000 && npcSchedule.floor != static_cast<std::int8_t>(entry.packedMoveFlags >> 8U))
-                continue;
-            return entry.name;
-        }
-    }
-    return {};
+// @verified - d
+std::int32_t NpcWait() SHENMUE_NPC_NOEXCEPT {
+    if (!IsNpcRegistryTaskActive())
+        return 0;
+    if (!npcReloadPassStarted)
+        return 1;
+    const NpcRouteLiveEntry *entry = reinterpret_cast<const NpcRouteLiveEntry *>(npcEntryStorage);
+    for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+        if (!(entry->flags & 8U) && (entry->flags & 1U))
+            return 1;
+    return 0;
 }
 
+#else
 
+// @verified - p
+bool NpcWait() {
+    if (!npcRegistryTask.current)
+        return false;
+    if (!npcReloadPassStarted || npcWaitBypassActive)
+        return true;
+    if (npcWaitSawLoadFailure || static_cast<std::int32_t>(++npcWaitFrames) > 150)
+        return false;
+    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
+        const NpcRouteLiveEntry &entry = npcRouteEntries[index];
+        if (!(entry.flags & NRSF_AbstractActive) && (entry.flags & NRSF_Requested))
+            return true;
+    }
+    return false;
+}
 
-std::int64_t npcSetDoorAnswerMode(shen_name character, std::int32_t enabled) {
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void FreeNpcRegistryTask() {
+    FreeNpcRouteLiveEntries();
+    areaNpcLoadCharacters = nullptr;
+    areaNpcLoadStartupTask = nullptr;
+    areaNpcLoadPhase = 0;
+    HLib::Task *const pending = npcRegistryTask.pending;
+    HLib::Task *const current = npcRegistryTask.current;
+    npcRegistryTask = {};
+    if (pending)
+        HLib::DestroyTask(pending);
+    if (current && current != pending)
+        HLib::DestroyTask(current);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::int32_t npcSetAreaName(shen_name area, const Vector3 *center, float radius, std::int32_t enabled) {
     if (!npcRegistryTask.current)
         return 0;
-    for (NpcRouteLiveEntry &entry : npcRouteEntries) {
-        if (entry.name.name != character.name)
-            continue;
-        const std::uint32_t flags = entry.flags;
-        if (!enabled) {
-            if (flags & 0x200000U) {
-                const auto saved = static_cast<std::int8_t>(entry.field338);
-                if (saved >= 0)
-                    entry.routeDirectionMode = saved;
-                else
-                    entry.eyeControlMode = static_cast<std::int8_t>(-saved);
-                entry.flags = flags & ~0x200000U;
-            }
-        } else if (!(flags & 0x200000U)) {
-            const auto eye = static_cast<std::uint8_t>(entry.eyeControlMode);
-            if (eye) {
-                entry.eyeControlMode = 13;
-                entry.field338 = static_cast<std::uint8_t>(-eye);
-            } else {
-                entry.field338 = static_cast<std::uint8_t>(entry.routeDirectionMode);
-                entry.routeDirectionMode = 13;
-            }
-            entry.flags = flags | 0x200000U;
+
+    if (enabled == 1) {
+        for (NpcNoSpawnArea &slot : npcRegistryTask.areas) {
+            if (slot.name.name != 0)
+                continue;
+            ++npcRegistryTask.areaCount;
+            slot = NpcNoSpawnArea{area, *center, radius};
+            return 1;
         }
+        return 0;
+    }
+
+    for (NpcNoSpawnArea &slot : npcRegistryTask.areas) {
+        if (slot.name.name != area.name)
+            continue;
+        --npcRegistryTask.areaCount;
+        slot.name = {};
         return 1;
     }
     return 0;
 }
 
-std::int64_t EV_ResetFreeTalkFlags() {
-    if (!npcRegistryTask.current)
-        return 1;
-    FlushQueuedLegacyDrawPasses();
-    FlushQueuedStripType3Batches();
-    ReleaseNpcTransitionHumanPackages();
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        NpcRouteRuntimeRecord &runtime = npcRouteRuntimeRecords[index];
-        if (entry.loadHumanResult < 0) {
-            entry.loadHumanResult = 8;
-            if (runtime.streamState == NpcHumanStreamState::Missing)
-                runtime.streamState = NpcHumanStreamState::Inactive;
-        }
-        if (!(entry.flags & (NRSF_AbstractActive | NRSF_Pinned)) && (entry.flags & 7U)) {
-            FlushQueuedLegacyDrawPasses();
-            ReleaseNpcRouteStream(entry, runtime, false);
-        }
-    }
-    return 1;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t CountNpcLiveStreams() SHENMUE_NPC_NOEXCEPT {
+    if (!IsNpcRegistryTaskActive() || !npcReloadPassStarted)
+        return 0;
+    std::int32_t count = 0;
+    const NpcRouteLiveEntry *entry = reinterpret_cast<const NpcRouteLiveEntry *>(npcEntryStorage);
+    for (std::int32_t index = 0; index < npcAuthoredEntryCount; ++index, ++entry)
+        if (entry->flags & 2U)
+            ++count;
+    return count;
 }
 
-// @verified - p
-std::int64_t ResetNpcColdStreams() {
-    if (!npcRegistryTask.current)
-        return 1;
-    FlushQueuedLegacyDrawPasses();
-    FlushQueuedStripType3Batches();
-    ReleaseNpcTransitionHumanPackages();
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (entry.stateContext.flags & 1U) {
-            if ((entry.stateContext.flags & 0x300U) || (entry.stateContext.routeFlags & 0x10U))
-                continue;
-            if (!(entry.flags & 0x4000000U)) {
-                SetNpcStreamLifecycleState(entry, 1);
-                continue;
-            }
-        }
-        if (static_cast<std::uint8_t>(entry.recordBase[0x0b]) & 0x10U)
-            SetNpcStreamLifecycleState(entry, 1);
-    }
-    return 1;
-}
-
-// @verified - p
-std::uint64_t SetNpcColdResetMode(std::uint32_t mode) {
-    if (!mode)
-        ResetNpcColdStreams();
-    npcColdResetMode = mode;
-    return mode;
-}
+#else
 
 std::uint64_t CountNpcLiveStreams() {
     if (!npcRegistryTask.current || !npcReloadPassStarted)
@@ -1685,6 +3700,10 @@ std::uint64_t CountNpcLiveStreams() {
             ++count;
     return count;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::uint64_t IsNpcLoadedOrVisible(shen_name character) {
     if (!npcRegistryTask.current)
@@ -1697,6 +3716,10 @@ std::uint64_t IsNpcLoadedOrVisible(shen_name character) {
     return 0;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::uint64_t IsNpcUsingHumansAfs(shen_name character) {
     if (!npcRegistryTask.current)
         return 0;
@@ -1707,6 +3730,10 @@ std::uint64_t IsNpcUsingHumansAfs(shen_name character) {
     }
     return 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::int64_t EV_ForceLoadNpcFromHumans(shen_name character) {
     if (npcRegistryTask.current) {
@@ -1720,6 +3747,10 @@ std::int64_t EV_ForceLoadNpcFromHumans(shen_name character) {
     }
     return npcLoadHuman(character, character, true) > 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character) {
     if (npcRegistryTask.current) {
@@ -1736,6 +3767,971 @@ std::uint64_t EV_npcStreamOrLoadHumanFromHumans(shen_name character) {
     return static_cast<std::uint32_t>(npcLastHumanLoadResult);
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void SaveNpcDateTime() {
+    shenGetCurrentDateTime(npcSavedDateTime);
+    npcSetCurrentTimeSimStateEnabled();
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+NpcRouteLiveEntry *FindNpcRouteEntry(shen_name name) SHENMUE_NPC_NOEXCEPT {
+    if (!IsNpcRegistryTaskActive())
+        return SHENMUE_NPC_NULL;
+    NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage);
+    for (std::int32_t index = 0; index < npcRouteEntryCount; ++index, ++entry)
+        if (name == entry->name)
+            return entry;
+    return SHENMUE_NPC_NULL;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void PlaceNpcOutsideDoor(NpcRouteLiveEntry *entry) {
+    entry->flags &= ~0x800U;
+    if (GetNpcAreaPointRouteState(entry->currentAreaPoint))
+        return;
+    const std::int32_t door = static_cast<std::int32_t>(GetNpcAreaPointOwnerName(entry->currentAreaPoint));
+    if (!door)
+        return;
+    Vector3 target;
+    if (!ComputeDoorIngress(door, &entry->localPosition, &target))
+        return;
+    ComputeDoorEgress(door, &entry->localPosition, &target);
+    entry->localPosition = target;
+    entry->worldPosition = target;
+    entry->worldPosition.x += npcRouteOrigin.x;
+    entry->worldPosition.z += npcRouteOrigin.z;
+    entry->flags |= 0x800U;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void CoreNPCTask() {
+    MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    if (control->ryo) {
+        npcRouteTableReady = 1;
+        npcPlayerSearchRequested = IsPlayerControlEnabled();
+        Vector3 delta = npcPlayerPosition;
+        plymUpdatePlayerSearchLocation(&npcPlayerPosition);
+        am2Vector3Subtract(&delta, &npcPlayerPosition, &delta);
+        npcPlayerDisplacement = Vector3::CalcMagnitude(delta);
+        if (std::fabs(npcPlayerDisplacement) < FLT_EPSILON)
+            npcPlayerDisplacement = 0.0099999998f;
+        npcPlayerRadius = mtwkGetClusterPosition(charFindMotionwork(ctrlGetRootNode()), &npcPlayerCenter);
+        npcNearbyDoor = GetNearbyDoorForNpc(&npcPlayerPosition);
+        npcScheduleFloor = GetQronNextStream();
+        const float displacement = npcPlayerDisplacement < 0.039999999f ? 0.0f : npcPlayerDisplacement > 0.17f ? 0.17f : npcPlayerDisplacement;
+        npcStreamThrottle += displacement;
+        if (npcStreamThrottle > displacement * 100.0f)
+            npcStreamThrottle = displacement * 100.0f;
+        npcStreamThrottleWithBias = npcStreamThrottle + 4.5f;
+    } else {
+        npcRouteTableReady = 0;
+        npcNearbyDoor = 0;
+        npcStreamThrottleWithBias = 4.5f;
+    }
+    ++npcFrameCount;
+    npcRouteBuildCount = 0;
+    npcCurrentRain = GetWeatherPressure();
+    npcHalfHourWeatherForecast = GetMaximumWeatherRainForecast(30);
+    if (!(npcCurrentRain < 0.15f))
+        npcCloudyState = 1;
+    else
+        npcCloudyState = 0;
+    shenGetCurrentDateTime(npcCurrentDateTime);
+    const std::int32_t seconds = ComputeSecondsSince1980(npcCurrentDateTime);
+    npcCurrentSeconds = seconds;
+    TickNpcRouteSlices(2 * (npcCurrentDateTime.hour * 3600 + npcCurrentDateTime.minute * 60 + npcCurrentDateTime.second));
+    NpcRouteLiveEntry *entry = npcCrowdHead;
+    switch (npcCrowdPhase) {
+    case 5: {
+        std::int32_t skipped = 0, cost = 0, candidate;
+        for (; cost < npcPoolTarget && entry; entry = entry->next) {
+            if (entry->flags & 0x100000U)
+                continue;
+            candidate = MeasureNpcStreamCost(entry);
+            if (!candidate)
+                ++skipped;
+            if (skipped == 20)
+                break;
+            cost += candidate;
+        }
+        npcCrowdBookmark = entry;
+        break;
+    }
+    case 6: {
+        if (npcCrowdBookmark)
+            for (entry = npcCrowdBookmark; entry; entry = entry->next)
+                if (!(entry->flags & 0x200U))
+                    BeginNpcRouteStreamOut(entry, 0);
+        entry = npcCrowdHead;
+        NpcRouteLiveEntry *retire = 0, *replacement = 0;
+        for (; entry && entry != npcCrowdBookmark; entry = entry->next) {
+            if (entry->flags & 0x200U)
+                continue;
+            if (!replacement) {
+                if (entry->streamSortKey > 20.0f)
+                    break;
+                if (entry->flags & 0x20000000U)
+                    replacement = entry;
+                else if (!(entry->flags & 2U) && entry->loadHumanResult < 0)
+                    replacement = entry;
+            } else if (entry->flags & 2U)
+                retire = entry;
+        }
+        if (retire && replacement) {
+            if (replacement->flags & 0x20000000U)
+                replacement->flags &= ~0x20000000U;
+            else
+                BeginNpcRouteStreamOut(retire, 1);
+        }
+        break;
+    }
+    case 7:
+        if (GetNpcNewLoadState()) {
+            npcReloadPassStarted = 1;
+            std::int32_t skipped = 0, cost = 0, candidate;
+            for (; cost < npcPoolTarget && entry; entry = entry->next) {
+                if (entry->flags & 0x100000U)
+                    continue;
+                candidate = MeasureNpcReloadStreamCost(entry);
+                if (!candidate)
+                    ++skipped;
+                if (skipped == 20)
+                    break;
+                cost += candidate;
+            }
+        }
+        break;
+    }
+    npcCrowdPhase = ++npcCrowdPhase % 8;
+    std::int32_t renderedCount = 0;
+    for (entry = npcCrowdHead; entry; entry = entry->next) {
+        if (entry->node)
+            mtwkSetUnknownField(entry->motionWork, renderedCount++ <= 4);
+        if (entry->flags & 4U)
+            UpdateNpcStreamFade(entry);
+    }
+    for (entry = npcCrowdHead; entry; entry = entry->next) {
+        if (!entry->node)
+            continue;
+        switch (static_cast<std::int8_t>(entry->liveState)) {
+        case 8:
+        case 11:
+        case 12:
+            break;
+        default:
+            GetCharacterWorldPosition(entry->node, &entry->localPosition);
+            SetNpcRouteScenePosition(&entry->stateContext, shen_name(), &entry->localPosition);
+        }
+        entry->streamRadius = mtwkGetClusterPosition(entry->motionWork, &entry->streamCenter);
+        if (entry->streamRadius < 0.2f)
+            entry->streamRadius = 0.2f;
+    }
+    for (entry = npcCrowdHead; entry;) {
+        if (entry->flags & 1U) {
+            RequestNpcStreamLoad(entry);
+            if (entry->flags & 1U)
+                entry = entry->next;
+            else
+                entry = npcCrowdHead;
+        } else
+            entry = entry->next;
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ReleaseNpcScriptRouteSlot(shen_name name) {
+    NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage) + npcAuthoredEntryCount;
+    for (std::int32_t index = 0; index < 6; ++index, ++entry) {
+        if (entry->name == name) {
+            entry->name = SHEN_NAME4('M', 'O', 'V', 'E');
+            entry->node = 0;
+            entry->motionWork = 0;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t CreateScriptNpcRouteSlot(shen_name name) {
+    ReleaseNpcScriptRouteSlot(name);
+    NpcRouteLiveEntry *entry = reinterpret_cast<NpcRouteLiveEntry *>(npcEntryStorage) + npcAuthoredEntryCount;
+    for (std::int32_t index = 0; index < 6; ++index, ++entry) {
+        if (entry->name != SHEN_NAME4('M', 'O', 'V', 'E'))
+            continue;
+        entry->name = name;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void ResetNpcEntryToAreaPoint(NpcRouteLiveEntry *entry) {
+    entry->localPosition = *GetNpcAreaPointPosition(entry->currentAreaPoint);
+    entry->localPosition.x -= npcRouteOrigin.x;
+    entry->localPosition.z -= npcRouteOrigin.z;
+    entry->packedMoveFlags = (entry->packedMoveFlags & 0xff00U) | GetNpcAreaPointMoveFlags(entry->currentAreaPoint);
+    if (entry->flags & 0xa000U)
+        entry->localPosition.y = entry->forcedY;
+    entry->worldPosition = entry->localPosition;
+    entry->worldPosition.x += npcRouteOrigin.x;
+    entry->worldPosition.z += npcRouteOrigin.z;
+    entry->previousPosition = entry->localPosition;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void BeginNpcAreaRoute(NpcRouteLiveEntry *entry, std::int32_t currentTime) {
+    ReplaceNpcStateCallback(entry, NpcAreaCompletionCallback);
+    InitializeNpcAreaRoute(entry);
+    entry->scheduleProgress = 3;
+    entry->liveState = 9;
+    if (GetNpcAreaPointRouteState(entry->currentAreaPoint)->flags & 8U)
+        npcSlotFlags[entry->poolIndex] |= 4U;
+    else
+        npcSlotFlags[entry->poolIndex] &= ~4U;
+    while (InterpretNpcAreaCommand(entry, currentTime)) {
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t MeasureNpcStreamCost(NpcRouteLiveEntry *entry) {
+    if (entry->flags & 7U)
+        return entry->streamCost;
+    if (entry->flags & 0x28U)
+        return 0;
+    Vector3 position = entry->localPosition;
+    if (!FindNpcIntersectionInScene(position, entry->packedMoveFlags)) {
+        if (npcLoadedArea == shen_name(SHEN_NAME4('T', 'E', 'S', 'T')))
+            entry->localPosition.y = 0.0f;
+        else if (entry->flags & 0x2000U)
+            entry->localPosition.y = entry->forcedY;
+        else if (!entry->attachedCharacter)
+            return 0;
+    }
+    return entry->streamCost;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t MeasureNpcReloadStreamCost(NpcRouteLiveEntry *entry) {
+    if (entry->flags & 7U)
+        return entry->streamCost;
+    if (entry->flags & 0x20000028U)
+        return 0;
+    Vector3 position = entry->localPosition;
+    if (!FindNpcIntersectionInScene(position, entry->packedMoveFlags)) {
+        if (npcLoadedArea == shen_name(SHEN_NAME4('T', 'E', 'S', 'T')))
+            entry->localPosition.y = 0.0f;
+        else if (entry->flags & 0x2000U)
+            entry->localPosition.y = entry->forcedY;
+        else if (!entry->attachedCharacter)
+            return 0;
+    }
+    if (((&entry->stateContext)->flags & 1U) && IsInsideNpcNoSpawnRadius(&entry->localPosition, 0.40000001f))
+        return 0;
+    entry->flags |= 0x1000U;
+    RequestNpcStreamLoad(entry);
+    return entry->streamCost;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t RequestNpcStreamLoad(NpcRouteLiveEntry *entry) {
+    npcLastHumanLoadResult = 0;
+    switch (static_cast<std::int8_t>(entry->streamRouteChangeKind)) {
+    case 0:
+        if (entry->flags & 2U) {
+            npcLastHumanLoadResult = 1;
+            return 1;
+        }
+        if (entry->flags & 4U) {
+            entry->flags = (entry->flags | 1U) & ~4U;
+            entry->streamRouteChangeKind = 2;
+            return 0;
+        }
+        if (!GetNpcNewLoadState() && (entry->flags & 0x1000U)) {
+            entry->flags &= ~1U;
+            return 1;
+        }
+        if (npcPoolTarget <= npcActiveStreamCost && !(entry->flags & 8U))
+            return 1;
+        entry->flags |= 1U;
+        npcActiveStreamCost += entry->streamCost;
+        entry->streamRetryTicks = 0;
+        entry->streamRouteChangeKind = 1;
+    case 1: {
+        const std::int32_t result = npcLoadHuman(entry->loadHumanName, entry->name, entry->flags & 0x40000000U);
+        entry->loadHumanResult = result;
+        if (!result)
+            break;
+        npcLastHumanLoadResult = result;
+        entry->streamRouteChangeKind = 0;
+        entry->flags &= ~1U;
+        if (result > 0) {
+            BindNpcRouteCharacter(entry);
+            if ((entry->flags & 0x1008U) != 0x1000U)
+                SelectCharacterFacialNode(entry->node, 1);
+            else
+                SelectCharacterFacialNode(entry->node, 0);
+            if (entry->name == SHEN_NAME4('S', 'I', 'N', '_')) {
+                SetLowQualityHands(entry->node);
+                SetCharacterHandRegionEnabled(AllocateHNDL(entry->node), 1, 0, 1);
+                SetCharacterHandRegionEnabled(AllocateHNDR(entry->node), 1, 0, 1);
+            }
+            if (entry->flags & 0x40U) {
+                cpamSetFlag(entry->node, 0);
+                SetCharacterAlpha(entry->node, 0.0f);
+                AssignCharacterControlFlags(entry->node, ccmGetFlags(entry->node) & ~8U);
+            }
+            entry->flags &= ~0x1000U;
+            return 1;
+        }
+        if (result < 0)
+            npcActiveStreamCost -= entry->streamCost;
+        break;
+    }
+    case 2:
+        if (!entry->fadeCounter) {
+            entry->streamRouteChangeKind = 0;
+            entry->fadeCounter = 0;
+            entry->flags = (entry->flags & ~1U) | 2U;
+            npcLastHumanLoadResult = 1;
+            return 1;
+        }
+        --entry->fadeCounter;
+        SetCharacterAlpha(entry->node, 1.0f - static_cast<float>(entry->fadeCounter) / 15.0f);
+        break;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+inline NpcRouteStateContextPrefix *GetNpcRouteStateContext(NpcRouteLiveEntry *entry) {
+    return &entry->stateContext;
+}
+
+void BindNpcRouteCharacter(NpcRouteLiveEntry *entry) {
+    entry->flags = (entry->flags & ~1U) | 2U;
+    MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    entry->node = scenFindChara(control->scenarioTask, entry->name);
+    entry->motionWork = charFindMotionwork(entry->node);
+    npcSlotFlags[entry->poolIndex] |= 1U;
+    BindNpcRouteMotionWork(&entry->stateContext, shen_name(), entry->motionWork);
+    BindNpcRouteAppliedMovement(&entry->stateContext, shen_name());
+    entry->localPosition = entry->worldPosition;
+    entry->localPosition.x -= npcRouteOrigin.x;
+    entry->localPosition.z -= npcRouteOrigin.z;
+    UpdateStreamedNpcMotion(entry);
+    if ((static_cast<std::int16_t>(entry->packedMoveFlags) & ~0xff) || (entry->flags & 0x2000U))
+        AssignCharacterControlFlags(entry->node, ccmGetFlags(entry->node) & ~2U);
+    if (entry->flags & 0x08000000U)
+        AssignCharacterControlFlags(entry->node, ccmGetFlags(entry->node) & ~0xcU);
+    mtwkSetRequestedRootMode(entry->motionWork, 1);
+    mtwkSetFrameTime(entry->motionWork, 20, LowerBody);
+    MapControlData *const currentControl = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    if (scenGetCharaName(currentControl->scenarioTask, entry->node) == SHEN_NAME4('R', 'E', 'N', '_'))
+        mtwkSetTimeRelated(entry->motionWork, 1, 0, 0xa204);
+    if (entry->flags & 8U) {
+        if (static_cast<std::int8_t>(entry->liveState) == 1 && (GetNpcRouteStateContext(entry)->routeFlags & 0x10U)) {
+            RestartNpcAreaRouteContext(entry->node, GetNpcRouteStateContext(entry));
+            if (RequestNpcRouteMotion(entry->node, GetNpcRouteStateContext(entry), 0))
+                TickNpcRouteStair(entry->node, GetNpcRouteStateContext(entry));
+        } else {
+            mtwkRequestMotion(entry->motionWork,
+                SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]), static_cast<std::int8_t>(entry->scriptRecord[4]),
+                    static_cast<std::int8_t>(entry->scriptRecord[8])),
+                LowerBody);
+        }
+        return;
+    }
+    std::int32_t applyMotion = 0;
+    switch (static_cast<std::int8_t>(entry->liveState)) {
+    case 1: {
+        NpcRouteStateContextPrefix *const context = &entry->stateContext;
+        RestartNpcAreaRouteContext(entry->node, context);
+        if (RequestNpcRouteMotion(entry->node, context, 0))
+            TickNpcRouteStair(entry->node, context);
+        break;
+    }
+    case 3:
+    case 7:
+        SetCharacterWorldPosition(entry->node, &entry->localPosition);
+        charaSetWorldRot(entry->node, entry->rotation);
+        if (entry->flags & 0x400U) {
+            mtwkSetRequestedRootMode(entry->motionWork, 0);
+            ResumeNpcTimedMotion(entry);
+        }
+        applyMotion = 1;
+        break;
+    case 6:
+        entry->currentMotionId = SelectNpcLeaningProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+            static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        applyMotion = 1;
+        break;
+    case 5:
+        ResumeNpcScheduleMotion(entry);
+        break;
+    case 4:
+        AssignCharacterControlFlags(entry->node, ccmGetFlags(entry->node) & ~6U);
+        SetCharacterWorldPosition(entry->node, &entry->localPosition);
+        mtwkAssignDrawCallback(entry->node, NpcRouteCollisionNullsub);
+        applyMotion = 1;
+        break;
+    case 8:
+        mtwkSetDrawOverrideData(entry->motionWork, 0);
+        AssignCharacterControlFlags(entry->node, 0);
+        SetCharacterWorldPosition(entry->node, &entry->localPosition);
+        if (entry->flags & 0x40000U)
+            entry->animationFrame = static_cast<std::int16_t>(static_cast<std::int32_t>(npcFrameCount + 2 * static_cast<std::int8_t>(entry->scriptRecord[8])) %
+                static_cast<std::int32_t>(npcMotionClipFrameCounts[static_cast<std::int8_t>(entry->retained324)]));
+        break;
+    case 9: {
+        NpcAreaRouteState *const state = GetNpcAreaPointRouteState(entry->currentAreaPoint);
+        if (entry->specialAnimationContext) {
+            entry->currentMotionId = ResolveNpcAreaAnimation(state, entry);
+            if (!entry->specialAnimationContext)
+                entry->currentMotionId = ResolveNpcAreaAnimation(state, entry);
+        } else {
+            entry->currentMotionId = ResolveNpcAreaAnimation(state, entry);
+        }
+        if (!entry->currentMotionId)
+            entry->currentMotionId = SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+                static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        ApplyNpcAreaMotion(entry, entry->currentMotionId);
+        break;
+    }
+    default:
+        entry->currentMotionId = SelectNpcProfileMotion(entry->node, static_cast<std::int8_t>(entry->scriptRecord[5]),
+            static_cast<std::int8_t>(entry->scriptRecord[4]), static_cast<std::int8_t>(entry->scriptRecord[8]));
+        applyMotion = 1;
+        break;
+    }
+    if (applyMotion == 1) {
+        mtwkRequestMotion(entry->motionWork, entry->currentMotionId, LowerBody);
+        mtwkSetSpeed(entry->motionWork, entry->motionSpeed, LowerBody);
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t BeginNpcRouteStreamOut(NpcRouteLiveEntry *entry, std::int32_t forced) {
+    if (!(entry->flags & 2U))
+        return 0;
+    if (entry->flags & 0x18U)
+        return 0;
+    entry->flags = (entry->flags & ~2U) | 4U;
+    if (forced)
+        entry->flags |= 0x20000000U;
+    entry->fadeCounter = 0;
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t UpdateNpcStreamFade(NpcRouteLiveEntry *entry) {
+    if (!IsOfThisVisibilityType(entry->node, CVM_MotionworkDisplayCheck))
+        entry->fadeCounter = 15;
+    switch (entry->fadeCounter) {
+    case 0:
+        ++entry->fadeCounter;
+        break;
+    case 15:
+        ReleaseNpcRouteStream(entry);
+        return 1;
+    default:
+        SetCharacterAlpha(entry->node, 1.0f - static_cast<float>(entry->fadeCounter) / 15.0f);
+        entry->fadeCounter = static_cast<std::int8_t>(entry->fadeCounter + 1);
+        break;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void ReleaseNpcRouteStream(NpcRouteLiveEntry *entry) {
+    npcReleasePak(entry->loadHumanName);
+    npcActiveStreamCost =
+        SHENMUE_NPC_SIGNED(static_cast<std::uint32_t>(npcActiveStreamCost) - static_cast<std::uint32_t>(static_cast<std::int32_t>(entry->streamCost)));
+    entry->flags &= 0xdffffff8U;
+    entry->node = SHENMUE_NPC_NULL;
+    entry->motionWork = SHENMUE_NPC_NULL;
+    if (entry->flags & 0x400U)
+        entry->timedMotionHandle->character = SHENMUE_NPC_NULL;
+    npcSlotFlags[entry->poolIndex] &= 0xfeU;
+    entry->fadeCounter = 0;
+    entry->streamRouteChangeKind = 0;
+    if (entry->flags & 0x10U) {
+        entry->liveState = entry->previousLiveState;
+        entry->specialMotionPhase = 0;
+        entry->flags &= ~0x10U;
+        entry->flags &= ~0x4000U;
+    }
+    NpcRouteStateContextPrefix *context = &entry->stateContext;
+    if (context->flags & 1U)
+        ResetNpcRouteContext(context);
+    entry->loadHumanResult = 8;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void ComputeNpcTargetRotation(const Vector3 *position, const Vector3 *target, Vector3i *rotation) {
+    Vector3 direction;
+    direction.x = target->x - position->x;
+    direction.y = target->y - position->y;
+    float &zField = direction.z;
+    const float z = target->z - position->z;
+    zField = z;
+    if (!(std::abs(direction.x) < 0.001f && std::abs(z) < 0.001f))
+        rotation->y = static_cast<std::int16_t>(InverseFixedAtan2(direction.x, direction.z));
+    else
+        rotation->y = 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t TickNpcSpecialMotion(NpcRouteLiveEntry *entry) {
+    if (!entry->node)
+        return 0;
+    if ((entry->flags & 0x4000U) && static_cast<std::int8_t>(entry->specialMotionPhase) < 9) {
+        entry->flags &= ~0x4000U;
+        entry->specialMotionPhase = 9;
+    }
+    if ((GetNpcRouteStateContext(entry)->flags & 0x1400U) == 0x400U) {
+        if (!npcSlotFlags[entry->poolIndex])
+            GetNpcRouteStateContext(entry)->routeFlags |= 0x10000U;
+        else
+            GetNpcRouteStateContext(entry)->routeFlags &= ~0x10000U;
+        TickNpcRouteStateContext(GetNpcRouteStateContext(entry));
+    }
+    if (static_cast<std::int8_t>(entry->previousLiveState) == 9)
+        TickNpcAreaRouteState(entry);
+    Vector3 position;
+    Vector3i facing, rotation;
+    std::uint16_t motion;
+    switch (static_cast<std::int8_t>(entry->specialMotionPhase)) {
+    case 0:
+    case 1:
+    case 7:
+    case 8:
+        break;
+    case 2:
+        if (!mtwkSetRegionFlag(entry->motionWork, 0x41, 1, LowerBody))
+            break;
+        if (mtwkSetExtraFlag(entry->motionWork, 0x3a, 1))
+            break;
+        motion = SelectNpcIdleSpecialMotion(entry, static_cast<std::int8_t>(entry->scriptRecord[5]), static_cast<std::int8_t>(entry->scriptRecord[4]),
+            static_cast<std::int8_t>(entry->scriptRecord[8]));
+        if (!motion) {
+            mtwkSetSpeed(entry->motionWork, 0.0f, LowerBody);
+            entry->specialMotionPhase = 0;
+            break;
+        }
+        if (motion != mtwkGetAnimationId(entry->motionWork, LowerBody))
+            mtwkRequestMotion(entry->motionWork, motion, LowerBody);
+        break;
+    case 3:
+        mtwkUpdateWithPosition(entry->motionWork, &entry->specialMotionTarget, 1);
+        if (GetNpcRouteStateContext(entry)->flags & 0x400U) {
+            GetNpcRouteStateContext(entry)->routeFlags |= 0x800U;
+            entry->specialMotionPhase = 0;
+            break;
+        }
+        if (static_cast<std::int8_t>(entry->previousLiveState) == 4) {
+            entry->specialMotionPhase = 0;
+            break;
+        }
+        entry->specialMotionPhase = 2;
+        GetCharacterWorldPosition(entry->node, &position);
+        GetCharacterWorldRotation(entry->node, &rotation);
+        ComputeNpcTargetRotation(&position, &entry->specialMotionTarget, &facing);
+        facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) - static_cast<std::int16_t>(rotation.y));
+        if (static_cast<std::int8_t>(entry->previousLiveState) == 9) {
+            std::uint32_t flags = GetNpcAreaSpecialMotionFlags(*entry);
+            if (flags & 1U) {
+                const std::uint32_t transition = SelectNpcAreaTransitionMotion(entry);
+                motion = static_cast<std::uint16_t>(transition);
+                if (motion && motion != mtwkGetAnimationId(entry->motionWork, LowerBody)) {
+                    mtwkRequestMotion(entry->motionWork, motion, LowerBody);
+                    flags = transition >> 16U;
+                }
+                if (flags & 4U) {
+                    mtwkUpdateWithPosition(entry->motionWork, &entry->specialMotionTarget, 0);
+                } else {
+                    mtwkUpdateWithPosition(entry->motionWork, &entry->specialMotionTarget, 1);
+                    if (flags & 8U) {
+                        mtwkUpdateWithPosition(entry->motionWork, 0, 7);
+                    } else if (flags & 0x70U) {
+                        if (static_cast<std::int16_t>(facing.y) >= 0) {
+                            if (flags & 0x10U)
+                                mtwkUpdateWithPosition(entry->motionWork, 0, 10);
+                            else
+                                mtwkUpdateWithPosition(entry->motionWork, 0, 9);
+                            if (flags & 0x20U)
+                                mtwkUpdateWithPosition(entry->motionWork, 0, 13);
+                        } else {
+                            if (flags & 0x10U)
+                                mtwkUpdateWithPosition(entry->motionWork, 0, 13);
+                            else
+                                mtwkUpdateWithPosition(entry->motionWork, 0, 12);
+                            if (flags & 0x20U)
+                                mtwkUpdateWithPosition(entry->motionWork, 0, 10);
+                        }
+                    }
+                }
+                entry->specialMotionPhase = 0;
+                break;
+            }
+        }
+        motion = 0;
+        if (static_cast<std::int8_t>(entry->previousLiveState) == 9) {
+            motion = static_cast<std::uint16_t>(SelectNpcAreaTransitionMotion(entry));
+            if (motion)
+                entry->specialMotionPhase = 0;
+        }
+        if (entry->flags & 0x800000U)
+            break;
+        entry->flags |= 0x800000U;
+        if (static_cast<std::int16_t>(facing.y) >= 0) {
+            if (static_cast<std::int16_t>(facing.y) > 0x4e38)
+                facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) - 0x4e38);
+        } else if (static_cast<std::int16_t>(facing.y) < -0x4e38)
+            facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) + 0x4e38);
+        if (!motion) {
+            motion = SelectNpcSpecialMotion(entry, static_cast<std::int8_t>(entry->scriptRecord[5]), static_cast<std::int8_t>(entry->scriptRecord[4]),
+                static_cast<std::int8_t>(entry->scriptRecord[8]));
+            if (!motion) {
+                mtwkSetSpeed(entry->motionWork, 0.0f, LowerBody);
+                entry->specialMotionPhase = 0;
+                break;
+            }
+        }
+        if (!facing.y && motion == mtwkGetAnimationId(entry->motionWork, LowerBody))
+            break;
+        facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) + static_cast<std::int16_t>(rotation.y));
+        mtwkCopyTransition(entry->motionWork, 0, facing.y, 13, 0);
+        mtwkSetTimeRelated(entry->motionWork, 1, 5, motion);
+        mtwkSetTimeRelated(entry->motionWork, 1, 0, motion);
+        break;
+    case 4:
+        if (GetNpcRouteStateContext(entry)->flags & 0x100U)
+            break;
+        entry->specialMotionPhase = 0;
+        GetCharacterWorldRotation(entry->node, &rotation);
+        if (static_cast<std::int16_t>(rotation.y) != static_cast<std::int16_t>(entry->rotation.y))
+            mtwkCopyTransition(entry->motionWork, 0, entry->rotation.y, 13, 0);
+        break;
+    case 5:
+        entry->specialMotionPhase = 0;
+        if (!QueryNpcSceneMotionPlaying(entry->name))
+            mtwkRequestTargetFacing(entry->motionWork, &entry->specialMotionTarget, 0);
+        else
+            mtwkRequestTargetFacing(entry->motionWork, &entry->specialMotionTarget, 2);
+        if (static_cast<std::int8_t>(entry->previousLiveState) == 4 || static_cast<std::int8_t>(entry->previousLiveState) == 9 ||
+            (GetNpcRouteStateContext(entry)->flags & 0x400U))
+            break;
+        GetCharacterWorldPosition(entry->node, &position);
+        GetCharacterWorldRotation(entry->node, &rotation);
+        ComputeNpcTargetRotation(&position, &entry->specialMotionTarget, &facing);
+        facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) - static_cast<std::int16_t>(rotation.y));
+        if (static_cast<std::int16_t>(facing.y) >= 0) {
+            if (static_cast<std::int16_t>(facing.y) > 0x4e38)
+                facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) - 0x4e38);
+        } else if (static_cast<std::int16_t>(facing.y) < -0x4e38)
+            facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) + 0x4e38);
+        facing.y = static_cast<std::int16_t>(static_cast<std::int16_t>(facing.y) + static_cast<std::int16_t>(rotation.y));
+        mtwkCopyTransition(entry->motionWork, 0, facing.y, 13, 0);
+        motion = SelectNpcSpecialMotion(entry, static_cast<std::int8_t>(entry->scriptRecord[5]), static_cast<std::int8_t>(entry->scriptRecord[4]),
+            static_cast<std::int8_t>(entry->scriptRecord[8]));
+        if (!motion) {
+            mtwkSetSpeed(entry->motionWork, 0.0f, LowerBody);
+            break;
+        }
+        mtwkSetTimeRelated(entry->motionWork, 1, 5, motion);
+        mtwkSetTimeRelated(entry->motionWork, 1, 0, motion);
+        break;
+    case 6:
+        entry->specialMotionPhase = 0;
+        mtwkRequestTargetFacing(entry->motionWork, 0, 0);
+        break;
+    case 9:
+        if (GetNpcRouteStateContext(entry)->flags & 0x8000U)
+            ResumeNpcRouteAfterSceneChange(entry->name);
+        mtwkSetSpeed(entry->motionWork, entry->motionSpeed, LowerBody);
+        switch (static_cast<std::int8_t>(entry->previousLiveState)) {
+        case 5:
+            entry->specialMotionPhase = 11;
+            position = entry->worldPosition;
+            position.x -= npcRouteOrigin.x;
+            position.z -= npcRouteOrigin.z;
+            mtwkCopyTransition(entry->motionWork, &position, entry->rotation.y, 6, 0);
+            break;
+        case 4:
+        case 9:
+            entry->liveState = entry->previousLiveState;
+            entry->specialMotionPhase = 0;
+            entry->flags &= ~0x10U;
+            entry->commandFlags &= ~0x40U;
+            ResumeNpcAreaSpecialMotion(entry);
+            return 0;
+        case 1:
+            entry->liveState = entry->previousLiveState;
+            entry->specialMotionPhase = 0;
+            entry->flags &= ~0x10U;
+            SetNpcRouteMotionState(GetNpcRouteStateContext(entry), shen_name(), 3);
+            return 0;
+        default: {
+            entry->specialMotionPhase = 10;
+            mtwkCopyTransition(entry->motionWork, &entry->specialMotionRestorePosition, entry->rotation.y, 6, 0);
+            mtwkSetTimeRelated(entry->motionWork, 0, 6, 0);
+            mtwkSetTimeRelated(entry->motionWork, 1, 5, entry->currentMotionId);
+            MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            if (scenGetCharaName(control->scenarioTask, entry->node) == SHEN_NAME4('R', 'E', 'N', '_'))
+                mtwkSetTimeRelated(entry->motionWork, 1, 0, 0xa204);
+            mtwkSetRegionEvalTime(entry->motionWork, static_cast<float>(entry->animationFrame), LowerBody);
+            break;
+        }
+        }
+        break;
+    case 10:
+    case 11:
+        if (!mtwkSetExtraFlag(entry->motionWork, 0x3a, 1)) {
+            if (static_cast<std::int8_t>(entry->specialMotionPhase) == 11)
+                ResumeNpcScheduleMotion(entry);
+            entry->liveState = entry->previousLiveState;
+            entry->specialMotionPhase = 0;
+            entry->flags &= ~0x10U;
+            return 0;
+        }
+        break;
+    }
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void UpdateStreamedNpcMotion(NpcRouteLiveEntry *entry) {
+    if (!entry->node)
+        return;
+    FindNpcIntersectionInScene(entry->localPosition, entry->packedMoveFlags);
+    if (entry->flags & 0xa000U)
+        entry->localPosition.y = entry->forcedY;
+    SetCharacterWorldPosition(entry->node, &entry->localPosition);
+    charaSetWorldRot(entry->node, entry->rotation);
+    if (camCtrlIsInsideDepthScaledRect(entry->localPosition, 2.0f))
+        entry->streamRetryTicks = 0;
+    else
+        ++entry->streamRetryTicks;
+    mtwkSetEnabled(entry->motionWork, 1);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void ApplyNpcCommandMotion(NpcRouteLiveEntry *entry, std::int32_t opcode) {
+    if (!entry->node || (entry->currentMotionId == mtwkGetAnimationId(entry->motionWork, LowerBody) && mtwkIsMotionNonLooping(entry->motionWork, 0)))
+        return;
+    switch (opcode) {
+    case 8:
+        mtwkSetRequestedRootMode(entry->motionWork, 1);
+        mtwkSetFrameTime(entry->motionWork, 20, LowerBody);
+        AssignCharacterControlFlags(entry->node, ccmGetFlags(entry->node) & ~6U);
+        mtwkAssignDrawCallback(entry->node, NpcRouteCollisionNullsub);
+        break;
+    case 40:
+        mtwkSetRequestedRootMode(entry->motionWork, 0);
+        ResumeNpcTimedMotion(entry);
+        break;
+    case 7:
+    case 10:
+    case 16:
+        mtwkSetRequestedRootMode(entry->motionWork, 1);
+        mtwkSetFrameTime(entry->motionWork, 20, LowerBody);
+        break;
+    }
+    if (entry->flags & 0xa000U)
+        entry->localPosition.y = entry->forcedY;
+    else
+        FindNpcIntersectionInScene(entry->localPosition, entry->packedMoveFlags);
+    SetCharacterWorldPosition(entry->node, &entry->localPosition);
+    charaSetWorldRot(entry->node, entry->rotation);
+    mtwkRequestMotion(entry->motionWork, entry->currentMotionId, LowerBody);
+    mtwkSetSpeed(entry->motionWork, entry->motionSpeed, LowerBody);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+NpcRouteStateContextPrefix *FindNpcRouteStateContext(shen_name name) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    return &entry->stateContext;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t npcGetPosFor(shen_name name, Vector3 *position) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (!entry)
+        return 0;
+    if (!npcPositionQueryMode) {
+        if (!entry->node)
+            return 0;
+        npcPositionQueryMode = 1;
+    }
+    Vector3 local = entry->worldPosition;
+    local.x -= npcRouteOrigin.x;
+    local.z -= npcRouteOrigin.z;
+    *position = local;
+    return 1;
+}
+
+#else
+
+std::int32_t npcGetPosFor(shen_name character, Vector3 *position) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (const NpcRouteLiveEntry &entry : npcRouteEntries) {
+        if (entry.name.name != character.name)
+            continue;
+        if (!npcPositionQueryMode) {
+            if (!entry.node)
+                return 0;
+            npcPositionQueryMode = 1;
+        }
+        *position = entry.worldPosition;
+        position->x -= npcSchedule.areaOrigin.x;
+        position->z -= npcSchedule.areaOrigin.z;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::int64_t MarkNpcRoutePartyControl(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (NpcRouteLiveEntry &entry : npcRouteEntries) {
+        if (entry.name.name != character.name)
+            continue;
+        if (!(entry.flags & NRSF_AbstractActive))
+            return 0;
+        entry.flags |= NRSF_Unknown80;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::int64_t ClearNpcRoutePartyControl(shen_name character) {
+    if (!npcRegistryTask.current)
+        return 0;
+    for (NpcRouteLiveEntry &entry : npcRouteEntries) {
+        if (entry.name.name != character.name)
+            continue;
+        if (!(entry.flags & NRSF_AbstractActive))
+            return 0;
+        entry.flags &= ~NRSF_Unknown80;
+        return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t SetNpcRouteControlHold(shen_name name, std::int32_t enabled) {
+    NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    std::int32_t previous;
+    if (!entry)
+        return 0;
+    previous = static_cast<std::int32_t>(entry->controlFlags) >> 5 & 1;
+    if (enabled)
+        entry->controlFlags |= 0x20U;
+    else
+        entry->controlFlags &= ~0x20U;
+    return previous;
+}
+
+#else
+
 // @verified - p
 std::uint64_t SetNpcRouteControlHold(shen_name character, std::int32_t enabled) {
     if (!npcRegistryTask.current)
@@ -1751,127 +4747,516 @@ std::uint64_t SetNpcRouteControlHold(shen_name character, std::int32_t enabled) 
     return 0;
 }
 
-// @verified - p
-std::int64_t EV_npcUnknownFunc(shen_name character) {
-    if (!npcRegistryTask.current)
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t QueueNpcMotionAttachment(NpcRouteLiveEntry *entry, std::uint16_t motion, std::int32_t flags, std::int32_t slot) {
+    if (!motion)
         return 0;
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (entry.name.name != character.name)
-            continue;
-        if (!(entry.flags & 8U))
-            return 0;
-        entry.flags &= ~0x80U;
+    entry->motionAttachments[slot].motion = static_cast<std::uint16_t>(motion);
+    entry->motionAttachments[slot].flags = (entry->motionAttachments[slot].flags & 0xffc1U) | (flags & 0x3eU);
+    std::uint16_t available = flags & 0x1eU;
+    for (std::int32_t index = 0; index < slot; ++index)
+        if (entry->motionAttachments[index].motion)
+            available &= ~(entry->motionAttachments[index].flags & 0x1eU);
+    if (available)
         return 1;
-    }
     return 0;
 }
 
-// @verified - p
-std::int64_t EV_npcUpdateFlags(shen_name character) {
-    if (!npcRegistryTask.current)
-        return 0;
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (entry.name.name != character.name)
-            continue;
-        if (!(entry.flags & 8U))
-            return 0;
-        entry.flags |= 0x80U;
-        return 1;
-    }
-    return 0;
-}
+#endif
 
-// @verified - p
-std::uint32_t GetNpcScriptRouteCompletion(shen_name character) {
-    if (!npcRegistryTask.current)
-        return 0;
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        const NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        if (entry.name.name != character.name)
-            continue;
-        if ((entry.flags & 0x88U) != 0x88U)
-            return 0;
-        return (GetNpcAreaSpecialMotionFlags(entry) ^ 0x80U) >> 7;
-    }
-    return 0;
-}
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 
-// Releases every unpinned, non-abstract stream that is still only requested.
-std::int32_t npcReleaseUnusedStreams() {
-    if (!npcRegistryTask.current)
-        return 1;
-    ReleaseReadyNpcTransitionHumanPackages();
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        NpcRouteRuntimeRecord &runtime = npcRouteRuntimeRecords[index];
-        if (ReadNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset) < 0) {
-            WriteNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset, 8);
-            if (runtime.streamState == NpcHumanStreamState::Missing)
-                runtime.streamState = NpcHumanStreamState::Inactive;
-        }
-        if ((entry.flags & (NRSF_AbstractActive | NRSF_Pinned)) == 0 &&
-            (entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) != 0) {
-            FlushQueuedLegacyDrawPasses();
-            if (entry.flags & NRSF_Requested)
-                ReleaseNpcRouteStream(entry, runtime, false);
+// @verified - d
+void CaptureNpcMotionAttachmentFrame(NpcRouteLiveEntry *entry, NpcMotionAttachment *attachment) {
+    for (std::int32_t region = 1; region < 5; ++region) {
+        const MotionRegion part = static_cast<MotionRegion>(region);
+        if (((attachment->flags >> region) & 1) && mtwkSetRegionFlag(entry->motionWork, 0x48, 1, part) &&
+            attachment->motion == mtwkGetAnimationId(entry->motionWork, part)) {
+            attachment->frame = mtwkGetFrame(entry->motionWork, part);
+            if (mtwkSetRegionFlag(entry->motionWork, 0x44, 1, part))
+                attachment->frame -= 12.0f;
+            return;
         }
     }
+    attachment->frame = -12.0f;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void RequestNpcMotionAttachmentRegion(NpcRouteLiveEntry *entry, const NpcMotionAttachment *attachment, std::uint32_t region) {
+    const MotionRegion part = static_cast<MotionRegion>(region);
+    float frame = attachment->frame + 12.0f;
+    frame *= mtwkGetSpeed(entry->motionWork, part);
+    const float last = static_cast<float>(static_cast<std::int32_t>(GetMotionFrameCount(attachment->motion))) - 1.0f;
+    if (last < 0.0f)
+        return;
+    if (attachment->flags & 0x20U) {
+        while (frame > last)
+            frame -= last;
+    } else if (frame > last)
+        frame = last;
+    mtwkRequestMotion(entry->motionWork, attachment->motion, part);
+    mtwkSetRegionEvalTime(entry->motionWork, frame, part);
+    mtwkSetRequestedRootMode(entry->motionWork, 1);
+    mtwkSetFrameTime(entry->motionWork, 12, part);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void EvaluateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
+    std::int32_t complete[3] = {0, 0, 0};
+    std::int32_t slot;
+    for (slot = 0; slot < 3; ++slot) {
+        if (entry->motionAttachments[slot].motion)
+            CaptureNpcMotionAttachmentFrame(entry, &entry->motionAttachments[slot]);
+        else
+            entry->motionAttachments[slot].flags = 0;
+    }
+    for (std::int32_t region = 1; region < 5; ++region) {
+        std::int32_t used = 0;
+        for (slot = 0; slot < 3; ++slot) {
+            if (entry->motionAttachments[slot].motion && !(entry->motionAttachments[slot].flags & 0x40)) {
+                const std::uint16_t flags = entry->motionAttachments[slot].flags;
+                if ((flags >> region) & 1) {
+                    used |= flags & (1 << region);
+                    std::uint16_t active = mtwkGetAnimationId(entry->motionWork, static_cast<MotionRegion>(region));
+                    if (!mtwkSetRegionFlag(entry->motionWork, 0x48, 1, static_cast<MotionRegion>(region)))
+                        active = 0;
+                    const std::uint16_t queued = mtwkGetQueuedAnimationId(entry->motionWork, static_cast<MotionRegion>(region));
+                    if ((!active && !queued) || (active && entry->motionAttachments[slot].motion != active) ||
+                        (queued && entry->motionAttachments[slot].motion != queued))
+                        RequestNpcMotionAttachmentRegion(entry, &entry->motionAttachments[slot], region);
+                    else if (!(entry->motionAttachments[slot].flags & 0x20) &&
+                        mtwkSetRegionFlag(entry->motionWork, 0x41, 1, static_cast<MotionRegion>(region))) {
+                        mtwkRequestRegionDetach(entry->motionWork, static_cast<MotionRegion>(region));
+                        complete[slot] = 1;
+                    }
+                    break;
+                }
+            }
+        }
+        if (!used)
+            mtwkRequestRegionDetach(entry->motionWork, static_cast<MotionRegion>(region));
+    }
+    for (slot = 0; slot < 3; ++slot)
+        if (complete[slot]) {
+            entry->motionAttachments[slot].motion = 0;
+            entry->motionAttachments[slot].flags = 0;
+        }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool IsNpcSceneMotionPlaying(shen_name name) {
+    const NpcRouteLiveEntry *const entry = FindNpcRouteEntry(name);
+    if (entry && entry->node) {
+        for (std::int32_t region = 1; region < 5; ++region) {
+            const MotionRegion part = static_cast<MotionRegion>(region);
+            if (mtwkSetRegionFlag(entry->motionWork, 0x48, 1, part)) {
+                const std::uint32_t animation = mtwkGetAnimationId(entry->motionWork, part);
+                std::uint32_t motion;
+                if (entry->flags & 0x10U)
+                    motion = RemapNpcMotionForRig(charGetMotionRigType(entry->node), 0xe364);
+                else
+                    motion = RemapNpcMotionForRig(charGetMotionRigType(entry->node), 0xe353);
+                if (animation == motion)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+#else
+
+// @verified - p
+std::uint64_t IsNpcSceneMotionPlaying(shen_name character) {
+    NpcRouteLiveEntry *const entry = FindActiveNpcEntry(character);
+    if (!entry || !entry->node)
+        return 0;
+    for (std::uint32_t region = 1; region < 5; ++region) {
+        if (mtwkSetRegionFlag(entry->motionWork, 72, 1, static_cast<MotionRegion>(region)) &&
+            mtwkGetAnimationId(entry->motionWork, static_cast<MotionRegion>(region)) == RemapNpcMotionForRig(GetCharacterBoneId(entry->node), NPC_SCENE_MOTION))
+            return 1;
+    }
+    return 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void ClearNpcMotionAttachment(NpcRouteLiveEntry *entry, std::int32_t slot) {
+    NpcMotionAttachment *attachment = &entry->motionAttachments[slot];
+    if (slot < 3)
+        attachment->flags = attachment->motion = 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t SelectNpcRandomMotionAttachment() {
+    if (dc::sdk::RandomFloat() * 3.0f > 1.0f)
+        return 0;
+    return 0x148075U;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
+    if (entry->controlFlags & 0x20U)
+        return;
+    if (!entry->node) {
+        entry->attachmentFrameCounter = 0;
+        return;
+    }
+    if (mtwkSetExtraFlag(entry->motionWork, 0x3c, 1))
+        return;
+    if (entry->controlFlags & 0x10U)
+        entry->motionAttachments[0].flags |= 0x40U;
+    if (npcCloudyState) {
+        std::uint32_t motion;
+        if (entry->flags & 0x10U)
+            motion = RemapNpcMotionForRig(charGetMotionRigType(entry->node), 0xe364);
+        else
+            motion = RemapNpcMotionForRig(charGetMotionRigType(entry->node), 0xe353);
+        const std::uint32_t attachedMotion = entry->motionAttachments[0].motion;
+        const std::uint32_t preserveMotion = 0x10U;
+        if (attachedMotion != 0) {
+            if (attachedMotion == motion)
+                goto updateAttachmentRegions;
+        } else if (entry->flags & preserveMotion) {
+            goto updateAttachmentRegions;
+        }
+        QueueNpcMotionAttachment(entry, static_cast<std::uint16_t>(motion), 0x28, 0);
+    } else if (entry->motionAttachments[0].motion && (entry->flags & 0x10U) == 0) {
+        entry->motionAttachments[0].motion = 0;
+        entry->motionAttachments[0].flags = 0;
+    }
+updateAttachmentRegions:
+    if (entry->controlFlags & 3U) {
+        mtwkRequestRegionDetach(entry->motionWork, LowerBody);
+        if (entry->controlFlags & 1U) {
+            for (std::uint32_t slot = 0; slot < 3; ++slot) {
+                entry->motionAttachments[slot].motion = 0;
+                entry->motionAttachments[slot].flags = 0;
+            }
+        }
+    } else {
+        EvaluateNpcMotionAttachments(entry);
+        if ((entry->controlFlags & 4U) && !entry->motionAttachments[2].motion) {
+            if (++entry->attachmentFrameCounter <= 90U)
+                return;
+            const std::uint32_t motion = SelectNpcRandomMotionAttachment();
+            if (motion && !QueueNpcMotionAttachment(entry, static_cast<std::uint16_t>(motion), motion >> 16U, 2)) {
+                entry->motionAttachments[2].motion = 0;
+                entry->motionAttachments[2].flags = 0;
+            }
+        }
+    }
+    entry->attachmentFrameCounter = 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t BranchNpcIfWeekday(NpcRouteLiveEntry *entry) {
+    std::int32_t branched = 0;
+    const std::int8_t week = static_cast<std::int8_t>(npcCurrentDateTime.week);
+    if (week != 0 && week != 6)
+        branched = SelectNpcScheduleBranch(entry, *reinterpret_cast<const std::int32_t *>(entry->currentCommand + 4));
+    if (!branched)
+        entry->currentCommand += 8;
     return 1;
 }
 
-// Returns 1 once no unpinned, non-abstract stream is still live or fading out.
-std::int32_t PrepareNpcAllFromArray() {
-    std::int32_t released = 1;
-    if (!npcRegistryTask.current)
-        return released;
-    if (GetNpcNewLoadState() != 0)
-        EV_NPC_NewLoadSw(0);
-    FlushQueuedLegacyDrawPasses();
-    FlushQueuedStripType3Batches();
-    ReleaseNpcTransitionHumanPackages();
-    for (std::size_t index = 0; index < npcAuthoredEntryCount; ++index) {
-        NpcRouteLiveEntry &entry = npcRouteEntries[index];
-        NpcRouteRuntimeRecord &runtime = npcRouteRuntimeRecords[index];
-        if (ReadNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset) < 0) {
-            WriteNpcLiveField<std::int8_t>(entry, npcLoadHumanResultOffset, 8);
-            if (runtime.streamState == NpcHumanStreamState::Missing)
-                runtime.streamState = NpcHumanStreamState::Inactive;
-        }
-        std::uint32_t pending = 4;
-        if ((entry.flags & NRSF_AbstractActive) != 0) {
-            pending = 2;
-        } else if ((entry.flags & NRSF_Pinned) != 0) {
-            pending = 3;
-        } else if ((entry.flags & (NRSF_Requested | NRSF_Live | NRSF_FadeOut)) != 0) {
-            FlushQueuedLegacyDrawPasses();
-            pending = entry.flags & NRSF_Requested;
-            if (pending != 0)
-                ReleaseNpcRouteStream(entry, runtime, false);
-            if ((entry.flags & (NRSF_Live | NRSF_AbstractActive | 0x10U)) == NRSF_Live) {
-                entry.field335 = 0;
-                entry.flags = (entry.flags & ~(NRSF_Live | NRSF_FadeOut)) | NRSF_FadeOut;
-            }
-            if ((entry.flags & NRSF_FadeOut) != 0)
-                UpdateNpcStreamFade(entry);
-        }
-        if (pending == 0)
-            released = 0;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t BranchNpcIfWeekend(NpcRouteLiveEntry *entry) {
+    std::int32_t branched = 0;
+    const std::int8_t week = static_cast<std::int8_t>(npcCurrentDateTime.week);
+    if (week == 0 || week == 6)
+        branched = SelectNpcScheduleBranch(entry, *reinterpret_cast<const std::int32_t *>(entry->currentCommand + 4));
+    if (!branched)
+        entry->currentCommand += 8;
+    return 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void ClearNpcScheduleSeeds() {
+    for (std::int32_t index = 0; index < 2; ++index)
+        npcScheduleSeedNames[index] = shen_name();
+    hasPendingNpcScheduleSeeds = 0;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+bool IsNpcScheduleSeedName(shen_name name) {
+    for (std::int32_t index = 0; index < 2; ++index)
+        if (npcScheduleSeedNames[index] == name)
+            return true;
+    return false;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+// @verified - d
+void RestoreNpcScheduleSeedPayload(const void *payload) {
+    pendingNpcScheduleSeeds = static_cast<const std::byte *>(payload);
+    hasPendingNpcScheduleSeeds = 1;
+}
+#endif
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcWalkingMotion(const Character *character) {
+    const std::int32_t rig = charGetMotionRigType(character);
+    return rig < 15 ? (npcWalkingMotions + 1)[rig] : 0xf084;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcRunningMotion(const Character *character) {
+    const std::int32_t rig = charGetMotionRigType(character);
+    return rig < 15 ? (npcRunningMotions + 1)[rig] : 0xf006;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t GetNpcRestingMotion(const Character *character) {
+    switch (charGetMotionRigType(character)) {
+    case 0:
+        return 0xf03f;
+    case 1:
+        return 0xf05f;
+    case 2:
+        return 0xf07f;
+    case 3:
+        return 0xf057;
+    case 4:
+        return 0xf09f;
+    case 5:
+        return 0xf0d2;
+    case 6:
+        return 0xf061;
+    case 7:
+        return 0xf087;
+    case 8: {
+        MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        return scenGetCharaName(control->scenarioTask, character) == SHEN_NAME4('R', 'E', 'N', '_') ? 0xa204 : 0xf085;
     }
-    return released;
+    case 9:
+        return 0xf079;
+    case 10:
+        return 0xf059;
+    case 11:
+        return 0xf0a8;
+    case 13:
+        return 0xf0a5;
+    case 14:
+        return 0xf0a7;
+    case 15:
+        return 0xf0ea;
+    default:
+        return 0xf085;
+    }
 }
 
-// @verified - p
-void EV_ReconfigureNpcRoutesForStoryStep() {
-    if (!npcRegistryTask.current)
-        return;
-    EV_ResetFreeTalkFlags();
-    WarmBootstrapNpcRoutes();
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcStairDescendingMotion(Character *character) {
+    static const std::uint16_t motions[16] = {
+        0xf0f4, 0xf040, 0xf040, 0xf080, 0xf040, 0xf0a0, 0xf0d3, 0xf062, 0xf088, 0x8025, 0xf07a, 0xf05a, 0x8025, 0x8025, 0xf040, 0xf0f3};
+    const std::int32_t rig = charGetMotionRigType(character);
+    return rig < 15 ? (motions + 1)[rig] : 0x8025;
 }
 
-std::uint64_t GetNpcNewLoadState() {
-    return npcNewLoadState;
-}
-} // namespace shenmue::s2
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcStairAlternateMotion(Character *character) {
+    static const std::uint16_t motions[16] = {
+        0xf0f3, 0x8067, 0x8067, 0x8067, 0x8067, 0x806a, 0x806a, 0x8068, 0x8069, 0x8069, 0x8069, 0x8069, 0x8069, 0x8069, 0x8067, 0x8067};
+    const std::int32_t rig = charGetMotionRigType(character);
+    return rig < 15 ? (motions + 1)[rig] : 0x8069;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t GetNpcProfileImageType(Character *character, std::int32_t age, std::int32_t sex, std::int32_t *type) {
+    if (character) {
+        const std::int32_t source = GetCharacterImageSourceType(character);
+        *type = source / 32;
+    } else
+        *type = 0;
+    std::int32_t group;
+    if (age < 13)
+        group = 2;
+    else if (age > 55)
+        group = 4;
+    else
+        group = 0;
+    if (sex)
+        ++group;
+    if (*type > 2)
+        group = -1;
+    return group;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcLeaningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile);
+
+std::uint16_t SelectNpcProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile) {
+    std::int32_t type;
+    const std::int32_t group = GetNpcProfileImageType(character, age, sex, &type);
+    return group == -1 ? 0x8028 : npcSeatedMotions[group][profile][type];
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcLeaningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile) {
+    std::int32_t type;
+    const std::int32_t group = GetNpcProfileImageType(character, age, sex, &type);
+    return group == -1 ? 0x8034 : npcLeaningMotions[group][profile][type];
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint16_t SelectNpcRecliningProfileMotion(Character *character, std::int32_t age, std::int32_t sex, std::int32_t profile) {
+    static const std::uint16_t motions[6][3][3] = {0xe38b, 0xe38b, 0xe38b, 0xe38a, 0xe38c, 0xe38c, 0xe38a, 0xe38a, 0xe38a, 0xe388, 0xe388, 0xe388, 0xe244,
+        0xe244, 0xe244, 0xe387, 0xe387, 0xe387, 0xe249, 0xe249, 0xe249, 0xe38a, 0xe38a, 0xe38a, 0xe249, 0xe249, 0xe249, 0xe249, 0xe249, 0xe249, 0xe249, 0xe249,
+        0xe249, 0xe387, 0xe387, 0xe387, 0xe24a, 0xe24a, 0xe24a, 0xe38a, 0xe38a, 0xe38a, 0xe389, 0xe389, 0xe389, 0xe24a, 0xe24a, 0xe24a, 0xe387, 0xe387, 0xe387,
+        0xe389, 0xe389, 0xe389};
+    std::int32_t type;
+    const std::int32_t group = GetNpcProfileImageType(character, age, sex, &type);
+    return group == -1 ? 0xe38a : motions[group][profile][type];
+}
+
+#endif
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_GetNpcNewLoadState() {
+    return shenmue::s2::GetNpcNewLoadState();
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ForceLoadNpc(std::uint32_t name) {
+    return shenmue::s2::EV_ForceLoadNpc(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_npcStreamOrLoadHuman(std::uint32_t name) {
+    return shenmue::s2::EV_npcStreamOrLoadHuman(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ReleaseNpcForRouteReload(std::uint32_t name) {
+    return shenmue::s2::ReleaseNpcForRouteReload(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ReleaseNpcForRouteReloadAndStoreCount(std::uint32_t name) {
+    return shenmue::s2::ReleaseNpcForRouteReloadAndStoreCount(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_IsNpcRouteLoadedOrVisible(std::uint32_t name) {
+    return shenmue::s2::IsNpcRouteLoadedOrVisible(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_NpcWait() {
+    return shenmue::s2::NpcWait();
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_CountNpcLiveStreams() {
+    return shenmue::s2::CountNpcLiveStreams();
+}
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_npcGetFlagFor(std::uint32_t name) {
+    return shenmue::s2::npcGetCanInteract(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_CheckWarmStartNpcRoute(std::uint32_t name) {
+    return shenmue::s2::EV_CheckWarmStartNpcRoute(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_PrepareNpcRouteReload(std::uint32_t name) {
+    return shenmue::s2::PrepareNpcRouteReload(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_IsNpcRouteReloadPrepared(std::uint32_t name) {
+    return shenmue::s2::IsNpcRouteReloadPrepared(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_npcFree(std::uint32_t name) {
+    return shenmue::s2::EV_npcFree(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_npcUpdateFlags(std::uint32_t name) {
+    return shenmue::s2::EV_npcUpdateFlags(shenmue::shen_name(name));
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_UnknownCharaFunc(std::uint32_t name) {
+    return shenmue::s2::EV_npcUnknownFunc(shenmue::shen_name(name));
+}
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_SetNpcRouteUpdatePaused(std::uint32_t name, std::int32_t enabled) {
+    return shenmue::s2::SetNpcRouteControlHold(shenmue::shen_name(name), enabled);
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_IsNpcAnimationActive(std::uint32_t name) {
+    return shenmue::s2::GetNpcScriptRouteCompletion(shenmue::shen_name(name));
+}
+
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_EV_NPC_NewLoadSw_0(std::uint32_t state) {
+    return shenmue::s2::EV_NPC_NewLoadSw(state);
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_EV_ResetFreeTalkFlags() {
+    return shenmue::s2::EV_ResetFreeTalkFlags();
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_PrepareNpcAllFromArray() {
+    return shenmue::s2::PrepareNpcAllFromArray();
+}
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_npcSetAreaName(
+    std::uint32_t name, const shenmue::Vector3 *center, std::int32_t enabled, float radius) {
+    return shenmue::s2::npcSetAreaName(shenmue::shen_name(name), center, radius, enabled);
+}
+
+#undef SHENMUE_NPC_NULL
+#undef SHENMUE_NPC_NOEXCEPT
+#undef SHENMUE_NPC_SIGNED
+#else
+#endif

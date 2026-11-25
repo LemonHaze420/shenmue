@@ -1,4 +1,37 @@
 #pragma once
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hlib.hpp"
+#include "s2/legacy_sprite_types.hpp"
+namespace shenmue {
+namespace s2 {
+struct FightLoadSpriteRecord {
+    std::int32_t textureIndex, width, height;
+};
+extern FightLoadSpriteRecord g_fightLoadSprites[6];
+extern std::int32_t g_fightLoadDigits[24], g_fightLoadMessage;
+extern std::int32_t g_battleSpriteTextures[13];
+struct BattleQteSpriteDimensions {
+    std::int32_t width, height;
+    float scale, depth;
+};
+extern BattleQteSpriteDimensions battleQteSpriteDimensions[13];
+extern std::uint32_t battleQteSpriteColours[11];
+void vfDrawBattleGaugeIcon(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha);
+void DrawBattleQteSprite(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha, std::int32_t rotation, std::int32_t flags, float depth);
+void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags);
+void LoadFBQTE();
+void fbLoadGauge();
+void FreeFBQTE();
+void FreeBattleGaugeSprites();
+void SetupLoadSprite();
+void FreeLoadSprites();
+void DrawFightLoadDigit(std::int32_t index);
+void ControlFightLoadSprites(std::int32_t mode, std::int32_t index);
+} // namespace s2
+} // namespace shenmue
+#else
+#pragma once
 
 #include "s2/hlib.hpp"
 #include "s2/legacy_sprite.hpp"
@@ -48,3 +81,5 @@ void DrawBattleQteSprite(
 void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags);
 
 } // namespace shenmue::s2
+
+#endif

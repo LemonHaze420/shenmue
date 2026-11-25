@@ -1,3 +1,20 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/reflector_board_dc.hpp"
+
+#include "s2/scenario_character_query_dc.hpp"
+#include "s2/scenario_talk_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/character_model_dc.hpp"
+#include "s2/legacy_sprite_dc.hpp"
+#include "s2/lighting_dc.hpp"
+#include "s2/memo_dc.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#else
 #include "s2/model_component.hpp"
 #include "d3t/buffer.hpp"
 #include "d3t/dx11_renderer.hpp"
@@ -54,9 +71,471 @@
 #include <vector>
 #include "s2/area_names.hpp"
 #include "s2/model_component_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 using namespace model_component_detail;
+
+namespace {
+
+std::int32_t reflectorSavedActiveLight;
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+namespace model_component_detail {
+
+ReflectorBoardParams *FindReflectorBoard(Character *character);
+void UpdateReflectorBoardParams(Character *character, void *payload);
+void CleanupReflectorBoardParams(Character *character, void *payload);
+
+} // namespace model_component_detail
+
+void AssignReflectorBoardParams(Character *character);
+bool AttachReflectorBoardComponent(Character *character, std::int32_t sector);
+void ResetReflectorBoardState();
+void SetReflectorBoardDefaultValues(const Vector4 &values);
+void ResetReflectorBoardMode(Character *character, std::int32_t sector);
+ReflectorBoardParams *SetReflectorBoardValues(Character *character, const Vector4 &values);
+bool SetReflectorBoardLightMode(Character *character, bool active, std::uint32_t lightMode, std::int32_t lightAngle);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+ReflectorBoardWork *SetReflectorBoardValues(Character *character, const Vector4 &values);
+
+void UpdateReflectorBoardParams(Character *character, void *payload);
+void DrawMainIconOverlay(std::uint32_t colour, float depth);
+
+std::int32_t reflectorBoardActive, reflectorDefaultLightType, reflectorDefaultLightAngle = 0;
+std::uint32_t reflectorSavedActiveLight = 0;
+
+Vector4 reflectorDefaultValues;
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ResetReflectorBoardState() {
+    reflectorBoardActive = 1;
+    reflectorDefaultValues.x = 1.0f;
+    reflectorDefaultValues.y = 0.3f;
+    reflectorDefaultValues.z = 0.3f;
+    reflectorDefaultValues.w = 0.3f;
+}
+
+#else
+
+// @verified - p
+void ResetReflectorBoardState() {
+    reflectorDefaultValues = {1.0f, 0.30000001f, 0.30000001f, 0.30000001f};
+    reflectorBoardActive = 1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetReflectorBoardActive(std::int32_t active) {
+    reflectorBoardActive = active;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void ResetReflectorBoardMode(Character *character, std::int32_t sector) {
+    if (!character)
+        return;
+    ReflectorBoardWork *const reflector = static_cast<ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+    if (!reflector)
+        return;
+    reflector->sector = sector;
+    reflector->customLight = 1;
+    *reinterpret_cast<Vector4 *>(&reflector->scale) = reflectorDefaultValues;
+    if (!reflector->sector)
+        reflector->sector = 2;
+}
+
+#else
+
+// @verified - p
+void ResetReflectorBoardMode(Character *character, std::int32_t sector) {
+    if (!character)
+        return;
+    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
+    if (!reflector)
+        return;
+    reflector->sector = sector;
+    reflector->customLight = 1;
+    const Vector4 values = reflectorDefaultValues;
+    if (sector == 0)
+        sector = 2;
+    reflector->sector = sector;
+    reflector->scale = values.x;
+    reflector->colour[0] = values.y;
+    reflector->colour[1] = values.z;
+    reflector->colour[2] = values.w;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool SetReflectorBoardMode(Character *character, std::int32_t mode) {
+    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
+    if (!reflector)
+        return false;
+    reflector->mode = static_cast<std::uint32_t>(mode);
+    reflector->customLight = 1;
+    if (mode == 0)
+        reflector->sector = 0;
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+std::int32_t GetReflectorBoardSector(Character *character) {
+    if (character) {
+        const ReflectorBoardWork *const reflector = reinterpret_cast<const ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+        if (reflector)
+            return reflector->sector;
+    }
+    return -1;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetReflectorBoardDefaultValues(const Vector4 &values) {
+    reflectorDefaultValues.x = 1.0f;
+    reflectorDefaultValues.y = values.y;
+    reflectorDefaultValues.z = values.z;
+    reflectorDefaultValues.w = values.w;
+}
+
+#else
+
+void SetReflectorBoardDefaultValues(const Vector4 &values) {
+    reflectorDefaultValues = {1.0f, values.y, values.z, values.w};
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+ReflectorBoardWork *SetReflectorBoardValues(Character *character, const Vector4 *values) {
+    ReflectorBoardWork *const reflector = static_cast<ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+    if (reflector) {
+        reflector->customLight = 1;
+        reflector->colour[0] = values->y;
+        reflector->colour[1] = values->z;
+        reflector->colour[2] = values->w;
+    }
+    return reflector;
+}
+
+#else
+
+// @verified - p
+ReflectorBoardParams *SetReflectorBoardValues(Character *character, const Vector4 &values) {
+    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
+    if (reflector) {
+        reflector->customLight = 1;
+        reflector->colour[0] = values.y;
+        reflector->colour[1] = values.z;
+        reflector->colour[2] = values.w;
+    }
+    return reflector;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+ReflectorBoardWork *SetReflectorBoardValues(Character *character, const Vector4 &values) {
+    return SetReflectorBoardValues(character, &values);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+bool GetReflectorBoardValues(Character *character, Vector4 &values) {
+    const ReflectorBoardWork *const reflector = reinterpret_cast<const ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+    if (!reflector)
+        return false;
+    values.y = reflector->colour[0];
+    values.z = reflector->colour[1];
+    values.w = reflector->colour[2];
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void SetReflectorBoardLightMode(Character *character, std::int32_t type, std::int32_t angle) {
+    if (character) {
+        ReflectorBoardWork *const reflector = static_cast<ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+        if (reflector) {
+            reflector->lightType = static_cast<std::uint32_t>(type);
+            reflector->lightAngle = angle;
+            if (!reflector->customLight) {
+                SetReflectorBoardValues(character, &reflectorDefaultValues);
+                reflector->customLight = 1;
+            }
+        }
+    } else {
+        reflectorDefaultLightType = type;
+        reflectorDefaultLightAngle = angle;
+    }
+}
+
+#else
+
+bool SetReflectorBoardLightMode(Character *character, bool active, std::uint32_t lightMode, std::int32_t lightAngle) {
+    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
+    if (!reflector)
+        return false;
+    reflector->mode = active ? 1U : 0U;
+    if (!active)
+        reflector->sector = 0;
+    reflector->lightType = lightMode;
+    reflector->lightAngle = lightAngle;
+    if (!reflector->customLight) {
+        reflector->customLight = 1;
+        reflector->scale = reflectorDefaultValues.x;
+        reflector->colour[0] = reflectorDefaultValues.y;
+        reflector->colour[1] = reflectorDefaultValues.z;
+        reflector->colour[2] = reflectorDefaultValues.w;
+    }
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void AttachReflectorBoardComponent(Character *character, std::int32_t sector) {
+    ReflectorBoardWork *reflector = static_cast<ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+    if (!reflector) {
+        if (sector < 5) {
+            reflector = static_cast<ReflectorBoardWork *>(
+                AllocateModelComponent(character, MODEL_COMPONENT_REFB, sizeof(ReflectorBoardWork), UpdateReflectorBoardParams));
+        } else {
+            sector -= 5;
+            reflector = static_cast<ReflectorBoardWork *>(AllocateModelComponent(character, MODEL_COMPONENT_REFB, sizeof(ReflectorBoardWork), 0));
+            SetFlagForToken(character, MODEL_COMPONENT_REFB, 0);
+        }
+        reflector->coreAssignment = charaAssignCoreCallback(character, AssignReflectorBoardParams);
+        reflector->customLight = 0;
+        reflector->scale = 1.0f;
+        reflector->colour[0] = reflectorBoardColourLimit;
+        reflector->colour[1] = reflectorBoardColourLimit;
+        reflector->colour[2] = reflectorBoardColourLimit;
+        reflector->sector = sector;
+        reflector->mode = 0;
+        reflector->lightType = 0;
+    } else {
+        reflector->sector = sector;
+    }
+    if (!reflector->sector)
+        reflector->sector = 2;
+    if (reflector->sector == 2)
+        reflector->customLight = 1;
+}
+
+void AssignReflectorBoardAttachedLight(const MemoModelDrawContext &context, std::uint32_t slot) {
+    reflectorSavedActiveLight = GetCurrentActiveLight();
+    Vector3 camera, origin;
+    origin.x = context.position.x;
+    origin.y = context.position.y;
+    origin.z = context.position.z;
+    camCtrlGetNextCamPos(&camera);
+    ResetSelectedLightEntry(slot);
+    SetLightKind(slot, 2);
+    EnableSelectedLight(slot);
+    shenAssignAttachedLightFor(origin, camera, context.style, slot);
+    shenSetLightColour(slot, reflectorDefaultValues);
+    PublishGlobalLighting();
+}
+
+void DrawReflectorBoardModel(const MemoModelDrawContext &context) {
+    matrix_stack::Matrix4x4_Push(0);
+    dc::sdk::PushGraphicsWorkspace();
+    Matrix4x4::preTranslate(context.position.x, context.position.y, context.position.z);
+    Matrix4x4::RotateAroundZ_Wrapper(context.rotation.z);
+    Matrix4x4::RotateAroundY_Wrapper(context.rotation.y);
+    Matrix4x4::RotateAroundX_Wrapper(context.rotation.x);
+    Matrix4x4::Scale(context.scale, context.scale, context.scale);
+    dc::sdk::SetModelScale(context.scale);
+    DrawSingleCharacterModel(context.root);
+    dc::sdk::SetModelScale(1.0f);
+    PopCurrentMatrix(1);
+    dc::sdk::PopGraphicsWorkspace();
+    DrawMainIconOverlay(0x76000000U, -0.5f);
+}
+
+void DrawReflectorBoardContext(void *parameter) {
+    const MemoModelDrawContext &context = *static_cast<const MemoModelDrawContext *>(static_cast<const void *>(parameter));
+    Vector4 savedValues;
+    savedValues.x = reflectorDefaultValues.x;
+    savedValues.y = reflectorDefaultValues.y;
+    savedValues.z = reflectorDefaultValues.z;
+    savedValues.w = reflectorDefaultValues.w;
+    reflectorDefaultValues.x = context.colour.x;
+    reflectorDefaultValues.y = context.colour.y;
+    reflectorDefaultValues.z = context.colour.z;
+    reflectorDefaultValues.w = context.colour.w;
+    const std::uint32_t kind = GetSelectedLightKind(0);
+    Vector3 direction;
+    GetSelectedLightDirection(0, &direction);
+    Vector4 colour;
+    GetSelectedLightColour(0, &colour);
+    const float intensity = GetSelectedLightSceneIntensity(0);
+    AssignReflectorBoardAttachedLight(context, 0);
+    DrawReflectorBoardModel(context);
+    SetLightKind(0, kind);
+    SetSelectedLightDirection(0, direction);
+    shenSetLightColour(0, colour);
+    SetSelectedLightSceneIntensity(0, intensity);
+    RestoreReflectorBoardLight(0);
+    reflectorDefaultValues.x = savedValues.x;
+    reflectorDefaultValues.y = savedValues.y;
+    reflectorDefaultValues.z = savedValues.z;
+    reflectorDefaultValues.w = savedValues.w;
+}
+
+#else
+
+bool AttachReflectorBoardComponent(Character *character, std::int32_t sector) {
+    if (!character)
+        return false;
+    ModelComponentHeader *component = FindHeader(character, kReflectorBoardToken);
+    ReflectorBoardParams *reflector = component ? reinterpret_cast<ReflectorBoardParams *>(Payload(component)) : nullptr;
+    if (!component) {
+        const bool installUpdate = sector < 5;
+        if (!installUpdate)
+            sector -= 5;
+        reflector = static_cast<ReflectorBoardParams *>(AllocateModelComponent(
+            character, kReflectorBoardToken, sizeof(ReflectorBoardParams), installUpdate ? UpdateReflectorBoardParams : nullptr, CleanupReflectorBoardParams));
+        if (!reflector)
+            return false;
+        component = HeaderForPayload(reflector);
+        if (!installUpdate)
+            component->flags &= ~1U;
+        reflector->coreAssignment = charaAssignCoreCallback(character, AssignReflectorBoardParams);
+        reflector->scale = 1.0f;
+        reflector->colour[0] = kReflectorBoardColourLimit;
+        reflector->colour[1] = kReflectorBoardColourLimit;
+        reflector->colour[2] = kReflectorBoardColourLimit;
+        reflector->mode = 0;
+        reflector->lightType = 0;
+        reflector->customLight = 0;
+    }
+    reflector->sector = sector == 0 ? 2 : sector;
+    if (reflector->sector == 2)
+        reflector->customLight = 1;
+    return true;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+bool ReadReflectorBoardState(const Character *character, std::int32_t &sector, Vector4 &values) {
+    const ReflectorBoardParams *const reflector = static_cast<const ReflectorBoardParams *>(FindModelComponent(character, kReflectorBoardToken));
+    if (!reflector)
+        return false;
+    sector = reflector->sector;
+    values.y = reflector->colour[0];
+    values.z = reflector->colour[1];
+    values.w = reflector->colour[2];
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void (*SetReflectorBoardCoreCallback(Character *character, void (*callback)(Character *)))(Character *) {
+    ReflectorBoardWork *const reflector = static_cast<ReflectorBoardWork *>(charFindComp(character, MODEL_COMPONENT_REFB));
+    if (!reflector)
+        return 0;
+    void (*const previous)(Character *) = reflector->coreAssignment;
+    reflector->coreAssignment = callback;
+    return previous;
+}
+
+std::int32_t ReflectorBoardZeroNullsub() {
+    return 0;
+}
+
+void ReflectorBoardNullsub() {
+}
+
+void ReflectorBoardUnusedNullsub() {
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void UpdateReflectorBoardParams(Character *character, void *payload) {
+    ReflectorBoardWork *const reflector = static_cast<ReflectorBoardWork *>(payload);
+    if (reflector->sector == 2) {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        if (IsScenarioCharacterForcedVisible(scenGetCharaName(control->scenarioTask, character))) {
+            reflector->colour[0] += reflectorBoardFadeStep;
+            if (reflector->colour[0] > reflectorBoardColourLimit)
+                reflector->colour[0] = reflectorBoardColourLimit;
+            reflector->colour[1] = reflector->colour[0];
+            reflector->colour[2] = reflector->colour[0];
+        } else if (reflector->colour[0] > 0.0f) {
+            reflector->colour[0] -= reflectorBoardFadeStep;
+            if (!(reflector->colour[0] > 0.0f))
+                reflector->colour[0] = 0.0f;
+            reflector->colour[1] = reflector->colour[0];
+            reflector->colour[2] = reflector->colour[0];
+        }
+        reflector->mode = reflector->colour[0] > 0.0f;
+    } else if (reflector->sector == 3) {
+        reflector->colour[0] += reflectorBoardFadeStep;
+        if (reflector->colour[0] > reflectorBoardColourLimit)
+            reflector->colour[0] = reflectorBoardColourLimit;
+        reflector->colour[1] = reflector->colour[0];
+        reflector->colour[2] = reflector->colour[0];
+        reflector->mode = 1;
+    }
+    reflector->scale = reflector->colour[0] / reflectorBoardColourLimit;
+    if (reflector->scale < 0.0f)
+        reflector->scale = 0.0f;
+    if (reflector->scale > 1.0f)
+        reflector->scale = 1.0f;
+}
+
+#else
 
 namespace model_component_detail {
 
@@ -80,9 +559,8 @@ void UpdateReflectorBoardParams(Character *character, void *payload) {
             reflector->colour[2] = reflector->colour[0];
         } else if (reflector->colour[0] > 0.0f) {
             reflector->colour[0] = std::max(reflector->colour[0] - fadeStep, 0.0f);
-
-        reflector->colour[1] = reflector->colour[0];
-        reflector->colour[2] = reflector->colour[0];
+            reflector->colour[1] = reflector->colour[0];
+            reflector->colour[2] = reflector->colour[0];
         }
         reflector->mode = reflector->colour[0] > 0.0f ? 1 : 0;
     } else if (reflector->sector == 3) {
@@ -106,9 +584,10 @@ void CleanupReflectorBoardParams(Character *character, void *payload) {
 
 } // namespace model_component_detail
 
-namespace {
-std::int32_t reflectorSavedActiveLight{};
-}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::int16_t ResolveReflectorBoardCharacterAngle(Character *character) {
     const std::int32_t cameraYaw = -camCtrlGetNextRotY();
@@ -117,7 +596,7 @@ std::int16_t ResolveReflectorBoardCharacterAngle(Character *character) {
     const std::int16_t boneYaw = mtwkGetBoneYaw(FindMotionWork(character), MB_HeadTarget);
     Vector3 characterDirection{sin_fixed16(boneYaw), 0.0f, cos_fixed16(static_cast<std::uint16_t>(boneYaw))};
     Vector3::NormalizeInPlace(characterDirection);
-    float angle = ((Vector3 ::Dot(cameraDirection, characterDirection) * 180.0f) - 180.0f) * -0.5f;
+    float angle = ((Vector3::Dot(cameraDirection, characterDirection) * 180.0f) - 180.0f) * -0.5f;
     if (static_cast<std::int16_t>(boneYaw + cameraYaw) < 0)
         angle = -angle;
     if (angle > 90.0f)
@@ -128,6 +607,10 @@ std::int16_t ResolveReflectorBoardCharacterAngle(Character *character) {
         angle *= -0.5f;
     return static_cast<std::int16_t>((angle * 8192.0f) / 45.0f);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetReflectorBoardDirectionalLight(Vector3 &origin, const Vector3 &cameraPosition, std::uint32_t slot) {
@@ -141,6 +624,10 @@ void SetReflectorBoardDirectionalLight(Vector3 &origin, const Vector3 &cameraPos
     Vector3::NormalizeInPlace(direction);
     SetSelectedLightDirection(slot, direction);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void shenAssignAttachedLightFor(Vector3 &origin, const Vector3 &cameraPosition, std::int16_t yaw, std::uint32_t slot) {
@@ -162,6 +649,10 @@ void shenAssignAttachedLightFor(Vector3 &origin, const Vector3 &cameraPosition, 
     Vector3::NormalizeInPlace(direction);
     SetSelectedLightDirection(slot, direction);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetReflectorBoardOrbitPointLight(Vector3 &origin, const Vector3 &cameraPosition, std::int16_t yaw, std::uint32_t slot) {
@@ -188,6 +679,10 @@ void SetReflectorBoardOrbitPointLight(Vector3 &origin, const Vector3 &cameraPosi
     SetLightKind(slot, 3);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetReflectorBoardPointLight(Vector3 &origin, const Vector3 &cameraPosition, std::uint32_t slot) {
     if (std::fabs(origin.x) < 0.00001f)
@@ -204,6 +699,10 @@ void SetReflectorBoardPointLight(Vector3 &origin, const Vector3 &cameraPosition,
     shenSetLightScale2(slot, 1.5f);
     SetLightKind(slot, 3);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void ConfigureReflectorBoardLight(Character *character, ReflectorBoardParams *reflector, std::uint32_t slot) {
@@ -243,6 +742,10 @@ void ConfigureReflectorBoardLight(Character *character, ReflectorBoardParams *re
     UpdateLegacyLightTransforms();
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void AssignReflectorBoardParams(Character *character) {
     ReflectorBoardParams *const reflector = FindReflectorBoard(character);
@@ -253,23 +756,17 @@ void AssignReflectorBoardParams(Character *character) {
             const float scale = reflector->customLight == 1 ? reflector->colour[0] : reflectorDefaultValues.y;
             Vector3 sourcePosition;
             charaGetMotWorldPos(character, MB_Head, &sourcePosition);
-
             Vector3 cameraPosition;
             camCtrlGetNextCamPos(&cameraPosition);
-
             Vector3 direction{sourcePosition.x - cameraPosition.x, sourcePosition.y - cameraPosition.y, sourcePosition.z - cameraPosition.z};
-            Vector3 ::NormalizeInPlace(direction);
+            Vector3::NormalizeInPlace(direction);
             direction.x *= scale;
             direction.y *= scale;
             direction.z *= scale;
-
             SetLegacyLambertFvfReference(&direction);
             reflector->coreAssignment(character);
             SetLegacyLambertFvfReference(nullptr);
-
-        }
-
-        else {
+        } else {
             ConfigureReflectorBoardLight(character, reflector, 15);
             reflector->coreAssignment(character);
             SetCurrentActiveLight(reflectorSavedActiveLight);
@@ -281,117 +778,8 @@ void AssignReflectorBoardParams(Character *character) {
         reflector->coreAssignment(character);
     }
 }
-bool AttachReflectorBoardComponent(Character *character, std::int32_t sector) {
-    if (!character)
-        return false;
-    ModelComponentHeader *component = FindHeader(character, kReflectorBoardToken);
-    ReflectorBoardParams *reflector = component ? reinterpret_cast<ReflectorBoardParams *>(Payload(component)) : nullptr;
-    if (!component) {
-        const bool installUpdate = sector < 5;
-        if (!installUpdate)
-            sector -= 5;
-        reflector = static_cast<ReflectorBoardParams *>(AllocateModelComponent(
-            character, kReflectorBoardToken, sizeof(ReflectorBoardParams), installUpdate ? UpdateReflectorBoardParams : nullptr, CleanupReflectorBoardParams));
-        if (!reflector)
-            return false;
-        component = HeaderForPayload(reflector);
-        if (!installUpdate)
-            component->flags &= ~1U;
-        reflector->coreAssignment = charaAssignCoreCallback(character, AssignReflectorBoardParams);
-        reflector->scale = 1.0f;
-        reflector->colour[0] = kReflectorBoardColourLimit;
-        reflector->colour[1] = kReflectorBoardColourLimit;
-        reflector->colour[2] = kReflectorBoardColourLimit;
-        reflector->mode = 0;
-        reflector->lightType = 0;
-        reflector->customLight = 0;
-    }
-    reflector->sector = sector == 0 ? 2 : sector;
-    if (reflector->sector == 2)
-        reflector->customLight = 1;
-    return true;
-}
 
-bool ReadReflectorBoardState(const Character *character, std::int32_t &sector, Vector4 &values) {
-    const ReflectorBoardParams *const reflector = static_cast<const ReflectorBoardParams *>(FindModelComponent(character, kReflectorBoardToken));
-    if (!reflector)
-        return false;
-    sector = reflector->sector;
-    values.y = reflector->colour[0];
-    values.z = reflector->colour[1];
-    values.w = reflector->colour[2];
-    return true;
-}
+#endif
 
-// @verified - p
-void ResetReflectorBoardState() {
-    reflectorDefaultValues = {1.0f, 0.30000001f, 0.30000001f, 0.30000001f};
-    reflectorBoardActive = 1;
-}
-
-void SetReflectorBoardDefaultValues(const Vector4 &values) {
-    reflectorDefaultValues = {1.0f, values.y, values.z, values.w};
-}
-
-// @verified - p
-void ResetReflectorBoardMode(Character *character, std::int32_t sector) {
-    if (!character)
-        return;
-    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
-    if (!reflector)
-        return;
-    reflector->sector = sector;
-    reflector->customLight = 1;
-    const Vector4 values = reflectorDefaultValues;
-    if (sector == 0)
-        sector = 2;
-    reflector->sector = sector;
-    reflector->scale = values.x;
-    reflector->colour[0] = values.y;
-    reflector->colour[1] = values.z;
-    reflector->colour[2] = values.w;
-}
-
-bool SetReflectorBoardMode(Character *character, std::int32_t mode) {
-    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
-    if (!reflector)
-        return false;
-    reflector->mode = static_cast<std::uint32_t>(mode);
-    reflector->customLight = 1;
-    if (mode == 0)
-        reflector->sector = 0;
-    return true;
-}
-
-// @verified - p
-ReflectorBoardParams *SetReflectorBoardValues(Character *character, const Vector4 &values) {
-    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
-    if (reflector) {
-        reflector->customLight = 1;
-        reflector->colour[0] = values.y;
-        reflector->colour[1] = values.z;
-        reflector->colour[2] = values.w;
-    }
-    return reflector;
-}
-
-bool SetReflectorBoardLightMode(Character *character, bool active, std::uint32_t lightMode, std::int32_t lightAngle) {
-    ReflectorBoardParams *const reflector = FindReflectorBoard(character);
-    if (!reflector)
-        return false;
-    reflector->mode = active ? 1U : 0U;
-    if (!active)
-        reflector->sector = 0;
-    reflector->lightType = lightMode;
-    reflector->lightAngle = lightAngle;
-    if (!reflector->customLight) {
-        reflector->customLight = 1;
-        reflector->scale = reflectorDefaultValues.x;
-        reflector->colour[0] = reflectorDefaultValues.y;
-        reflector->colour[1] = reflectorDefaultValues.z;
-        reflector->colour[2] = reflectorDefaultValues.w;
-    }
-    return true;
-}
-
-} // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

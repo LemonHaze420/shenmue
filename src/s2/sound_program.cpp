@@ -1,8 +1,21 @@
 #include "shenmue.h"
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/sound_program.hpp"
+#endif
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/conversation_dc.hpp"
+#include "platform/dc/aica.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/field_event_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/footstep_dc.hpp"
+#include "s2/sound_table_dc.hpp"
+#include "s2/sound_dc.hpp"
+#include "s2/fight_blur_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "d3t/archive_handles.hpp"
 #include "s2/flag.hpp"
 #include "s2/player.hpp"
@@ -12,7 +25,19 @@
 #include "s2/author.hpp"
 #include "s2/camera.hpp"
 #include "s2/character.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/date_time.hpp"
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/map_info.hpp"
+#include "s2/scenario_flags_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/d3t_renderer.hpp"
 #include "s2/door.hpp"
 #include "s2/conversation.hpp"
@@ -24,25 +49,146 @@
 #include "s2/map_control.hpp"
 #include "s2/math.hpp"
 #include "s2/pak.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include "s2/story_state.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/weather.hpp"
 
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <cstdlib>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 #include <cstring>
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/file_loader_dc.hpp"
+#include "s2/directory_cache.hpp"
+#include <sg_xpt.h>
+#include <cri_adxf.h>
+#include "s2/hlib.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <span>
 #include <string_view>
+#endif
 
-namespace shenmue::s2 {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+extern "C" {
+std::int32_t syCfgInit(void *buffer);
+std::int32_t syCfgExit();
+std::int32_t syCfgGetSoundMode(std::int32_t *mode);
+std::int32_t syCfgSetSoundMode(std::int32_t mode);
+}
+#include "s2/math.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/input_dc.hpp"
+#include "s2/title_dc.hpp"
+#include "s2/pak_dc.hpp"
+#include "s2/scene_data.hpp"
+#include "platform/dc/simm.hpp"
+#include "s2/character_table_dc.hpp"
+#include <cstdio>
+#endif
+
+namespace shenmue {
+
+namespace s2 {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+const std::uint16_t *soundEnvironmentKeyRows[8][6] = {{soundEnvironmentKeys + 0, soundEnvironmentKeys + 0, soundEnvironmentKeys + 0, soundEnvironmentKeys + 0,
+                                                          soundEnvironmentKeys + 12, soundEnvironmentKeys + 16},
+    {soundEnvironmentKeys + 0, soundEnvironmentKeys + 0, soundEnvironmentKeys + 4, soundEnvironmentKeys + 8, soundEnvironmentKeys + 32,
+        soundEnvironmentKeys + 36},
+    {soundEnvironmentKeys + 20, soundEnvironmentKeys + 20, soundEnvironmentKeys + 24, soundEnvironmentKeys + 28, soundEnvironmentKeys + 12,
+        soundEnvironmentKeys + 16},
+    {soundEnvironmentKeys + 40, soundEnvironmentKeys + 40, soundEnvironmentKeys + 44, soundEnvironmentKeys + 48, soundEnvironmentKeys + 12,
+        soundEnvironmentKeys + 16},
+    {soundEnvironmentKeys + 52, soundEnvironmentKeys + 52, soundEnvironmentKeys + 54, soundEnvironmentKeys + 56, soundEnvironmentKeys + 12,
+        soundEnvironmentKeys + 16},
+    {soundEnvironmentKeys + 58, soundEnvironmentKeys + 58, soundEnvironmentKeys + 60, soundEnvironmentKeys + 62, soundEnvironmentKeys + 12,
+        soundEnvironmentKeys + 16},
+    {soundEnvironmentKeys + 64, soundEnvironmentKeys + 64, soundEnvironmentKeys + 68, soundEnvironmentKeys + 70, soundEnvironmentKeys + 12,
+        soundEnvironmentKeys + 16},
+    {soundEnvironmentKeys + 72, soundEnvironmentKeys + 72, soundEnvironmentKeys + 68, soundEnvironmentKeys + 70, soundEnvironmentKeys + 12,
+        soundEnvironmentKeys + 16}};
+
+struct ConversationBuffer;
+
+bool FindMaterialSoundCommand(std::uint32_t material, MaterialSoundCommand *output);
+void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
+bool LoadWholeSoundBank(const char *directory, const char *filename, std::int32_t bank);
+bool LoadStreamedSoundBank(const char *directory, const char *filename, std::int32_t bank, std::uint32_t bufferBytes);
+const std::uint32_t *LoadSoundBankMetadata(const std::uint32_t *data, std::int32_t bank);
+static const std::byte *CopyMaterialSoundRecords(const SoundBankMetadataHeader *header, std::int32_t bank);
+static const std::byte *CopySampleProgramRecords(const std::uint32_t *data, std::int32_t bank, SampleProgramState *program);
+static std::int32_t IsSoundBankSlotNamed(const char *name, std::uint32_t bank);
+void SetSoundBankAllocation(std::int32_t bank, std::uint32_t bytes);
+std::int32_t LoadAicaDriver();
+void ResetSampleProgram(SampleProgramState *program);
+void sndClearSceneState();
+std::int32_t DispatchSoundCommand(SoundCommandMode mode, const SoundDriverCommand *record);
+SoundDriverCommand *SetSoundDriverCommand(SoundDriverCommand *record, std::uint32_t command, std::int32_t value);
+void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
+std::uint32_t GetSoundMaterialKey(std::uint32_t flags);
+std::int32_t GetSoundEnvironment();
+std::uint32_t GetSoundEnvironmentFromProperties(std::uint32_t properties);
+std::int32_t GetSoundBankPlaybackState(std::int32_t bank);
+char *GetCurrentBgm();
+void AdvanceSelectedSoundProgram(bool fadeCommandIssued);
+void UpdateSelectedSoundProgram(bool fadeCommandIssued);
+void UpdateSampleProgramDucking(SampleProgramState *program, bool fadeCommandIssued);
+std::int32_t SoundPan(std::int32_t *pan, std::int32_t yaw, const Vector3 *source, const Vector3 *camera);
+float SoundDistanceGain(const Vector3 *listener, const Vector3 *source, float minimumDistance, float fadeDistance);
+void UpdateSampleProgram(SampleProgramState *program);
+std::int32_t SetSampleProgramEnabled(std::int32_t sample, std::int32_t enabled, SampleProgramState *program);
+SampleProgramState *SelectSampleProgram(SampleProgramState *first);
+void CopySoundProgramKey(const char *name, char *key);
+const SoundDataHeader *FindSoundRecordInTable(const SoundDataHeader *table, shen_name tag, std::uint32_t key0, std::uint32_t key1);
+const SoundDataHeader *FindSoundRecord(shen_name tag, const char *name);
+const SoundSequenceHeader *FindSbt(const char *name);
+void ResetBankVolumeFades();
+void ConfigureSoundMap(const SoundMapRecord *record, std::int32_t act);
+
+void CopySoundProgramKey(const char *name, char *key);
+const SoundDataHeader *FindSoundRecordInTable(const SoundDataHeader *table, shen_name tag, std::uint32_t key0, std::uint32_t key1);
+const SoundDataHeader *FindSoundRecord(shen_name tag, const char *name);
+const SoundSequenceHeader *FindSbt(const char *name);
+void ResetBankVolumeFades();
+void ConfigureSoundMap(const SoundMapRecord *record, std::int32_t act);
+const char *g_soundDefinitionProgramName = 0;
+std::int32_t g_soundDefinitionSceneIndex = -1;
+std::int32_t cvsHasValidConverseData(const ConversationBuffer *buffer);
+char g_soundBankNames[8][16] = {};
+std::uint32_t g_soundBankAllocations[8] = {};
+std::int8_t g_soundBankLoadStates[8] = {};
+SampleProgramState g_samplePrograms[2] = {};
+SampleProgramState g_secondarySamplePrograms[2] = {};
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::array<void *, 2> g_aicaMemoryArena{};
 std::int32_t g_audioPlaybackEnabled = 1;
 std::int32_t g_audioPlaybackSuppressed{};
 std::int32_t g_forceDreamcastSoundData{};
+#endif
 
 namespace {
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+MaterialSoundPair materialSounds[369] = {};
+SampleProgramRecord sampleRecords[85] = {};
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr shen_name soundTaskToken{SHEN_NAME(SOND)};
 constexpr shen_name eventTaskToken{SHEN_NAME(EVNT)};
 constexpr std::uint32_t smapTag = SHEN_NAME(SMAP);
@@ -82,7 +228,7 @@ SampleProgramState *SelectSampleProgram(std::size_t first) noexcept {
     return nullptr;
 }
 
-
+// Native SGTS pools: first free pool that fits, not bank-indexed.
 std::array<MaterialSoundPair, 369> materialSounds{};
 std::array<MaterialSoundBank, 8> materialBanks{{
     {materialSounds.data(), 1, -1, 0},
@@ -100,30 +246,54 @@ std::int32_t soundListenerUsesCamera{};
 // StripDryMask uses dryMaterialKeys from g_stepEnvIds[26..73].
 // The remaining pointer at 74 is not a material row (it points at a string).
 constexpr std::uint16_t dryMaterialKeys[48][4] = {
-    {1467,1468,2466,2469}, {1467,1468,2466,2469},
-    {1467,1468,2466,2469}, {1467,1468,2466,2469},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
-    {1467,1468,2466,2469}, {1467,1468,2466,2469},
-    {2141,2142,2467,2470}, {2153,2154,2468,2471},
-    {2863,2862,2858,2859}, {2856,2857,2861,2860},
-    {1469,1470,2472,2475}, {1469,1470,2472,2475},
-    {2143,2144,2473,2476}, {2155,2156,2474,2477},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
-    {1471,1472,2478,2481}, {1471,1472,2478,2481},
-    {2145,2146,2479,2482}, {2157,2158,2480,2483},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
-    {1473,1474,2147,2148}, {1473,1474,2147,2148},
-    {2147,2148,2159,2160}, {2159,2160,1475,1476},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
-    {1475,1476,2149,2150}, {1475,1476,2149,2150},
-    {2149,2150,2161,2162}, {2161,2162,1477,1478},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
-    {1477,1478,2854,2855}, {1477,1478,2854,2855},
-    {2151,2152,2163,2164}, {2163,2164,2848,2849},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
-    {2848,2849,0,0}, {2848,2849,0,0},
-    {2151,2152,2163,2164}, {2163,2164,2848,2849},
-    {2661,2662,2663,2664}, {2850,2851,2852,2853},
+    {1467, 1468, 2466, 2469},
+    {1467, 1468, 2466, 2469},
+    {1467, 1468, 2466, 2469},
+    {1467, 1468, 2466, 2469},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
+    {1467, 1468, 2466, 2469},
+    {1467, 1468, 2466, 2469},
+    {2141, 2142, 2467, 2470},
+    {2153, 2154, 2468, 2471},
+    {2863, 2862, 2858, 2859},
+    {2856, 2857, 2861, 2860},
+    {1469, 1470, 2472, 2475},
+    {1469, 1470, 2472, 2475},
+    {2143, 2144, 2473, 2476},
+    {2155, 2156, 2474, 2477},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
+    {1471, 1472, 2478, 2481},
+    {1471, 1472, 2478, 2481},
+    {2145, 2146, 2479, 2482},
+    {2157, 2158, 2480, 2483},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
+    {1473, 1474, 2147, 2148},
+    {1473, 1474, 2147, 2148},
+    {2147, 2148, 2159, 2160},
+    {2159, 2160, 1475, 1476},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
+    {1475, 1476, 2149, 2150},
+    {1475, 1476, 2149, 2150},
+    {2149, 2150, 2161, 2162},
+    {2161, 2162, 1477, 1478},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
+    {1477, 1478, 2854, 2855},
+    {1477, 1478, 2854, 2855},
+    {2151, 2152, 2163, 2164},
+    {2163, 2164, 2848, 2849},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
+    {2848, 2849, 0, 0},
+    {2848, 2849, 0, 0},
+    {2151, 2152, 2163, 2164},
+    {2163, 2164, 2848, 2849},
+    {2661, 2662, 2663, 2664},
+    {2850, 2851, 2852, 2853},
 };
 std::uint32_t soundProgramPhaseFlags[3]{};
 
@@ -280,7 +450,7 @@ std::int32_t SoundPan(const Vector3 &position, bool &behind) noexcept {
     behind = angle < 0;
     const auto folded = behind ? static_cast<std::int16_t>(~angle) : angle;
     const auto relative = static_cast<std::int16_t>(folded - 0x4000);
-
+    // Arithmetic shift, without native's undefined signed left shift in C++.
     return std::clamp(-((static_cast<std::int32_t>(relative) * 64) >> 14), -40, 40);
 }
 
@@ -453,13 +623,11 @@ bool LoadSoundBankChunk(const char *directory, const char *filename, std::uint32
     for (char *cursor = path; *cursor; ++cursor)
         if (*cursor == '/')
             *cursor = '\\';
-    d3t ::LargeFileHandle *const file = d3t::LargeFile_OpenPathHandle(path);
-
+    d3t::LargeFileHandle *const file = d3t::LargeFile_OpenPathHandle(path);
     if (!file)
         return false;
     std::byte *const data = static_cast<std::byte *>(HLib::AllocateTaskData(size, SOUND_BANK_CHUNK_DATA));
-    (void)d3t ::GetFileFromCachedBuffer(file, size >> 11U, data, 0);
-
+    (void)d3t::GetFileFromCachedBuffer(file, size >> 11U, data, 0);
     std::int32_t state = d3t::CheckFileInfo(file);
     if (state != 3) {
         while (state != 4) {
@@ -535,18 +703,15 @@ bool LoadBank(std::int32_t scene, std::size_t bank, std::string_view filename, s
     } else {
         char selected[64];
         SelectSoundBankFilename(selected, directory, original, static_cast<std::uint32_t>(bank));
-
         const int written = std::snprintf(path.data(), path.size(), "%s/%s", directory, selected);
         if (written <= 0 || static_cast<std::size_t>(written) >= path.size())
             return false;
-
         const std::uint64_t size = ArchiveData_GetFileSize(path.data());
         if (!size || size > static_cast<std::uint64_t>(SIZE_MAX))
             return false;
         std::byte *const data = static_cast<std::byte *>(HLib::AllocateTaskData(size, SOUND_BANK_DATA));
         if (!data)
             return false;
-
         if (ArchiveData_Read(path.data(), 0, data, size)) {
             const std::span<const std::byte> payload = LoadBankSoundTable({data, static_cast<std::size_t>(size)}, static_cast<std::uint32_t>(bank));
             if (!payload.empty()) {
@@ -554,7 +719,7 @@ bool LoadBank(std::int32_t scene, std::size_t bank, std::string_view filename, s
                 if (size > 0x20) {
                     const HLib::TaskData *const allocation = reinterpret_cast<const HLib::TaskData *>(data - sizeof(HLib::TaskData));
                     if (allocation->next) {
-
+                        // Native bank upload can consume the adjacent arena header, not just the file's bytes.
                         transferSize = HLib::GetTaskDataSize(data) + sizeof(HLib::TaskData) - static_cast<std::size_t>(payload.data() - data);
                     }
                 }
@@ -665,12 +830,12 @@ bool CompareCondition(std::int32_t comparison, std::int32_t left, std::int32_t r
     }
 }
 
-
+// Native SNDD program-name pointer (op 4) and scene override (op 5) published by SNDD_Reader.
 const char *snddProgramName{};
 std::int32_t snddSceneIndex{-1};
 
-
-
+// Native SNDD token 23: the scene count byte of the first .sbt bank named by the current op-4 program's SMAP, or of
+// AR02_000.sbt. The port looks up an absent program name as a missing SMAP rather than dereferencing null.
 // @verified - p
 std::int32_t snddProgramSceneCount() noexcept {
     std::string_view sbtName{};
@@ -690,12 +855,1084 @@ std::int32_t snddProgramSceneCount() noexcept {
         return 0;
     return static_cast<std::int8_t>(std::to_integer<std::uint8_t>(stbs[22]));
 }
+#endif
 
 } // namespace
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace
+
+MaterialSoundBank g_materialSoundBanks[8] = {
+    {SHEN_FIELD(pairs) materialSounds, SHEN_FIELD(capacity) 1, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 1, SHEN_FIELD(capacity) 1, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 2, SHEN_FIELD(capacity) 1, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 3, SHEN_FIELD(capacity) 24, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 27, SHEN_FIELD(capacity) 48, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 75, SHEN_FIELD(capacity) 64, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 139, SHEN_FIELD(capacity) 110, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+    {SHEN_FIELD(pairs) materialSounds + 249, SHEN_FIELD(capacity) 120, SHEN_FIELD(bank) - 1, SHEN_FIELD(count) 0},
+};
+
+SampleProgramPool g_sampleProgramStorage[4] = {
+    {SHEN_FIELD(records) sampleRecords, SHEN_FIELD(capacity) 5, SHEN_FIELD(bank) - 1},
+    {SHEN_FIELD(records) sampleRecords + 5, SHEN_FIELD(capacity) 10, SHEN_FIELD(bank) - 1},
+    {SHEN_FIELD(records) sampleRecords + 15, SHEN_FIELD(capacity) 10, SHEN_FIELD(bank) - 1},
+    {SHEN_FIELD(records) sampleRecords + 25, SHEN_FIELD(capacity) 60, SHEN_FIELD(bank) - 1},
+};
+
+std::int32_t g_pendingSoundSceneIndex = -1;
+std::int32_t g_soundMusicCommandEnabled = 1;
+float GetWeatherPressure();
+float GetWeatherWindVector();
+std::int32_t g_soundDebugMode = 0;
+std::int32_t g_soundDebugSelection = 0;
+std::int32_t g_soundDebugSecondarySelection = 0;
+std::uint8_t blurModelFlag = 0, g_savedFightBlurFlag = 0;
+std::int32_t accumulatedFightBlur;
+
+std::int32_t SoundProgramNullsub() {
+    return 0;
+}
 
 
+// @verified - d
+char *shenGetCurrentSbt() {
+    return g_currentSoundSequenceName;
+}
 
+
+// @verified - d
+std::int32_t GetCurrentSoundSceneIndex() {
+    return g_currentSoundSceneIndex;
+}
+
+
+// @verified - d
+const char *FindSoundMapSequenceName(const char *name) {
+    const SoundMapRecord *const record = reinterpret_cast<const SoundMapRecord *>(FindSoundRecord(SOUND_MAP_RECORD, name));
+    if (!record)
+        return 0;
+    for (std::int32_t bank = 0; bank < 8; ++bank) {
+        if (std::strstr(record->banks[bank].filename, ".sbt"))
+            return record->banks[bank].filename;
+    }
+    return 0;
+}
+
+
+// @verified - d
+void InitializeMaterialSoundEffects() {
+    ExecuteAicaCommand(0x400a0, 0, 0);
+    for (std::int32_t index = 0; index < 16; ++index)
+        g_materialSoundHandles[index].active = 0;
+}
+
+
+// @verified - d
+void RestoreMaterialSoundHandles(std::int32_t mode) {
+    for (std::int32_t index = 16; index >= 0; --index) {
+        if (g_materialSoundHandles[index].active) {
+            if (mode) {
+                std::int32_t active;
+                do {
+                    active = g_materialSoundHandles[index].active = 1;
+                } while (0);
+                if (mode > active) {
+                    ExecuteAicaCommand(0xa5, index, active);
+                    ExecuteAicaCommand(0x10a5, index, g_materialSoundHandles[index].volume);
+                    ExecuteAicaCommand(0x20a5, index, g_materialSoundHandles[index].control);
+                }
+                ExecuteAicaCommand(0xa6, index, g_materialSoundHandles[index].gain);
+            } else {
+                ExecuteAicaCommand(0xa6, index, 0);
+                g_materialSoundHandles[index].active = 2;
+            }
+        }
+    }
+}
+
+
+// @verified - d
+std::int32_t CompareSoundProgramKeys(const char *first, const char *second) {
+    std::uint32_t firstKey[2], secondKey[2];
+    CopySoundProgramKey(first, reinterpret_cast<char *>(firstKey));
+    CopySoundProgramKey(second, reinterpret_cast<char *>(secondKey));
+    if (firstKey[0] == secondKey[0] && firstKey[1] == secondKey[1])
+        return 0;
+    return 1;
+}
+
+
+// @verified - d
+SampleProgramRecord *GetLoudestSampleProgramRecord(const SampleProgramState *program) {
+    if (!program || !program->executing)
+        return 0;
+    SampleProgramRecord *selected = program->records;
+    SampleProgramRecord *record = selected + 1;
+    for (std::int32_t index = 1; index < program->count; ++index, ++record) {
+        if (static_cast<std::int8_t>(selected->volume) < static_cast<std::int8_t>(record->volume))
+            selected = record;
+    }
+    return selected;
+}
+
+
+// @verified - d
+bool LoadSoundProgramAnyScene(const char *name, std::uint32_t sceneIndex) {
+    return LoadSoundProgram(name, sceneIndex, -1);
+}
+
+
+// @verified - d
+std::int32_t GetSoundSequenceSceneCount(const char *name) {
+    if (!name) {
+        name = shenGetCurrentSbt();
+        if (!name)
+            return 0;
+    }
+    const SoundSequenceHeader *const sequence = FindSbt(name);
+    if (!sequence)
+        return 0;
+    return sequence->count;
+}
+
+
+// @verified - d
+void SNDD_Reader(const MapInfoChunk *chunk, std::int32_t, std::int32_t entry) {
+    std::int32_t comparison = 0;
+    std::int32_t mode = 0;
+    if (!chunk)
+        return;
+    const std::int32_t *cursor = reinterpret_cast<const std::int32_t *>(reinterpret_cast<const std::byte *>(chunk) + sizeof(MapInfoChunk));
+    DateTime date;
+    shenGetCurrentDateTime(date);
+    std::int32_t values[2];
+    std::int32_t operation;
+    goto next;
+    do {
+        if (operation < 0) {
+            if (operation == -1) {
+                std::int32_t count = 0;
+                for (std::int32_t token = *cursor++; token >= 0; token = *cursor++) {
+                    if (token == 16)
+                        values[count++] = *cursor++;
+                    else if (token <= 5)
+                        comparison = token;
+                    else if (token <= 15)
+                        mode = token;
+                    else if (token == 17)
+                        values[count++] = GetInternalFlag(*cursor++);
+                    else if (token == 18)
+                        values[count++] = entry;
+                    else if (token == 19)
+                        values[count++] = date.month;
+                    else if (token == 20)
+                        values[count++] = date.day;
+                    else if (token == 21)
+                        values[count++] = date.hour;
+                    else if (token == 22)
+                        values[count++] = date.minute;
+                    else if (token == 23)
+                        values[count++] = GetSoundSequenceSceneCount(FindSoundMapSequenceName(g_soundDefinitionProgramName));
+                    else if (token == 24)
+                        values[count++] = g_storyStep;
+                    else if (token == 25)
+                        values[count++] = EV_GetShenmueFlag(*cursor++);
+                }
+                bool hit = false;
+                if (count < 2) {
+                    values[1] = 0;
+                    comparison = 5;
+                }
+                switch (comparison) {
+                case 0:
+                    if (values[0] == values[1])
+                        hit = true;
+                    break;
+                case 1:
+                    if (values[0] <= values[1])
+                        hit = true;
+                    break;
+                case 2:
+                    if (values[0] >= values[1])
+                        hit = true;
+                    break;
+                case 3:
+                    if (values[0] < values[1])
+                        hit = true;
+                    break;
+                case 4:
+                    if (values[0] > values[1])
+                        hit = true;
+                    break;
+                case 5:
+                    if (values[0] != values[1])
+                        hit = true;
+                    break;
+                }
+                if (mode == 6)
+                    hit = !hit;
+                if (hit)
+                    ++cursor;
+                else
+                    cursor = reinterpret_cast<const std::int32_t *>(reinterpret_cast<const std::byte *>(cursor) + *cursor);
+            } else if (operation == -2) {
+                cursor = reinterpret_cast<const std::int32_t *>(reinterpret_cast<const std::byte *>(cursor) + *cursor);
+            }
+        } else if (operation == 4) {
+            const char *const name = reinterpret_cast<const char *>(cursor);
+            cursor += 4;
+            g_soundDefinitionProgramName = name;
+        } else if (operation == 5) {
+            operation = *cursor++;
+            g_soundDefinitionSceneIndex = operation;
+        }
+    next:
+        operation = *cursor++;
+    } while (operation != 0);
+}
+
+
+// @verified - d
+bool SNDP_SoundProgramReader(const MapInfoChunk *chunk, std::int32_t act, shen_name area) {
+    std::uint32_t key[3];
+    g_currentSoundMap = 0;
+    if (!chunk)
+        return false;
+    ++chunk;
+    g_pendingSoundSceneIndex = -1;
+    key[0] = 0;
+    const MapInfoChunk *soundMap = FindNativeChunk("SNDM", const_cast<MapInfoChunk *>(chunk));
+    if (!soundMap)
+        return false;
+    ++soundMap;
+    g_currentSoundMap = reinterpret_cast<const SoundDataHeader *>(soundMap);
+    if (const MapInfoChunk *const assignment = FindNativeChunk("SNDA", const_cast<MapInfoChunk *>(chunk))) {
+        const char *const name = reinterpret_cast<const char *>(assignment + 1);
+        if (std::strcmp(name, "default"))
+            CopySoundProgramKey(name, reinterpret_cast<char *>(key));
+    }
+    if (const MapInfoChunk *const scene = FindNativeChunk("SNDR", const_cast<MapInfoChunk *>(chunk)))
+        g_pendingSoundSceneIndex = *reinterpret_cast<const std::int32_t *>(scene + 1);
+    if (const MapInfoChunk *const definition = FindNativeChunk("SNDD", const_cast<MapInfoChunk *>(chunk))) {
+        g_soundDefinitionProgramName = 0;
+        g_soundDefinitionSceneIndex = -1;
+        SNDD_Reader(definition, act, g_entryPoint);
+        if (g_soundDefinitionProgramName)
+            CopySoundProgramKey(g_soundDefinitionProgramName, reinterpret_cast<char *>(key));
+        if (g_soundDefinitionSceneIndex >= 0)
+            g_pendingSoundSceneIndex = g_soundDefinitionSceneIndex;
+    }
+    if (!key[0]) {
+        key[0] = area;
+        key[1] = 0;
+    }
+    const SoundDataHeader *const record = FindSoundRecordInTable(g_currentSoundMap, SOUND_MAP_RECORD, key[0], key[1]);
+    if (record) {
+        key[2] = 0;
+        std::strcpy(g_activeSoundMapName, reinterpret_cast<const char *>(key));
+        ConfigureSoundMap(reinterpret_cast<const SoundMapRecord *>(record), act);
+        UpdateSelectedSoundProgram(false);
+        ++g_selectedSoundProgramFrame;
+        return true;
+    }
+    return false;
+}
+
+
+// @verified - d
+std::int32_t Loop3DSoundEffect(std::uint32_t flags) {
+    std::int32_t environment = static_cast<std::int32_t>((flags & 0x780000U) >> 19U);
+    std::uint32_t key = flags & 0x87ffffU;
+    if (key & 0x40000U) {
+        key = GetSoundMaterialKey(key);
+        if (!environment)
+            environment = GetSoundEnvironment();
+    }
+    SoundDriverCommand record;
+    if (FindMaterialSoundCommand(key, &record.material)) {
+        if (environment > 0)
+            DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x2db0U, environment));
+        DispatchSoundCommand(SoundCommandMode_Raw, &record);
+        if (environment > 0)
+            DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x2db0U, 0));
+        return 1;
+    }
+    if (static_cast<std::uint32_t>((flags & 0xffU) - 0xa8U) > 7U)
+        return 0;
+    ExecuteAicaCommand(flags, 0, 0);
+    return 1;
+}
+
+
+// @verified - d
+std::int32_t GetSoundBankFadeVolume(std::int32_t bank) {
+    if (g_soundBankFades[bank].step != 0.0f) {
+        const std::int32_t volume = static_cast<std::int32_t>(g_soundBankFades[bank].volume);
+        if (volume <= 127)
+            return volume < 0 ? 0 : volume;
+    }
+    return -1;
+}
+
+
+// @verified - d
+bool FindMaterialSoundCommand(std::uint32_t material, MaterialSoundCommand *output) {
+    for (std::int32_t bank = 0; bank < 8; ++bank) {
+        if (g_materialSoundBanks[bank].bank < 0)
+            continue;
+        const std::int32_t count = static_cast<std::int32_t>(g_materialSoundBanks[bank].count);
+        const MaterialSoundPair *pair = g_materialSoundBanks[bank].pairs;
+        for (std::int32_t index = 0; index < count; ++index, ++pair) {
+            if (pair->material != material)
+                continue;
+            const std::int32_t rawCommand = static_cast<std::int32_t>(pair->command);
+            const std::uint32_t command = rawCommand & 0x00ffffff;
+            output->command = command;
+            const std::uint32_t variants = static_cast<std::uint8_t>(rawCommand >> 24) + 1U;
+            output->variantCount = variants;
+            if (variants > 128U)
+                output->extendedCommand = command;
+            output->bank = g_materialSoundBanks[bank].bank;
+            return true;
+        }
+    }
+    return false;
+}
+
+
+// @verified - d
+std::uint32_t FindMaterialSoundBank(std::uint32_t material) {
+    SoundDriverCommand command;
+    return FindMaterialSoundCommand(material, &command.material) ? static_cast<std::uint32_t>(command.material.bank) : 0xffffffffU;
+}
+
+
+// @verified - d
+std::int32_t ExecuteAicaBankCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value) {
+    SoundDriverCommand record;
+    record.material.extendedCommand = command;
+    record.material.bank = static_cast<std::int32_t>(bank);
+    record.value = value;
+    return DispatchSoundCommand(SoundCommandMode_Bank, &record);
+}
+
+
+// @verified - d
+void EV_spmBeginSampleExecute(std::int32_t) {
+    const SoundMapExtendedRecord *const extended = reinterpret_cast<const SoundMapExtendedRecord *>(FindSoundRecord(SOUND_MAP_RECORD, GetCurrentBgm()));
+    const std::uint8_t *durations;
+    if (extended && extended->name == SOUND_MAP_EXTENSION)
+        durations = extended->fadeIn;
+    else
+        durations = kDefaultSoundBankFadeIn;
+    for (std::int32_t bank = 0; bank < 8; ++bank) {
+        if (durations[bank] && GetSoundBankPlaybackState(bank)) {
+            g_soundBankFades[bank].volume = 0.0f;
+            g_soundBankFades[bank].step = (127.0f - g_soundBankFades[bank].volume) / static_cast<float>(durations[bank]);
+        } else {
+            g_soundBankFades[bank].step = 0.0f;
+        }
+    }
+}
+
+
+// @verified - d
+void spmFadeOut(std::int32_t) {
+    const SoundMapExtendedRecord *const extended = reinterpret_cast<const SoundMapExtendedRecord *>(FindSoundRecord(SOUND_MAP_RECORD, GetCurrentBgm()));
+    const std::uint8_t *durations;
+    if (extended && extended->name == SOUND_MAP_EXTENSION)
+        durations = extended->fadeOut;
+    else
+        durations = kDefaultSoundBankFadeOut;
+    for (std::int32_t bank = 0; bank < 8; ++bank) {
+        if (durations[bank] && GetSoundBankPlaybackState(bank)) {
+            g_soundBankFades[bank].volume = static_cast<float>(SOND_QueryBankLevel(static_cast<std::uint32_t>(bank), 0x4a0U));
+            g_soundBankFades[bank].step = -(g_soundBankFades[bank].volume / static_cast<float>(durations[bank]));
+            if (bank == g_soundMusic.bank) {
+                g_soundMusic.activeProgramCommand = -1;
+            } else if (bank == g_samplePrograms[0].bank) {
+                g_samplePrograms[0].executing = 0;
+            } else if (bank == g_samplePrograms[1].bank) {
+                g_samplePrograms[1].executing = 0;
+            } else if (bank == g_secondarySamplePrograms[0].bank) {
+                g_secondarySamplePrograms[0].executing = 0;
+            } else if (bank == g_secondarySamplePrograms[1].bank) {
+                g_secondarySamplePrograms[1].executing = 0;
+            }
+        } else {
+            g_soundBankFades[bank].step = 0.0f;
+        }
+    }
+    if (ConversationBuffer *const voice = FindConversationByPriority(1))
+        scenCvsCtrlFree(voice, 60);
+}
+
+
+// @verified - d
+std::int32_t GetSystemAudioOutputMode() {
+    void *const configuration = HLib::AllocateTaskData(0x4000, SOUND_SYSTEM_CONFIG_STORAGE);
+    syCfgInit(configuration);
+    std::int32_t mode;
+    syCfgGetSoundMode(&mode);
+    syCfgExit();
+    HLib::FreeTaskData(configuration);
+    return mode;
+}
+
+
+// @verified - d
+void SetSystemAudioOutputMode(std::int32_t mode) {
+    void *const configuration = HLib::AllocateTaskData(0x4000, SOUND_SYSTEM_CONFIG_STORAGE);
+    syCfgInit(configuration);
+    syCfgSetSoundMode(mode);
+    syCfgExit();
+    HLib::FreeTaskData(configuration);
+    std::uint32_t command, volume;
+    if (mode == 1) {
+        volume = 14;
+        command = 0x900a0;
+    } else {
+        command = 0x800a0;
+        volume = 15;
+    }
+    ExecuteAicaCommand(command, 0, 0);
+    SOND_ExecuteRawAicaCommand(0x1ba0 + (volume << 16));
+}
+
+
+// @verified - d
+void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value) {
+    if ((command & 0xf0U) == 0xb0U) {
+        const std::uint32_t channel = command & 15U;
+        nlsndExecuteAicaCommand2Ch(bank, channel ? channel : 16, command & 0xfffff0U, value & 127);
+    } else if ((command & 0xffU) >= 0xa8U) {
+        SOND_ExecuteRawAicaCommand(command);
+    } else if ((command & 0xffU) < 0xa5U) {
+        nlsndExecuteAicaCommand(bank, command, value & 127);
+    } else if (bank <= 16) {
+        nlsndExecuteEnvironmentAicaCommand(bank, command, value);
+    }
+}
+
+
+// @verified - d
+void LoadSoundBankData(const char *directory, const char *filename, std::uint32_t bank) {
+    const std::int8_t previousState = g_soundBankLoadStates[bank];
+    g_soundBankLoadStates[bank] = 0;
+    if (!IsSoundBankSlotNamed(filename, bank) || previousState == -2) {
+        ExecuteAicaCommand(0x1100a0, bank, 0);
+        std::size_t totalFree;
+        std::size_t largestBlock;
+        std::size_t otherFree;
+        HLib::AnalyzeFreeHeap(&totalFree, &largestBlock, &otherFree);
+        const std::uint32_t bytes = shenOpenFile(directory, filename);
+        if (bytes <= largestBlock) {
+            if (!LoadWholeSoundBank(directory, filename, static_cast<std::int32_t>(bank)))
+                g_soundBankLoadStates[bank] = -2;
+        } else if (!LoadStreamedSoundBank(directory, filename, static_cast<std::int32_t>(bank), largestBlock & 0xfffff800U)) {
+            g_soundBankLoadStates[bank] = -2;
+        }
+        std::strcpy(g_soundBankNames[bank], filename);
+    }
+}
+
+
+// @verified - d
+bool LoadWholeSoundBank(const char *directory, const char *filename, std::int32_t bank) {
+    void *const data = shenLoadFile(directory, filename, SOUND_FILE_STORAGE);
+    const std::uint32_t *const bankData = LoadSoundBankMetadata(reinterpret_cast<const std::uint32_t *>(data), bank);
+    const std::int32_t result = SOND_ReplaceBank(bankData, bank);
+    HLib::FreeTaskData(data);
+    if (result < 0)
+        return false;
+    return true;
+}
+
+
+// @verified - d
+bool LoadStreamedSoundBank(const char *directory, const char *filename, std::int32_t bank, std::uint32_t bufferBytes) {
+    if (cvsHasValidConverseData(0))
+        return false;
+    const std::uint32_t sectorBytes = static_cast<std::int32_t>(bufferBytes) < 0 ? bufferBytes + 0x7ffU : bufferBytes;
+    const std::int32_t sectors = static_cast<std::int32_t>(sectorBytes) >> 11;
+    const std::uint32_t words = bufferBytes >> 2;
+    ADXF const file = ADXF_Open(const_cast<char *>(filename), GetCachedDiscDirectory(directory));
+    if (!file)
+        return false;
+    std::uint32_t *const buffer = static_cast<std::uint32_t *>(HLib::AllocateTaskData(bufferBytes, SOUND_STREAM_STORAGE));
+    ADXF_ReadNw32(file, sectors, buffer);
+    while (ADXF_GetStat(file) != 3) {
+    }
+    const std::uint32_t *data = LoadSoundBankMetadata(buffer, bank);
+    const std::uint32_t metadataBytes = reinterpret_cast<const std::byte *>(data) - reinterpret_cast<const std::byte *>(buffer);
+    if (SOND_BeginStreamReplacement(data, bank, (bufferBytes - metadataBytes) >> 2) < 0) {
+        HLib::FreeTaskData(buffer);
+        ADXF_Close(file);
+        return false;
+    }
+    while (SOND_PollBankUpload() != 0) {
+    }
+    while (SOND_WriteStreamChunk(data) != 0) {
+        SOND_SetUploadWords(words);
+        ADXF_ReadNw32(file, sectors, buffer);
+        while (ADXF_GetStat(file) != 3) {
+        }
+        data = buffer;
+    }
+    while (SOND_PollBankUpload() != 0) {
+    }
+    ADXF_Close(file);
+    HLib::FreeTaskData(buffer);
+    return true;
+}
+
+
+// @verified - d
+static const std::byte *CopyMaterialSoundRecords(const SoundBankMetadataHeader *header, std::int32_t bank) {
+    std::int32_t bytes = header->recordSize * header->count;
+    const std::byte *records = reinterpret_cast<const std::byte *>(header) + header->dataOffset;
+    for (std::int32_t index = 0; index < 8; ++index) {
+        if (g_materialSoundBanks[index].bank < 0 && header->count <= static_cast<std::int32_t>(g_materialSoundBanks[index].capacity)) {
+            std::memcpy(g_materialSoundBanks[index].pairs, records, bytes);
+            g_materialSoundBanks[index].bank = bank;
+            g_materialSoundBanks[index].count = header->count;
+            break;
+        }
+    }
+    return records + bytes;
+}
+
+
+// @verified - d
+void ReleaseMaterialSoundBank(std::int32_t bank) {
+    for (std::int32_t index = 0; index < 8; ++index) {
+        if (g_materialSoundBanks[index].bank == bank) {
+            g_materialSoundBanks[index].bank = -1;
+            break;
+        }
+    }
+}
+
+
+// @verified - d
+static const std::byte *CopySampleProgramRecords(const std::uint32_t *data, std::int32_t bank, SampleProgramState *program) {
+    const SoundBankMetadataHeader *const header = reinterpret_cast<const SoundBankMetadataHeader *>(data);
+    std::int32_t bytes = header->recordSize * header->count;
+    const std::byte *records = reinterpret_cast<const std::byte *>(header) + header->dataOffset;
+    std::int32_t index = 0;
+    for (; index < 2; ++index, ++program) {
+        if (!program->records)
+            break;
+    }
+    if (index < 2) {
+        program->executing = 0;
+        for (index = 0; index < 4; ++index) {
+            if (g_sampleProgramStorage[index].bank < 0 && header->count <= static_cast<std::int32_t>(g_sampleProgramStorage[index].capacity)) {
+                std::memcpy(g_sampleProgramStorage[index].records, records, bytes);
+                program->command = header->command;
+                program->count = header->count;
+                program->bank = bank;
+                program->records = g_sampleProgramStorage[index].records;
+                g_sampleProgramStorage[index].bank = bank;
+                break;
+            }
+        }
+    }
+    return records + bytes;
+}
+
+
+// @verified - d
+void ReleaseSampleProgramBank(std::int32_t bank) {
+    SampleProgramState *selected = 0;
+    std::int32_t index;
+    for (index = 0; index < 2; ++index) {
+        if (g_samplePrograms[index].bank == bank) {
+            selected = g_samplePrograms + index;
+            break;
+        }
+        if (g_secondarySamplePrograms[index].bank == bank) {
+            selected = g_secondarySamplePrograms + index;
+            break;
+        }
+    }
+    if (selected) {
+        selected->records = 0;
+        selected->executing = 0;
+    }
+    for (index = 0; index < 4; ++index) {
+        if (g_sampleProgramStorage[index].bank == bank)
+            g_sampleProgramStorage[index].bank = -1;
+    }
+}
+
+
+// @verified - d
+static std::int32_t IsSoundBankSlotNamed(const char *name, std::uint32_t bank) {
+    if (CompareCharacterTableTokens(name, g_soundBankNames[bank]))
+        return 0;
+    return 1;
+}
+
+
+// @verified - d
+const std::uint32_t *LoadSoundBankMetadata(const std::uint32_t *data, std::int32_t bank) {
+    ReleaseMaterialSoundBank(bank);
+    ReleaseSampleProgramBank(bank);
+    const SoundBankMetadataHeader *const header = reinterpret_cast<const SoundBankMetadataHeader *>(data);
+    const std::uint32_t name = header->name;
+    if (name == SOUND_MATERIAL_TABLE) {
+        data = reinterpret_cast<const std::uint32_t *>(CopyMaterialSoundRecords(header, bank));
+    } else {
+        SampleProgramState *program;
+        if (name == SOUND_AMBIENT_TABLE)
+            program = g_samplePrograms;
+        else if (name == SOUND_SECONDARY_SAMPLE_TABLE)
+            program = g_secondarySamplePrograms;
+        else
+            return data;
+        data = reinterpret_cast<const std::uint32_t *>(CopySampleProgramRecords(data, bank, program));
+    }
+    return data;
+}
+
+
+// @verified - d
+void InitAica() {
+    std::int32_t index;
+    LoadAicaDriver();
+    for (index = 7; index >= 0; --index)
+        g_soundBankNames[index][0] = 0;
+    g_soundPauseDepth = 0;
+    g_soundListenerUsesCamera = 0;
+    g_soundMusic.activeProgramCommand = -1;
+    g_pendingSoundSceneIndex = -1;
+    ResetSampleProgram(g_samplePrograms);
+    ResetSampleProgram(g_samplePrograms + 1);
+    ResetSampleProgram(g_secondarySamplePrograms);
+    ResetSampleProgram(g_secondarySamplePrograms + 1);
+    for (index = 0; index < 8; ++index)
+        g_materialSoundBanks[index].bank = -1;
+    for (index = 0; index < 8; ++index)
+        SetSoundBankAllocation(index, kInitialAicaBankAllocations[index]);
+    sndClearSceneState();
+    LoadSoundBankData("MISC", "system1.snd", 0);
+    ExecuteAicaCommand(0xa8, 0, 0);
+    SetSystemAudioOutputMode(GetSystemAudioOutputMode());
+}
+
+
+// @verified - d
+void FinishAica() {
+    SOND_FinishAicaDriver();
+}
+
+
+// @verified - d
+void SetSoundBankAllocation(std::int32_t bank, std::uint32_t bytes) {
+    if (bytes) {
+        SOND_UploadBank(kEmptyAicaBank, bank, bytes);
+        std::memcpy(g_soundBankNames[bank], ".", 2);
+    }
+    g_soundBankAllocations[bank] = bytes;
+}
+
+
+// @verified - d
+std::int32_t LoadAicaDriver() {
+    void *const driver = shenLoadFile("MISC", "AICADRV.BIN", AICA_DRIVER_STORAGE);
+    const std::int16_t result = static_cast<std::int16_t>(SOND_InitializeAicaDriver(reinterpret_cast<const std::uint32_t *>(driver), 0));
+    HLib::FreeTaskData(driver);
+    return result;
+}
+
+
+// @verified - d
+void ResetSampleProgram(SampleProgramState *program) {
+    program->executing = 0;
+    program->records = 0;
+}
+
+
+// @verified - d
+void sndClearSceneState() {
+    g_savedSoundMapName[0] = 0;
+    g_savedSoundSequenceName[0] = 0;
+    g_savedSoundSceneIndex = 0;
+}
+
+
+// @verified - d
+std::int32_t DispatchSoundCommand(SoundCommandMode mode, const SoundDriverCommand *record) {
+    std::int32_t result;
+    switch (mode) {
+    case SoundCommandMode_Raw:
+        result = SOND_ExecuteRawAicaCommand(record->material.command);
+        break;
+    case SoundCommandMode_Channel:
+        result = nlsndExecuteAicaCommand2Ch(record->material.bank, record->material.variantCount, record->material.extendedCommand, record->value);
+        break;
+    case SoundCommandMode_Bank:
+        result = nlsndExecuteAicaCommand(static_cast<std::uint16_t>(record->material.bank), record->material.extendedCommand, record->value);
+        break;
+    case SoundCommandMode_Environment:
+        result = nlsndExecuteEnvironmentAicaCommand(record->material.bank, record->material.extendedCommand, record->value);
+        break;
+    }
+    return result;
+}
+
+
+// @verified - d
+SoundDriverCommand *SetSoundDriverCommand(SoundDriverCommand *record, std::uint32_t command, std::int32_t value) {
+    record->material.extendedCommand = command;
+    record->value = value;
+    return record;
+}
+
+
+// @verified - d
+void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value) {
+    SoundDriverCommand record;
+    record.material.extendedCommand = command;
+    record.material.bank = static_cast<std::int32_t>(bank);
+    record.value = value;
+    if ((command & 0xf0U) == 0xb0U) {
+        std::uint32_t channel = command & 0xfU;
+        if (!channel)
+            channel = 16;
+        record.material.extendedCommand = command & 0xfffff0U;
+        record.value = value & 0x7f;
+        record.material.variantCount = channel;
+        DispatchSoundCommand(SoundCommandMode_Channel, &record);
+    } else if ((command & 0xffU) <= 0xa7U) {
+        if ((command & 0xffU) <= 0xa4U) {
+            record.value = value & 0x7f;
+            DispatchSoundCommand(SoundCommandMode_Bank, &record);
+        } else if (bank <= 16U) {
+            DispatchSoundCommand(SoundCommandMode_Environment, &record);
+        }
+    } else {
+        record.material.command = command;
+        DispatchSoundCommand(SoundCommandMode_Raw, &record);
+    }
+}
+
+
+// @verified - d
+std::int32_t DispatchChannelSoundCommand(std::int32_t bank, std::uint32_t channel, std::uint32_t command, std::int32_t value) {
+    SoundDriverCommand record;
+    record.material.extendedCommand = command;
+    record.material.bank = bank;
+    record.material.variantCount = channel;
+    record.value = value;
+    return DispatchSoundCommand(SoundCommandMode_Channel, &record);
+}
+
+
+// @verified - d
+std::uint32_t GetSoundMaterialKey(std::uint32_t flags) {
+    const std::uint32_t group = (flags & 0x70U) >> 4U;
+    const std::uint32_t variant = (flags >> 8U) & 3U;
+    const std::uint32_t key = flags & 7U;
+    return static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(soundEnvironmentKeyRows[group][key][variant])));
+}
+
+
+void SoundProgramObjectNullsub() {
+}
+
+
+// @verified - d
+std::int32_t GetSoundEnvironment() {
+    Vector3 position;
+    camCtrlGetNextCamPos(&position);
+    std::int32_t environment = static_cast<std::int32_t>(GetFieldSoundProperties(&position) >> 16U) - 4;
+    if (environment < 0)
+        environment = 0;
+    return environment;
+}
+
+
+// @verified - d
+std::int32_t GetSoundBankPlaybackState(std::int32_t bank) {
+    return SOND_QueryBankPlaybackState(bank);
+}
+
+
+std::int32_t ConsumeSoundDriverEvent() {
+    return SOND_ConsumeDriverEvent();
+}
+
+
+// @verified - d
+void spmFadeInBank(std::int32_t bank, std::int32_t frames) {
+    g_soundBankFades[bank].volume = 0.0f;
+    g_soundBankFades[bank].step = (127.0f - g_soundBankFades[bank].volume) / static_cast<float>(frames);
+}
+
+
+// @verified - d
+void spmFadeOutBank(std::int32_t bank, std::int32_t frames) {
+    const std::int32_t current = SOND_QueryBankLevel(static_cast<std::uint32_t>(bank), 0x4a0U);
+    g_soundBankFades[bank].volume = static_cast<float>(current);
+    g_soundBankFades[bank].step = -(g_soundBankFades[bank].volume / static_cast<float>(frames));
+}
+
+
+// @verified - d
+SoundEffectHandle *AllocateMaterialSoundHandle(std::int32_t key) {
+    SoundDriverCommand command;
+    SoundEffectHandle *handle = g_materialSoundHandles;
+    std::int32_t slot;
+    for (slot = 0; slot < 16 && handle->active; ++slot, ++handle)
+        ;
+    if (slot > 15)
+        return 0;
+    if (!FindMaterialSoundCommand(static_cast<std::uint32_t>(key), &command.material))
+        return 0;
+    handle->active = 1;
+    handle->command = command.material.extendedCommand;
+    handle->slot = slot;
+    handle->gain = 0;
+    handle->volume = 0;
+    handle->control = 0;
+    ExecuteAicaCommand(0xa5U, slot, command.material.extendedCommand);
+    return handle;
+}
+
+
+// @verified - d
+std::int32_t ExecuteMaterialSoundHandleCommand(SoundEffectHandle *handle, std::uint32_t command, std::int32_t value) {
+    std::int32_t *cached = 0;
+    switch (command) {
+    case 0xa6U:
+        cached = &handle->gain;
+        break;
+    case 0x10a5U:
+        cached = &handle->volume;
+        break;
+    case 0x20a5U:
+        cached = &handle->control;
+        break;
+    }
+    if (cached) {
+        if (*cached == value)
+            return 1;
+        *cached = value;
+    }
+    if (handle->active == 1)
+        ExecuteAicaCommand(command, handle->slot, value);
+    return 1;
+}
+
+
+// @verified - d
+std::int32_t FreeMaterialSoundHandle(SoundEffectHandle *handle) {
+    ExecuteAicaCommand(0xa6U, handle->slot, 0);
+    handle->active = 0;
+    return 1;
+}
+
+
+// @verified - d
+void SetSoundListenerUsesCamera(std::int32_t enabled) {
+    g_soundListenerUsesCamera = enabled;
+}
+
+
+// @verified - d
+std::int32_t Publish3DSoundCommand(
+    SoundDriverCommand *record, const Vector3 *position, float minimumDistance, float fadeDistance, std::int32_t volume, std::uint32_t persistent) {
+    const std::int32_t yaw = camCtrlGetNextRotY();
+    Vector3 listener;
+    if (g_soundListenerUsesCamera) {
+        camCtrlGetNextCamPos(&listener);
+    } else {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        GetCharacterWorldPosition(control->ryo, &listener);
+    }
+    float gain = SoundDistanceGain(&listener, position, minimumDistance, fadeDistance);
+    if (!volume)
+        volume = 127;
+    if (volume < 127)
+        gain *= static_cast<float>(volume) / 127.0f;
+    const std::int32_t bankVolume = GetSoundBankFadeVolume(record->material.bank);
+    if (bankVolume >= 0)
+        gain *= static_cast<float>(bankVolume) / 127.0f;
+    volume = static_cast<std::int32_t>(gain);
+    if (!volume)
+        return 0;
+    if (!g_soundListenerUsesCamera)
+        camCtrlGetNextCamPos(&listener);
+    std::int32_t pan;
+    SoundPan(&pan, yaw, position, &listener);
+    if (!persistent) {
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(record, 0x27b0U, volume));
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(record, 0x2ab0U, pan));
+        DispatchSoundCommand(SoundCommandMode_Raw, record);
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(record, 0x2ab0U, 0));
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(record, 0x27b0U, 127));
+    } else {
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(record, 0x07b0U, volume));
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(record, 0x0ab0U, pan));
+        DispatchSoundCommand(SoundCommandMode_Raw, record);
+    }
+    return 1;
+}
+
+
+// @verified - d
+std::int32_t PlayFootstepForNode(std::uint32_t flags, Character *character) {
+    const std::uint32_t volume = flags >> 24U;
+    std::int32_t environment = static_cast<std::int32_t>((flags & 0x780000U) >> 19U);
+    const std::uint32_t persistent = flags & 0x20000U;
+    flags &= 0x85ffffU;
+    if (flags > 0x7fffffU) {
+        const std::int32_t token = ResolveFootstepGroundToken(character);
+        if (token < 0)
+            return 0;
+        environment = GetSoundEnvironmentFromProperties(static_cast<std::uint32_t>(token));
+        flags = ResolveFootstepMaterialKey(character, static_cast<std::uint32_t>(token), flags);
+    }
+    if (flags & 0x40000U) {
+        flags = GetSoundMaterialKey(flags);
+        if (!environment)
+            environment = GetSoundEnvironment();
+    }
+    SoundDriverCommand record;
+    if (FindMaterialSoundCommand(flags, &record.material)) {
+        if (environment > 0)
+            DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x2db0U, environment));
+        if (character) {
+            Vector3 position;
+            GetCharacterWorldPosition(character, &position);
+            Publish3DSoundCommand(&record, &position, 2.0f, 30.0f, static_cast<std::int32_t>(volume), persistent);
+        } else if (volume == 127U) {
+            DispatchSoundCommand(SoundCommandMode_Raw, &record);
+        } else {
+            DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x27b0U, static_cast<std::int32_t>(volume)));
+            DispatchSoundCommand(SoundCommandMode_Raw, &record);
+            DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x27b0U, 127));
+        }
+        if (environment > 0)
+            DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x2db0U, 0));
+        return 1;
+    }
+    return 0;
+}
+
+
+// @verified - d
+std::int32_t Execute3DSoundCommand(std::uint32_t flags, const Vector3 *position, float minimumDistance, float fadeDistance) {
+    std::uint32_t priority = flags >> 24U;
+    std::int32_t environment = static_cast<std::int32_t>((flags & 0x780000U) >> 19U);
+    std::uint32_t loop = flags & 0x20000U;
+    flags &= 0x85ffffU;
+    if (flags & 0x40000U) {
+        flags = GetSoundMaterialKey(flags);
+        if (!environment)
+            environment = GetSoundEnvironment();
+    }
+    SoundDriverCommand record;
+    if (!FindMaterialSoundCommand(flags, &record.material))
+        return 0;
+    if (environment > 0)
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x2db0U, environment));
+    Publish3DSoundCommand(&record, position, minimumDistance, fadeDistance, priority, loop);
+    if (environment > 0)
+        DispatchSoundCommand(SoundCommandMode_Channel, SetSoundDriverCommand(&record, 0x2db0U, 0));
+    return 1;
+}
+
+
+// @verified - d
+std::int32_t UpdateMaterialSoundEffectPosition(
+    SoundEffectHandle *handle, const Vector3 *position, float minimumDistance, float fadeDistance, std::int32_t controlValue) {
+    const std::int32_t yaw = camCtrlGetNextRotY();
+    Vector3 listener;
+    if (g_soundListenerUsesCamera) {
+        camCtrlGetNextCamPos(&listener);
+    } else {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        GetCharacterWorldPosition(control->ryo, &listener);
+    }
+    const std::int32_t volume = static_cast<std::int32_t>(SoundDistanceGain(&listener, position, minimumDistance, fadeDistance));
+    if (!g_soundListenerUsesCamera)
+        camCtrlGetNextCamPos(&listener);
+    std::int32_t pan;
+    SoundPan(&pan, yaw, position, &listener);
+    ExecuteMaterialSoundHandleCommand(handle, 0x10a5U, volume);
+    if (volume) {
+        ExecuteMaterialSoundHandleCommand(handle, 0x20a5U, pan);
+        ExecuteMaterialSoundHandleCommand(handle, 0xa6U, controlValue);
+    }
+    return 1;
+}
+
+
+// @verified - d
+char *GetCurrentBgm() {
+    return g_activeSoundMapName;
+}
+
+
+// @verified - d
+void ResetSelectedSoundProgram() {
+    g_selectedSoundProgramFrame = 0;
+    g_selectedSoundProgram = 0;
+}
+
+
+// @verified - d
+void InitializeAmbientSoundProgram() {
+    ResetSelectedSoundProgram();
+}
+
+
+// @verified - d
+bool UpdateVolumeFades() {
+    bool changed = false;
+    for (std::int32_t bank = 0; bank < 8; ++bank) {
+        if (g_soundBankFades[bank].step != 0.0f) {
+            std::int32_t volume = static_cast<std::int32_t>(g_soundBankFades[bank].volume);
+            if (g_soundBankFades[bank].step > 0.0f) {
+                if (volume > 126) {
+                    volume = 127;
+                    g_soundBankFades[bank].step = 0.0f;
+                }
+            } else if (volume <= 0) {
+                volume = 0;
+                g_soundBankFades[bank].step = 0.0f;
+            }
+            g_soundBankFades[bank].volume += g_soundBankFades[bank].step;
+            ExecuteAicaCommand(0x4a0, bank, volume);
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+
+// @verified - d
+void SoundDebugDisplayNullsub(SampleProgramState *, const char *, std::int32_t *) {
+}
+
+
+// @verified - d
+void AdvanceSelectedSoundProgram(bool fadeCommandIssued) {
+    UpdateSelectedSoundProgram(fadeCommandIssued);
+    ++g_selectedSoundProgramFrame;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+ // namespace
+
+// Native SNDD_Reader: interprets the conditional SNDD stream. Comparison and negation tokens and both value slots persist
+// across conditions within one call; a condition with fewer than two values compares the first against zero with "not
+// equal", which also becomes the persisting comparison. Values past the second are dropped.
 // @verified - p
 void SNDD_Reader(const MapInfoChunk *sndd, std::int32_t, std::int32_t entryId) noexcept {
     if (!sndd)
@@ -802,9 +2039,11 @@ void SNDD_Reader(const MapInfoChunk *sndd, std::int32_t, std::int32_t entryId) n
         op = Read<std::int32_t>(cursor);
     } while (op != 0);
 }
+#endif
 
 namespace {
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t FadeDuration(std::span<const std::byte> smap, std::size_t bank, bool fadeOut) noexcept {
     if (!Contains(smap, 176, 32) || Read<std::uint32_t>(smap.data() + 176) != smpxTag)
         return fadeOut ? defaultSampleFadeOut[bank] : defaultSampleFadeIn[bank];
@@ -1099,8 +2338,12 @@ void UpdateSelectedSoundProgram(bool fadeCommandIssued) noexcept {
         }
     }
 }
+#endif
 
 } // namespace
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+ // namespace
 
 void InitAica() noexcept {
     if (aicaEmulationEnabled)
@@ -1227,7 +2470,7 @@ std::int64_t FreeMaterialSoundHandle(SoundEffectHandle *handle) noexcept {
     return 1;
 }
 
-
+// Native Shenmue::aicaSetMainCommand: queues one sound-driver command word (the high bit of its low byte set).
 std::int32_t aicaSetMainCommand(std::uint32_t command) noexcept {
     return Dispatch(AicaBackendOperation::MainCommand, command);
 }
@@ -1277,7 +2520,6 @@ std::int64_t ProcessAicaCommand(std::uint32_t command, std::int32_t value) noexc
     runtime.activeProgramCommand = -1;
     return 1;
 }
-
 
 SoundEffectHandle *AllocateMaterialSoundHandle(std::int32_t key) noexcept {
     std::uint32_t slot = 0;
@@ -1437,7 +2679,6 @@ void SetSoundListenerUsesCamera(std::int32_t enabled) noexcept {
 // @verified - p
 void QueueSoundProgramControl() noexcept {
     soundTask = HLib::EnqueueTaskWithoutParameter(SoundProgramControl_Callback, 0x0e, 3, static_cast<std::int32_t>(soundTaskToken.name));
-
     runtime.queued = soundTask != nullptr;
     (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
     (void)Dispatch(AicaBackendOperation::BankCommand, 0x400a0U);
@@ -1452,7 +2693,7 @@ void QueueSoundProgramControl() noexcept {
         PrimeAicaEmulationForPause(0);
 }
 
-
+// Copies a sound name up to '.', NUL or eight characters into an eight-byte key, zero-padded as native.
 void CopySoundProgramKey(std::array<char, 12> &key, const char *name) noexcept {
     std::size_t index = 0;
     for (; index < 8 && name[index] != '.' && name[index] != 0; ++index)
@@ -1461,9 +2702,9 @@ void CopySoundProgramKey(std::array<char, 12> &key, const char *name) noexcept {
         key[index] = 0;
 }
 
-
-
-
+// Native SNDP_SoundProgramReader: selects the map's SMAP program (SNDA name unless "default", SNDD op-4 override, else
+// the map name) and scene index (SNDR, SNDD op-5 override), honours the one-shot QDKJ suppression, then applies the
+// SMAP banks. Returns 0 when no SNDP, SNDM or SMAP is found.
 // @verified - p
 std::int64_t SNDP_SoundProgramReader(const MapInfoChunk *sndp, std::int32_t sceneId, shen_name map) noexcept {
     currentSoundMap = {};
@@ -1833,7 +3074,7 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
                 SoundEffectHandle &handle = materialSoundHandles[slot];
                 if (handle.active == 0)
                     continue;
-                (void)Dispatch(AicaBackendOperation ::SetBankProperty, 0, 1, 0, 0x5a);
+                (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
                 (void)Dispatch(AicaBackendOperation::WideBankCommand, MATERIAL_SOUND_GAIN_COMMAND, slot, 0, 0);
                 handle.active = 2;
             }
@@ -1856,7 +3097,7 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
         return;
 
     for (std::uint32_t bank = 1; bank < runtime.banks.size(); ++bank) {
-        (void)Dispatch(AicaBackendOperation ::SetBankProperty, 0, 1, 0, 0x5a);
+        (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
         (void)Dispatch(AicaBackendOperation::BankCommand, 0x1300a0U, bank, 0, 0);
         (void)Dispatch(AicaBackendOperation::BankCommand, 0x5a0U, bank, 0, runtime.banks[bank].currentVolume);
         (void)Dispatch(AicaBackendOperation::SetBankProperty, 0, 1, 0, 0x5a);
@@ -1874,21 +3115,459 @@ void PrimeAicaEmulationForPause(std::int32_t enabled) noexcept {
     (void)Dispatch(AicaBackendOperation::ResumeStreams);
     PauseConversationCategories(false);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void SoundProgramControl_Callback(void *) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    g_soundCallbackParity ^= 1U;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     runtime.callbackParity ^= 1U;
+#endif
     const bool fadeCommandIssued = UpdateVolumeFades();
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (g_soundPauseDepth == 0)
+        AdvanceSelectedSoundProgram(fadeCommandIssued);
+    UpdateSampleProgram(SelectSampleProgram(g_samplePrograms));
+    UpdateSampleProgram(SelectSampleProgram(g_secondarySamplePrograms));
+    if (g_soundDebugMode > 0) {
+        std::int32_t direction = 0;
+        if (g_inputBuffer[3].repeatedPresses & 0x40U)
+            direction = -1;
+        else if (g_inputBuffer[3].repeatedPresses & 0x80U)
+            direction = 1;
+        if (g_soundDebugMode == 1) {
+            g_soundDebugSelection += direction;
+            if (g_soundDebugSelection < 0)
+                g_soundDebugSelection = 0;
+            SoundDebugDisplayNullsub(SelectSampleProgram(g_samplePrograms), "BGM AMB", &g_soundDebugSelection);
+        } else if (g_soundDebugMode == 2) {
+            g_soundDebugSecondarySelection += direction;
+            if (g_soundDebugSecondarySelection < 0)
+                g_soundDebugSecondarySelection = 0;
+            SoundDebugDisplayNullsub(SelectSampleProgram(g_secondarySamplePrograms), "SE AMB", &g_soundDebugSecondarySelection);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if (runtime.pauseDepth == 0) {
         UpdateSelectedSoundProgram(fadeCommandIssued);
         ++runtime.frame;
+#endif
+        }
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
     }
+    UpdateSampleProgramDucking(SelectSampleProgram(g_samplePrograms), fadeCommandIssued);
+    UpdateSampleProgramDucking(SelectSampleProgram(g_secondarySamplePrograms), fadeCommandIssued);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     UpdateSampleProgram(SelectSampleProgram(0));
     UpdateSampleProgram(SelectSampleProgram(2));
     UpdateSampleProgramDucking(SelectSampleProgram(0), fadeCommandIssued);
     UpdateSampleProgramDucking(SelectSampleProgram(2), fadeCommandIssued);
     RefreshSampleExecutionState();
+#endif
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+void QueueSoundProgramControl() {
+    HLib::EnqueueTaskWithoutParameter(SoundProgramControl_Callback, 14, 3, SHEN_NAME4('S', 'O', 'N', 'D'));
+    InitializeMaterialSoundEffects();
+    InitializeAmbientSoundProgram();
+    ResetBankVolumeFades();
+    g_soundListenerUsesCamera = 0;
+    while (g_soundPauseDepth > 0)
+        SetSoundPaused(0);
 }
 
+
+// @verified - d
+void UpdateSelectedSoundProgram(bool fadeCommandIssued) {
+    std::uint32_t requested = 0xffffffffU;
+    std::int32_t duck = -1;
+    std::uint32_t command;
+    if (!g_selectedSoundProgram)
+        return;
+    const SelectedSoundProgramRecord *const record = g_selectedSoundProgram;
+    if (record->startFrame == g_selectedSoundProgramFrame) {
+        g_soundMusic.volume = static_cast<float>(record->volume);
+        g_soundMusic.fadeFrames = -1;
+        command = (static_cast<std::uint32_t>(record->sequence) << 8U) | 0xa8U;
+        if (record->restart || command != static_cast<std::uint32_t>(g_soundMusic.activeProgramCommand) ||
+            CompareSoundProgramKeys(g_soundMusic.bankName, record->bankName) || g_soundMusic.bank != record->bank) {
+            ExecuteAicaCommand(0x4a0, record->bank, record->volume);
+            if (g_soundMusicCommandEnabled)
+                ExecuteAicaCommand(command, 0, 0);
+            g_soundMusic.activeProgramCommand = command;
+            std::strncpy(g_soundMusic.bankName, record->bankName, 8);
+            g_soundMusic.bank = record->bank;
+            g_soundMusic.publishedVolume = record->volume;
+            g_soundMusic.duckVolume = 0;
+        }
+    }
+    if (record->panFrame && record->panFrame == g_selectedSoundProgramFrame)
+        ExecuteAicaCommand(0xaa0, record->bank, record->pan);
+    const SoundProgramFadeRecord *fade = record->fades;
+    for (std::int32_t index = 0; index < 16 && fade->frame != 0xffffU; ++index, ++fade) {
+        if (fade->frame == g_selectedSoundProgramFrame) {
+            g_soundMusic.fadeFrames = fade->duration + 1;
+            const float target = fade->volume;
+            const float frames = g_soundMusic.fadeFrames;
+            g_soundMusic.volumeStep = (target - g_soundMusic.volume) / frames;
+        }
+    }
+    if (g_soundMusic.fadeFrames > 0) {
+        g_soundMusic.volume += g_soundMusic.volumeStep;
+        if (g_soundMusic.volume > 127.0f)
+            g_soundMusic.volume = 127.0f;
+        if (g_soundMusic.volume < 0.0f)
+            g_soundMusic.volume = 0.0f;
+        requested = static_cast<std::uint32_t>(static_cast<std::int32_t>(g_soundMusic.volume));
+        --g_soundMusic.fadeFrames;
+    }
+    SampleProgramRecord *const loudest = GetLoudestSampleProgramRecord(SelectSampleProgram(g_samplePrograms));
+    if (loudest) {
+        const float volume = static_cast<float>(static_cast<std::int8_t>(loudest->volume));
+        float minimum = static_cast<float>(static_cast<std::int8_t>(loudest->minimumMusicVolume));
+        if (64.0f > minimum)
+            minimum = 64.0f;
+        if (volume > 64.0f) {
+            requested = static_cast<std::uint32_t>(static_cast<std::int32_t>((1.0f - (volume - 64.0f) / 63.0f) * (g_soundMusic.volume - minimum) + minimum));
+            if (static_cast<std::int32_t>(static_cast<std::uint32_t>(g_soundMusic.publishedVolume) - requested) > 2)
+                requested = static_cast<std::uint32_t>(g_soundMusic.publishedVolume) - 2U;
+        }
+    }
+    if (FindConversationByPriority(6)) {
+        if (g_soundMusic.duckVolume == 0 && g_soundMusic.volume > 95.0f) {
+            g_soundMusic.duckVolume = static_cast<std::int32_t>(g_soundMusic.volume);
+            duck = g_soundMusic.duckVolume;
+            g_soundMusic.duckDelay = 2;
+        } else if (g_soundMusic.duckVolume != 0) {
+            if (g_soundMusic.duckVolume > 95)
+                --g_soundMusic.duckVolume;
+            duck = g_soundMusic.duckVolume;
+        }
+    } else if (g_soundMusic.duckVolume != 0) {
+        if (g_soundMusic.duckVolume < static_cast<std::int32_t>(g_soundMusic.volume)) {
+            if (g_soundMusic.duckDelay == 0) {
+                ++g_soundMusic.duckVolume;
+                g_soundMusic.duckDelay = 2;
+            } else {
+                --g_soundMusic.duckDelay;
+            }
+            duck = g_soundMusic.duckVolume;
+        } else {
+            g_soundMusic.duckVolume = 0;
+        }
+    }
+    if (duck > 0 && static_cast<std::uint32_t>(duck) < requested)
+        requested = duck;
+    if (requested < 65U)
+        requested = 0;
+    if (static_cast<std::int32_t>(requested) >= 0 && g_soundMusic.publishedVolume != static_cast<std::int32_t>(requested)) {
+        if (static_cast<std::int32_t>(requested) > 127)
+            requested = 127;
+        if (g_soundMusic.activeProgramCommand >= 0 && !fadeCommandIssued) {
+            ExecuteAicaCommand(0x4a0, record->bank, requested);
+            g_soundMusic.publishedVolume = requested;
+        }
+    }
+}
+
+
+// @verified - d
+void UpdateSampleProgramDucking(SampleProgramState *program, bool fadeCommandIssued) {
+    if (!program || !program->executing)
+        return;
+    std::int32_t volume = -1;
+    if (FindConversationByPriority(6) && program->duckVolume == 0) {
+        program->duckVolume = 127;
+        volume = program->duckVolume;
+        program->duckDelay = 2;
+    } else if (program->duckVolume != 0) {
+        if (FindConversationByPriority(6)) {
+            if (program->duckVolume > 95) {
+                program->duckVolume -= 2;
+                if (program->duckVolume < 95)
+                    program->duckVolume = 95;
+                volume = program->duckVolume;
+            }
+        } else if (program->duckVolume < 127) {
+            if (program->duckDelay == 0) {
+                program->duckVolume = program->duckVolume + 1;
+                volume = program->duckVolume;
+                program->duckDelay = 2;
+            } else {
+                --program->duckDelay;
+            }
+        } else {
+            program->duckVolume = 0;
+        }
+    }
+    if (volume >= 0 && !fadeCommandIssued)
+        ExecuteAicaCommand(0x4a0, program->bank, volume);
+}
+
+
+// @verified - d
+void SampleChannelCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value, const std::uint8_t *channels) {
+    SoundDriverCommand record;
+    record.material.bank = static_cast<std::int32_t>(bank);
+    for (std::int32_t index = 0; index < 8 && *channels; ++index, ++channels) {
+        record.material.variantCount = *channels;
+        record.material.extendedCommand = command;
+        record.value = value;
+        DispatchSoundCommand(SoundCommandMode_Channel, &record);
+    }
+}
+
+
+// @verified - d
+void SampleChannelBankCommand(std::uint32_t command, std::uint32_t bank, const std::uint8_t *channels) {
+    SoundDriverCommand record;
+    record.material.bank = static_cast<std::int32_t>(bank);
+    for (std::int32_t index = 0; index < 8 && *channels; ++index, ++channels) {
+        record.material.extendedCommand = command;
+        record.value = *channels;
+        DispatchSoundCommand(SoundCommandMode_Bank, &record);
+    }
+}
+
+
+// @verified - d
+std::int32_t SoundPan(std::int32_t *pan, std::int32_t yaw, const Vector3 *source, const Vector3 *camera) {
+    std::int32_t behind = 0;
+    const std::int16_t direction = InverseFixedAtan2(source->x - camera->x, source->z - camera->z);
+    std::int16_t angle = static_cast<std::int16_t>(direction - yaw);
+    angle = static_cast<std::int16_t>(angle + 0x4000);
+    if (angle < 0) {
+        angle = static_cast<std::int16_t>(~angle);
+        behind = 1;
+    }
+    const std::int16_t relative = static_cast<std::int16_t>(static_cast<std::uint16_t>(angle - 0x4000));
+    std::int32_t value = -((static_cast<std::int32_t>(relative) * 64) >> 14);
+    if (value > 40)
+        value = 40;
+    else if (value < -40)
+        value = -40;
+    *pan = value;
+    return behind;
+}
+
+
+// @verified - d
+float SoundDistanceGain(const Vector3 *listener, const Vector3 *source, float minimumDistance, float fadeDistance) {
+    const float distance = source->y == 0.0f ? CalculatePlanarDistanceBetweenPoints(listener, source) : GetEuclideanDistance(listener, source);
+    float gain;
+    if (minimumDistance > distance)
+        gain = 127.0f;
+    else if (distance > fadeDistance + minimumDistance)
+        gain = 0.0f;
+    else
+        gain = 127.0f / fadeDistance * (fadeDistance - (distance - minimumDistance));
+    return gain;
+}
+
+
+// @verified - d
+void UpdateSampleProgram(SampleProgramState *program) {
+    Vector3 listener;
+    Vector3 source;
+    Vector3 camera;
+    DateTime date;
+    std::int32_t pan;
+    std::int32_t index;
+    if (!program || !program->executing)
+        return;
+    shenGetCurrentDateTime(date);
+    std::int32_t quarter = date.hour * 4;
+    float minute;
+    if (date.minute >= 45) {
+        quarter += 3;
+        minute = static_cast<float>(date.minute - 45);
+    } else if (date.minute >= 30) {
+        quarter += 2;
+        minute = static_cast<float>(date.minute - 30);
+    } else if (date.minute >= 15) {
+        ++quarter;
+        minute = static_cast<float>(date.minute - 15);
+    } else {
+        minute = static_cast<float>(date.minute);
+    }
+    std::int32_t nextQuarter = quarter + 1;
+    if (nextQuarter > 95)
+        nextQuarter = 0;
+    const std::int32_t yaw = camCtrlGetNextRotY();
+    camCtrlGetNextCamPos(&camera);
+    if (g_soundListenerUsesCamera) {
+        listener = camera;
+    } else {
+        const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        GetCharacterWorldPosition(control->ryo, &listener);
+    }
+    SampleProgramRecord *record = program->records;
+    for (index = 0; index < program->count; ++index, ++record) {
+        if (!record->disabled && ((record->weekdays >> static_cast<std::int8_t>(date.week)) & 1)) {
+            float gain;
+            switch (record->spatialMode) {
+            case 1:
+                if (record->characterName) {
+                    const MapControlData *const control = reinterpret_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+                    const Character *const character = scenFindChara(control->scenarioTask, shen_name(record->characterName));
+                    if (!character)
+                        continue;
+                    GetCharacterWorldPosition(character, &source);
+                } else {
+                    source.x = record->position.x;
+                    source.y = record->position.y;
+                    source.z = record->position.z;
+                }
+                gain = SoundDistanceGain(&listener, &source, record->minimumDistance, record->fadeDistance);
+                break;
+            case 2:
+                gain = 127.0f;
+                break;
+            case 3:
+                gain = 127.0f;
+                break;
+            default:
+                gain = 127.0f;
+                break;
+            }
+            if (gain > 0.0f && record->timeMode) {
+                float timeGain = static_cast<float>(record->quarterHourGains[quarter]) / 100.0f;
+                if (record->timeMode == 1) {
+                    const float difference = (static_cast<float>(record->quarterHourGains[nextQuarter]) / 100.0f - timeGain) * 0.066660002f;
+                    timeGain += difference * minute;
+                }
+                gain *= timeGain;
+            }
+            if (gain > 0.0f) {
+                switch (record->weatherMode) {
+                case 1:
+                    gain -= gain * GetWeatherWindVector();
+                    break;
+                case 2: {
+                    float pressure = GetWeatherPressure();
+                    if (pressure > 0.01f)
+                        pressure += 1.0f;
+                    else
+                        pressure = GetWeatherWindVector();
+                    gain -= 0.44999999f * pressure * gain;
+                    break;
+                }
+                case 3:
+                    gain = 32.0f + GetWeatherPressure() * gain;
+                    if (gain > 127.0f)
+                        gain = 127.0f;
+                    break;
+                }
+            }
+            std::int32_t volume = static_cast<std::int32_t>(gain);
+            if (volume > 127)
+                volume = 127;
+            if (volume < 64)
+                volume = 0;
+            std::int32_t behind = 0;
+            if (volume > 0 && record->panMode) {
+                behind = SoundPan(&pan, yaw, &source, &camera);
+                if (pan != record->pan) {
+                    SampleChannelCommand(0xab0, program->bank, pan, record->channels);
+                    record->pan = static_cast<std::int8_t>(pan);
+                }
+            }
+            if (volume > 0 && record->panMode && record->frontGainPercent < 100) {
+                std::int32_t attenuation;
+                if (behind) {
+                    float scale = static_cast<float>(pan) * 0.015625f;
+                    if (0.0f > scale)
+                        scale = -scale;
+                    attenuation = static_cast<std::int32_t>((1.0f - static_cast<float>(record->frontGainPercent) / 100.0f) * 127.0f * (1.0f - scale));
+                } else {
+                    attenuation = 0;
+                }
+                if (attenuation != static_cast<std::int8_t>(record->attenuation)) {
+                    SampleChannelCommand(0x2b0, program->bank, attenuation, record->channels);
+                    record->attenuation = static_cast<std::uint8_t>(attenuation);
+                }
+            }
+            if (volume != static_cast<std::int8_t>(record->volume)) {
+                if (volume == 0)
+                    SampleChannelBankCommand(0x28a0, program->bank, record->channels);
+                else if (record->volume == 0)
+                    SampleChannelBankCommand(0x29a0, program->bank, record->channels);
+                if (volume == 0 || static_cast<std::uint32_t>(volume & 1) != g_soundCallbackParity) {
+                    SampleChannelCommand(0x7b0, program->bank, volume, record->channels);
+                    record->volume = static_cast<std::uint8_t>(volume);
+                }
+            }
+        }
+    }
+}
+
+
+// @verified - d
+std::int32_t spmSetSampleEnabled(std::int32_t sample, std::int32_t enabled) {
+    return SetSampleProgramEnabled(sample, enabled, SelectSampleProgram(g_samplePrograms));
+}
+
+
+// @verified - d
+std::int32_t spmSetSecondarySampleEnabled(std::int32_t sample, std::int32_t enabled) {
+    return SetSampleProgramEnabled(sample, enabled, SelectSampleProgram(g_secondarySamplePrograms));
+}
+
+
+// @verified - d
+std::int32_t SetSampleProgramEnabled(std::int32_t sample, std::int32_t enabled, SampleProgramState *program) {
+    if (!sample)
+        return 0;
+    --sample;
+    SampleProgramRecord *record = program->records;
+    record += sample;
+    if (enabled) {
+        record->disabled = 0;
+    } else {
+        record->disabled = 1;
+        record->volume = 0;
+        record->pan = 0;
+        record->attenuation = 0;
+        SampleChannelBankCommand(0x28a0, program->bank, record->channels);
+        SampleChannelCommand(0x7b0, program->bank, 0, record->channels);
+    }
+    return 1;
+}
+
+
+// @verified - d
+SampleProgramState *SelectSampleProgram(SampleProgramState *first) {
+    SampleProgramState *program = first;
+    for (std::int32_t index = 0; index < 2; ++index, ++program) {
+        if (program->records && g_soundBankLoadStates[program->bank] > -1)
+            return program;
+    }
+    return 0;
+}
+
+
+// @verified - d
+void blurInit() {
+    g_savedFightBlurFlag = 0;
+    blurModelPreviousFlag = 0;
+    blurModelFlag = 0;
+    accumulatedFightBlur = 0;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ShutdownSoundProgramControl() noexcept {
     if (soundTask) {
         if (soundTask == HLib::GetCurrentTask())
@@ -1941,6 +3620,40 @@ void EVT_AT_FadeBGM(std::int32_t frames, std::int32_t mode, std::int32_t delay) 
     data->time = static_cast<float>(delay);
     (void)RegisterEventTask(task);
 }
+#endif
 
-} // namespace shenmue::s2
+} // namespace s2
 
+} // namespace shenmue
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+ // namespace shenmue
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_PlayFootstepForNode(std::uint32_t flags, shenmue::s2::Character *character) {
+    return shenmue::s2::PlayFootstepForNode(flags, character);
+}
+
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_Shenmue_Execute3DSoundCommand(
+    std::uint32_t flags, const shenmue::Vector3 *position, float minimumDistance, float fadeDistance) {
+    return shenmue::s2::Execute3DSoundCommand(flags, position, minimumDistance, fadeDistance);
+}
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_Loop3DSoundEffect(std::uint32_t flags) {
+    return shenmue::s2::Loop3DSoundEffect(flags);
+}
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ExecuteAicaCommand_Wrapper(
+    shenmue::s2::SoundEffectHandle *handle, std::uint32_t command, std::int32_t value) {
+    return shenmue::s2::ExecuteMaterialSoundHandleCommand(handle, command, value);
+}
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_StopMaterialSoundEffect(shenmue::s2::SoundEffectHandle *handle) {
+    return shenmue::s2::FreeMaterialSoundHandle(handle);
+}
+
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_UpdateMaterialSoundEffectPosition(
+    shenmue::s2::SoundEffectHandle *handle, const shenmue::Vector3 *position, float minimumDistance, float fadeDistance, std::int32_t controlValue) {
+    return shenmue::s2::UpdateMaterialSoundEffectPosition(handle, position, minimumDistance, fadeDistance, controlValue);
+}
+#endif

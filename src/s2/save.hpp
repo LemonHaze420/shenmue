@@ -1,15 +1,43 @@
 #pragma once
-
 #include "shenmue.h"
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/save_screen_state_dc.hpp"
 
-#include "shenmue.h"
+namespace shenmue {
+namespace s2 {
+
+std::int32_t GetBackupConnectionStatusPort0();
+std::int32_t WaitForBackupOperationPort0();
+std::int32_t CheckBackupFileExistsPort0(const char *filename);
+std::int32_t CheckSaveFileExistsByIndex(std::int32_t index);
+std::int32_t GetBackupFreeBlocksPort0();
+std::int32_t LoadBackupFile(std::int32_t index);
+std::int32_t LoadBackupFilePort0(std::int32_t index);
+std::int32_t ReadBackupBlocksPort0(void *destination, std::int32_t firstBlock, std::int32_t blocks, const char *filename);
+std::int32_t ReadSystemSaveFile();
+std::int32_t ReadGameSaveFile(std::int32_t slot);
+std::int32_t ValidateSaveSlotChecksum(std::int32_t slot);
+std::int32_t ValidateSaveSlot(std::int32_t slot);
+std::int32_t LoadImportedSaveFile(void *image);
+void RestoreSaveGameTime(const std::byte *time);
+void CaptureSaveBufferBlocks(std::byte *stats, std::byte *story, std::byte *internal);
+void RestoreSaveBufferBlocks(const std::byte *stats, const std::byte *story, const std::byte *internal);
+void ReloadLocalSaveSlots();
+
+} // namespace s2
+} // namespace shenmue
+
+#else
 
 #include "s2/hlib.hpp"
 #include "s2/window.hpp"
 #include "s2/arcade.hpp"
 #include "common/types.hpp"
 #include "common/math.hpp"
+#if SHENMUE_IS_DC
+#include "s2/lcdm_dc.hpp"
+#endif
 
 #include <array>
 #include <cstddef>
@@ -27,6 +55,7 @@ inline constexpr shen_name TITLE_AREA_SPRITE_FILE{SHEN_NAME(NVTT)};
 inline constexpr shen_name TITLE_LOCAL_AREA_SPRITE_FILE{SHEN_NAME(NVTX)};
 inline constexpr std::array<std::int32_t, 24> SAVE_SCREEN_WARNING_IDS{0, 0, 14, 5, 11, 18, 4, 1, 8, 1, 10, 12, 13, 15, 16, 7, 20, 5, 3, 6, 17, 19, 2, 0};
 
+// Legacy save-screen glyph atlas: a character-pair code and its texel rectangle.
 struct LegacySaveGlyph {
     std::uint16_t code;
     std::uint8_t x;
@@ -178,6 +207,7 @@ inline constexpr std::array<LegacySaveArea, 19> LEGACY_SAVE_AREA_ALIASES{{
 }};
 inline constexpr shen_name LEGACY_SAVE_CLEARED_AREA{SHEN_NAME(CQS2)};
 
+// Native legacy save-list storage: location and area texture packs, per-row texture slots and cached thumbnail ids.
 struct LegacySaveListState {
     std::byte *locationPack;
     std::byte *areaPack;
@@ -265,6 +295,7 @@ inline constexpr S2VmuSaveHeader S2_VMU_SAVE_HEADER{.shortDescription = {'S', 'H
     .dataSize = 0,
     .reserved = {},
     .iconPalette = {}};
+#if !SHENMUE_IS_DC
 struct LcdmTaskData {
     std::array<std::byte, 0x61c> screen{};
     std::uint32_t nativeBufferSize{};
@@ -291,12 +322,14 @@ static_assert(sizeof(LcdmTaskData) == 0xc74);
 static_assert(offsetof(LcdmTaskData, resource) == 0x6d8);
 static_assert(offsetof(LcdmTaskData, resourceState) == 0x6dc);
 #endif
+#endif
 struct LcdmSectionBinding {
     std::uint32_t name0;
     std::uint32_t name1;
     std::size_t stateOffset;
 };
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 struct WindowTaskData {
     shen_name name;
 #if SHENMUE_IS_PC
@@ -330,6 +363,8 @@ static_assert(offsetof(WindowTaskData, activeSlot0) == 0x04);
 static_assert(offsetof(WindowTaskData, activeSlot1) == 0x64);
 static_assert(offsetof(WindowTaskData, activeSlot4) == 0x184);
 static_assert(offsetof(WindowTaskData, customFlag) == 0x1e4);
+#endif
+
 #endif
 
 #pragma pack(push, 1)
@@ -425,6 +460,7 @@ void InitializeInheritedMoveProficiency();
 std::int64_t ImportS1SaveData(const void *bank, std::int32_t slot);
 void ImportSelectedS1SaveData(const void *bank, std::int32_t slot);
 std::int64_t ResetItemInventoryState() noexcept;
+
 struct SnapshotMetadataRecord {
     std::int32_t id;
     std::int32_t use;
@@ -542,7 +578,7 @@ struct S2PersistentPlayerStats {
 
 inline constexpr std::size_t S2StreetFightProgressOffset = 0xe44;
 
-
+// Native shenResetStats' separate 0x1000 runtime block, not the serialized player payload.
 struct S2CombatStatistics {
     std::array<std::byte, 0xba4> retainedPrefix{};
     std::array<std::uint16_t, 128> performedMoves{};
@@ -661,11 +697,11 @@ std::uint64_t GetCurrentGameFlags() noexcept;
 std::uint64_t SetCurrentGameFlag(std::uint8_t bit, std::int32_t enabled) noexcept;
 std::uint64_t GetCompletedGameCount() noexcept;
 std::uint64_t SetCompletedGameCount(std::uint32_t count) noexcept;
-
+// Native QueueSnapshotSave: queues the album slot's JPEG write of the packed RGBA rows (the mapped row pitch rides along).
 std::uint32_t QueueSnapshotSave(
     std::uint32_t slot, std::uint32_t rowPitch, std::uint32_t width, std::uint32_t height, std::uint32_t format, std::vector<std::byte> &&pixels) noexcept;
 std::uint32_t IsSnapshotSaveInProgress() noexcept;
-
+// Native LocalTimeSnapshot: SYSTEMTIME narrowed to bytes after the year.
 #pragma pack(push, 1)
 struct LocalTimeSnapshot {
     std::uint16_t year;
@@ -707,8 +743,10 @@ bool S2Save_HasContinueSlot();
 
 using S2SaveTaskCompletion = void (*)(S2SaveResult result, std::size_t slot);
 HLib::Task *SM_Init_Enqueue(std::int32_t initializationMode);
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 HLib::Task *QueueWindowTask(std::uint8_t nextFunctionIndex = 2);
-
+#endif
+// Native WND message-sprite draw gate (the sprite pass itself is a PC nullsub).
 extern std::int32_t g_wndMessageDrawDisabled;
 void wndEnableMessageDraw();
 void wndDisableMessageDraw();
@@ -909,6 +947,7 @@ inline constexpr std::array<TitleFileSelectSprite, 14> TITLE_SAVE_SPRITES{{
     {.group = 2, .item = 2, .position = {.x = 30.0f, .y = 0.0f, .z = -2.8000001907348633f}},
     {.group = 2, .item = 3, .position = {.x = 30.0f, .y = 0.0f, .z = -2.8000001907348633f}},
 }};
+
 #pragma pack(push, 1)
 struct TitleFileSelectSlot {
     std::uint32_t flags;
@@ -982,6 +1021,7 @@ void TFSEL_ModChange_Callback(void *taskData);
 void BeginSaveMenuLoad(std::int32_t slot);
 std::int64_t CompleteSaveMenuLoad();
 bool GetSaveMenuSlotEligibility(std::uint32_t slot) noexcept;
+
 void S2Save_NewGameTitleTask(void *taskData);
 void S2Save_ContinueTitleTask(void *taskData);
 void S2Save_TitleLoadTask(void *taskData);
@@ -1003,11 +1043,11 @@ std::uint32_t InitializeDefaultSaveData() noexcept;
 std::uint64_t ReadSaveDataSection(std::int32_t gameSection, std::int32_t slot);
 std::byte *RestoreSystemSaveProgress() noexcept;
 std::int64_t InitializeNewGameFromSaveSlot(std::int32_t slot);
-
 std::uint64_t ReadSystemSaveHeader(std::int32_t slot);
 std::int64_t RestoreSaveSystemSettings(std::int32_t slot);
 void RestoreGameSaveSlot(std::uint32_t slot);
 std::int64_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlacement);
+
 inline constexpr std::array<std::int16_t, 13> InitialHandMoveProficiency{96, 64, 82, 64, 62, 86, 58, 84, 78, 66, 52, 58, 46};
 inline constexpr std::array<std::int16_t, 12> InitialLegMoveProficiency{92, 86, 78, 72, 0, 46, 58, 48, 54, 34, 52, 64};
 inline constexpr std::array<std::int16_t, 9> InitialThrowMoveProficiency{84, 64, 60, 64, 38, 60, 38, 54, 44};
@@ -1016,3 +1056,4 @@ inline constexpr std::array<std::byte, 12> InitialPlayerSkillFlags{std::byte{0},
 
 } // namespace shenmue::s2
 
+#endif

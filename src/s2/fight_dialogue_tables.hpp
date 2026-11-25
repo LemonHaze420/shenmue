@@ -1,3 +1,40 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#pragma once
+#include "s2/fight.hpp"
+namespace shenmue {
+namespace s2 {
+struct FightDialogueRecord {
+    std::uint16_t delay, camera;
+    std::uint8_t played;
+    std::byte reserved05[3];
+    const char *voice;
+    std::int16_t next;
+    std::byte reserved0e[2];
+};
+typedef char FightDialogueRecordSizeCheck[sizeof(FightDialogueRecord) == 0x10 ? 1 : -1];
+typedef char FightDialogueRecordVoiceCheck[offsetof(FightDialogueRecord, voice) == 8 ? 1 : -1];
+extern FightDialogueRecord dialogueRecords[253];
+extern FightDialogueRecord *const dialogueBanks[4];
+struct FightDialogueCamera {
+    std::uint16_t camera;
+    std::uint8_t isolate;
+    std::int8_t expression;
+    shen_name character, target;
+};
+typedef char FightDialogueCameraSizeCheck[sizeof(FightDialogueCamera) == 0x0c ? 1 : -1];
+static FightDialogueCamera dialogueCameras[10] = {{0, 0, -1, 0, 0},
+    {620, 1, -1, SHEN_NAME(RYO_), 0},
+        {621, 1, -1, SHEN_NAME(VNC_), 0},
+            {9000, 1, -1, SHEN_NAME(SYE_), SHEN_NAME(RYO_)},
+                {9001, 1, 6, SHEN_NAME(RYO_), SHEN_NAME(SYE_)},
+                    {2311, 1, 0, SHEN_NAME(KFT_), 0},
+                        {2311, 1, 0, SHEN_NAME(AW1_), 0},
+                            {2321, 1, 0, SHEN_NAME(AW1_), 0}, {9002, 1, -1, SHEN_NAME(SYE_), SHEN_NAME(RYO_)}, {9001, 1, 1, SHEN_NAME(RYO_), SHEN_NAME(SYE_)}};
+void vfmaSetupDialogueReactionsEtc(FightRuntimePrefix *game);
+} // namespace s2
+} // namespace shenmue
+#else
 #pragma once
 
 #include "s2/fight.hpp"
@@ -90,14 +127,26 @@ struct FightDialogueCamera {
     std::int8_t expression;
     shen_name character, target;
 };
-inline constexpr FightDialogueCamera dialogueCameras[]{{.expression = -1}, {.camera = 620, .isolate = 1, .expression = -1, .character = SHEN_NAME(RYO_)},
-    {.camera = 621, .isolate = 1, .expression = -1, .character = SHEN_NAME(VNC_)},
-    {.camera = 9000, .isolate = 1, .expression = -1, .character = SHEN_NAME(SYE_), .target = SHEN_NAME(RYO_)},
-    {.camera = 9001, .isolate = 1, .expression = 6, .character = SHEN_NAME(RYO_), .target = SHEN_NAME(SYE_)},
-    {.camera = 2311, .isolate = 1, .expression = 0, .character = SHEN_NAME(KFT_)},
-    {.camera = 2311, .isolate = 1, .expression = 0, .character = SHEN_NAME(AW1_)},
-    {.camera = 2321, .isolate = 1, .expression = 0, .character = SHEN_NAME(AW1_)},
-    {.camera = 9002, .isolate = 1, .expression = -1, .character = SHEN_NAME(SYE_), .target = SHEN_NAME(RYO_)},
-    {.camera = 9001, .isolate = 1, .expression = 1, .character = SHEN_NAME(RYO_), .target = SHEN_NAME(SYE_)}};
+inline constexpr FightDialogueCamera dialogueCameras[]{{.expression = -1},
+    {.camera = 620, .isolate = 1, .expression = -1, .character = SHEN_NAME(RYO_)},
+        {.camera = 621, .isolate = 1, .expression = -1, .character = SHEN_NAME(VNC_)},
+            {.camera = 9000,
+                .isolate = 1,
+                .expression = -1,
+                .character = SHEN_NAME(SYE_), .target = SHEN_NAME(RYO_)},
+                {.camera = 9001,
+                    .isolate = 1,
+                    .expression = 6,
+                    .character = SHEN_NAME(RYO_), .target = SHEN_NAME(SYE_)},
+                    {.camera = 2311, .isolate = 1, .expression = 0, .character = SHEN_NAME(KFT_)},
+                        {.camera = 2311, .isolate = 1, .expression = 0, .character = SHEN_NAME(AW1_)},
+                            {.camera = 2321, .isolate = 1, .expression = 0, .character = SHEN_NAME(AW1_)},
+                                {.camera = 9002,
+                                    .isolate = 1,
+                                    .expression = -1,
+                                    .character = SHEN_NAME(SYE_), .target = SHEN_NAME(RYO_)},
+                                    {.camera = 9001, .isolate = 1, .expression = 1, .character = SHEN_NAME(RYO_), .target = SHEN_NAME(SYE_)}};
 
 } // namespace shenmue::s2
+
+#endif

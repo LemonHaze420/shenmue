@@ -102,7 +102,6 @@ struct ScenarioFreeTalkRecord {
 
 #pragma pack(push, 4)
 
-
 struct ScenarioFreeTalkCandidate {
     shen_name name;
     std::uint16_t characterStateIndex;
@@ -119,7 +118,6 @@ struct ScenarioFreeTalkCandidate {
 #pragma pack(pop)
 
 #pragma pack(push, 4)
-
 
 struct FreeTalkComponent {
     std::array<ScenarioFreeTalkCandidate, 4> candidates;
@@ -155,14 +153,30 @@ extern std::int32_t scenarioFollowPromptShown;
 ScenarioFreeTalkRecord *FindMutableScenarioFreeTalkRecord(shen_name character);
 std::int32_t GetScenarioFollowEligibility(shen_name character);
 void ApplyScenarioFaceLook(std::uint32_t command);
-
+// Native scenCheckIsRyo includes scenario-pointer aliases.
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t ScenarioCharacterIsRyo(shen_name name);
+#else
 bool ScenarioCharacterIsRyo(shen_name name);
+#endif
 // These selectors discover visibility/control state; they do not activate a
 // conversation or populate the participant span.
 bool IsScenarioCharacterForcedVisible(shen_name character);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t HasScenarioCharacterControl();
+#else
 bool HasScenarioCharacterControl();
+#endif
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t scenCheckActiveRecordBusy();
+#else
 bool scenCheckActiveRecordBusy();
+#endif
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsScenarioBusy();
+#else
 bool IsScenarioBusy();
+#endif
 bool IsScenarioBusyForMainIcon();
 void ResetScenarioFreeTalkResumeFlags();
 std::span<shen_name, 32> GetScenarioCharacterAdmissionNames();

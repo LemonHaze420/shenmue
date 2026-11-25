@@ -1,0 +1,10 @@
+--- a/gcc/final.c
++++ b/gcc/final.c
+@@ -1030,6 +1030,7 @@
+     (max_labelno - min_labelno + 1) * sizeof (struct label_alignment));
+ 
+   uid_shuid = (int *) xmalloc (max_uid * sizeof *uid_shuid);
++  bzero ((char *) uid_shuid, max_uid * sizeof *uid_shuid);
+ 
+   /* Initialize label_align and set up uid_shuid to be strictly
+      monotonically rising with insn order.  */

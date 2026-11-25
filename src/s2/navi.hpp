@@ -1,5 +1,48 @@
 #pragma once
 
+#include "shenmue.h"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#include <cstdint>
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "common/math.hpp"
+#endif
+
+namespace shenmue {
+namespace s2 {
+std::uint32_t SetNaviDisplayOverride(std::int32_t enabled);
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+namespace HLib {
+struct Task;
+}
+struct NativeNaviMapConfig {
+    std::int16_t itemId, floorDefinition;
+    float scale, originX, originZ;
+    const char *spriteStem;
+};
+typedef char NativeNaviMapConfigSizeCheck[sizeof(NativeNaviMapConfig) == 0x14 ? 1 : -1];
+struct NativeNaviMarker {
+    std::uint32_t active : 1, type : 3, area : 6, floor : 6;
+    std::int8_t x, z;
+};
+typedef char NativeNaviMarkerSizeCheck[sizeof(NativeNaviMarker) == 4 ? 1 : -1];
+extern HLib::Task *g_naviTask;
+extern std::uint32_t naviFlags;
+extern std::uint8_t *g_naviTrailTexturePixels;
+extern std::uint32_t g_savedNaviMarkers[128];
+extern std::int32_t g_savedNaviMarkerCursor, g_savedNaviReloadState;
+void ResetNaviSavedData();
+void SetNaviTaskEnabled(std::int32_t enabled);
+void AddNaviTrailLocations(const ::shenmue::Vector3 *locations, std::int32_t count);
+void PlotNaviTrailLocation(const ::shenmue::Vector3 *location, const NativeNaviMapConfig *config);
+void SetNaviTrailPixel(std::uint32_t x, std::uint32_t y, std::int32_t colour);
+#endif
+} // namespace s2
+} // namespace shenmue
+
+#else
+
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -92,9 +135,13 @@ bool DrawLegacySpritePacket(const LegacySpritePacket &packet, std::uint32_t text
 bool SetDrawWithAlpha(const LegacySpritePacket &packet, std::int32_t textureIndex, float depth);
 bool naviDraw(const LegacySpritePacket &packet, std::int32_t textureIndex, float depth);
 
-
-
+// IsNaviActive tests interaction phases 2..5. IsNaviTaskEnabled instead tests
+// the allocated task and its enabled bit; these are distinct native queries.
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsNaviActive() noexcept;
+#else
 bool IsNaviActive() noexcept;
+#endif
 bool IsNaviTaskEnabled() noexcept;
 void SetNaviTaskEnabled(bool enabled);
 bool IsNaviDisplayOverridden() noexcept;
@@ -103,8 +150,8 @@ void ResetNaviInputPhase() noexcept;
 void ReleaseNaviResources();
 
 struct LegacyInputSlot;
-
-
+// Native NAVI_DummyWait_Enqueue owns the actual HLib task and its 0x30-byte
+// payload. InitializeNaviResources initializes that task-owned state.
 bool InitializeNaviResources(HLib::Task *task, std::int32_t configIndex);
 void InitializeNaviInputState(NaviTaskData &task);
 // CtrlNavi runs interaction only after full input admission, otherwise it
@@ -113,8 +160,8 @@ void UpdateNaviInteraction(const LegacyInputSlot &input);
 void UpdateNaviInputAnimation(NaviTaskData &task, const LegacyInputSlot &input);
 void PrepareNaviFrame(void *taskData);
 float ComputeNaviAlphaLoss(float order);
-
-
+// Native draw priority is 900. Admission uses naviIsDisplayable(0);
+// showFloorLabel must reflect naviIsDisplayable(1) when the draw is queued.
 void DrawNaviFrame(bool showFloorLabel);
 void QueueNaviFrameDraw(bool showFloorLabel);
 
@@ -135,3 +182,5 @@ std::int32_t navPlaceMarker(const Vector3 &position, std::int32_t type);
 void AddNaviTrailLocations(std::span<const Vector3> locations);
 
 } // namespace shenmue::s2
+
+#endif

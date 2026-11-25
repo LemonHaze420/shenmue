@@ -6,7 +6,6 @@ using namespace event_runtime_detail;
 
 namespace event_runtime_detail {
 
-
 Vector3i EventCharacterRotation(const Character &character, bool recursive) {
     if (recursive)
         return GetCharacterWorldRotation(&character);
@@ -14,7 +13,6 @@ Vector3i EventCharacterRotation(const Character &character, bool recursive) {
     return {character.entity.node.rotation[0], character.entity.node.rotation[1], character.entity.node.rotation[2]};
 }
 } // namespace event_runtime_detail
-
 
 std::uint64_t mtwkSetMotionworkScale3(shen_name characterId, const Vector3 *scale) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -273,7 +271,11 @@ bool IsScenarioCharacterDisplayEnabled(shen_name name) {
 }
 
 // @verified - p
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t DoesScenarioCharacterExist(shen_name name) {
+#else
 bool DoesScenarioCharacterExist(shen_name name) {
+#endif
     return ctrlGetCharaByName(name) != nullptr;
 }
 
@@ -449,7 +451,11 @@ Character *ctrlGetCharaByName(shen_name character) {
 }
 
 // @verified - p
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t CheckIsArgEquZero(std::int32_t value) {
+#else
 bool CheckIsArgEquZero(std::int32_t value) {
+#endif
     return value == 0;
 }
 
@@ -464,9 +470,8 @@ void EV_SetCurrentRefCount(std::uint32_t count) {
 }
 namespace event_runtime_detail {
 
-
-constexpr std::array<shen_name, 9> openingTemporaryCharacters{SHEN_NAME(FT1_), SHEN_NAME(FT2_), SHEN_NAME(FT3_), SHEN_NAME(FT4_), SHEN_NAME(FT5_),
-    SHEN_NAME(FT6_), SHEN_NAME(FT7_), SHEN_NAME(FT8_), shen_name{0xffffffffU}};
+constexpr std::array<shen_name, 9> openingTemporaryCharacters{SHEN_NAME(FT1_),
+    SHEN_NAME(FT2_), SHEN_NAME(FT3_), SHEN_NAME(FT4_), SHEN_NAME(FT5_), SHEN_NAME(FT6_), SHEN_NAME(FT7_), SHEN_NAME(FT8_), shen_name{0xffffffffU}};
 } // namespace event_runtime_detail
 
 void EV_InitializeOpeningTemporaryCharacters(HLib::Task *startupTask) {

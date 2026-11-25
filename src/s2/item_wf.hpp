@@ -2,7 +2,71 @@
 
 #include "shenmue.h"
 
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
 
+#include "s2/hlib.hpp"
+#include "common/types.hpp"
+#include <cstddef>
+#include <cstdint>
+
+namespace shenmue {
+namespace s2 {
+
+struct NativeWfTaskData {
+    std::int32_t state;
+    std::uint32_t npcLoadState;
+    void *ptx;
+    std::uint32_t flags, owned, learned;
+    std::int32_t row, first;
+    float remaining, x, y, velocity, retained30, retained34;
+    std::uint8_t retained38[8];
+    std::int32_t textures[6];
+};
+typedef char NativeWfTaskDataSizeCheck[(sizeof(NativeWfTaskData) == 0x58) ? 1 : -1];
+typedef char NativeWfTaskDataPtxCheck[(offsetof(NativeWfTaskData, ptx) == 0x08) ? 1 : -1];
+typedef char NativeWfTaskDataTexturesCheck[(offsetof(NativeWfTaskData, textures) == 0x40) ? 1 : -1];
+typedef char NativeWfTaskDataFlagsCheck[(offsetof(NativeWfTaskData, flags) == 0x0c) ? 1 : -1];
+typedef char NativeWfTaskDataOwnedCheck[(offsetof(NativeWfTaskData, owned) == 0x10) ? 1 : -1];
+typedef char NativeWfTaskDataLearnedCheck[(offsetof(NativeWfTaskData, learned) == 0x14) ? 1 : -1];
+typedef char NativeWfTaskDataRowCheck[(offsetof(NativeWfTaskData, row) == 0x18) ? 1 : -1];
+typedef char NativeWfTaskDataFirstCheck[(offsetof(NativeWfTaskData, first) == 0x1c) ? 1 : -1];
+typedef char NativeWfTaskDataTimerCheck[(offsetof(NativeWfTaskData, remaining) == 0x20) ? 1 : -1];
+typedef char NativeWfTaskDataPositionCheck[(offsetof(NativeWfTaskData, x) == 0x24) ? 1 : -1];
+
+struct NativeWfScrollDefinition {
+    std::int8_t itemOffset;
+    std::uint8_t category;
+    std::int16_t move;
+    std::int16_t prompt;
+};
+typedef char NativeWfScrollDefinitionSizeCheck[(sizeof(NativeWfScrollDefinition) == 6) ? 1 : -1];
+
+const NativeWfScrollDefinition wfScrollDefinitions[25] = {{0, 1, 14, 0}, {1, 2, 18, 0}, {2, 1, 16, 0}, {3, 2, 17, 0}, {4, 2, 14, 0}, {5, 1, 13, 0},
+    {6, 2, 15, 0}, {7, 3, 11, 0}, {8, 3, 10, 0}, {10, 3, -1, 2}, {11, 2, 22, 1}, {12, 3, 18, 1}, {13, 3, 16, 1}, {14, 1, 27, 1}, {15, 1, 26, 1}, {16, 1, 23, 1},
+    {17, 2, 19, 1}, {18, 1, 25, 1}, {19, 1, 19, 1}, {20, 2, 21, 1}, {21, 2, 20, 1}, {22, 3, 19, 1}, {23, 3, 17, 1}, {24, 2, 4, 1}, {25, 3, 20, 2}};
+const NativeWfScrollDefinition wfSpecialScrollDefinitions[2] = {{10, 3, -1, 2}, {9, 3, -1, 2}};
+
+extern HLib::Task *wfMainControl;
+void RefreshWfMasks(NativeWfTaskData &wf);
+void ReleaseWfResources(NativeWfTaskData &wf);
+void ReleaseWf(NativeWfTaskData &wf);
+void Queue_wf_MainControl(std::uint8_t nextFunctionIndex);
+void wf_MainControl_Callback(void *parameter);
+std::int32_t GetwfMainControlState();
+std::int32_t OpenWfScrollMenu();
+void OpenWfScrollWidget();
+void CloseWfScrollMenu(std::int32_t force);
+void StopWfScrollMenu();
+void LearnWfScroll(std::int32_t index);
+void InspectWfScroll(std::int32_t index);
+std::uint32_t GetWfOwnedScrolls();
+std::uint32_t GetWfLearnedScrolls();
+void ReleaseItemWfOwners();
+
+} // namespace s2
+} // namespace shenmue
+
+#else
 
 #include "s2/hlib.hpp"
 #include "common/math.hpp"
@@ -88,8 +152,8 @@ inline constexpr std::array<WfScrollDefinition, 25> wfScrollDefinitions{{
 }};
 inline constexpr std::array<WfScrollDefinition, 2> wfSpecialScrollDefinitions{{{10, 3, -1, 2}, {9, 3, -1, 2}}};
 inline constexpr std::array<std::array<std::uint16_t, 2>, 3> wfPromptIcons{{{266, 265}, {268, 267}, {270, 269}}};
-
-
+// The modern owned-slot list stores 3009/3010, then passes them through the native index lookup.
+// Both reads reach a signed byte with value one in the PC image's adjacent constant data.
 inline constexpr std::int8_t wfMenuSpecialReadThroughOffset = 1;
 
 struct WfMenuEntry {
@@ -159,3 +223,4 @@ void ReleaseItemWfOwners();
 
 } // namespace shenmue::s2
 
+#endif

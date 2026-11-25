@@ -2,21 +2,42 @@
 
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/npc_data_dc.hpp"
+#else
 #include "s2/npc.hpp"
+#endif
 
+#if !SHENMUE_S2_GCC295
 #include <cstddef>
 #include <cstdint>
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 #include <span>
+#endif
 
+#if SHENMUE_S2_GCC295
+#define SHENMUE_NPCAREA_JOIN_(a, b) a##b
+#define SHENMUE_NPCAREA_JOIN(a, b) SHENMUE_NPCAREA_JOIN_(a, b)
+#define SHENMUE_NPCAREA_LAYOUT(condition) typedef char SHENMUE_NPCAREA_JOIN(NpcAreaLayout_, __LINE__)[(condition) ? 1 : -1]
+#else
 #define SHENMUE_NPCAREA_LAYOUT(condition) static_assert(condition)
-namespace shenmue::s2 {
+#endif
+
+namespace shenmue {
+namespace s2 {
+
 
 #pragma pack(push, 4)
 struct NpcAreaPoint {
     shen_name area;
     std::int16_t routeIndex;
     std::int16_t field06;
+#if SHENMUE_IS_DC
+    std::int16_t routeParameters[4][5];
+#else
     std::byte routeParameters[40];
+#endif
     shen_name owner;
     Vector3 position;
     std::int32_t routeStateOffset;
@@ -44,7 +65,11 @@ struct NpcAreaRouteState {
 struct NpcAreaControlRow {
     std::uint8_t index;
     std::uint8_t flags;
+#if SHENMUE_S2_GCC295
+    std::int8_t laneMode;
+#else
     std::uint8_t laneMode;
+#endif
     std::uint8_t spanCount;
     std::uint32_t previousForwardMask;
     std::uint32_t previousBackwardMask;
@@ -60,7 +85,11 @@ struct NpcAreaOwnerRow {
     std::uint8_t flags;
     std::uint8_t runtimeMask;
     std::uint8_t index;
+#if SHENMUE_IS_DC
+    std::int8_t actionKind;
+#else
     std::uint8_t actionKind;
+#endif
     std::int8_t adjacentOwners[4];
     std::int32_t linkedControlOffset;
     float positionAlongSegment;
@@ -78,6 +107,37 @@ SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaControlRow, forwardOffset) == 0x24);
 SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaOwnerRow) == 0x20);
 SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaOwnerRow, position) == 0x14);
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+struct NpcAreaStoreSlot {
+    NpcAreaRouteState *state;
+    NpcAreaStoreSlot *previous;
+    NpcAreaStoreSlot *next;
+    float distanceSquared;
+};
+SHENMUE_NPCAREA_LAYOUT(sizeof(NpcAreaStoreSlot) == 0x10);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaStoreSlot, previous) == 4);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaStoreSlot, next) == 8);
+SHENMUE_NPCAREA_LAYOUT(offsetof(NpcAreaStoreSlot, distanceSquared) == 0x0c);
+#if SHENMUE_S2_GCC295
+static const std::int32_t kNpcAreaRouteSlots = 512;
+#else
+inline constexpr std::int32_t kNpcAreaRouteSlots = 512;
+#endif
+extern NpcAreaStoreSlot *npcNearestAreaSlot;
+extern std::int32_t npcAreaRouteCount;
+extern NpcAreaPoint *npcAreaPoints;
+std::int32_t PrepareNpcAreaRouteStore(std::int32_t count);
+std::int32_t RegisterNpcAreaRouteState(NpcAreaRouteState *state, std::int32_t point);
+void InitializeNpcAreaPointTable(NpcAreaPoint *points);
+void RebuildNpcAreaPointGround(NpcAreaPoint *points);
+NpcAreaRouteState *GetNpcAreaPointRouteState(std::int32_t point);
+std::uint32_t GetNpcAreaSpecialMotionFlags(const NpcRouteLiveEntry &entry);
+std::uint16_t ResolveNpcAreaAnimation(NpcAreaRouteState *state, NpcRouteLiveEntry *entry);
+void ApplyNpcAreaMotion(NpcRouteLiveEntry *entry, std::uint16_t motion);
+std::int32_t ClearNpcAreaRouteForEntry(NpcRouteLiveEntry *entry);
+void ActivateNpcAreaRoutes(std::int32_t active);
+void PrepareNpcAreaRoutes();
+#else
 // NPCB is the sole backing for these records. Registration converts file-relative
 // row offsets to HLib offsets in place; list heads remain state-relative.
 bool InitializeNpcAreaRouteStore();
@@ -99,6 +159,12 @@ void PrepareNpcAreaRoutes();
 bool ResetNpcAreaRouteState(NpcRouteLiveEntry &entry);
 bool TryEnterNpcAreaRoute(NpcRouteLiveEntry &entry);
 bool RequestNpcAreaRouteCompletion(NpcRouteLiveEntry &entry);
+#endif
 
-} // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue
+#if SHENMUE_S2_GCC295
+#undef SHENMUE_NPCAREA_JOIN_
+#undef SHENMUE_NPCAREA_JOIN
+#endif
 #undef SHENMUE_NPCAREA_LAYOUT

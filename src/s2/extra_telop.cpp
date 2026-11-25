@@ -1,3 +1,53 @@
+#include "shenmue.h"
+#include "s2/legacy_sprite_types.hpp"
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/extra_telop.hpp"
+#include "s2/conversation_playback_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/legacy_sprite_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/moves_scroll.hpp"
+#include "s2/pause.hpp"
+#include "s2/texture_dc.hpp"
+#include "s2/title_sprite_dc.hpp"
+#include "s2/window.hpp"
+#include <cstring>
+#include "s2/hlib.hpp"
+#include "s2/help_icon_dc.hpp"
+#include "s2/input_dc.hpp"
+#include "s2/npc_data_dc.hpp"
+#include "s2/date_time.hpp"
+#include "s2/camera_state_query_dc.hpp"
+#include "s2/player_stats_dc.hpp"
+#include "s2/save_load_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/camera_roll_dc.hpp"
+#include "s2/character_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "s2/character_components_dc.hpp"
+#include "s2/character_state_flags_dc.hpp"
+#include "s2/character_draw_tasks_dc.hpp"
+#include "s2/character_model_dc.hpp"
+#include "s2/model_dc.hpp"
+#include "s2/model_image_dc.hpp"
+#include "s2/model_image_component_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/motion_registry_dc.hpp"
+#include "s2/lcdm_dc.hpp"
+#include "s2/reflector_board_dc.hpp"
+#include "s2/player_ground_state_dc.hpp"
+#include "s2/player_model_dc.hpp"
+#include "s2/player_state_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/time_hud_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#include "common/math.hpp"
+#include <stdio.h>
+#include <string.h>
+#else
 #include "s2/extra_telop.hpp"
 
 #include "s2/archive_data.hpp"
@@ -12,19 +62,108 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 HLib::Task *g_extraTelopTask{};
-std::int32_t g_extraTelopMode{};
-std::int32_t g_extraTelopPhase{};
-std::int32_t g_extraTelopRemainingFrames{};
-std::int32_t g_extraTelopGlyphCount{};
+
+std::int32_t g_extraTelopMode;
+
+std::int32_t g_extraTelopPhase;
+
+std::int32_t g_extraTelopRemainingFrames;
+
+std::int32_t g_extraTelopGlyphCount;
+
 std::int32_t g_extraTelopActiveGlyph{};
+
 std::array<LegacyIconSprite, 8> g_extraTelopSprites{};
+
 std::array<std::uint32_t, 8> g_extraTelopColours{};
+
 std::array<float, 8> g_extraTelopOffsets{};
-std::array<char, 24> g_extraTelopText{};
+
+std::array<char, 24> g_extraTelopText;
+
 const char *g_extraTelopDisplayedText{};
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+namespace {
+
+void PublishExtraTelopGlyph(std::int32_t index, std::uint32_t colour);
+void PositionExtraTelopGlyphs();
+std::int32_t UpdateProgressiveExtraTelop();
+std::int32_t UpdateFadingExtraTelop();
+std::int32_t UpdateSixGlyphExtraTelop();
+void ExtraTelopControl_Callback(void *);
+
+} // namespace
+
+std::int64_t ShowBigKanjiText(const char *text);
+void QueueExtraTelop(const char *text, std::int32_t mode);
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+void ExtraTelopControl_Callback(void *);
+
+} // namespace
+
+std::int32_t ShowBigKanjiText(const char *text);
+
+HLib::Task *g_extraTelopTask = 0;
+
+std::int32_t g_extraTelopMode, g_extraTelopPhase, g_extraTelopRemainingFrames, g_extraTelopGlyphCount = 0;
+
+std::int32_t g_extraTelopTextures[8];
+
+ExtraTelopGlyph g_extraTelopGlyphs[8] = {};
+
+char g_extraTelopText[24];
+
+const char *g_extraTelopDisplayedText = 0;
+
+void shenExecuteAICACommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
+void DrawMainIconOverlay(std::uint32_t colour, float depth);
+void ReleaseNamedTexture_Wrapper(std::int32_t index);
+void ExecuteAicaCommand(std::uint32_t command, std::uint32_t bank, std::int32_t value);
+
+namespace {
+
+std::int32_t extraTelopRevealFrames;
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+void PublishExtraTelopGlyph(std::uint32_t colour) {
+    LegacySpritePacket packet;
+    INIT_LEGACY_SPRITE_PACKET(packet);
+    TransformScreenSpace(packet.quad, static_cast<ScreenAlignment>(moveAndTelopSprite.alignment), static_cast<std::int32_t>(moveAndTelopSprite.x),
+        static_cast<std::int32_t>(moveAndTelopSprite.y), moveAndTelopSprite.width, moveAndTelopSprite.height, moveAndTelopSprite.scaleX,
+        moveAndTelopSprite.scaleY, static_cast<std::int32_t>(moveAndTelopSprite.rotation));
+    packet.quad.flags |= 0x400U;
+    packet.colour = colour;
+    DrawLegacySpritePacket(packet, static_cast<std::uint32_t>(static_cast<std::int16_t>(moveAndTelopSprite.icon)), moveAndTelopSprite.depth);
+}
+
+} // namespace
+
+#else
+
 namespace {
 
 // @verified - p
@@ -41,6 +180,34 @@ void PublishExtraTelopGlyph(std::int32_t index, std::uint32_t colour) {
     PublishBigKanjiGlyph(index, colour);
 }
 
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+void PositionExtraTelopGlyphs() {
+    const float rows[9] = {0.0f, 240.0f, 340.0f, 340.0f, 340.0f, 340.0f, 340.0f, 340.0f, 340.0f};
+    const float spacing = static_cast<float>(640 / g_extraTelopGlyphCount);
+    float x = spacing * 0.5f;
+    for (std::int32_t index = 0; index < g_extraTelopGlyphCount; ++index) {
+        g_extraTelopGlyphs[index].x = x;
+        g_extraTelopGlyphs[index].y = rows[g_extraTelopGlyphCount];
+        g_extraTelopGlyphs[index].scaleY = 1.0f;
+        g_extraTelopGlyphs[index].scaleX = 1.0f;
+        x += spacing;
+    }
+}
+
+} // namespace
+
+#else
+
+namespace {
+
 // @verified - p
 void PositionExtraTelopGlyphs() {
     const float spacing = 640.0f / static_cast<float>(g_extraTelopGlyphCount);
@@ -53,6 +220,54 @@ void PositionExtraTelopGlyphs() {
         sprite.scaleX = sprite.scaleY = 1.0f;
     }
 }
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+std::int32_t UpdateProgressiveExtraTelop() {
+    switch (g_extraTelopPhase) {
+    case 0:
+        g_extraTelopRemainingFrames = 90;
+        PositionExtraTelopGlyphs();
+        g_extraTelopPhase = 1;
+        break;
+    case 1:
+        for (std::int32_t index = 0; index < g_extraTelopGlyphCount; ++index) {
+            if (g_extraTelopTextures[index] == -1)
+                continue;
+            const std::int32_t revealFrame = index * (60 / g_extraTelopGlyphCount);
+            const std::int32_t elapsed = 90 - g_extraTelopRemainingFrames;
+            if (elapsed < revealFrame)
+                continue;
+            if (elapsed == revealFrame)
+                ExecuteAicaCommand(0x208ab, 0, 0);
+            moveAndTelopSprite.icon = static_cast<std::uint16_t>(g_extraTelopTextures[index]);
+            moveAndTelopSprite.x = g_extraTelopGlyphs[index].x;
+            moveAndTelopSprite.y = g_extraTelopGlyphs[index].y;
+            moveAndTelopSprite.scaleX = g_extraTelopGlyphs[index].scaleX;
+            moveAndTelopSprite.scaleY = g_extraTelopGlyphs[index].scaleY;
+            PublishExtraTelopGlyph(0xffffffffU);
+        }
+        if (--g_extraTelopRemainingFrames == 0)
+            return 1;
+        break;
+    default:
+        return 0;
+    }
+    return 0;
+}
+
+} // namespace
+
+#else
+
+namespace {
 
 // @verified - p
 std::int32_t UpdateProgressiveExtraTelop() {
@@ -76,6 +291,121 @@ std::int32_t UpdateProgressiveExtraTelop() {
     }
     return 0;
 }
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void QueueExtraTelop(const char *text, std::int32_t mode) {
+    if (g_extraTelopTask)
+        return;
+    if (!g_extraTelopDisplayedText)
+        for (std::int32_t index = 0; index < 8; ++index)
+            g_extraTelopTextures[index] = -1;
+    if (mode == 99) {
+        g_extraTelopDisplayedText = 0;
+        ShowBigKanjiText(text);
+    } else {
+        g_extraTelopTask = HLib::EnqueueTaskWithoutParameter(ExtraTelopControl_Callback, 15, 0, SHEN_NAME(XTLP));
+        g_extraTelopMode = mode;
+        g_extraTelopPhase = 0;
+        extraTelopRevealFrames = 60;
+        moveAndTelopSprite.alignment = 5;
+        moveAndTelopSprite.depth = 0.5f;
+        moveAndTelopSprite.rotation = 0;
+        if (mode >= 0)
+            RequestFightTelopPause();
+        ShowBigKanjiText(text);
+    }
+}
+
+#else
+
+// @verified - p
+void QueueExtraTelop(const char *text, std::int32_t mode) {
+    if (g_extraTelopTask)
+        return;
+    if (!g_extraTelopDisplayedText) {
+        for (LegacyIconSprite &sprite : g_extraTelopSprites)
+            sprite.icon = 0xffffU;
+    }
+    if (mode == 99) {
+        g_extraTelopDisplayedText = nullptr;
+        ShowBigKanjiText(text);
+    } else {
+        SetNewEwzoTypeForMoveLearned(1, 0, 0);
+        g_extraTelopTask = HLib::EnqueueTaskWithoutParameter(ExtraTelopControl_Callback, 15, 0, static_cast<std::int32_t>(TASK_XTLP.name));
+        g_extraTelopMode = mode;
+        g_extraTelopPhase = 0;
+        g_extraTelopRemainingFrames = 0;
+        g_extraTelopActiveGlyph = 0;
+        if (mode >= 0)
+            RequestFightTelopPause();
+        ShowBigKanjiText(text);
+        PositionExtraTelopGlyphs();
+    }
+}
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+std::int32_t UpdateFadingExtraTelop() {
+    switch (g_extraTelopPhase) {
+    case 0:
+        g_extraTelopRemainingFrames = 60;
+        g_extraTelopPhase = 1;
+        PositionExtraTelopGlyphs();
+        moveAndTelopSprite.icon = static_cast<std::uint16_t>(g_extraTelopTextures[0]);
+        moveAndTelopSprite.x = g_extraTelopGlyphs[0].x;
+        moveAndTelopSprite.y = g_extraTelopGlyphs[0].y;
+        moveAndTelopSprite.scaleX = g_extraTelopGlyphs[0].scaleX;
+        moveAndTelopSprite.scaleY = g_extraTelopGlyphs[0].scaleY;
+        break;
+    case 1: {
+        float fraction = static_cast<float>(60 - g_extraTelopRemainingFrames) / 60.0f;
+        if (fraction > 1.0f)
+            fraction = 1.0f;
+        PublishExtraTelopGlyph((static_cast<std::uint32_t>(static_cast<std::int32_t>(fraction * 255.0f)) << 24) | 0xffffffU);
+        if (--g_extraTelopRemainingFrames != 0) {
+            if (g_extraTelopRemainingFrames == 50)
+                shenPlayAudioWithFlags("JINGURU01", 2);
+        } else {
+            g_extraTelopRemainingFrames = 20;
+            g_extraTelopPhase = 2;
+        }
+        break;
+    }
+    case 2: {
+        float fraction = static_cast<float>(g_extraTelopRemainingFrames) / 20.0f;
+        if (fraction > 1.0f)
+            fraction = 1.0f;
+        PublishExtraTelopGlyph((static_cast<std::uint32_t>(static_cast<std::int32_t>(fraction * 255.0f)) << 24) | 0xffffffU);
+        if (--g_extraTelopRemainingFrames == 0) {
+            g_extraTelopRemainingFrames = 10;
+            g_extraTelopPhase = 3;
+        }
+        break;
+    }
+    case 3:
+        if (--g_extraTelopRemainingFrames == 0)
+            return 1;
+        break;
+    }
+    return 0;
+}
+
+} // namespace
+
+#else
+
+namespace {
 
 // @verified - p
 std::int32_t UpdateFadingExtraTelop() {
@@ -113,6 +443,25 @@ std::int32_t UpdateFadingExtraTelop() {
     }
     return 0;
 }
+
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+std::int32_t UpdateSixGlyphExtraTelop() {
+    return 0;
+}
+
+} // namespace
+
+#else
+
+namespace {
 
 // @verified - p
 std::int32_t UpdateSixGlyphExtraTelop() {
@@ -207,6 +556,14 @@ std::int32_t UpdateSixGlyphExtraTelop() {
     return 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 // @verified - p
 std::int32_t UpdateFiveGlyphExtraTelop() {
     const std::int32_t remaining = --g_extraTelopRemainingFrames;
@@ -287,6 +644,53 @@ std::int32_t UpdateFiveGlyphExtraTelop() {
     return 0;
 }
 
+} // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+void ExtraTelopControl_Callback(void *) {
+    if (!(g_extraTelopMode & 0x40000000))
+        DrawMainIconOverlay(0xa0000000U, 0.0f);
+    std::int32_t completed;
+    switch (g_extraTelopMode & 0xff) {
+    case 0:
+        completed = UpdateProgressiveExtraTelop();
+        break;
+    case 1:
+        completed = UpdateFadingExtraTelop();
+        break;
+    case 2:
+        completed = UpdateSixGlyphExtraTelop();
+        break;
+    default:
+        completed = 1;
+        break;
+    }
+    if (completed) {
+        for (std::int32_t index = 0; index < 8; ++index) {
+            if (g_extraTelopTextures[index] != -1)
+                ReleaseNamedTexture_Wrapper(g_extraTelopTextures[index]);
+            g_extraTelopTextures[index] = -1;
+        }
+        g_extraTelopDisplayedText = 0;
+        if (g_extraTelopMode >= 0)
+            RequestFightTelopResume();
+        HLib::DestroyTaskInternal(g_extraTelopTask);
+        g_extraTelopTask = 0;
+    }
+}
+
+} // namespace
+
+#else
+
+namespace {
+
 // @verified - p
 void ExtraTelopControl_Callback(void *) {
     if (!(static_cast<std::uint32_t>(g_extraTelopMode) & 0x40000000U))
@@ -323,6 +727,64 @@ void ExtraTelopControl_Callback(void *) {
 }
 
 } // namespace
+
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ShowBigKanjiText(const char *text) {
+    const char *spriteName = 0;
+    const char *glyphText = text;
+    g_extraTelopGlyphCount = static_cast<std::int32_t>(std::strlen(text) >> 1);
+    if (g_extraTelopDisplayedText)
+        return 0;
+    std::int16_t size = 256;
+    if (!std::strcmp(text, "³°ÌçÄºÉª")) {
+        spriteName = "GAIMON.SPR";
+        size = 128;
+    } else if (!std::strcmp(text, "Ä°Ò¦")) {
+        spriteName = "CHOUKEI.SPR";
+        size = 128;
+    } else if (!std::strcmp(text, "Ï¢¼êË¤")) {
+        spriteName = "RENSYUHO.SPR";
+        size = 128;
+    } else if (!std::strcmp(text, "µÁ")) {
+        spriteName = "BTK_GI.SPR";
+    } else if (!std::strcmp(text, "²ü")) {
+        spriteName = "BTK_KAI.SPR";
+    } else if (!std::strcmp(text, "¸ù")) {
+        spriteName = "BTK_KOU.SPR";
+    } else if (!std::strcmp(text, "ÃÀ")) {
+        spriteName = "BTK_TAN.SPR";
+    }
+    if (spriteName) {
+        const std::uint32_t bytes = shenOpenFile("sprite", spriteName);
+        void *const source = SafeTryLoadFile("sprite", spriteName, SHEN_NAME(TLPF), 0x20000);
+        ReadTitleSpriteTextures(source, bytes, g_extraTelopTextures);
+        HLib::FreeTaskData(source);
+        std::strcpy(g_extraTelopText, text);
+        g_extraTelopDisplayedText = g_extraTelopText;
+        moveAndTelopSprite.width = moveAndTelopSprite.height = size;
+        return 1;
+    }
+    moveAndTelopSprite.width = 32;
+    moveAndTelopSprite.height = 32;
+    char glyph[32];
+    glyph[2] = 0;
+    for (std::int32_t index = 0; index < g_extraTelopGlyphCount; ++index) {
+        std::strncpy(glyph, glyphText, 2);
+        glyphText += 2;
+        MapControlData *const map = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        g_extraTelopTextures[index] = SetupUIElement(map->retainedTaskD, glyph, 32, 0xffff, 0xf000, 1);
+    }
+    return 0;
+}
+
+void ExtraTelopObjectNullsub() {
+}
+
+#else
 
 std::int64_t ShowBigKanjiText(const char *text) {
     g_extraTelopGlyphCount = static_cast<std::int32_t>(std::strlen(text) / 2);
@@ -378,29 +840,7 @@ std::int64_t ShowBigKanjiText(const char *text) {
     return 1;
 }
 
-// @verified - p
-void QueueExtraTelop(const char *text, std::int32_t mode) {
-    if (g_extraTelopTask)
-        return;
-    if (!g_extraTelopDisplayedText) {
-        for (LegacyIconSprite &sprite : g_extraTelopSprites)
-            sprite.icon = 0xffffU;
-    }
-    if (mode == 99) {
-        g_extraTelopDisplayedText = nullptr;
-        ShowBigKanjiText(text);
-    } else {
-        SetNewEwzoTypeForMoveLearned(1, 0, 0);
-        g_extraTelopTask = HLib::EnqueueTaskWithoutParameter(ExtraTelopControl_Callback, 15, 0, static_cast<std::int32_t>(TASK_XTLP.name));
-        g_extraTelopMode = mode;
-        g_extraTelopPhase = 0;
-        g_extraTelopRemainingFrames = 0;
-        g_extraTelopActiveGlyph = 0;
-        if (mode >= 0)
-            RequestFightTelopPause();
-        ShowBigKanjiText(text);
-        PositionExtraTelopGlyphs();
-    }
-}
+#endif
 
-} // namespace shenmue::s2
+} // namespace s2
+} // namespace shenmue

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "shenmue.h"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -61,6 +63,19 @@ struct ScreenSpaceFillParams {
     std::uint8_t alignmentType;
 };
 
+#if SHENMUE_IS_DC
+struct ShenmueSurfaceBuffer {
+    std::uint16_t width;
+    std::uint16_t height;
+    std::uint8_t layout;
+    std::uint8_t format;
+    std::int16_t updateDepth;
+    std::int16_t surfaces[2];
+    std::uint16_t *pixels;
+    std::uint8_t selectedSurface;
+    std::uint8_t reserved11[3];
+};
+#else
 struct ShenmueSurfaceBuffer {
     std::uint16_t width;
     std::uint16_t height;
@@ -77,14 +92,23 @@ struct ShenmueSurfaceOwner {
     std::uint64_t reserved;
     ShenmueSurfaceBuffer **surfaceHandleSlot;
 };
+#endif
 #pragma pack(pop)
 
 static_assert(sizeof(OriginalStrip) == 0x58);
 static_assert(sizeof(ScreenSpaceParams) == 0x24);
 static_assert(sizeof(ScreenSpaceFillParams) == 0x21 && offsetof(ScreenSpaceFillParams, colour) == 0x14 && offsetof(ScreenSpaceFillParams, angle) == 0x1c &&
     offsetof(ScreenSpaceFillParams, alignmentType) == 0x20);
+#if SHENMUE_IS_DC
+static_assert(sizeof(ShenmueSurfaceBuffer) == 0x14);
+static_assert(offsetof(ShenmueSurfaceBuffer, updateDepth) == 6);
+static_assert(offsetof(ShenmueSurfaceBuffer, surfaces) == 8);
+static_assert(offsetof(ShenmueSurfaceBuffer, pixels) == 0xc);
+static_assert(offsetof(ShenmueSurfaceBuffer, selectedSurface) == 0x10);
+#else
 static_assert(sizeof(ShenmueSurfaceBuffer) == 0x20);
 static_assert(sizeof(ShenmueSurfaceOwner) == 0x10);
+#endif
 
 void SetRenderFlags_UnmapAndDraw_0(OriginalStrip *strip, std::int32_t texture2D, float maxExtent);
 void AdjustAspectRatioMatrix(OriginalStrip *strip, std::int32_t alignmentType, std::int32_t horizontalPosition, std::int32_t verticalPosition,
@@ -98,8 +122,19 @@ void AdjustDefaultScreenSpace(const ScreenSpaceParams *params);
 void AdjustScreenSpaceWithParams(const ScreenSpaceParams *params, std::uint32_t flags, std::int32_t screenMode);
 void DrawMiddleOfScreenStretchedAdjusted(std::uint32_t colour, float maxExtent);
 std::int32_t CreateDXPVRTextureBuffer(std::uint32_t width, std::uint32_t height, std::uint16_t format);
+#if SHENMUE_IS_DC
+ShenmueSurfaceBuffer *SurfaceAllocation(std::int32_t width, std::int32_t height, std::int32_t layout, std::int32_t format);
+void SurfaceAllocateBackBuffer(ShenmueSurfaceBuffer *surface);
+std::uint16_t *SurfaceLock(ShenmueSurfaceBuffer *surface);
+void SurfaceUnlock(ShenmueSurfaceBuffer *surface);
+void SurfaceSwap(ShenmueSurfaceBuffer *surface);
+std::int32_t SurfaceDisplayedTexture(const ShenmueSurfaceBuffer *surface);
+void SurfaceRelease(ShenmueSurfaceBuffer *surface);
+std::int32_t SurfaceDetachTexture(ShenmueSurfaceBuffer *surface);
+#else
 ShenmueSurfaceBuffer *SurfaceAllocation(std::uint32_t width, std::uint32_t height);
 ShenmueSurfaceBuffer **SurfaceAllocation_Wrapper(ShenmueSurfaceOwner *owner);
+#endif
 
 extern std::int32_t (*g_getAspectRatioModeFunction)();
 

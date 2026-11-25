@@ -39,7 +39,9 @@
 #define ARMW_WON SHEN_NAME4('W', 'O', 'N', '_')
 #define ARMW_BATTLE_INPUT SHEN_NAME4('B', 'T', 'B', 'A')
 #define ARMW_EPSILON 1.1920929e-7f
-#define ARMW_SNAP(value) if (__builtin_fabs(value) < ARMW_EPSILON) value = 0.0f
+#define ARMW_SNAP(value)                                                                                                                                       \
+    if (__builtin_fabs(value) < ARMW_EPSILON)                                                                                                                  \
+    value = 0.0f
 #define ARMW_SNAP_VALUE(value) (__builtin_fabs(value) < ARMW_EPSILON ? 0.0f : (value))
 #define ARMW_MAX(a, b) ((a) < (b) ? (b) : (a))
 #define ARMW_MIN(a, b) ((a) < (b) ? (a) : (b))

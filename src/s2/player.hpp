@@ -216,11 +216,9 @@ static_assert(sizeof(RyoBagForm) == 0x18);
 inline std::int16_t playerInteractionPlacementAngles[5]{0x2000, 0x1000, -0x1000, -0x2000, 0};
 inline Vector3 playerInteractionPlacementOffset{0.0f, 0.0f, -1.25f};
 
-inline std::int32_t playerSpecialRightHandPoseCommand[19][3]{
-    {1999,65354,62444}, {1638,180,63900}, {546,64719,3365}, {0,64810,60984}, {0,64628,61893}, {0,0,64261},
-    {0,0,64628}, {0,0,60074}, {0,0,59710}, {0,65172,63353}, {0,0,65354}, {0,729,61165}, {0,65173,58073},
-    {0,65172,64444}, {0,0,0}, {0,547,57161}, {0,1639,61165}, {0,64810,64080}, {64080,182,0}
-};
+inline std::int32_t playerSpecialRightHandPoseCommand[19][3]{{1999, 65354, 62444}, {1638, 180, 63900}, {546, 64719, 3365}, {0, 64810, 60984}, {0, 64628, 61893},
+    {0, 0, 64261}, {0, 0, 64628}, {0, 0, 60074}, {0, 0, 59710}, {0, 65172, 63353}, {0, 0, 65354}, {0, 729, 61165}, {0, 65173, 58073}, {0, 65172, 64444},
+    {0, 0, 0}, {0, 547, 57161}, {0, 1639, 61165}, {0, 64810, 64080}, {64080, 182, 0}};
 
 struct PlayerModelState {
     std::uint32_t flags; // input mode flags
@@ -673,7 +671,11 @@ std::int32_t RequestPlayerMotion(PlayerMovementState &movement, std::int32_t req
 std::int64_t InitializePlayerRuntime();
 void plymSetDefaultFlags();
 bool AttachPlayerModel(Character *character);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t plymHasRyoBag(std::int32_t mode);
+#else
 bool plymHasRyoBag(std::int32_t mode);
+#endif
 std::uint32_t GetCharacterControlModelFlags(Character *character);
 void SetCharacterControlModelFlags(Character *character, std::uint32_t flags);
 std::uint64_t SetPlayerControlEnabled(std::int32_t mode);
@@ -699,8 +701,12 @@ std::uint32_t plymGetAuxiliaryState();
 std::uint64_t plymGetAreaExitState();
 std::uint16_t plymGetAngY();
 std::uint8_t plymGetLookZoomScale();
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t plymIsLookAllowed(std::uint32_t modes);
+#else
 bool plymIsLookAllowed(std::uint32_t modes);
-
+#endif
+// Native camCtrlQueryPitchYaw lives with the PLYM queries: CCM_ ground angles, overridden on authored stairs.
 void camCtrlQueryPitchYaw(Vector3s &angles);
 void ctrlSetLookOverlayWeight(float alpha);
 float ctrlGetLookOverlayWeight();
@@ -711,7 +717,11 @@ bool plymIsSearchable();
 bool plymIsSearchBlocked();
 bool plymCanEvaluateSearchTargets();
 bool IsPlayerPartyGuideBlocked();
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t plymIsInterpolationActive();
+#else
 bool plymIsInterpolationActive();
+#endif
 bool plymPublishSearchHandTarget(PlayerSearchHand hand, const Vector3 *worldTarget);
 void plymClearSearchHandTargets();
 bool plymIsSearchHandTargetSettled(PlayerSearchHand hand);

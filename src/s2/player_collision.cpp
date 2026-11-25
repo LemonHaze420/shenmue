@@ -1,7 +1,80 @@
+#include "shenmue.h"
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/player_model_dc.hpp"
+#include "s2/player_movement_dc.hpp"
+#include "s2/character_control_dc.hpp"
+#include "s2/character_state_flags_dc.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include "s2/field_event_dc.hpp"
+#include "s2/field_query_dc.hpp"
+#include "s2/math.hpp"
+#include "s2/npc_data_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/motion_registry_dc.hpp"
+#include "s2/motion_ground_dc.hpp"
+#include "s2/scenario_character_query_dc.hpp"
+#include "s2/character_yaw_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "platform/dc/sdk.hpp"
+#include <cmath>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/player_internal.hpp"
+#endif
 
-namespace shenmue::s2::player_detail {
+namespace shenmue {
 
+namespace s2 {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t mtwkGetEntityYaw(const MotionWork *work);
+void OffsetPointAlongYaw(Vector3 *result, const Vector3 *point, float distance, std::int16_t yaw);
+std::int32_t FindFieldSegmentOffsetInWorld(Vector3 *output, const Vector3 *destination, const Vector3 *origin);
+std::int16_t Vector3_GetFixedYaw(const Vector3 *direction);
+void GetTransformedForwardVector(Vector3 *direction);
+const std::uint32_t *flddGetCategoryRecord(std::uint32_t category);
+#endif
+
+namespace model_component_detail {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+float Vector3_ComputeSquaredDistance(const Vector3 &left, const Vector3 &right);
+#endif
+
+} // namespace model_component_detail
+
+namespace player_detail {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+inline float SquareRoot(float value) {
+    return ::sqrtf(value);
+}
+
+
+float plymProbeSpeedRatio(float distance, float speed);
+void UpdatePlayerDeltaSpeedRatio(PlayerModelState &state);
+bool IsHeldTransitionReady(const PlayerModelState &state);
+
+static const Vector3 plymRayForward = {0.0f, 0.0f, -10.0f};
+static const Vector3 plymRayRightEnd = {0.34999999f, 0.0f, -10.0f};
+static const Vector3 plymRayLeftEnd = {-0.34999999f, 0.0f, -10.0f};
+static const Vector3 plymRayRightStart = {0.34999999f, 0.0f, 0.0f};
+static const Vector3 plymRayLeftStart = {-0.34999999f, 0.0f, 0.0f};
+
+static std::int16_t PlymAngleXZ(const Vector3 &vector) {
+    return static_cast<std::int16_t>(dc::sdk::ArcTan2Fixed(-vector.x, -vector.z));
+}
+
+
+static float ClampPlymRatio(float ratio) {
+    return ratio < 0.0f ? 0.0f : ratio < 1.0f ? ratio : 1.0f;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector3 TransformWithActiveMatrix(const Vector3 &value) {
     return {
         value.x * workTransformMatrix.rows[0].x + value.y * workTransformMatrix.rows[1].x + value.z * workTransformMatrix.rows[2].x +
@@ -13,14 +86,14 @@ Vector3 TransformWithActiveMatrix(const Vector3 &value) {
     };
 }
 
-
+// Native Vector3::RotateAngleAxis: the point `amount` along the back direction of the yaw.
 Vector3 RotateAngleAxis(const Vector3 &origin, float amount, std::int16_t angle) {
     const auto back = static_cast<std::uint16_t>(angle + 0x8000);
     return {sin_fixed16(static_cast<std::int16_t>(back)) * amount + origin.x, origin.y, cos_fixed16(back) * amount + origin.z};
 }
 
-
-
+// Native SimdSolveVectorProjection: Gauss-Jordan on the XZ rows [direction | -crossVector | reference - base], swapping
+// the rows for a pivot below FLT_EPSILON. Output stays at base for parallel lines or an unusable pivot.
 void SimdSolveVectorProjection(Vector3 &output, const Vector3 &base, const Vector3 &direction, const Vector3 &reference, const Vector3 &crossVector) {
     constexpr float epsilon = 0.00000011920929f;
     output = base;
@@ -49,14 +122,14 @@ void SimdSolveVectorProjection(Vector3 &output, const Vector3 &base, const Vecto
     output = {weight * direction.x + base.x, weight * direction.y + base.y, weight * direction.z + base.z};
 }
 
-
+// Native ComputeVectorProjection: where the base->target line meets the reference->referenceEnd line in XZ.
 void ComputeVectorProjection(Vector3 &output, const Vector3 &base, const Vector3 &target, const Vector3 &reference, const Vector3 &referenceEnd) {
     const Vector3 direction{target.x - base.x, target.y - base.y, target.z - base.z};
     const Vector3 crossVector{referenceEnd.x - reference.x, referenceEnd.y - reference.y, referenceEnd.z - reference.z};
     SimdSolveVectorProjection(output, base, direction, reference, crossVector);
 }
 
-
+// Native GetPlanarDistanceOrZero: the XZ distance, or zero when both deltas are below FLT_EPSILON.
 float GetPlanarDistanceOrZero(const Vector3 &first, const Vector3 &second) {
     const float deltaZ = first.z - second.z;
     const float deltaX = first.x - second.x;
@@ -98,13 +171,57 @@ Vector3 TransformPlymPoint(const Matrix4x4 &transform, const Vector3 &point) {
     Matrix4x4::Pop(1);
     return output;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, const Vector3 &destination) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    std::int32_t firstHit = 0;
+    float squared = 100.0f;
+    Vector3 second, first;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     float squaredDistance = 100.0f;
     const std::uint8_t previousFlags = state.collisionFlags;
+#endif
     state.collisionFlags = 0;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    state.collisionType = 0;
+    state.collisionCharacter = 0;
+    flddToggleFlag(0xfbd7U);
+    if (FindFieldSegmentOffsetInWorld(&first, &destination, &origin)) {
+        if (flddHasFoundIntersectionOfType(0x20U))
+            firstHit |= 0x20U;
+    }
+    flddToggleFlag(0x428U);
+    if (FindFieldSegmentOffsetInWorld(&second, &destination, &origin) &&
+        (!firstHit ||
+            !(model_component_detail::Vector3_ComputeSquaredDistance(origin, second) >
+                model_component_detail::Vector3_ComputeSquaredDistance(origin, first)))) {
+        state.fieldCollisionPoint = second;
+        state.collisionFlags = 1;
+        state.collisionType = 1;
+        squared = model_component_detail::Vector3_ComputeSquaredDistance(state.worldPosition, second);
+    }
+    ccmUpdateEntityFlag(state.character);
+    if (CheckPointInCylinder(&origin, &destination)) {
+        state.collisionCharacter = GetPointFound();
+        GetCharacterWorldPosition(state.collisionCharacter, &second);
+        second.y = destination.y;
+        const float margin = GetCharacterCollisionCapsuleMargin(state.collisionCharacter);
+        const float distance = model_component_detail::Vector3_ComputeSquaredDistance(origin, second) - margin * margin;
+        if (squared > distance) {
+            state.fieldCollisionPoint = second;
+            state.collisionFlags = 2;
+            state.collisionType = 2;
+            squared = distance;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.collisionType = plymRayHitNone;
     std::int32_t result = 0;
     state.collisionCharacter = nullptr;
@@ -138,8 +255,17 @@ std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, co
                     distance = 10.0f;
                 squaredDistance = distance * distance;
                 result = 1;
-            }
+#endif
         }
+    }
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const float distance = sqrtf(squared);
+    state.collisionDistance = distance;
+    return static_cast<std::int8_t>(state.collisionFlags);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     }
     if ((previousFlags & 4U) == 0) {
         if (CharacterControlModel *const own = FindCharacterControlModel(state.characterNode))
@@ -164,8 +290,11 @@ std::int32_t flddRaycastScene(PlayerModelState &state, const Vector3 &origin, co
         state.collisionDistance = std::sqrt(squaredDistance);
     }
     return result;
+#endif
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // One side-rail cast; a later rail replaces the earlier only when nearer.
 void CastPlymSideRay(PlayerModelState &state, const Vector3 &origin, const Vector3 &destination, PlymRayResult &ray, bool nearerOnly) {
     if (!flddRaycastScene(state, origin, destination) || (nearerOnly && !(ray.distance > state.collisionDistance)))
@@ -179,8 +308,8 @@ void CastPlymSideRay(PlayerModelState &state, const Vector3 &origin, const Vecto
         ray.character = state.collisionCharacter;
 }
 
-
-
+// Native collision-boundary construction around a character obstacle: the
+// capsule's angular half-width, relative to the current yaw.
 void SetPlymCharacterBoundary(PlayerModelState &state, std::int16_t bearing, float capsuleDistance, float horizontalDistance) {
     const float ratio = std::fmin(1.0f, std::fmax(0.0f, capsuleDistance / horizontalDistance));
     const std::uint16_t inverse = ComputeInverseAngleRatio(ratio);
@@ -205,8 +334,180 @@ void SetPlymWallBoundary(PlayerModelState &state, std::int16_t wallYaw) {
     state.collisionLimitYawA = static_cast<std::int16_t>(wallYaw + side);
     state.collisionLimitYawB = static_cast<std::int16_t>(state.collisionBoundaryYaw + side);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void plymProbeMovementCollision(PlayerModelState &state) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    Vector3 forward, leftEnd, rightEnd, leftStart, rightStart;
+    Vector2s centerNormal, rightNormal, leftNormal;
+    Vector3 centerPoint, rightPoint, leftPoint, delta, position, local;
+    float centerDistance, rightDistance, leftDistance;
+    std::int32_t centerType, rightType, leftType;
+    Character *centerCharacter, *rightCharacter, *leftCharacter;
+    std::int16_t yaw, halfWidth, relative;
+    leftType = 0;
+    rightType = 0;
+    centerType = 0;
+    leftCharacter = 0;
+    rightCharacter = 0;
+    centerCharacter = 0;
+    state.collisionProbeState = 0;
+    state.forwardProbeDistance = 10.0f;
+    state.limitingCollisionDistance = 10.0f;
+    state.limitingCollisionCharacter = 0;
+    state.collisionData = 0;
+    state.nearestCollisionCharacter = 0;
+    matrix_stack::Matrix4x4_Push(0);
+    matrix_stack::LoadMatrix(&state.worldTransform);
+    Matrix4x4::TransformPoint(plymRayForward, forward);
+    Matrix4x4::TransformPoint(plymRayRightEnd, rightEnd);
+    Matrix4x4::TransformPoint(plymRayLeftEnd, leftEnd);
+    Matrix4x4::TransformPoint(plymRayRightStart, rightStart);
+    Matrix4x4::TransformPoint(plymRayLeftStart, leftStart);
+    PopCurrentMatrix(1);
+    centerPoint = forward;
+    rightPoint = rightEnd;
+    leftPoint = leftEnd;
+    centerDistance = rightDistance = leftDistance = 10.0f;
+    if (flddRaycastScene(state, state.worldPosition, forward)) {
+        centerDistance = state.collisionDistance;
+        centerType = static_cast<std::int8_t>(state.collisionType);
+        centerPoint = state.fieldCollisionPoint;
+        if (static_cast<std::int8_t>(state.collisionType) == 1) {
+            if (flddHasFoundIntersectionOfType(0x40U))
+                state.collisionData = *flddGetCategoryRecord(6);
+            transformIntersectionResult(&centerNormal);
+            state.forwardSurfaceYaw = centerNormal.y + 0x8000;
+        } else if (static_cast<std::int8_t>(state.collisionType) == 2) {
+            centerCharacter = state.collisionCharacter;
+            state.forwardSurfaceYaw = state.currentYaw + 0x8000;
+        }
+        state.nearestCollisionCharacter = state.collisionCharacter;
+        state.forwardProbeDistance = centerDistance;
+    }
+    if (flddRaycastScene(state, rightStart, rightEnd)) {
+        rightDistance = state.collisionDistance;
+        rightType = static_cast<std::int8_t>(state.collisionType);
+        rightPoint = state.fieldCollisionPoint;
+        if (static_cast<std::int8_t>(state.collisionType) == 1)
+            transformIntersectionResult(&rightNormal);
+        else if (static_cast<std::int8_t>(state.collisionType) == 2)
+            rightCharacter = state.collisionCharacter;
+    }
+    if (flddRaycastScene(state, leftStart, leftEnd)) {
+        leftDistance = state.collisionDistance;
+        leftType = static_cast<std::int8_t>(state.collisionType);
+        leftPoint = state.fieldCollisionPoint;
+        if (static_cast<std::int8_t>(state.collisionType) == 1)
+            transformIntersectionResult(&leftNormal);
+        else if (static_cast<std::int8_t>(state.collisionType) == 2)
+            leftCharacter = state.collisionCharacter;
+    }
+    if (centerDistance < rightDistance && centerDistance < leftDistance) {
+        state.limitingCollisionDistance = centerDistance;
+        if (centerCharacter)
+            state.limitingCollisionCharacter = centerCharacter;
+        if (centerType == 1)
+            state.hitNormalYaw = centerNormal.y;
+    } else if (rightDistance < leftDistance) {
+        state.limitingCollisionDistance = rightDistance;
+        if (rightCharacter)
+            state.limitingCollisionCharacter = rightCharacter;
+        if (rightType == 1)
+            state.hitNormalYaw = rightNormal.y;
+    } else {
+        state.limitingCollisionDistance = leftDistance;
+        if (leftCharacter)
+            state.limitingCollisionCharacter = leftCharacter;
+        if (leftType == 1)
+            state.hitNormalYaw = leftNormal.y;
+    }
+    if (centerDistance < rightDistance && centerDistance < leftDistance) {
+        if (!centerCharacter) {
+            state.collisionBoundaryYaw = centerNormal.y;
+            state.secondaryCollisionBoundaryYaw = centerNormal.y;
+            relative = state.currentYaw - state.collisionBoundaryYaw;
+            if (relative > 0)
+                relative = 0x4000;
+            else
+                relative = -0x4000;
+            state.collisionLimitYawA = state.collisionBoundaryYaw + relative;
+            state.collisionLimitYawB = state.collisionBoundaryYaw + relative;
+        } else {
+            am2Vector3Subtract(&delta, &centerPoint, &state.worldPosition);
+            yaw = Vector3_GetFixedYaw(&delta);
+            const float radius = GetCharacterCollisionCapsuleMargin(centerCharacter);
+            const float margin = radius > 0.40000001f ? radius : 0.40000001f;
+            float ratio = (margin + 0.40000001f) / SquareRoot(delta.x * delta.x + delta.z * delta.z);
+            ratio = (ratio < 0.0f ? 0.0f : ratio) < 1.0f ? (ratio < 0.0f ? 0.0f : ratio) : 1.0f;
+            halfWidth = 0x4000 - ComputeInverseAngleRatio(ratio);
+            relative = yaw - state.currentYaw;
+            if (relative < 0)
+                relative -= 0x4000 - halfWidth;
+            else
+                relative += 0x4000 - halfWidth;
+            state.collisionBoundaryYaw = state.currentYaw + relative;
+            state.secondaryCollisionBoundaryYaw = state.currentYaw + relative;
+            relative = yaw - state.currentYaw;
+            if (relative < 0) {
+                state.collisionLimitYawA = yaw + halfWidth;
+                state.collisionLimitYawB = yaw - halfWidth;
+            } else {
+                state.collisionLimitYawA = yaw - halfWidth;
+                state.collisionLimitYawB = yaw + halfWidth;
+            }
+        }
+    } else if (state.limitingCollisionCharacter) {
+        GetCharacterWorldPosition(state.limitingCollisionCharacter, &position);
+        am2Vector3Subtract(&delta, &position, &state.worldPosition);
+        yaw = Vector3_GetFixedYaw(&delta);
+        const float radius = GetCharacterCollisionCapsuleMargin(state.limitingCollisionCharacter);
+        const float margin = radius > 0.40000001f ? radius : 0.40000001f;
+        float ratio = (margin + 0.40000001f) / SquareRoot(delta.x * delta.x + delta.z * delta.z);
+        ratio = (ratio < 0.0f ? 0.0f : ratio) < 1.0f ? (ratio < 0.0f ? 0.0f : ratio) : 1.0f;
+        halfWidth = 0x4000 - ComputeInverseAngleRatio(ratio);
+        relative = yaw - state.currentYaw;
+        if (relative < 0)
+            relative -= 0x4000 - halfWidth;
+        else
+            relative += 0x4000 - halfWidth;
+        state.collisionBoundaryYaw = state.currentYaw + relative;
+        state.secondaryCollisionBoundaryYaw = state.currentYaw + relative;
+        relative = yaw - state.currentYaw;
+        if (relative < 0) {
+            state.collisionLimitYawA = yaw + halfWidth;
+            state.collisionLimitYawB = yaw - halfWidth;
+        } else {
+            state.collisionLimitYawA = yaw - halfWidth;
+            state.collisionLimitYawB = yaw + halfWidth;
+        }
+    } else {
+        am2Vector3Subtract(&delta, &rightPoint, &leftPoint);
+        Vector3_GetFixedYaw(&delta);
+        state.collisionBoundaryYaw = state.hitNormalYaw;
+        state.secondaryCollisionBoundaryYaw = state.hitNormalYaw;
+        relative = state.currentYaw - state.collisionBoundaryYaw;
+        if (relative > 0)
+            relative = 0x4000;
+        else
+            relative = -0x4000;
+        state.collisionLimitYawA = state.collisionBoundaryYaw + relative;
+        state.collisionLimitYawB = state.collisionBoundaryYaw + relative;
+    }
+    if (state.limitingCollisionCharacter) {
+        GetCharacterWorldPosition(state.limitingCollisionCharacter, &position);
+        matrix_stack::Matrix4x4_Push(0);
+        matrix_stack::LoadMatrix(&state.inverseWorldTransform);
+        Matrix4x4::TransformPoint(position, local);
+        PopCurrentMatrix(1);
+        if ((local.x < 0.0f ? -local.x : local.x) < 0.30000001f)
+            state.collisionBoundaryYaw = state.currentYaw;
+    }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.forwardProbeDistance = 10.0f;
     state.limitingCollisionDistance = 10.0f;
     state.limitingCollisionCharacter = nullptr;
@@ -321,29 +622,84 @@ void plymProbeMovementCollision(PlayerModelState &state) {
         if (std::fabs(local.x) < 0.30000001f)
             state.collisionBoundaryYaw = state.currentYaw;
     }
+#endif
 }
 
+
+// @verified - d
 void plymProbeDesiredYawCollision(PlayerModelState &state) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    Vector3 forward;
+    Vector2s normal;
+    Vector3 delta;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     float rightDistance = 10.0f;
     float leftDistance = 10.0f;
+#endif
     state.desiredYawProbeDistance = 10.0f;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&state.worldPosition);
+    Matrix4x4::RotateAroundY_Wrapper(state.desiredYaw);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     Matrix4x4_Push(&transformMatrix_prePass);
     Matrix4x4::preTranslate(state.worldPosition.x, state.worldPosition.y, state.worldPosition.z);
     Matrix4x4::RotateAroundY_Wrapper(static_cast<std::uint16_t>(state.desiredYaw));
     Vector3 forward{}, rightEnd{}, leftEnd{}, rightStart{}, leftStart{};
+#endif
     Matrix4x4::TransformPoint(plymRayForward, forward);
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    PopCurrentMatrix(1);
+    if (!flddRaycastScene(state, state.worldPosition, forward))
+        return;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     Matrix4x4::TransformPoint(plymRayRightEnd, rightEnd);
     Matrix4x4::TransformPoint(plymRayLeftEnd, leftEnd);
     Matrix4x4::TransformPoint(plymRayRightStart, rightStart);
     Matrix4x4::TransformPoint(plymRayLeftStart, leftStart);
     Matrix4x4::Pop(1);
     if (flddRaycastScene(state, state.worldPosition, forward)) {
-        state.desiredYawProbeDistance = state.collisionDistance;
+#endif
+    state.desiredYawProbeDistance = state.collisionDistance;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (static_cast<std::int8_t>(state.collisionType) == 1) {
+        transformIntersectionResult(&normal);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
         if (state.collisionType == plymRayHitField) {
             Vector3s normal{};
             transformIntersectionResult(normal);
-            state.desiredProbeYaw = static_cast<std::int16_t>(normal.y + 0x4000);
-        }
+#endif
+        state.desiredProbeYaw = static_cast<std::int16_t>(normal.y + 0x4000);
+    }
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (static_cast<std::int8_t>(state.collisionType) == 2) {
+        am2Vector3Subtract(&delta, &state.fieldCollisionPoint, &state.worldPosition);
+        const std::int16_t yaw = Vector3_GetFixedYaw(&delta);
+        float ratio = 0.80000001f / SquareRoot(delta.x * delta.x + delta.z * delta.z);
+        ratio = (ratio < 0.0f ? 0.0f : ratio) < 1.0f ? (ratio < 0.0f ? 0.0f : ratio) : 1.0f;
+        const std::int16_t halfWidth = 0x4000 - ComputeInverseAngleRatio(ratio);
+        std::int16_t relative = yaw - state.desiredYaw;
+        if (relative < 0)
+            relative += halfWidth;
+        else
+            relative -= halfWidth;
+        state.desiredProbeYaw = state.desiredYaw + relative;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
         if (state.collisionType == plymRayHitCharacter) {
             const Vector3 toHit{state.fieldCollisionPoint.x - state.worldPosition.x, state.fieldCollisionPoint.y - state.worldPosition.y,
                 state.fieldCollisionPoint.z - state.worldPosition.z};
@@ -353,7 +709,10 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
             const auto relative = static_cast<std::int16_t>(bearing - state.desiredYaw);
             const auto offset = static_cast<std::int16_t>(relative >= 0 ? relative - (0x4000 - inverse) : 0x4000 - inverse + relative);
             state.desiredProbeYaw = static_cast<std::int16_t>(state.desiredYaw + offset);
-        }
+#endif
+    }
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     }
     const float forwardDistance = state.desiredYawProbeDistance;
     if (flddRaycastScene(state, leftStart, leftEnd))
@@ -362,8 +721,11 @@ void plymProbeDesiredYawCollision(PlayerModelState &state) {
         rightDistance = state.collisionDistance;
     if (forwardDistance > leftDistance && leftDistance > rightDistance && leftDistance < 0.80000001f && rightDistance < 0.80000001f)
         state.desiredYawProbeDistance = (leftDistance + rightDistance) * 0.5f;
+#endif
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ProbeReachedOrdinaryMovementCollision(PlayerMovementState &movement) {
     movement.flags &= ~0x80U;
@@ -388,7 +750,7 @@ void ProbeReachedOrdinaryMovementCollision(PlayerMovementState &movement) {
         return;
     }
 
-
+    // Native consumes these outputs even when the radius query leaves them unwritten.
     Vector3 stairAnchor;
     std::int32_t stairYaw;
     const std::int32_t stepCount = flddQueryStairOrigin(intersection, stairAnchor, stairYaw);
@@ -421,7 +783,7 @@ void ProbeReachedOrdinaryMovementCollision(PlayerMovementState &movement) {
         return;
     const std::uint16_t motionId = mtwkGetAnimationId(motionWork, MotionRegion::LowerBody);
     const bool correctionMotion = motionId == 0xf005U || motionId == 0xf006U || (motionId >= 0xf035U && motionId <= 0xf03dU);
-
+    // Native compares the sign-extended target yaw with the full transformed wall yaw.
     if (!correctionMotion ||
         ((movement.flags & 8U) != 0 && static_cast<std::int32_t>(movement.targetWorldYaw) == static_cast<std::int32_t>(stairYaw) &&
             static_cast<std::int32_t>(movement.targetHeightScale) == stepCount)) {
@@ -484,7 +846,7 @@ void UpdateReachedFloorStairCollision(PlayerMovementState &movement) {
     location = GetCharacterWorldPosition(character);
     Vector3 probe{location.x, static_cast<float>(static_cast<double>(location.y) + 1.5), location.z};
     const float ground = shenFindIntersectionWithScene(probe, probe.y);
-
+    // Native leaves the first anchor, and the no-ground edge length, unwritten.
     Vector3 anchor;
     float edgeLength;
     std::int32_t stepCount = 0;
@@ -685,9 +1047,9 @@ void PrepareReachedStairPhaseCorrection(PlayerMovementState &movement) {
 }
 
 void ApplyReachedCollisionRootCorrection(PlayerMovementState &movement) {
-
-
-
+    // PC v1.07 ApplyReachedCollisionRootCorrection consumes the FLDD obstruction handoff. Its
+    // +0x164 input is the current root-motion step, not motion-speed field
+    // +0x160.
     const float pendingMagnitude = std::fabs(movement.pendingPositionCorrection);
     if (pendingMagnitude <= 0.0f || !movement.character)
         return;
@@ -751,8 +1113,8 @@ Vector3 PlymRotatedWorldProbe(const PlayerModelState &state, std::int16_t yaw, c
     return point;
 }
 
-
-
+// Native two-wall side probe: 2 m field rays either side publish the wall
+// distances, the rotation-only lead foot and a wall-parallel turn target.
 void plymProbeSideWalls(PlayerModelState &state) {
     state.movementSelectionFlags &= ~selectionObstacleTurnCandidate;
     std::int32_t hits = 0;
@@ -790,10 +1152,97 @@ void plymProbeSideWalls(PlayerModelState &state) {
         state.movementSelectionFlags |= selectionObstacleTurnCandidate;
     }
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void plymUpdateGroundBoundaryTurn(PlayerModelState &state) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const PlayerMovementState *const movement = state.movementState;
+    Vector3 anchorLocal, playerLocal;
+    std::int32_t yaw;
+    state.groundBoundaryTurnYawDelta = 0;
+    if (movement->flags & 8U) {
+        state.movementSelectionFlags |= 0x4000U;
+        state.movementSelectionFlags &= ~0x2000U;
+        return;
+    }
+    if (movement->sceneGroundIndex == -1) {
+        state.movementSelectionFlags &= ~0x4000U;
+        state.movementSelectionFlags &= ~0x2000U;
+        return;
+    }
+    if (movement->sceneGroundIndex != 1 && movement->sceneGroundIndex != 3 && movement->sceneGroundIndex != 5) {
+        state.movementSelectionFlags &= ~0x4000U;
+        state.movementSelectionFlags &= ~0x2000U;
+        return;
+    }
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-state.currentYaw);
+    matrix_stack::TranslateInverseVector(&state.searchLocation);
+    Matrix4x4::TransformPoint(movement->stairBoundaryAnchor, anchorLocal);
+    PopCurrentMatrix(1);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-movement->stairBoundaryYaw);
+    matrix_stack::TranslateInverseVector(&movement->stairBoundaryAnchor);
+    Matrix4x4::TransformPoint(state.searchLocation, playerLocal);
+    PopCurrentMatrix(1);
+    if (!(state.movementSelectionFlags & 0x2000U)) {
+        if (!(state.movementSelectionFlags & 0x4000U))
+            return;
+        if (playerLocal.z > -0.80000001f) {
+            if (anchorLocal.x < 0.0f) {
+                if (static_cast<std::int8_t>(state.packedDirection) < -20)
+                    state.movementSelectionFlags |= 0x2000U;
+                else if (static_cast<std::int8_t>(state.packedDirection) > 20)
+                    state.movementSelectionFlags &= ~0x4000U;
+            } else {
+                if (static_cast<std::int8_t>(state.packedDirection) > 20)
+                    state.movementSelectionFlags |= 0x2000U;
+                else if (static_cast<std::int8_t>(state.packedDirection) < -20)
+                    state.movementSelectionFlags &= ~0x4000U;
+            }
+        } else
+            state.movementSelectionFlags &= ~0x4000U;
+    }
+    if (!(state.movementSelectionFlags & 0x2000U))
+        return;
+    state.movementSelectionFlags &= ~0x4000U;
+    if (state.currentMovementMode == 2 || state.currentMovementMode == 6)
+        state.movementSelectionFlags &= ~0x2000U;
+    if (anchorLocal.x < 0.0f) {
+        if (static_cast<std::int8_t>(state.packedDirection) > 20)
+            state.movementSelectionFlags &= ~0x2000U;
+    } else if (static_cast<std::int8_t>(state.packedDirection) < -20)
+        state.movementSelectionFlags &= ~0x2000U;
+    if (!(state.movementSelectionFlags & 0x2000U))
+        return;
+    playerLocal.z += 0.80000001f;
+    if (playerLocal.z > 0.0f)
+        yaw = movement->stairBoundaryYaw;
+    else {
+        yaw = dc::sdk::ArcTan2Fixed(playerLocal.x, playerLocal.z) - 0x8000;
+        yaw = static_cast<std::int16_t>(yaw);
+        const std::int32_t boundary = movement->stairBoundaryYaw - 0x4000;
+        yaw += boundary;
+        yaw = static_cast<std::int16_t>(yaw);
+    }
+    std::int32_t delta = static_cast<std::int16_t>(yaw - state.currentYaw);
+    if (delta < 0)
+        delta = -delta;
+    if (delta > 0x4000)
+        yaw = static_cast<std::int16_t>(yaw - 0x8000);
+    if (!(playerLocal.z > 0.0f)) {
+        if (anchorLocal.x < 0.0f)
+            yaw = static_cast<std::int16_t>(yaw + 2048);
+        else
+            yaw = static_cast<std::int16_t>(yaw - 2048);
+    }
+    state.groundBoundaryTurnYawDelta = static_cast<std::int16_t>(yaw - state.currentYaw);
+    state.turnSpeedScale = 8.0f;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const PlayerMovementState &movement = *state.movementState;
     state.groundBoundaryTurnYawDelta = 0;
     if (movement.flags & 8U) {
@@ -844,32 +1293,138 @@ void plymUpdateGroundBoundaryTurn(PlayerModelState &state) {
         turnYaw = static_cast<std::int16_t>(turnYaw + (anchorLocal.x >= 0.0f ? -2048 : 2048));
     state.turnSpeedScale = 8.0f;
     state.groundBoundaryTurnYawDelta = static_cast<std::int16_t>(turnYaw - state.currentYaw);
+#endif
 }
+#endif
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+void plymProbeSideWalls(PlayerModelState &state) {
+    static const Vector3 leftProbe = {2.0f, 0.0f, 0.0f};
+    static const Vector3 rightProbe = {-2.0f, 0.0f, 0.0f};
+    std::int16_t count = 0, leftYaw = 0, rightYaw = 0;
+    Vector3 left, right, hit;
+    Vector2s leftNormal, rightNormal;
+    state.movementSelectionFlags &= ~0x10U;
+    state.leftSideProbeDistance = 10.0f;
+    state.rightSideProbeDistance = 10.0f;
+    matrix_stack::Matrix4x4_Push(0);
+    matrix_stack::LoadMatrix(&state.worldTransform);
+    Matrix4x4::TransformPoint(leftProbe, left);
+    Matrix4x4::TransformPoint(rightProbe, right);
+    PopCurrentMatrix(1);
+    flddToggleFlag(0x428U);
+    if (FindFieldSegmentOffsetInWorld(&hit, &left, &state.worldPosition)) {
+        state.leftSideProbeDistance = CalculateDistanceBetweenPoints(&state.worldPosition, &hit);
+        if (state.leftSideProbeDistance < 0.75f) {
+            transformIntersectionResult(&leftNormal);
+            leftYaw = static_cast<std::int16_t>(state.currentYaw - leftNormal.y) > 0 ? 0x4000 : -0x4000;
+            leftYaw = static_cast<std::int16_t>(leftNormal.y + leftYaw);
+            ++count;
+        }
+    }
+    flddToggleFlag(0x428U);
+    if (FindFieldSegmentOffsetInWorld(&hit, &right, &state.worldPosition)) {
+        state.rightSideProbeDistance = CalculateDistanceBetweenPoints(&state.worldPosition, &hit);
+        if (state.rightSideProbeDistance < 0.75f) {
+            transformIntersectionResult(&rightNormal);
+            const std::int32_t yawDelta = static_cast<std::int16_t>(state.currentYaw - rightNormal.y);
+            const std::int32_t yawOffset = yawDelta > 0 ? 0x4000 : -0x4000;
+            rightYaw = static_cast<std::int16_t>(rightNormal.y + yawOffset);
+            ++count;
+        }
+    }
+    if (count) {
+        if (count == 2) {
+            const std::int16_t delta = rightYaw - leftYaw;
+            state.requestedTurnYaw = static_cast<std::int16_t>(leftYaw + delta / count);
+        } else
+            state.requestedTurnYaw = static_cast<std::int16_t>(leftYaw + rightYaw);
+        state.movementSelectionFlags |= 0x10U;
+    }
+}
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void plymMatchCharacterSpeed(PlayerModelState &state) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (state.limitingCollisionDistance > 3.0f || state.movementInterpolation > 0.0f)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if (state.limitingCollisionDistance > 3.0f || state.normalizedMotionInput > 0.0f)
+#endif
         return;
     Character *const character = state.limitingCollisionCharacter;
     const shen_name name = ctrlGetScenarioCharaName(character);
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (!character || !IsNpcRouteMoving(name))
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if (!character)
+#endif
         return;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    std::int32_t yawDelta = static_cast<std::int16_t>(GetCharacterWorldYaw(character) - state.currentYaw);
+    if (yawDelta < 0)
+        yawDelta = -yawDelta;
+    if (yawDelta > 0x2000)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     NpcRouteStateContext *const route = FindNpcRouteStateContext(name);
     if (!route || route->owner->liveState != 1U || (route->flags & 3U) == 0 || (route->flags & 0x101008U) != 0 || route->moveState == 3U)
+#endif
         return;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    Vector3 position;
+    GetCharacterWorldPosition(character, &position);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-state.currentYaw);
+    matrix_stack::TranslateInverseVector(&state.worldPosition);
+    Matrix4x4::TransformPoint(position, position);
+    PopCurrentMatrix(1);
+    if ((position.x < 0.0f ? -position.x : position.x) > 0.40000001f)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if (Abs16(GetAllAngYForNode(&character->entity.node) - state.currentYaw) > 0x2000U)
+#endif
         return;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    state.movementSelectionFlags |= 0x20000U;
+    const float step = GetNpcRouteCurrentStep(name);
+    if (!(std::fabs(step) < 0.00000011920929f))
+        state.movementResult = step * 0.97500002f;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const Vector3 local = PlymToLocal(state.currentYaw, state.worldPosition, GetCharacterWorldPosition(character));
     if (std::fabs(local.x) > 0.40000001f)
         return;
     state.movementSelectionFlags |= selectionCharacterSpeedMatch;
     if (std::fabs(route->motionStep) >= 0.00000011920929f)
         state.movementResult = route->motionStep * 0.97500002f;
+#endif
 }
+#endif
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t plymRaycastFromModel(PlayerModelState &state, const Vector3 &destination) {
+    return flddRaycastScene(state, state.worldPosition, destination);
+}
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native route-NPC avoidance side: the signed auxiliary of an active NPC's
+// arc-length avoidance result, or zero.
 std::int32_t NpcAvoidanceSide(shen_name name) {
     const NpcRouteStateContext *const route = FindNpcRouteStateContext(name);
     if (!route || (route->flags & 3U) != 3U || !(route->avoidanceResult == 2U || static_cast<std::int8_t>(route->avoidanceResult) >= 5) ||
@@ -877,10 +1432,188 @@ std::int32_t NpcAvoidanceSide(shen_name name) {
         return 0;
     return route->avoidanceAuxiliary;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void plymResolveCollisionSteering(PlayerModelState &state) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    std::uint32_t steerFlag = 4U;
+    std::int16_t limitYaw, spread, opposite, turn, angle;
+    turn = 0;
+    state.previousCollisionTurnDelta = state.collisionTurnDelta;
+    state.collisionTurnDelta = turn;
+    state.collisionAvoidanceYaw = turn;
+    if (!(state.limitingCollisionDistance < 5.0f) || (state.movementSelectionFlags & 0x20000U))
+        return;
+    angle = static_cast<std::int16_t>(dc::sdk::ArcTanFixed(0.80000001f / state.limitingCollisionDistance));
+    dc::sdk::CosFixed(angle);
+    spread = angle;
+    opposite = static_cast<std::int16_t>(-angle);
+    limitYaw = static_cast<std::int16_t>(state.collisionLimitYawA - state.currentYaw);
+    Vector3 negative, positive, boundary;
+    matrix_stack::Matrix4x4_Push(0);
+    matrix_stack::LoadMatrix(&state.worldTransform);
+    Matrix4x4::RotateAroundY_Wrapper(angle);
+    Matrix4x4::TransformPoint(plymRayForward, positive);
+    matrix_stack::LoadMatrix(&state.worldTransform);
+    Matrix4x4::RotateAroundY_Wrapper(-angle);
+    Matrix4x4::TransformPoint(plymRayForward, negative);
+    matrix_stack::LoadMatrix(&state.worldTransform);
+    Matrix4x4::RotateAroundY_Wrapper(limitYaw);
+    Matrix4x4::TransformPoint(plymRayForward, boundary);
+    PopCurrentMatrix(1);
+    float negativeDistance = 10.0f, positiveDistance = 10.0f, boundaryDistance = 10.0f;
+    if (plymRaycastFromModel(state, negative))
+        negativeDistance = state.collisionDistance;
+    if (plymRaycastFromModel(state, positive))
+        positiveDistance = state.collisionDistance;
+    if (plymRaycastFromModel(state, boundary))
+        boundaryDistance = state.collisionDistance;
+    if (state.yawDelta) {
+        std::int16_t target;
+        turn = static_cast<std::int16_t>(state.currentYaw - state.collisionBoundaryYaw);
+        if ((turn < 0 ? -turn : turn) < 2730) {
+            turn = static_cast<std::int16_t>(state.desiredYaw - state.collisionBoundaryYaw);
+            if (turn > 0)
+                turn = 0x4000;
+            else
+                turn = -0x4000;
+            target = static_cast<std::int16_t>(state.secondaryCollisionBoundaryYaw + turn);
+        } else {
+            turn = static_cast<std::int16_t>(state.desiredYaw - state.secondaryCollisionBoundaryYaw);
+            if (turn > 0)
+                turn = 0x4000;
+            else
+                turn = -0x4000;
+            target = static_cast<std::int16_t>(state.secondaryCollisionBoundaryYaw + turn);
+            if (plymProbeSpeedRatio(state.desiredYawProbeDistance, state.speedZ) < 0.2f) {
+                turn = static_cast<std::int16_t>(state.currentYaw - state.secondaryCollisionBoundaryYaw);
+                if (turn > 0)
+                    turn = 0x4000;
+                else
+                    turn = -0x4000;
+                target = static_cast<std::int16_t>(state.secondaryCollisionBoundaryYaw + turn);
+            }
+        }
+        target = static_cast<std::int16_t>(target - state.currentYaw);
+        state.collisionTurnDelta = target;
+        state.movementSelectionFlags |= steerFlag;
+        return;
+    }
+    if (state.limitingCollisionCharacter) {
+        if (limitYaw > 0) {
+            if (boundaryDistance > positiveDistance) {
+                positiveDistance = boundaryDistance;
+                spread = limitYaw;
+            } else if (boundaryDistance > 3.0f) {
+                positiveDistance = boundaryDistance;
+                spread = limitYaw;
+            }
+        } else if (boundaryDistance > negativeDistance) {
+            negativeDistance = boundaryDistance;
+            opposite = limitYaw;
+        } else if (boundaryDistance > 3.0f) {
+            negativeDistance = boundaryDistance;
+            opposite = limitYaw;
+        }
+    }
+    float difference = positiveDistance - negativeDistance;
+    if (difference < 0.0f)
+        difference = -difference;
+    if (state.limitingCollisionDistance > negativeDistance && state.limitingCollisionDistance > positiveDistance)
+        return;
+    state.movementSelectionFlags |= steerFlag;
+    std::int32_t spacing;
+    if (positiveDistance > 3.0f && negativeDistance > 3.0f) {
+        spacing = difference > 4.0f ? 1 : 2;
+    } else if (positiveDistance > 3.0f || negativeDistance > 3.0f) {
+        spacing = difference > 1.0f ? 3 : 4;
+    } else if (difference > 0.34999999f) {
+        spacing = 5;
+    } else {
+        spacing = 6;
+        if (positiveDistance < 0.60000002f && negativeDistance < 0.60000002f) {
+            if (((state.limitingCollisionDistance - positiveDistance) < 0.0f ? -(state.limitingCollisionDistance - positiveDistance) :
+                                                                               (state.limitingCollisionDistance - positiveDistance)) < 1.0f &&
+                ((state.limitingCollisionDistance - negativeDistance) < 0.0f ? -(state.limitingCollisionDistance - negativeDistance) :
+                                                                               (state.limitingCollisionDistance - negativeDistance)) < 1.0f)
+                state.movementSelectionFlags |= 0x100000U;
+        }
+        if (state.limitingCollisionDistance < 1.5f &&
+            (positiveDistance > negativeDistance ? positiveDistance : negativeDistance) + 0.050000001f > state.limitingCollisionDistance)
+            state.movementSelectionFlags |= 0x100000U;
+    }
+    std::int32_t side;
+    switch (spacing) {
+    case 0:
+    case 1:
+    case 3:
+    case 5:
+    default:
+        side = positiveDistance > negativeDistance ? -1 : 1;
+        break;
+    case 2:
+    case 4:
+    case 6:
+        side = limitYaw > 0 ? -1 : 1;
+        if (state.limitingCollisionCharacter) {
+            const std::int32_t avoidance = -GetNpcRouteAvoidanceSide(ctrlGetScenarioCharaName(state.limitingCollisionCharacter));
+            if (avoidance) {
+                if (avoidance < 0)
+                    side = 1;
+                if (avoidance > 0)
+                    side = -1;
+            }
+        }
+        break;
+    }
+    if (state.movementSelectionFlags & 0x800U) {
+        if (side == 1)
+            ++state.collisionSideCounter;
+        else
+            state.collisionSideCounter = 0;
+    } else if ((state.movementSelectionFlags & 0x400U) && side == -1) {
+        ++state.collisionSideCounter;
+    } else {
+        state.collisionSideCounter = 0;
+    }
+    if (state.collisionSideCounter > 0) {
+        if (state.collisionSideCounter > 1) {
+            if (state.collisionSideCounter == 2)
+                side = -side;
+            if (state.collisionSideCounter > 5)
+                state.collisionSideCounter = 0;
+        }
+    }
+    turn = opposite;
+    if (side < 0) {
+        turn = spread;
+        negativeDistance = positiveDistance;
+    }
+    angle = static_cast<std::int16_t>(turn < 0 ? -turn : turn);
+    const float forward = negativeDistance * dc::sdk::CosFixed(angle) - state.limitingCollisionDistance;
+    const float lateral = dc::sdk::SinFixed(angle) * negativeDistance;
+    std::int16_t avoidanceYaw = 0;
+    if (!(std::fabs(lateral) < 0.00000011920929f))
+        avoidanceYaw = static_cast<std::int16_t>(dc::sdk::ArcTanFixed(forward / lateral));
+    state.collisionAvoidanceYaw = avoidanceYaw;
+    if (state.forwardProbeDistance - state.limitingCollisionDistance > 1.5f && state.forwardProbeDistance > 3.0f)
+        turn = static_cast<std::int16_t>((turn * 3) / 4);
+    angle = static_cast<std::int16_t>(limitYaw + state.currentYaw);
+    angle = static_cast<std::int16_t>(angle - state.currentYaw);
+    if (angle * turn > 0 && (angle < 0 ? -angle : angle) < (turn < 0 ? -turn : turn)) {
+        if (state.limitingCollisionCharacter) {
+            turn = static_cast<std::int16_t>(turn - angle);
+            turn = static_cast<std::int16_t>(turn / 2 + angle);
+        } else {
+            turn = angle;
+        }
+    }
+    state.collisionTurnDelta = turn;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const float limit = state.limitingCollisionDistance;
     state.previousCollisionTurnDelta = state.collisionTurnDelta;
     state.collisionTurnDelta = 0;
@@ -986,11 +1719,76 @@ void plymResolveCollisionSteering(PlayerModelState &state) {
     if (limitYaw * spread > 0 && Abs16(limitYaw) < magnitude)
         spread = character ? static_cast<std::int16_t>(limitYaw + static_cast<std::int16_t>(spread - limitYaw) / 2) : limitYaw;
     state.collisionTurnDelta = spread;
+#endif
 }
 
 
-
+// @verified - d
 void plymUpdateCollisionTurnActivation(PlayerModelState &state) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const std::uint32_t candidate = state.movementSelectionFlags & 4U;
+    std::int32_t activate = candidate ? 1 : 0;
+    const std::int16_t boundaryDelta = static_cast<std::int16_t>(state.collisionBoundaryYaw - state.currentYaw);
+    const std::int32_t boundaryDistance = boundaryDelta < 0 ? -boundaryDelta : boundaryDelta;
+    if (boundaryDistance < 2730) {
+        if (state.limitingCollisionCharacter) {
+            if (std::fabs(state.movementInterpolation) < 0.00000011920929f)
+                activate = false;
+        } else {
+            const std::int16_t yawDelta = state.yawDelta;
+            const std::int32_t yawDistance = yawDelta < 0 ? -yawDelta : yawDelta;
+            if (yawDistance <= 1024 && (state.movementSelectionFlags & 4U)) {
+                const std::int16_t avoidanceDelta = state.collisionAvoidanceYaw;
+                const std::int32_t avoidanceDistance = avoidanceDelta < 0 ? -avoidanceDelta : avoidanceDelta;
+                if (avoidanceDistance < 2730)
+                    activate = false;
+            }
+        }
+    }
+    const std::int16_t collisionDelta = static_cast<std::int16_t>(state.collisionBoundaryYaw - state.currentYaw);
+    const std::int32_t collisionDistance = collisionDelta < 0 ? -collisionDelta : collisionDelta;
+    if (collisionDistance < 13653 && state.collisionData)
+        activate = false;
+    if (state.currentMovementMode == 2 || state.currentMovementMode == 6 || state.motionState == 9 || state.motionState == 4) {
+        state.movementSelectionFlags &= ~8U;
+        state.inactiveDirection184 = 0;
+        return;
+    }
+    const std::int8_t packedDirection = static_cast<std::int8_t>(state.packedDirection);
+    const std::int32_t packedMagnitude = packedDirection < 0 ? -packedDirection : packedDirection;
+    if (packedMagnitude > 20)
+        state.inactiveDirection184 = 0;
+    const float speedDelta = state.speedZ - 1.0f;
+    float reach = 1.0f;
+    reach += speedDelta * 2.25f;
+    if (IsHeldTransitionReady(state))
+        reach = 1.0f;
+    if (state.limitingCollisionDistance > reach)
+        activate = false;
+    if (activate) {
+        state.movementSelectionFlags |= 8U;
+        state.inactiveDirection184 = 4;
+    } else if (state.inactiveDirection184 > 0) {
+        state.movementSelectionFlags |= 8U;
+    }
+    if (state.movementSelectionFlags & 0x2000U)
+        state.movementSelectionFlags &= ~8U;
+    if (!(state.previousMovementSelectionFlags & 8U) && (state.movementSelectionFlags & 8U)) {
+        state.movementSelectionFlags |= 0x40000U;
+        state.inactiveDirection17e = 0;
+        if (!(state.movementSelectionFlags & 0x1000U))
+            state.collisionLatchYaw = state.currentYaw;
+    }
+    if (state.movementSelectionFlags & 8U) {
+        state.movementSelectionFlags &= ~0xc00U;
+        if (state.collisionTurnDelta < 0)
+            state.movementSelectionFlags |= 0x400U;
+        else
+            state.movementSelectionFlags |= 0x800U;
+    }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     const std::uint32_t candidate = state.movementSelectionFlags & selectionCollisionTurnCandidate;
     bool activate = candidate != 0;
     if (Abs16(state.collisionBoundaryYaw - state.currentYaw) < 2730U) {
@@ -1031,11 +1829,67 @@ void plymUpdateCollisionTurnActivation(PlayerModelState &state) {
         state.movementSelectionFlags &= ~(selectionCollisionTurnNegative | selectionCollisionTurnPositive);
         state.movementSelectionFlags |= state.collisionTurnDelta >= 0 ? selectionCollisionTurnPositive : selectionCollisionTurnNegative;
     }
+#endif
 }
 
 
-
+// @verified - d
 void plymUpdateCollisionTurnLatch(PlayerModelState &state) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    std::int16_t offset;
+    const Vector3 *endProbe, *startProbe;
+    Vector3 end, start;
+    float distance;
+    state.turnYawDelta = 0;
+    if (state.movementSelectionFlags & 0x40000U) {
+        if (!(state.movementSelectionFlags & 0x1000U)) {
+            ++state.inactiveDirection17e;
+            if (state.inactiveDirection17e > 90)
+                state.movementSelectionFlags &= ~0x40000U;
+        }
+        if (state.yawDelta)
+            state.movementSelectionFlags &= ~0x40000U;
+        if (state.movementSelectionFlags & 0x8000U)
+            state.movementSelectionFlags &= ~0x40000U;
+        offset = static_cast<std::int16_t>(state.collisionLatchYaw - state.currentYaw);
+        if ((offset < 0 ? -offset : offset) > 0x4000) {
+            offset = (offset < -0x4000 ? -0x4000 : offset) < 0x4000 ? (offset < -0x4000 ? -0x4000 : offset) : 0x4000;
+            state.collisionLatchYaw = static_cast<std::int16_t>(state.currentYaw + offset);
+        }
+    }
+    offset = static_cast<std::int16_t>(state.collisionLatchYaw - state.currentYaw);
+    state.movementSelectionFlags &= ~0x1000U;
+    if (state.movementSelectionFlags & 8U)
+        return;
+    if (!(state.movementSelectionFlags & 0x40000U))
+        return;
+    if (offset > 0) {
+        endProbe = &plymRayLeftEnd;
+        startProbe = &plymRayLeftStart;
+    } else {
+        endProbe = &plymRayRightEnd;
+        startProbe = &plymRayRightStart;
+    }
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&state.worldPosition);
+    Matrix4x4::RotateAroundY_Wrapper(state.collisionLatchYaw);
+    Matrix4x4::TransformPoint(*endProbe, end);
+    Matrix4x4::TransformPoint(*startProbe, start);
+    PopCurrentMatrix(1);
+    distance = 10.0f;
+    if (flddRaycastScene(state, start, end))
+        distance = state.collisionDistance;
+    if (distance < 2.0f)
+        return;
+    if ((offset < 0 ? -offset : offset) <= 0x221) {
+        state.movementSelectionFlags &= ~0x41000U;
+    } else {
+        state.movementSelectionFlags |= 0x1000U;
+        state.turnYawDelta = offset;
+    }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.turnYawDelta = 0;
     if (state.movementSelectionFlags & selectionCollisionTurnLatched) {
         if ((state.movementSelectionFlags & selectionGroundBoundaryTurnCandidate) == 0 && ++state.inactiveDirection182 > 90)
@@ -1070,10 +1924,13 @@ void plymUpdateCollisionTurnLatch(PlayerModelState &state) {
     } else {
         state.movementSelectionFlags &= ~(selectionGroundBoundaryTurnCandidate | selectionCollisionTurnLatched);
     }
+#endif
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native movement-context yaw constraint (PLYM pad flag 0x400000): stair and
+// target-world contexts clamp or snap the desired yaw to the context heading.
 bool plymConstrainMovementContextYaw(PlayerModelState &state) {
     const PlayerMovementState &movement = *state.movementState;
     if ((state.padFlags & 0x400000U) == 0)
@@ -1125,10 +1982,127 @@ bool plymConstrainMovementContextYaw(PlayerModelState &state) {
     state.desiredYaw = static_cast<std::int16_t>(yaw + 0x8000);
     return true;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void plymResolveCollisionTurn(PlayerModelState &state) {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    std::int32_t kind;
+    reinterpret_cast<PlayerMovementState *>(&state.retainedSecondaryController)->motionScale = (kind = 0, state.turnSpeedScale = 1.0f);
+    state.pendingTurnDelta = 0;
+    state.previousMovementSelectionFlags = state.movementSelectionFlags;
+    if ((state.movementSelectionFlags & 1U) == 0)
+        state.movementSelectionFlags &= ~0xc00U;
+    if ((state.movementSelectionFlags & 1U) == 0) {
+        state.movementSelectionFlags &= ~0x3000000U;
+        state.collisionSideCounter = 0;
+    }
+    state.movementSelectionFlags &= ~0x8001U;
+    state.movementSelectionFlags &= ~0x10000cU;
+    state.movementSelectionFlags &= ~0x20000U;
+    if (state.movementSelectionFlags & 0x40000000U) {
+        state.movementSelectionFlags &= ~0x40000000U;
+        return;
+    }
+    if (state.movementInterpolation < 0.1f || state.interpolationValue < 0.1f)
+        return;
+    if (state.flags & 0x20000000U)
+        return;
+    if (!(state.flags & 0x10000000U))
+        return;
+    if (state.currentMovementMode == 2 || state.currentMovementMode == 6 || state.motionState == 9 || state.motionState == 4)
+        state.movementSelectionFlags |= 0x8000U;
+    plymUpdateGroundBoundaryTurn(state);
+    plymProbeSideWalls(state);
+    plymMatchCharacterSpeed(state);
+    plymResolveCollisionSteering(state);
+    if (state.inactiveDirection184 > 0)
+        --state.inactiveDirection184;
+    if (state.activeMovementMode == 2 || state.activeMovementMode == 6) {
+        state.movementSelectionFlags &= ~0x41000U;
+        state.movementSelectionFlags &= ~8U;
+        state.inactiveDirection164 = 0;
+        state.inactiveDirection184 = 0;
+    }
+    if (state.activeMovementMode == 2 || state.activeMovementMode == 6)
+        return;
+    plymUpdateCollisionTurnActivation(state);
+    plymUpdateCollisionTurnLatch(state);
+    if (state.movementSelectionFlags & 0x2000U) {
+        state.pendingTurnDelta = state.groundBoundaryTurnYawDelta;
+        kind = 0x2000;
+    } else if (state.movementSelectionFlags & 8U) {
+        kind = 8;
+        state.pendingTurnDelta = state.collisionTurnDelta;
+    } else if (state.movementSelectionFlags & 0x1000U) {
+        state.pendingTurnDelta = state.turnYawDelta;
+        kind = 0x1000;
+    } else if (state.movementSelectionFlags & 0x10U) {
+        state.pendingTurnDelta = state.requestedTurnYaw - state.currentYaw;
+        kind = 0x10;
+    }
+    if (state.pendingTurnDelta) {
+        state.movementSelectionFlags |= 1U;
+        if (!state.yawDelta) {
+            state.resolvedTurnYaw = state.currentYaw + state.pendingTurnDelta;
+        } else if (state.yawDelta * state.pendingTurnDelta >= 0) {
+            if ((state.pendingTurnDelta < 0 ? -state.pendingTurnDelta : state.pendingTurnDelta) > (state.yawDelta < 0 ? -state.yawDelta : state.yawDelta))
+                state.resolvedTurnYaw = state.currentYaw + state.pendingTurnDelta;
+            else
+                state.movementSelectionFlags &= ~1U;
+        } else {
+            state.movementSelectionFlags &= ~1U;
+            if (state.motionState == 2 || state.motionState == 6) {
+                const float ratio = plymProbeSpeedRatio(state.desiredYawProbeDistance, state.speedZ);
+                if ((state.movementSelectionFlags & 0x10U) && ratio < 0.2f) {
+                    state.resolvedTurnYaw = state.currentYaw + state.pendingTurnDelta;
+                    state.movementSelectionFlags |= 1U;
+                }
+            }
+        }
+        if (state.movementSelectionFlags & 0x2000U) {
+            state.resolvedTurnYaw = state.currentYaw + state.pendingTurnDelta;
+            state.movementSelectionFlags |= 1U;
+        }
+    }
+    if ((state.movementSelectionFlags & 1U) == 0)
+        return;
+    const std::int16_t direction = state.resolvedTurnYaw - state.currentYaw;
+    if ((state.previousMovementSelectionFlags & 1U) == 0) {
+        state.movementSelectionFlags &= ~0x3000000U;
+        if (direction < 0)
+            state.movementSelectionFlags |= 0x2000000U;
+        else
+            state.movementSelectionFlags |= 0x1000000U;
+    } else if (state.movementSelectionFlags & 0x1000000U) {
+        if (direction < 0)
+            state.movementSelectionFlags = (state.movementSelectionFlags & ~0x1000000U) | 0x6000000U;
+    } else if ((state.movementSelectionFlags & 0x2000000U) && direction > 0) {
+        state.movementSelectionFlags = (state.movementSelectionFlags & ~0x2000000U) | 0x5000000U;
+    }
+    state.desiredYaw = state.resolvedTurnYaw;
+    plymProbeDesiredYawCollision(state);
+    UpdatePlayerDeltaSpeedRatio(state);
+    PlayerMovementState *const movement = reinterpret_cast<PlayerMovementState *>(&state.retainedSecondaryController);
+    switch (kind) {
+    case 8:
+    case 0x2000: {
+        float rate = (state.limitingCollisionDistance - 0.80000001f) / 0.69999999f;
+        const float clearance = 1.0f - ((rate < 0.0f ? 0.0f : rate) < 1.0f ? (rate < 0.0f ? 0.0f : rate) : 1.0f);
+        rate = clearance + clearance + 1.5f;
+        movement->motionScale = state.turnSpeedScale;
+        if (rate > movement->motionScale)
+            movement->motionScale = rate;
+        break;
+    }
+    case 0x1000:
+        movement->motionScale = 1.5f;
+        break;
+    }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.turnSpeedScale = 1.0f;
     state.embeddedMovementState.yawInterpolationRate = 1.0f;
     std::int32_t turnKind = 0;
@@ -1240,10 +2214,437 @@ void plymResolveCollisionTurn(PlayerModelState &state) {
         state.embeddedMovementState.yawInterpolationRate = 1.5f;
     }
     plymConstrainMovementContextYaw(state);
+#endif
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+float SimdSolveVectorProjection(Vector3 &output, const Vector3 &base, const Vector3 &direction, const Vector3 &reference, const Vector3 &crossVector) {
+    output.x = base.x;
+    output.y = base.y;
+    output.z = base.z;
+    if (std::fabs(direction.x * crossVector.z - crossVector.x * direction.z) < 0.00000011920929f)
+        return 0.0f;
+    float rows[2][3], value;
+    std::int32_t pivot, row, column;
+    rows[0][0] = direction.x;
+    rows[0][1] = -crossVector.x;
+    rows[0][2] = -base.x + reference.x;
+    rows[1][0] = direction.z;
+    rows[1][1] = -crossVector.z;
+    rows[1][2] = -base.z + reference.z;
+    for (pivot = 0; pivot < 2; ++pivot) {
+        value = rows[pivot][pivot];
+        for (column = pivot; column < 3; ++column)
+            rows[pivot][column] /= value;
+        for (row = 0; row < 2; ++row) {
+            if (row == pivot)
+                continue;
+            value = rows[row][pivot];
+            for (column = pivot; column < 3; ++column)
+                rows[row][column] -= value * rows[pivot][column];
+        }
+    }
+    value = rows[0][2];
+    output.x = base.x + value * direction.x;
+    output.y = base.y + value * direction.y;
+    output.z = base.z + value * direction.z;
+    return value;
 }
 
 
+// @verified - d
+void ComputeVectorProjection(Vector3 &output, const Vector3 &base, const Vector3 &target, const Vector3 &reference, const Vector3 &referenceEnd) {
+    Vector3 direction, crossVector;
+    direction.x = target.x - base.x;
+    direction.y = target.y - base.y;
+    direction.z = target.z - base.z;
+    crossVector.x = referenceEnd.x - reference.x;
+    crossVector.y = referenceEnd.y - reference.y;
+    crossVector.z = referenceEnd.z - reference.z;
+    SimdSolveVectorProjection(output, base, direction, reference, crossVector);
+}
 
+
+void ProbeReachedOrdinaryMovementCollision(PlayerMovementState &movement) {
+    Vector3 location, nearPoint, farPoint, intersection, stairAnchor, wallEnd, local, wallPoint;
+    std::int32_t stairYaw, steps;
+    movement.flags &= ~0x80U;
+    movement.pendingPositionCorrection = 0.0f;
+    movement.correctionCycleDistance = 0.0f;
+    movement.correctionCycleCount = 0;
+    GetCharacterWorldPosition(movement.character, &location);
+    nearPoint.x = location.x;
+    nearPoint.y = location.y + 0.22499999f;
+    nearPoint.z = location.z;
+    OffsetPointAlongYaw(&farPoint, &nearPoint, 10.0f, movement.currentYaw);
+    flddPushIntersectionFlag(0x20);
+    std::int32_t found = FindNearestRayIntersection(&intersection, &farPoint, &nearPoint);
+    if (!found) {
+        nearPoint.y = location.y - 0.22499999f;
+        flddPushIntersectionFlag(0x20);
+        found = FindNearestRayIntersection(&intersection, &nearPoint, &farPoint);
+    }
+    if (!found || !flddHasFoundIntersectionOfType(0x20)) {
+        movement.pendingPositionCorrection = 0.0f;
+        return;
+    }
+    steps = flddQueryStairOrigin(&intersection, &stairAnchor, &stairYaw);
+    std::int32_t selectedStep = 0;
+    if (location.y - stairAnchor.y > static_cast<float>(steps) * 0.22499999f * 0.5f)
+        selectedStep = steps;
+    wallPoint.x = 0.0f;
+    wallPoint.y = static_cast<float>(selectedStep) * 0.22499999f;
+    if (!selectedStep)
+        wallPoint.z = 0.15000001f;
+    else
+        wallPoint.z = -(static_cast<float>(selectedStep - 1) * 0.30000001f);
+    wallEnd.x = 1.0f;
+    wallEnd.y = 0.0f;
+    wallEnd.z = 0.0f;
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&stairAnchor);
+    Matrix4x4::RotateAroundY_Wrapper(stairYaw);
+    matrix_stack::TranslateVector(&wallPoint);
+    matrix_stack::GetTranslation(&wallPoint);
+    Matrix4x4::TransformPoint(wallEnd, wallEnd);
+    PopCurrentMatrix(1);
+    ComputeVectorProjection(intersection, nearPoint, intersection, wallPoint, wallEnd);
+    const float dx = nearPoint.x - intersection.x, dz = nearPoint.z - intersection.z;
+    movement.obstacleDistance = SquareRoot(dx * dx + dz * dz);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-movement.currentYaw);
+    matrix_stack::TranslateInverseVector(&nearPoint);
+    Matrix4x4::TransformPoint(intersection, local);
+    PopCurrentMatrix(1);
+    if (local.z > 0.0f)
+        movement.obstacleDistance = 0.0f;
+    const std::int32_t animation = mtwkGetAnimationId(movement.motion, static_cast<MotionRegion>(0));
+    if (animation != 0xf005 && animation != 0xf03d && animation != 0xf03c && animation != 0xf03b && animation != 0xf03a && animation != 0xf039 &&
+        animation != 0xf038 && animation != 0xf037 && animation != 0xf036 && animation != 0xf035 && animation != 0xf006)
+        return;
+    if ((movement.flags & 8U) && movement.targetWorldYaw == stairYaw && movement.targetHeightScale == steps)
+        return;
+    const float scale = movement.secondScale * movement.firstScale;
+    float trackDistance, cycleDistance, frame, halfCycle, perFrame, phase, travelled;
+    SampleNativeMotionRoot(animation, mtwkGetRigBoneId(movement.motion), -1.0f, &nearPoint);
+    trackDistance = nearPoint.z;
+    if (trackDistance < 0.0f)
+        trackDistance = -trackDistance;
+    cycleDistance = trackDistance * 0.5f;
+    frame = mtwkGetFrame(movement.motion, static_cast<MotionRegion>(0));
+    halfCycle = static_cast<float>(GetMotionFrameCount(animation)) - 1.0f;
+    perFrame = trackDistance / halfCycle * scale;
+    halfCycle *= 0.5f;
+    phase = halfCycle - frame;
+    if (phase < 0.0f)
+        phase += halfCycle;
+    phase /= scale;
+    travelled = phase * perFrame;
+    if (movement.obstacleDistance <= travelled) {
+        movement.pendingPositionCorrection = -(travelled - movement.obstacleDistance);
+        movement.correctionCycleDistance = phase;
+        movement.correctionCycleCount = 0;
+        movement.flags |= 0x80U;
+    } else {
+        float remainder = movement.obstacleDistance;
+        remainder -= travelled;
+        std::int32_t count = static_cast<std::int32_t>(remainder / cycleDistance);
+        remainder -= static_cast<float>(count) * cycleDistance;
+        if (remainder > 0.5f * cycleDistance) {
+            remainder -= cycleDistance;
+            ++count;
+        }
+        movement.pendingPositionCorrection = remainder;
+        movement.correctionCycleDistance = static_cast<float>(count) * halfCycle + phase;
+        movement.correctionCycleCount = static_cast<std::int16_t>(count);
+    }
+    if ((movement.flags & 0x100000U) && movement.obstacleDistance < 0.25f)
+        movement.pendingPositionCorrection = movement.obstacleDistance;
+}
+
+
+#define PLAYER_STAIR_ABS(x) ((x) < 0 ? -(x) : (x))
+#define PLAYER_STAIR_MIN(a, b) ((a) < (b) ? (a) : (b))
+
+void UpdateReachedFloorStairCollision(PlayerMovementState &movement) {
+    Vector3 location, local, anchor, probe, rightTarget, leftTarget, rightBone, leftBone, rightMid, leftMid, upperProbe, upperAnchor, boundary;
+    std::int32_t steps, upperSteps, yawDistance, direction, upperStep, rightStep, leftStep, footStep, rightTargetLevel, leftTargetLevel;
+    std::int32_t step, rightHeight, leftHeight, lowest, height, yaw, upperYaw, connectionId;
+    Character *const character = movement.character;
+    std::int32_t publishTarget = 0, retainTarget = 0;
+    ProbeReachedOrdinaryMovementCollision(movement);
+    MotionWork *const work = movement.motion;
+    mtwkGetAnimationId(work, static_cast<MotionRegion>(0));
+    GetCharacterWorldPosition(movement.character, &location);
+    location.y += 1.0f;
+    movement.flags &= ~0x10000U;
+    movement.sceneGroundIndex = scenFindIntersection(&location);
+    if (movement.sceneGroundIndex != -1)
+        movement.flags |= 0x10000U;
+    GetCharacterWorldPosition(movement.character, &location);
+    probe = location;
+    probe.y += 1.5f;
+    probe.y = FindFieldIntersectionHeight(&probe);
+    steps = flddQueryStairOrigin(&probe, &anchor, &yaw);
+    upperProbe = probe;
+    upperProbe.y += 1.5f;
+    upperSteps = flddQueryStairConnection(&upperProbe, &upperAnchor, &upperYaw, &connectionId);
+    if (upperSteps > 0 && PLAYER_STAIR_ABS(anchor.y - upperAnchor.y) >= 0.22499999f) {
+        steps = upperSteps;
+        anchor = upperAnchor;
+        yaw = upperYaw;
+    }
+    if (steps > 0) {
+        std::uint32_t control = ccmGetFlags(character);
+        if (!(movement.flags & 8U)) {
+            movement.targetWorldPosition.x = anchor.x;
+            movement.targetWorldPosition.y = anchor.y;
+            movement.targetWorldPosition.z = anchor.z;
+            movement.targetWorldYaw = yaw;
+            movement.targetHeightScale = steps;
+            movement.cachedCharacterControlFlags = control;
+            movement.groundedStepIndex = 0;
+            publishTarget = 1;
+        } else if (PLAYER_STAIR_ABS(movement.targetWorldPosition.y - anchor.y) >= 0.22499999f) {
+            if (movement.flags & 0x40000U) {
+                movement.targetWorldPosition.x = anchor.x;
+                movement.targetWorldPosition.y = anchor.y;
+                movement.targetWorldPosition.z = anchor.z;
+                movement.targetWorldYaw = yaw;
+                movement.targetHeightScale = steps;
+                publishTarget = 1;
+            } else {
+                anchor.x = movement.targetWorldPosition.x;
+                anchor.y = movement.targetWorldPosition.y;
+                anchor.z = movement.targetWorldPosition.z;
+                yaw = movement.targetWorldYaw;
+                steps = movement.targetHeightScale;
+                retainTarget = 1;
+            }
+        }
+        movement.flags = (movement.flags | 8U) & ~0x40000U;
+        if (retainTarget)
+            movement.flags |= 0x40000U;
+        control &= ~0x42U;
+        control |= 0x100U;
+        control &= ~0x800U;
+        if (!movement.rootYawMode && !(movement.flags & 0x100U))
+            control |= 0x42U;
+        else if (movement.playerMotionFlags & 2U)
+            control |= 0x800U;
+        AssignCharacterControlFlags(character, control);
+        matrix_stack::PushUnitMatrix();
+        Matrix4x4::RotateAroundY_Wrapper(-yaw);
+        Matrix4x4::preTranslate(-anchor.x, -anchor.y, -anchor.z);
+        Matrix4x4::TransformPoint(location, local);
+        PopCurrentMatrix(1);
+        if (local.y < -0.01f) {
+            control |= 0x40U;
+            AssignCharacterControlFlags(character, control);
+        }
+    } else {
+        if (movement.flags & 8U)
+            AssignCharacterControlFlags(character, movement.cachedCharacterControlFlags);
+        movement.flags &= 0xfffbfff7U;
+    }
+    direction = 0;
+    yawDistance = PLAYER_STAIR_ABS(static_cast<std::int16_t>(mtwkGetEntityYaw(work) - yaw));
+    if (yawDistance < 0x2aaa)
+        direction = 1;
+    if (yawDistance > 0x5555)
+        direction = -1;
+    if (publishTarget) {
+        if (yawDistance < 0x4000)
+            movement.groundedStepIndex = 0;
+        else
+            movement.groundedStepIndex = steps;
+    }
+    mtwkGetControllerTargetPosition(work, 6, rightTarget);
+    mtwkGetControllerTargetPosition(work, 5, leftTarget);
+    mtwkGetBonePosition(work, 0x20, &rightBone);
+    mtwkGetBonePosition(work, 0x1b, &leftBone);
+    if (mtwkIsRightFootTargetAhead(work))
+        probe = leftTarget;
+    else
+        probe = rightTarget;
+    probe.y += 1.0f;
+    probe.y = FindFieldIntersectionHeight(&probe);
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::RotateAroundY_Wrapper(-yaw);
+    Matrix4x4::preTranslate(-anchor.x, -anchor.y, -anchor.z);
+    Matrix4x4::TransformPoint(location, local);
+    Matrix4x4::TransformPoint(rightTarget, rightTarget);
+    Matrix4x4::TransformPoint(leftTarget, leftTarget);
+    Matrix4x4::TransformPoint(rightBone, rightBone);
+    Matrix4x4::TransformPoint(leftBone, leftBone);
+    PopCurrentMatrix(1);
+    am2Vector3Add(&rightMid, &rightBone, &rightBone);
+    am2Vector3Add(&leftMid, &leftBone, &leftBone);
+    am2Vector3Add(&rightMid, &rightTarget, &rightBone);
+    am2Vector3Add(&leftMid, &leftTarget, &leftBone);
+    local.z = -local.z;
+    rightTarget.z = -rightTarget.z;
+    leftTarget.z = -leftTarget.z;
+    rightMid.z = -rightMid.z;
+    leftMid.z = -leftMid.z;
+    step = static_cast<std::int32_t>(local.z / 0.30000001f) + 1;
+    if (step < 0)
+        step = 0;
+    upperStep = PLAYER_STAIR_MIN(step, steps);
+    rightTargetLevel = static_cast<std::int32_t>(rightTarget.z / 0.30000001f) + 1;
+    if (rightTargetLevel < 0)
+        rightTargetLevel = 0;
+    rightTargetLevel = PLAYER_STAIR_MIN(rightTargetLevel, steps);
+    leftTargetLevel = static_cast<std::int32_t>(leftTarget.z / 0.30000001f) + 1;
+    if (leftTargetLevel < 0)
+        leftTargetLevel = 0;
+    leftTargetLevel = PLAYER_STAIR_MIN(leftTargetLevel, steps);
+    step = static_cast<std::int32_t>(rightMid.z * 0.5f / 0.30000001f) + 1;
+    if (step < 0)
+        step = 0;
+    rightStep = PLAYER_STAIR_MIN(step, steps);
+    step = static_cast<std::int32_t>(leftMid.z * 0.5f / 0.30000001f) + 1;
+    if (step < 0)
+        step = 0;
+    leftStep = PLAYER_STAIR_MIN(step, steps);
+    footStep = PLAYER_STAIR_MIN(rightStep, leftStep);
+    rightHeight = static_cast<std::int32_t>(rightTarget.y / 0.22499999f);
+    leftHeight = static_cast<std::int32_t>(leftTarget.y / 0.22499999f);
+    lowest = PLAYER_STAIR_MIN(rightHeight, leftHeight);
+    if (lowest < 0)
+        lowest = 0;
+    height = PLAYER_STAIR_MIN(lowest, steps);
+    if (movement.flags & 8U)
+        movement.upperBodyStepIndex = upperStep;
+    movement.stepDirection = 0;
+    if (steps > 0) {
+        if (direction == 1) {
+            if (local.z > -0.15000001f && static_cast<float>(steps - 1) * 0.30000001f > local.z && footStep < steps && height < steps)
+                movement.stepDirection = direction;
+        } else if (direction == -1) {
+            if (local.z > -0.075000003f && static_cast<float>(steps) * 0.30000001f > local.z && footStep > 0 && height > 0)
+                movement.stepDirection = direction;
+        }
+    }
+    rightHeight = static_cast<std::int32_t>(rightTarget.y / 0.22499999f);
+    leftHeight = static_cast<std::int32_t>(leftTarget.y / 0.22499999f);
+    footStep = PLAYER_STAIR_MIN(rightHeight, leftHeight);
+    footStep = PLAYER_STAIR_MIN(footStep < 0 ? 0 : footStep, movement.targetHeightScale);
+    movement.groundedStepIndex = footStep;
+    if (publishTarget) {
+        if (yawDistance < 0x4000)
+            movement.groundedStepIndex = 0;
+        else
+            movement.groundedStepIndex = steps;
+    }
+    if (!movement.stepDirection)
+        return;
+    if (movement.targetHeightScale > 0) {
+        if (movement.stepDirection > 0) {
+            boundary.x = -1.8f;
+            boundary.y = static_cast<float>(movement.targetHeightScale) * 0.22499999f;
+            boundary.z = static_cast<float>(-movement.targetHeightScale) * 0.30000001f;
+            movement.stairBoundaryYaw = yaw;
+        } else {
+            boundary.x = -1.8f;
+            boundary.y = 0.0f;
+            boundary.z = 0.30000001f;
+            movement.stairBoundaryYaw = yaw + 0x8000;
+        }
+        matrix_stack::PushUnitMatrix();
+        matrix_stack::TranslateVector(&anchor);
+        Matrix4x4::RotateAroundY_Wrapper(yaw);
+        Matrix4x4::TransformPoint(boundary, movement.stairBoundaryAnchor);
+        PopCurrentMatrix(1);
+    }
+}
+
+
+#undef PLAYER_STAIR_MIN
+#undef PLAYER_STAIR_ABS
+
+// @verified - d
+void PrepareReachedStairPhaseCorrection(PlayerMovementState &movement) {
+    const std::uint32_t animation = mtwkGetAnimationId(movement.motion, static_cast<MotionRegion>(0));
+    if (animation != 0xf02bU && animation != 0xf009U && animation != 0xf12fU && animation != 0xf12eU && animation != 0xf02aU && animation != 0xf008U)
+        return;
+    if (!(movement.flags & 8U) || !movement.targetHeightScale)
+        return;
+    std::int32_t steps = 1;
+    if (animation == 0xf02aU || animation == 0xf008U)
+        steps = 2;
+    std::int32_t phases = 2;
+    if (animation - 0xf12eU <= 1U) {
+        phases = 1;
+        steps = 2;
+    }
+    movement.correctionCycleDistance = 0.0f;
+    Vector3 terminal;
+    SampleNativeMotionRoot(animation, mtwkGetRigBoneId(movement.motion), -1.0f, &terminal);
+    float trackDistance = terminal.z;
+    if (trackDistance < 0.0f)
+        trackDistance = -trackDistance;
+    const float frame = mtwkGetFrame(movement.motion, static_cast<MotionRegion>(0));
+    float phaseLength = static_cast<float>(GetMotionFrameCount(animation)) - 1.0f;
+    const float perFrame = trackDistance / phaseLength;
+    phaseLength = phaseLength / static_cast<float>(phases);
+    float phase = phaseLength - frame;
+    if (phase < 0.0f)
+        phase += phaseLength;
+    const float travelled = phase * perFrame;
+    float stepLength = 0.30000001f / dc::sdk::CosFixed(static_cast<std::int16_t>(movement.currentYaw - movement.targetWorldYaw));
+    if (stepLength < 0.0f)
+        stepLength = -stepLength;
+    Vector3 position;
+    GetCharacterWorldPosition(movement.character, &position);
+    const float distance = GetPlanarDistance(&movement.rootConsumerPosition, &position) + travelled;
+    const float correction =
+        frame <= phaseLength ? stepLength * static_cast<float>(steps) - distance : (stepLength + stepLength) * static_cast<float>(steps) - distance;
+    movement.pendingPositionCorrection = correction;
+}
+
+
+// @verified - d
+void ApplyReachedCollisionRootCorrection(PlayerMovementState &movement) {
+    float magnitude, limit, step, scale;
+    Vector3 direction, position;
+    magnitude = movement.pendingPositionCorrection < 0.0f ? -movement.pendingPositionCorrection : movement.pendingPositionCorrection;
+    if (!(magnitude > 0.0f))
+        return;
+    limit = movement.rootMotionStep * 0.5f * (1.0f / static_cast<float>(movement.correctionCycleCount + 1));
+    limit = limit > 0.02f ? limit : 0.02f;
+    step = magnitude > limit ? limit : magnitude;
+    if (movement.pendingPositionCorrection < 0.0f)
+        step = -step;
+    movement.pendingPositionCorrection -= step;
+    if ((movement.pendingPositionCorrection < 0.0f ? -movement.pendingPositionCorrection : movement.pendingPositionCorrection) < 0.02f)
+        movement.pendingPositionCorrection = 0.0f;
+    matrix_stack::PushUnitMatrix();
+    Matrix4x4::Scale(step, step, step);
+    Matrix4x4::RotateAroundY_Wrapper(movement.currentYaw);
+    GetTransformedForwardVector(&direction);
+    PopCurrentMatrix(1);
+    GetCharacterWorldPosition(movement.character, &position);
+    matrix_stack::PushUnitMatrix();
+    matrix_stack::TranslateVector(&position);
+    Matrix4x4::TransformPoint(direction, position);
+    PopCurrentMatrix(1);
+    SetCharacterWorldPosition(movement.character, &position);
+    if (movement.correctionCycleDistance * limit <
+            (movement.pendingPositionCorrection < 0.0f ? -movement.pendingPositionCorrection : movement.pendingPositionCorrection) &&
+        (movement.flags & 0x80U) && movement.correctionCycleDistance > 0.0f) {
+        float ratio = movement.pendingPositionCorrection / movement.correctionCycleDistance;
+        scale = (ratio + movement.rootMotionStep) / movement.rootMotionStep;
+        movement.verticalMotionScale = (scale < 0.75f ? 0.75f : scale) < 1.25f ? (scale < 0.75f ? 0.75f : scale) : 1.25f;
+    }
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native motion-input owner (PLYM +0x0e, published by shenToggleAreaFlags and
+// the scripted approach callers).
 void plymUpdateMotionInputState(PlayerModelState &state) {
     switch (state.motionInputState) {
     case 1:
@@ -1288,5 +2689,10 @@ void plymUpdateMotionInputState(PlayerModelState &state) {
         break;
     }
 }
+#endif
 
-} // namespace shenmue::s2::player_detail
+} // namespace player_detail
+
+} // namespace s2
+
+} // namespace shenmue

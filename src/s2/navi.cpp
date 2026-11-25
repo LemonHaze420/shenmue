@@ -1,4 +1,16 @@
+#include "shenmue.h"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/navi.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/hlib.hpp"
+#include "s2/event_overlay.hpp"
+#include "common/math.hpp"
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/navigation.hpp"
 
 #include "s2/archive_data.hpp"
@@ -24,13 +36,22 @@
 #include <cmath>
 #include <algorithm>
 #include <cstdio>
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include <cstring>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/area_names.hpp"
+#endif
 
-namespace shenmue::s2 {
+
+namespace shenmue {
+namespace s2 {
+
 namespace {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr NaviMapConfig mapConfigs[] = {
     {6012, -1, 2.5f, 248.0f, 350.0f, "AR00"},
     {6006, -1, 2.0f, 160.0f, 110.0f, "WE00"},
@@ -68,76 +89,103 @@ constexpr NaviMapConfig mapConfigs[] = {
 
 constexpr NaviAreaConfig areaConfigs[] = {
     {SHEN_NAME(AR00), 0},
-    {SHEN_NAME(AR01), 0},
-    {SHEN_NAME(AR02), 0},
-    {SHEN_NAME(AR03), 18},
-    {SHEN_NAME(AK00), 17},
-    {SHEN_NAME(AB00), 8},
-    {SHEN_NAME(WE00), 1},
-    {SHEN_NAME(WR00), 2},
-    {SHEN_NAME(WK00), 3},
-    {SHEN_NAME(WN00), 4},
-    {SHEN_NAME(WB00), 5},
-    {SHEN_NAME(WS00), 6},
-    {SHEN_NAME(WT00), 7},
-    {SHEN_NAME(KWWT), 15},
-    {SHEN_NAME(VIEW), 15},
-    {SHEN_NAME(KMZ1), 15},
-    {SHEN_NAME(KMZ2), 15},
-    {SHEN_NAME(KMZ3), 15},
-    {SHEN_NAME(KMZ4), 15},
-    {SHEN_NAME(KES1), 16},
-    {SHEN_NAME(Q100), 19},
-    {SHEN_NAME(Q200), 22},
-    {SHEN_NAME(Q300), 21},
-    {SHEN_NAME(QA00), 23},
-    {SHEN_NAME(QAW1), 13},
-    {SHEN_NAME(QAE1), 13},
-    {SHEN_NAME(QAW6), 23},
-    {SHEN_NAME(QAE6), 23},
-    {SHEN_NAME(QJBT), 13},
-    {SHEN_NAME(QA11), 29},
-    {SHEN_NAME(QB00), 30},
-    {SHEN_NAME(QC00), 24},
-    {SHEN_NAME(QC01), 9},
-    {SHEN_NAME(QC06), 24},
-    {SHEN_NAME(QCAE), 31},
-    {SHEN_NAME(QD00), 25},
-    {SHEN_NAME(QD01), 10},
-    {SHEN_NAME(QE00), 26},
-    {SHEN_NAME(QE01), 11},
-    {SHEN_NAME(QE06), 26},
-    {SHEN_NAME(QLBT), 26},
-    {SHEN_NAME(QF00), 12},
-    {SHEN_NAME(QF01), 12},
-    {SHEN_NAME(QF02), 12},
-    {SHEN_NAME(QF39), 28},
-    {SHEN_NAME(QF06), 12},
-    {SHEN_NAME(QR00), 20},
-    {SHEN_NAME(QSFD), 19},
-    {SHEN_NAME(QSFA), 19},
-    {SHEN_NAME(QSB1), 19},
-    {SHEN_NAME(QTB2), 19},
-    {SHEN_NAME(QTB3), 21},
-    {SHEN_NAME(QTB4), 21},
-    {SHEN_NAME(QTB1), 19},
-    {SHEN_NAME(QSFC), 22},
-    {SHEN_NAME(QSFB), 22},
-    {SHEN_NAME(QSB1), 22},
-    {SHEN_NAME(QGBT), 22},
+        {SHEN_NAME(AR01), 0},
+            {SHEN_NAME(AR02), 0},
+                {SHEN_NAME(AR03), 18},
+                    {SHEN_NAME(AK00), 17},
+                        {SHEN_NAME(AB00), 8},
+                            {SHEN_NAME(WE00), 1},
+                                {SHEN_NAME(WR00), 2},
+                                    {SHEN_NAME(WK00), 3},
+                                        {SHEN_NAME(WN00), 4},
+                                            {SHEN_NAME(WB00), 5},
+                                                {SHEN_NAME(WS00), 6},
+                                                    {SHEN_NAME(WT00), 7},
+                                                        {SHEN_NAME(KWWT), 15},
+                                                            {SHEN_NAME(VIEW), 15},
+                                                                {SHEN_NAME(KMZ1), 15},
+                                                                    {SHEN_NAME(KMZ2), 15},
+                                                                        {SHEN_NAME(KMZ3), 15},
+                                                                            {SHEN_NAME(KMZ4), 15},
+                                                                                {SHEN_NAME(KES1), 16},
+                                                                                    {SHEN_NAME(Q100), 19},
+                                                                                        {SHEN_NAME(Q200), 22},
+                                                                                            {SHEN_NAME(Q300), 21},
+                                                                                                {SHEN_NAME(QA00), 23},
+                                                                                                    {SHEN_NAME(QAW1), 13},
+                                                                                                        {SHEN_NAME(QAE1), 13},
+                                                                                                            {SHEN_NAME(QAW6), 23},
+                                                                                                                {SHEN_NAME(QAE6), 23},
+                                                                                                                    {SHEN_NAME(QJBT), 13},
+                                                                                                                        {SHEN_NAME(QA11), 29},
+                                                                                                                            {SHEN_NAME(QB00), 30},
+                                                                                                                                {SHEN_NAME(QC00), 24},
+                                                                                                                                    {SHEN_NAME(QC01), 9},
+                                                                                                                                        {SHEN_NAME(QC06), 24},
+                                                                                                                                            {SHEN_NAME(QCAE),
+                                                                                                                                                 31},
+                                                                                                                                                {SHEN_NAME(QD00), 25},
+                                                                                                                                                    {SHEN_NAME(QD01),
+                                                                                                                                                         10},
+                                                                                                                                                        {SHEN_NAME(QE00),
+                                                                                                                                                             26},
+                                                                                                                                                            {SHEN_NAME(QE01),
+                                                                                                                                                                 11},
+                                                                                                                                                                {SHEN_NAME(QE06),
+                                                                                                                                                                     26},
+                                                                                                                                                                    {SHEN_NAME(QLBT),
+                                                                                                                                                                         26},
+                                                                                                                                                                        {SHEN_NAME(QF00),
+                                                                                                                                                                             12},
+                                                                                                                                                                            {SHEN_NAME(QF01),
+                                                                                                                                                                                 12},
+                                                                                                                                                                                {SHEN_NAME(QF02),
+                                                                                                                                                                                     12},
+                                                                                                                                                                                    {SHEN_NAME(QF39),
+                                                                                                                                                                                         28},
+                                                                                                                                                                                        {SHEN_NAME(QF06),
+                                                                                                                                                                                             12},
+                                                                                                                                                                                            {SHEN_NAME(QR00),
+                                                                                                                                                                                                 20},
+                                                                                                                                                                                                {SHEN_NAME(QSFD),
+                                                                                                                                                                                                     19},
+                                                                                                                                                                                                    {SHEN_NAME(QSFA),
+                                                                                                                                                                                                         19},
+                                                                                                                                                                                                        {SHEN_NAME(QSB1),
+                                                                                                                                                                                                             19},
+                                                                                                                                                                                                            {SHEN_NAME(QTB2),
+                                                                                                                                                                                                                 19},
+                                                                                                                                                                                                                {SHEN_NAME(QTB3),
+                                                                                                                                                                                                                     21},
+                                                                                                                                                                                                                    {SHEN_NAME(QTB4), 21},
+                                                                                                                                                                                                                        {SHEN_NAME(QTB1),
+                                                                                                                                                                                                                             19},
+                                                                                                                                                                                                                            {SHEN_NAME(QSFC),
+                                                                                                                                                                                                                                 22},
+                                                                                                                                                                                                                                {SHEN_NAME(QSFB),
+                                                                                                                                                                                                                                     22},
+                                                                                                                                                                                                                                    {SHEN_NAME(QSB1),
+                                                                                                                                                                                                                                         22},
+                                                                                                                                                                                                                                        {SHEN_NAME(QGBT),
+                                                                                                                                                                                                                                             22},
 };
 
 constexpr NaviFloorImage floorImagesQA[] = {
-    {23, 48, 32, 0, 0x3fc0}, {10, 33, 16, 1, 0x3800},
-    {10, 26, 8, 2, 0xfc000}, {10, 36, 8, 2, 0x3c0},
+    {23, 48, 32, 0, 0x3fc0},
+    {10, 33, 16, 1, 0x3800},
+    {10, 26, 8, 2, 0xfc000},
+    {10, 36, 8, 2, 0x3c0},
 };
 constexpr NaviFloorImage floorImagesQB[] = {{-17, 12, 16, 0, 0x400}};
 constexpr NaviFloorImage floorImagesQC[] = {{-10, -60, 16, 0, 0x9000}};
 constexpr NaviFloorImage floorImagesQD[] = {{-43, 50, 16, 0, 0x9000}};
 constexpr NaviFloorImage floorImagesQE[] = {{-65, -18, 16, 0, 0xff800}};
 constexpr NaviFloorImage floorImagesQF[] = {
-    {31, -25, 64, 0, 0xfffffffff0000000ULL}, {-12, -5, 8, 1, 0xcff4fff},
-    {-12, -5, 8, 2, 0x300b000}, {11, 12, 32, 3, 0xf87ffff}, {11, 12, 32, 4, 0x780000},
+    {31, -25, 64, 0, 0xfffffffff0000000ULL},
+    {-12, -5, 8, 1, 0xcff4fff},
+    {-12, -5, 8, 2, 0x300b000},
+    {11, 12, 32, 3, 0xf87ffff},
+    {11, 12, 32, 4, 0x780000},
 };
 constexpr NaviFloorDefinition floorDefinitions[] = {
     {"NVPTQA.SPR", 4, 0, floorImagesQA, 0xfffffffffffffc00ULL},
@@ -154,7 +202,9 @@ const std::uint32_t *markerSaveSource{};
 NaviTrailStorage trailStorage{};
 const NaviTrailStorage *trailSaveSource{};
 shen_name retainedTrailMap{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t CompactMarkers() noexcept {
     std::array<std::uint32_t, 128> compacted{};
     std::uint32_t count = 0;
@@ -167,7 +217,9 @@ std::uint32_t CompactMarkers() noexcept {
     nextMarker = count;
     return count;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 constexpr std::size_t trailTextureSize = 512 * 512 * 4 + 176;
 constexpr std::uint32_t trailColours[16] = {0xffffffff, 0xff000000, 0xff00ff00, 0xffffff00, 0xffff0000};
 constexpr std::uint8_t stampBits[3][8] = {
@@ -177,12 +229,12 @@ constexpr std::uint8_t stampBits[3][8] = {
 };
 constexpr NaviAreaConfig trailTransfers[] = {
     {SHEN_NAME(KMZ1), SHEN_NAME(KMZ2)},
-    {SHEN_NAME(KMZ2), SHEN_NAME(KMZ3)},
-    {SHEN_NAME(KMZ3), SHEN_NAME(KMZ4)},
-    {SHEN_NAME(KMZ3), SHEN_NAME(KMZ1)},
-    {SHEN_NAME(KMZ4), SHEN_NAME(KMZ1)},
-    {SHEN_NAME(KMZ2), SHEN_NAME(KMZ1)},
-    {SHEN_NAME(KMZ1), SHEN_NAME(KMZ1)},
+        {SHEN_NAME(KMZ2), SHEN_NAME(KMZ3)},
+            {SHEN_NAME(KMZ3), SHEN_NAME(KMZ4)},
+                {SHEN_NAME(KMZ3), SHEN_NAME(KMZ1)},
+                    {SHEN_NAME(KMZ4), SHEN_NAME(KMZ1)},
+                        {SHEN_NAME(KMZ2), SHEN_NAME(KMZ1)},
+                            {SHEN_NAME(KMZ1), SHEN_NAME(KMZ1)},
 };
 
 HLib::Task *naviTask{};
@@ -228,12 +280,16 @@ NaviQuad mapQuad{};
 NaviQuad playerQuad{};
 NaviQuad backgroundQuad{};
 NaviDrawState naviDrawState{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector4 NaviIconUv(std::uint16_t id) {
     const auto rect = GetCommonIconRect(id);
     return {rect[0] * 0.125f, rect[1] * 0.125f, rect[2] * 0.125f, rect[3] * 0.125f};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetNaviIcons() {
     constexpr std::uint16_t ids[]{0, 1044, 60, 61, 59, 516};
     naviIcons = {};
@@ -246,14 +302,18 @@ void ResetNaviIcons() {
     naviIcons[1].uv.y = 0.133f;
     naviIcons[1].uv.w = 0.24f;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Vector2 TransformNaviPoint(const Matrix4x4 &matrix, float x, float z) {
     return {
         matrix.rows[0].x * x + matrix.rows[2].x * z + matrix.rows[3].x,
         matrix.rows[0].z * x + matrix.rows[2].z * z + matrix.rows[3].z,
     };
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 NaviQuad MakeNaviQuad(std::int32_t x, std::int32_t y, std::int32_t width, std::int32_t height, float aspect) {
     const float left = static_cast<float>(x - width / 2) * aspect;
     const float right = static_cast<float>(x - width / 2 + width) * aspect;
@@ -261,21 +321,27 @@ NaviQuad MakeNaviQuad(std::int32_t x, std::int32_t y, std::int32_t width, std::i
     const float bottom = static_cast<float>(y - height / 2 + height);
     return {{{left, top}, {right, top}, {left, bottom}, {right, bottom}}};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t RequestNaviDrawUpdate() {
     if (!naviDrawPending)
         naviDrawPending = 1;
     return naviDrawPending;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint32_t RequestNaviScissorUpdate() {
     if (!naviScissorPending)
         naviScissorPending = 1;
     return naviScissorPending;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviQuad(const NaviQuad &quad, std::uint32_t texture, float depth, const Vector4 &uv = {0.0f, 0.0f, 1.0f, 1.0f}, std::uint32_t diffuse = 0xffffffff,
     std::uint32_t specular = 0) {
     if (!texture)
@@ -290,23 +356,31 @@ void DrawNaviQuad(const NaviQuad &quad, std::uint32_t texture, float depth, cons
     }};
     DrawLegacyStripType3AlphaTestImmediate(vertices, texture);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseTexture(std::uint32_t &texture) {
     if (texture)
         d3t::InitTexture2DResource(texture);
     texture = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void WriteTextureWord(std::byte *bytes, std::size_t offset, std::uint32_t value) {
     std::memcpy(bytes + offset, &value, sizeof(value));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t ReadTextureWord(const std::byte *bytes) {
     std::uint32_t value;
     std::memcpy(&value, bytes, sizeof(value));
     return value;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeTrailTexture(std::byte *bytes) {
     std::memset(bytes, 0, trailTextureSize);
     WriteTextureWord(bytes, 0, SHEN_NAME(TEXN));
@@ -330,7 +404,9 @@ void InitializeTrailTexture(std::byte *bytes) {
     std::memcpy(dds + 76, format, sizeof(format));
     WriteTextureWord(dds, 108, 4096);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void OverrideMapTexture(std::uint32_t &texture, const char *image) {
     if (!texture)
         return;
@@ -349,7 +425,9 @@ void OverrideMapTexture(std::uint32_t &texture, const char *image) {
     ReleaseTexture(texture);
     texture = replacement;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *LoadSpriteAllocation(const char *filename, std::size_t &size) {
     char path[128];
     std::snprintf(path, sizeof(path), "/SPRITE/%s", filename);
@@ -364,7 +442,9 @@ void *LoadSpriteAllocation(const char *filename, std::size_t &size) {
     HLib::FreeTaskData(allocation);
     return nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UploadTrailTexture() {
     if (!activeTrailTexture)
         return;
@@ -374,7 +454,9 @@ void UploadTrailTexture() {
     ReleaseTexture(mapTexture);
     mapTexture = replacement;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void PlotTrailPoint(std::int16_t x, std::int16_t y) {
     trailStorage.points[trailStorage.next] = {x, y};
     if (++trailStorage.next >= 1022)
@@ -392,7 +474,9 @@ void PlotTrailPoint(std::int16_t x, std::int16_t y) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RestoreTrailTexture() {
     std::int32_t visited = 0;
     std::int32_t index = trailStorage.next - 1;
@@ -416,7 +500,9 @@ void RestoreTrailTexture() {
     }
     UploadTrailTexture();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void StampTrailTexture(std::int32_t x, std::int32_t y, std::uint8_t colour, std::int32_t pattern) {
     const std::uint8_t startX = x >= 3 ? static_cast<std::uint8_t>(x - 3) : 0;
     const std::uint8_t startY = y >= 3 ? static_cast<std::uint8_t>(y - 3) : 0;
@@ -432,7 +518,9 @@ void StampTrailTexture(std::int32_t x, std::int32_t y, std::uint8_t colour, std:
     }
     UploadTrailTexture();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool LoadNaviFloorImages(const NaviFloorDefinition &definition) {
     for (std::uint32_t &texture : floorTextures)
         ReleaseTexture(texture);
@@ -460,7 +548,9 @@ bool LoadNaviFloorImages(const NaviFloorDefinition &definition) {
     }
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void LoadNaviBackground() {
     std::size_t size = 0;
     void *const allocation = LoadSpriteAllocation("NVBACK.SPR", size);
@@ -470,7 +560,9 @@ void LoadNaviBackground() {
     HLib::FreeTaskData(allocation);
     OverrideMapTexture(backgroundTexture, "/maps/NVBACK_0.png?usage=0");
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ConstructNaviMap(std::uint32_t configIndex) {
     if (configIndex >= std::size(mapConfigs))
         return false;
@@ -532,18 +624,25 @@ bool ConstructNaviMap(std::uint32_t configIndex) {
         HLib::FreeTaskData(allocation);
     return true;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool NaviInputCancels(const LegacyInputSlot &input) {
     return (input.held & 0xf0c0) || input.analog0d > 5 || input.analog0c > 5 || std::abs(static_cast<std::int32_t>(input.analog0f) - 128) > 5 ||
         std::abs(static_cast<std::int32_t>(input.analog0e) - 128) > 5;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviGlyph(std::uint16_t icon, std::int32_t x, std::int32_t y, float aspect) {
     CommonIconAtlas *const atlas = GetCommonIconAtlas(icon);
     if (!atlas)
         return;
     DrawNaviQuad(MakeNaviQuad(x, y, 16, 16, aspect), atlas->textureHandle, 1.0f / 103.0f, NaviIconUv(icon), 0xffffffff, 0x003f3f3f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviFloorNumber(std::int32_t floor, float aspect) {
     if (floor == -1000)
         return;
@@ -568,7 +667,9 @@ void DrawNaviFloorNumber(std::int32_t floor, float aspect) {
     if (displayed <= 0)
         DrawNaviGlyph(1043, number < 10 ? 183 : 167, 463, aspect);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviFloors(const NaviDrawState &draw, float aspect) {
     const NaviTaskData &task = *draw.task;
     const NaviFloorDefinition *const definition = task.definition;
@@ -596,17 +697,20 @@ void DrawNaviFloors(const NaviDrawState &draw, float aspect) {
             (void)RequestNaviDrawUpdate();
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool NaviMarkerInside(const NaviTaskData &task, const Vector2 &point) {
     return task.trigger || (point.x > 32.0f * (3 - task.clipColumns) && point.y > 32.0f * (12 - task.clipRows) && point.x < 176.0f && point.y < 464.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviMarkers(const NaviDrawState &draw, float aspect) {
     const NaviTaskData &task = *draw.task;
     const float zoom = 1.0f + 2.0f * (task.trigger / 255.0f * 0.60000002f);
     const float unitsPerCoordinate = task.config->scale * 128.0f / 256.0f;
-    const std::int32_t floor = std::min(
-        (task.stream == -1000 ? 63 : task.stream) + 8, 63);
+    const std::int32_t floor = std::min((task.stream == -1000 ? 63 : task.stream) + 8, 63);
     float layer = 0.60000002f;
     bool visible = false;
     for (std::uint32_t index = 0; index < markers.size(); ++index) {
@@ -640,8 +744,8 @@ void DrawNaviMarkers(const NaviDrawState &draw, float aspect) {
                     naviIcons[1].atlas->textureHandle, 1.0f - ComputeNaviAlphaLoss(0.5f), naviIcons[1].uv);
         }
     }
-
-
+    // The player dot lies outside the map scissor and blinks for six frames
+    // in each native 28-frame cycle.
     if (!task.trigger) {
         if (visible)
             (void)RequestNaviDrawUpdate();
@@ -652,9 +756,10 @@ void DrawNaviMarkers(const NaviDrawState &draw, float aspect) {
     if (naviIcons[1].atlas && task.animation <= 21)
         DrawNaviQuad(playerQuad, naviIcons[1].atlas->textureHandle, 1.0f - ComputeNaviAlphaLoss(0.5f), naviIcons[1].uv);
 }
+#endif
 
 } // namespace
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool DrawLegacySpritePacket(const LegacySpritePacket &packet, std::uint32_t texture, float depth) {
     const float u0 = packet.uv[(packet.quad.flags & 0x100U) ? 2 : 0];
     const float u1 = packet.uv[(packet.quad.flags & 0x100U) ? 0 : 2];
@@ -683,30 +788,40 @@ bool DrawLegacySpritePacket(const LegacySpritePacket &packet, std::uint32_t text
     SetLegacyFogMode(0);
     return drawn;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool SetDrawWithAlpha(const LegacySpritePacket &packet, std::int32_t textureIndex, float depth) {
     return DrawLegacySpritePacket(packet, ResolveNamedTextureHandle(textureIndex), depth);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool naviDraw(const LegacySpritePacket &packet, std::int32_t textureIndex, float depth) {
     if (!(packet.quad.flags & 0x1000U))
         depth = depth < 0.0f ? std::fmax(1.0f, -depth) : 1.0f / (depth + 100.0f);
     return SetDrawWithAlpha(packet, textureIndex, depth);
 }
+#endif
 
 namespace {
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviFrameCallback(void *data) {
     DrawNaviFrame(reinterpret_cast<std::uintptr_t>(data) != 0);
 }
-} // namespace
+#endif
 
+} // namespace
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 float ComputeNaviAlphaLoss(float order) {
     if (order >= 0.0f)
         return 1.0f / (order + 100.0f);
     return std::fmax(1.0f, -order);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void DrawNaviFrame(bool showFloorLabel) {
     const NaviDrawState &draw = naviDrawState;
     if (!naviTask || !draw.task || !mapTexture)
@@ -754,13 +869,17 @@ void DrawNaviFrame(bool showFloorLabel) {
     state.viewport = previousViewport;
     state.viewportDirtyMask |= 1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void QueueNaviFrameDraw(bool showFloorLabel) {
     if (!naviDrawState.task || !mapTexture)
         return;
     SetUpdateCallback(DrawNaviFrameCallback, reinterpret_cast<void *>(static_cast<std::uintptr_t>(showFloorLabel)), 900.0f);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void PrepareNaviFrame(void *taskData) {
     if (!taskData)
         return;
@@ -830,7 +949,9 @@ void PrepareNaviFrame(void *taskData) {
     if (NaviIsDisplayable(false))
         QueueNaviFrameDraw(NaviIsDisplayable(true));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateNaviInteraction(const LegacyInputSlot &input) {
     constexpr shen_name navigation = SHEN_NAME(BTNV);
     constexpr shen_name marking = SHEN_NAME(BTMK);
@@ -898,13 +1019,18 @@ void UpdateNaviInteraction(const LegacyInputSlot &input) {
         break;
     }
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void InitializeNaviInputState(NaviTaskData &task) {
     plymUpdatePlayerSearchLocation(&task.position);
     naviPhase = 0;
     triggerBlend = 0.0f;
     task.stream = static_cast<std::int32_t>(GetQronNextStream());
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void UpdateNaviInputAnimation(NaviTaskData &task, const LegacyInputSlot &input) {
     task.trigger = 0;
     if (input.held & 0x200)
@@ -912,7 +1038,9 @@ void UpdateNaviInputAnimation(NaviTaskData &task, const LegacyInputSlot &input) 
     if (++task.animation >= 28)
         task.animation = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool InitializeNaviResources(HLib::Task *task, std::int32_t configIndex) {
     // The previous map's task-owned resources are retired before the module
     // switch. This initializer only overwrites handles from the freed use space.
@@ -948,25 +1076,43 @@ bool InitializeNaviResources(HLib::Task *task, std::int32_t configIndex) {
     SelectNaviMapMarkers(g_currentMap);
     return loaded;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<const NaviAreaConfig> GetNaviAreaConfigs() noexcept {
     return areaConfigs;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<const NaviMapConfig> GetNaviMapConfigs() noexcept {
     return mapConfigs;
 }
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::span<const NaviFloorDefinition> GetNaviFloorDefinitions() noexcept {
     return floorDefinitions;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsNaviActive() noexcept {
+#else
 bool IsNaviActive() noexcept {
+#endif
     return static_cast<std::uint32_t>(naviPhase) - 2 <= 3;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsNaviTaskEnabled() noexcept {
     return naviTask && HLib::GetTaskParameter(naviTask) && (naviFlags & 0x20) != 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetNaviTaskEnabled(bool enabled) {
     if (!naviTask)
         return;
@@ -978,11 +1124,15 @@ void SetNaviTaskEnabled(bool enabled) {
         naviFlags &= ~0x20U;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsNaviDisplayOverridden() noexcept {
     return (naviFlags & 1) != 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool SetNaviDisplayOverride(bool enabled) noexcept {
     const bool previous = (naviFlags & 1) != 0;
     if (enabled)
@@ -991,11 +1141,15 @@ bool SetNaviDisplayOverride(bool enabled) noexcept {
         naviFlags &= ~1U;
     return previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetNaviInputPhase() noexcept {
     naviPhase = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ReleaseNaviResources() {
     naviTask = nullptr;
     naviDrawState = {};
@@ -1008,7 +1162,9 @@ void ReleaseNaviResources() {
         ReleaseTexture(texture);
     naviIcons = {};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t navGetNumEntriesFor(shen_name map) noexcept {
     for (const NaviAreaConfig &area : areaConfigs) {
         if (!area.map.name)
@@ -1018,7 +1174,9 @@ std::int32_t navGetNumEntriesFor(shen_name map) noexcept {
     }
     return -1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetNaviSavedData() noexcept {
     markers.fill(0);
     nextMarker = 0;
@@ -1027,7 +1185,9 @@ void ResetNaviSavedData() noexcept {
     trailSaveSource = nullptr;
     retainedTrailMap = {};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t LoadNaviMarkers(const std::uint32_t *source) noexcept {
     markerSaveSource = source;
     if (!source)
@@ -1036,13 +1196,17 @@ std::uint32_t LoadNaviMarkers(const std::uint32_t *source) noexcept {
     std::memcpy(markers.data(), source, sizeof(markers));
     return CompactMarkers();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t SaveNaviMarkers(std::uint32_t *destination) noexcept {
     const std::uint32_t count = CompactMarkers();
     std::memcpy(destination, markers.data(), sizeof(markers));
     return count;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t LoadNaviTrail(const NaviTrailStorage *source) noexcept {
     trailSaveSource = source;
     if (!source)
@@ -1050,12 +1214,16 @@ std::int32_t LoadNaviTrail(const NaviTrailStorage *source) noexcept {
     std::memcpy(&trailStorage, source, sizeof(trailStorage));
     return trailStorage.count;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t SaveNaviTrail(NaviTrailStorage *destination) noexcept {
     std::memcpy(destination, &trailStorage, sizeof(trailStorage));
     return trailStorage.count;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SelectNaviMapMarkers(shen_name map) noexcept {
     std::int32_t mapIndex = navGetNumEntriesFor(map);
     for (std::size_t index = 0; index < std::size(areaConfigs); ++index) {
@@ -1072,7 +1240,9 @@ void SelectNaviMapMarkers(shen_name map) noexcept {
             marker |= 1;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RemoveLatestNaviMarker() noexcept {
     std::int32_t last = -1;
     for (std::uint32_t index = 0; index < 128; ++index) {
@@ -1085,7 +1255,9 @@ void RemoveLatestNaviMarker() noexcept {
     markers[last] &= ~0xfU;
     CompactMarkers();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RemoveNaviMapMarkers() noexcept {
     for (std::uint32_t &marker : markers) {
         if ((marker & 1) && !(marker & 8))
@@ -1093,7 +1265,9 @@ void RemoveNaviMapMarkers() noexcept {
     }
     CompactMarkers();
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t navCreate(const Vector3 &position, std::int32_t type) {
     if (!naviTask)
         return -1;
@@ -1148,7 +1322,9 @@ std::int32_t navCreate(const Vector3 &position, std::int32_t type) {
         (static_cast<std::uint32_t>(x) << 16) | (static_cast<std::uint32_t>(z) << 24);
     return static_cast<std::int32_t>(nextMarker);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t navPlaceMarker(const Vector3 &position, std::int32_t type) {
     switch (type) {
     case 1:
@@ -1168,7 +1344,9 @@ std::int32_t navPlaceMarker(const Vector3 &position, std::int32_t type) {
         return navCreate(position, 0);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void AddNaviTrailLocations(std::span<const Vector3> locations) {
     if (!naviTask)
         return;
@@ -1183,5 +1361,8 @@ void AddNaviTrailLocations(std::span<const Vector3> locations) {
     }
     UploadTrailTexture();
 }
+#endif
 
-} // namespace shenmue::s2
+
+} // namespace s2
+} // namespace shenmue

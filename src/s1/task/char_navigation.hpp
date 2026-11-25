@@ -32,6 +32,7 @@ void PTTM_Allocate(Character *character);
 void PTTM_AssignSource(Character *character, Character *source, std::uint8_t mode);
 void PTTM_Stop(Character *character);
 
+
 struct Walk3DPathKey {
     Vector3 position;
     float radius;
@@ -125,17 +126,29 @@ struct Walk3DArc {
 struct Walk3DWork {
     std::uint32_t flags;
     std::int16_t index;
+#if SHENMUE_IS_DC
+    std::int16_t count;
+#else
     std::uint16_t count;
+#endif
     std::int32_t mode;
+#if SHENMUE_IS_DC
+    Walk3DEndMode pathEndMode;
+#else
     std::uint32_t pathEndMode;
+#endif
     std::int32_t yaw;
     std::int32_t pitch;
     float step;
+#if !SHENMUE_IS_DC
     std::uint32_t reserved1c;
+#endif
     Walk3DPathKey *path;
     Vector3 currentPosition;
     Walk3DArc arc;
+#if !SHENMUE_IS_DC
     std::uint32_t reserved7c;
+#endif
 };
 
 struct Walk3DSegment {
@@ -186,7 +199,9 @@ struct PartyWork {
     float averageSourceStep;
     float currentStep;
     std::int32_t followerYaw;
+#if !(SHENMUE_IS_DC && (SHENMUE_IS_DEMO || SHENMUE_IS_S1))
     std::uint32_t reserved54c;
+#endif
 };
 
 struct TimedPartyWork {

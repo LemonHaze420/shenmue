@@ -1,6 +1,21 @@
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/motion_registry_dc.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/file_loader_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/motion_stream_dc.hpp"
+#include "s2/motion_node_dc.hpp"
+#include "s2/model_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include <cstdio>
+#include <cstring>
 
+#define SHENMUE_MOTION_DATA(name) name
+#define SHENMUE_MOTION_NULL 0
+#define SHENMUE_MOTION_NAME(value) shenmue::shen_name(value)
+#else
 #include "s2/motion.hpp"
 
 #include <shendk/files/animation/motn_reader.h>
@@ -27,18 +42,152 @@
 #include <cstring>
 #include <limits>
 #include <stdexcept>
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::array<MotionRegistryEntry, 32> g_motionRegistry{};
+
 MotionRegistryEntry *g_motionData = nullptr;
+
 MotionRegistryEntry *g_battleMotionData = nullptr;
+
 std::byte *g_fallbackMotionTable = nullptr;
+
 std::array<std::int32_t *, 4> g_fallbackMotionSections{};
+
 std::int32_t g_motionBankCount = 0;
+
 std::uint32_t g_totalMotionCount = 0;
+
 std::byte *g_armMotionMemory = nullptr;
+
 std::byte *g_unfoSpace = nullptr;
+
+namespace {
+
+std::uint32_t unfoState = 0;
+
+std::array<MotnFile, 32> decodedMotionBanks;
+
+std::span<const MotnFile> authorMotionBanks;
+
+std::array<std::uint64_t, 32> motionBankSizes{};
+
+struct RetiredMotionRange {
+    std::uint16_t end;
+    std::uint16_t begin;
+};
+
+std::array<RetiredMotionRange, 32> retiredMotionRanges{};
+
+HLib::Task *motionRetirementTask{};
+
+struct MotionPropBank {
+    std::int32_t handle{-1};
+    std::uint32_t reserved{};
+    std::byte *data{};
+    MotionPropBank *previous{};
+    MotionPropBank *next{};
+};
+
+static_assert(sizeof(MotionPropBank) == 0x20);
+
+std::array<MotionPropBank, 6> motionPropBanks{{{0}}};
+
+std::array<std::vector<MT7Model>, 6> motionPropModels;
+
+#pragma pack(push, 2)
+
+struct MotionPropDescriptor {
+    std::uint16_t prop;
+    std::uint16_t bone;
+    std::byte reserved4[4];
+    std::uint16_t position[3];
+    std::int16_t rotation[3];
+    std::uint16_t windowCount;
+};
+
+#pragma pack(pop)
+
+static_assert(sizeof(MotionPropDescriptor) == 0x16);
+
+constexpr std::uint32_t kUnfoSlotCount = 16;
+
+constexpr std::uint32_t kUnfoSlotSize = 0xec;
+
+constexpr std::uint32_t kUnfoSize = kUnfoSlotCount * kUnfoSlotSize;
+
+#pragma pack(push, 4)
+
+struct MotionSnapshot {
+    std::int32_t slot;              // +0x00
+    shen_name character;            // +0x04
+    std::uint8_t requestedRootMode; // +0x08
+    std::byte reserved09[3];
+    std::uint16_t motionIds[5];         // +0x0c
+    std::uint16_t defaultStepFrames[5]; // +0x16
+    std::uint16_t regionFlags[5];       // +0x20
+    std::byte reserved2a[2];
+    std::uint32_t motionFlags;       // +0x2c
+    std::uint32_t sequenceFlags;     // +0x30
+    std::uint32_t environmentMotion; // +0x34
+    Vector3i entityRotation;         // +0x38
+    Vector3i worldRotation;          // +0x44
+    Vector3 rootPosition;            // +0x50
+    Vector3 worldPosition;           // +0x5c
+    float splitFrames[5];            // +0x68
+    float ticksTime[5];              // +0x7c
+    float maxTime[5];                // +0x90
+    float playbackSpeed[5];          // +0xa4
+    float constraintStepLimit[9];    // +0xb8
+    float projectionCotangents[3];   // +0xdc
+    std::uint32_t callbackFlags;     // +0xe8
+};
+
+#pragma pack(pop)
+
+static_assert(sizeof(MotionSnapshot) == kUnfoSlotSize);
+
+static_assert(offsetof(MotionSnapshot, motionFlags) == 0x2c);
+
+static_assert(offsetof(MotionSnapshot, rootPosition) == 0x50);
+
+static_assert(offsetof(MotionSnapshot, playbackSpeed) == 0xa4);
+
+static_assert(offsetof(MotionSnapshot, callbackFlags) == 0xe8);
+
+// PC v1.07 motnFuncWidths. The per-animation command stream starts at
+// metadata + 0x0c and terminates on opcode 0 or 8.
+constexpr std::uint8_t motnCommandWidths[] = {12, 4, 8, 16, 20, 12, 8, 4, 0, 16, 8, 12, 4, 4, 16, 8, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 4, 8, 8, 8, 0, 4, 4,
+    16, 8, 8, 8, 8, 4, 4, 4, 8, 8, 4, 8, 8, 4, 4, 8, 8, 8, 4, 8, 8, 8, 16, 12, 28, 4, 8, 8, 4, 8, 8, 8, 8, 8, 12, 8, 12, 8, 8, 4, 8, 8, 4, 4, 4, 4, 16, 8, 12,
+    8, 4, 8, 4, 4, 0};
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+std::int32_t ReadMotionPropsFromDirectory(std::int32_t act, shen_name map, const char *filename);
+void RetireMotionPropTrack(const void *track, std::uint32_t region);
+void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable);
+bool TickTimedNodeMotion(TimedNodeMotion &motion);
+std::span<const std::byte> FindLoadedMotionData(std::uint32_t runtimeId);
+std::int32_t ReadMotiFromDirectory(std::int32_t act, shen_name map, const char *filename);
+bool DeleteMotion(std::int32_t handle);
+
+namespace {
+
+bool DeleteMotionInternal(std::int32_t handle, bool releaseStorage);
+
+} // namespace
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 float DecodeMotnFloat(std::uint16_t raw) {
 #if 0
     if (!raw)
@@ -50,41 +199,11 @@ float DecodeMotnFloat(std::uint16_t raw) {
 #endif
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 namespace {
-
-std::uint32_t unfoState = 0;
-std::array<MotnFile, 32> decodedMotionBanks;
-std::span<const MotnFile> authorMotionBanks;
-std::array<std::uint64_t, 32> motionBankSizes{};
-struct RetiredMotionRange {
-    std::uint16_t end;
-    std::uint16_t begin;
-};
-std::array<RetiredMotionRange, 32> retiredMotionRanges{};
-HLib::Task *motionRetirementTask{};
-
-struct MotionPropBank {
-    std::int32_t handle{-1};
-    std::uint32_t reserved{};
-    std::byte *data{};
-    MotionPropBank *previous{};
-    MotionPropBank *next{};
-};
-static_assert(sizeof(MotionPropBank) == 0x20);
-std::array<MotionPropBank, 6> motionPropBanks{{{0}}};
-std::array<std::vector<MT7Model>, 6> motionPropModels;
-
-#pragma pack(push, 2)
-struct MotionPropDescriptor {
-    std::uint16_t prop;
-    std::uint16_t bone;
-    std::byte reserved4[4];
-    std::uint16_t position[3];
-    std::int16_t rotation[3];
-    std::uint16_t windowCount;
-};
-#pragma pack(pop)
-static_assert(sizeof(MotionPropDescriptor) == 0x16);
 
 void RetireMotionRange(std::uint16_t begin, std::uint16_t end) {
     if (!end || end < begin)
@@ -98,6 +217,14 @@ void RetireMotionRange(std::uint16_t begin, std::uint16_t end) {
     throw std::runtime_error("MOTF native retirement capacity exceeded");
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 // MotFileManage: every MOTF frame clears all 32 retired-range words, so a range retired by
 // DeleteMotionInternal only blocks its motion IDs until the next MOTF execution.
 // @verified - p
@@ -105,59 +232,64 @@ void MotFileManage() {
     retiredMotionRanges = {};
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 // MotFileManageTaskEntry_Callback: the MOTF task callback is a thunk to MotFileManage.
 // @verified - p
 void MotFileManageTaskEntry_Callback(void *) {
     MotFileManage();
 }
-constexpr std::uint32_t kUnfoSlotCount = 16;
-constexpr std::uint32_t kUnfoSlotSize = 0xec;
-constexpr std::uint32_t kUnfoSize = kUnfoSlotCount * kUnfoSlotSize;
 
-#pragma pack(push, 4)
-struct MotionSnapshot {
-    std::int32_t slot;
-    shen_name character;
-    std::uint8_t requestedRootMode;
-    std::byte reserved09[3];
-    std::uint16_t motionIds[5];
-    std::uint16_t defaultStepFrames[5];
-    std::uint16_t regionFlags[5];
-    std::byte reserved2a[2];
-    std::uint32_t motionFlags;
-    std::uint32_t sequenceFlags;
-    std::uint32_t environmentMotion;
-    Vector3i entityRotation;
-    Vector3i worldRotation;
-    Vector3 rootPosition;
-    Vector3 worldPosition;
-    float splitFrames[5];
-    float ticksTime[5];
-    float maxTime[5];
-    float playbackSpeed[5];
-    float constraintStepLimit[9];
-    float projectionCotangents[3];
-    std::uint32_t callbackFlags;
-};
-#pragma pack(pop)
-static_assert(sizeof(MotionSnapshot) == kUnfoSlotSize);
-static_assert(offsetof(MotionSnapshot, motionFlags) == 0x2c);
-static_assert(offsetof(MotionSnapshot, rootPosition) == 0x50);
-static_assert(offsetof(MotionSnapshot, playbackSpeed) == 0xa4);
-static_assert(offsetof(MotionSnapshot, callbackFlags) == 0xe8);
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 MotionSnapshot *GetMotionSnapshot(std::uint32_t slot) {
     return g_unfoSpace && slot < kUnfoSlotCount ? reinterpret_cast<MotionSnapshot *>(g_unfoSpace + slot * kUnfoSlotSize) : nullptr;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 Character *FindSnapshotCharacter(shen_name name) {
     const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 std::array<MotionRigClock *, 5> SnapshotClocks(MotionWork &work) {
     return {&work.rig.lowerBody.clock, &work.rig.chest.clock, &work.rig.head.clock, &work.rig.rightArm.clock, &work.rig.leftArm.clock};
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 void AllocateAndSetUNFOFlag() {
     g_unfoSpace = static_cast<std::byte *>(HLib::AllocateStaticOrDynamicBlock(kUnfoSize, SHEN_NAME(UNFO)));
@@ -166,6 +298,14 @@ void AllocateAndSetUNFOFlag() {
     }
     HLib::SetTaskDataMotionFlag(g_unfoSpace);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 std::uint32_t InitializeUNFO() {
     const std::uint32_t previousState = unfoState;
@@ -185,6 +325,14 @@ std::uint32_t InitializeUNFO() {
     return previousState;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 template <typename Value> bool ReadValue(const std::byte *data, std::uint64_t size, std::uint64_t offset, Value &value) {
     if (!data || offset > size || sizeof(Value) > size - offset) {
         return false;
@@ -192,6 +340,14 @@ template <typename Value> bool ReadValue(const std::byte *data, std::uint64_t si
     std::memcpy(&value, data + offset, sizeof(Value));
     return true;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 std::byte *ReadMotionFile(const char *directory, const char *name, shen_name allocationName, std::uint64_t &size) {
     if (!directory || !name)
@@ -215,8 +371,16 @@ std::byte *ReadMotionFile(const char *directory, const char *name, shen_name all
     return data;
 }
 
+} // namespace
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+// Native FileRead: the file takes a block from the heap tail, so a scene load's transient head allocations (COLD) do not
+// strand free space below it when the scene heap is partitioned.
 std::byte *ReadMiscFile(const char *name, shen_name allocationName, std::uint64_t &size) {
     char path[256]{};
     const int length = std::snprintf(path, sizeof(path), "/misc/%s", name);
@@ -236,10 +400,26 @@ std::byte *ReadMiscFile(const char *name, shen_name allocationName, std::uint64_
     return data;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 bool BindMotionHeader(MotionRegistryEntry &bank, std::uint64_t size) {
     return ReadValue(bank.data, size, 0x14, bank.firstMotion) && ReadValue(bank.data, size, 0x0c, bank.lastMotion) &&
         ReadValue(bank.data, size, 0x10, bank.motionCount);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 bool BindFallbackMotionTable(std::uint64_t size) {
     if (!g_fallbackMotionTable || size < 4 * sizeof(std::int32_t)) {
@@ -256,6 +436,14 @@ bool BindFallbackMotionTable(std::uint64_t size) {
     return true;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 template <typename Value> bool ReadSpanValue(std::span<const std::byte> bytes, std::size_t offset, Value &value) {
     if (offset > bytes.size() || sizeof(Value) > bytes.size() - offset) {
         return false;
@@ -264,11 +452,27 @@ template <typename Value> bool ReadSpanValue(std::span<const std::byte> bytes, s
     return true;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 std::uint16_t ReadMotionU16(const std::byte *source) {
     std::uint16_t value;
     std::memcpy(&value, source, sizeof(value));
     return value;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 template <class Visitor> void VisitMotionProps(const void *track, std::uint32_t region, Visitor &&visitor) {
     if (!track)
@@ -282,7 +486,15 @@ template <class Visitor> void VisitMotionProps(const void *track, std::uint32_t 
     }
 }
 
-MT7Model *FindMotionProp(std::uint16_t id, std::int32_t handle = -1) {
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+MT7Model *FindMotionProp(std::uint16_t id, std::int32_t handle) {
     if (!motionPropBanks[0].next)
         return nullptr;
     const auto searchBank = [id](MotionPropBank &bank) -> MT7Model * {
@@ -309,6 +521,14 @@ MT7Model *FindMotionProp(std::uint16_t id, std::int32_t handle = -1) {
     return nullptr;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 void RetireMotionBankTracks(const std::byte *data, std::uint64_t size) {
     struct Allocation {
         std::uintptr_t begin;
@@ -317,7 +537,13 @@ void RetireMotionBankTracks(const std::byte *data, std::uint64_t size) {
     ForEachLiveCharacterInMapOrder(
         [](Character *character, void *opaque) {
             const auto &allocation = *static_cast<const Allocation *>(opaque);
-            MotionWork *const work = FindMotionWork(character);
+            MotionWork *const work =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(character);
             if (!work)
                 return;
             auto owns = [&](const void *pointer) { return pointer && reinterpret_cast<std::uintptr_t>(pointer) - allocation.begin < allocation.size; };
@@ -338,6 +564,14 @@ void RetireMotionBankTracks(const std::byte *data, std::uint64_t size) {
     while (d3t::ProcessObjectStore(true, -1)) {
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 std::int32_t SampleTimedNode(const std::byte *data, MT7Node *node, std::int32_t frame, float fraction, std::int32_t index) {
     if (index >= static_cast<std::int16_t>(ReadMotionU16(data + 8)))
@@ -386,10 +620,27 @@ std::int32_t SampleTimedNode(const std::byte *data, MT7Node *node, std::int32_t 
         return SampleTimedNode(data, mtGetSibling(node), frame, fraction, next);
     return next;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 void SampleTimedNodes(TimedNodeMotion &motion, std::int32_t frame, float fraction) {
     if (!motion.model->nodes.empty())
         SampleTimedNode(motion.data, motion.model->nodes.data(), frame, fraction, 0);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 bool ReadMotnTuple(std::span<const std::byte> bytes, std::size_t &cursor, float &value, float &leftSlope, float &rightSlope) {
 #if 0
@@ -426,15 +677,25 @@ bool ReadMotnTuple(std::span<const std::byte> bytes, std::size_t &cursor, float 
 #endif
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 bool IsMotnNameCharacter(std::uint8_t value) {
     return value == '.' || value == '_' || (value >= '0' && value <= '9') || (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z');
 }
 
+} // namespace
 
+#endif
 
-constexpr std::uint8_t motnCommandWidths[] = {12, 4, 8, 16, 20, 12, 8, 4, 0, 16, 8, 12, 4, 4, 16, 8, 4, 8, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8, 4, 8, 8, 8, 0, 4, 4,
-    16, 8, 8, 8, 8, 4, 4, 4, 8, 8, 4, 8, 8, 4, 4, 8, 8, 8, 4, 8, 8, 8, 16, 12, 28, 4, 8, 8, 4, 8, 8, 8, 8, 8, 12, 8, 12, 8, 8, 4, 8, 8, 4, 4, 4, 4, 16, 8, 12,
-    8, 4, 8, 4, 4, 0};
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
 
 bool ReadMotnTimedCommands(std::span<const std::byte> bytes, std::size_t cursor, MotnSequence &sequence) {
     for (;;) {
@@ -484,6 +745,14 @@ bool ReadMotnTimedCommands(std::span<const std::byte> bytes, std::size_t cursor,
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 bool ReadMotnPlaybackCommands(std::span<const std::byte> bytes, std::int32_t metadataOffset, MotnSequence &sequence) {
     if (!metadataOffset)
         return true;
@@ -523,6 +792,14 @@ bool ReadMotnPlaybackCommands(std::span<const std::byte> bytes, std::int32_t met
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
 std::span<const std::byte> FindMotionBankPayload(std::uint32_t runtimeId, bool metadata) {
     for (const MotionRegistryEntry *bank = g_motionData; bank; bank = bank->next) {
         if (runtimeId <= bank->firstMotion || runtimeId >= bank->lastMotion)
@@ -546,8 +823,8 @@ std::span<const std::byte> FindMotionBankPayload(std::uint32_t runtimeId, bool m
         const bool emptyMetadata = metadata && payload.empty();
 #endif
         if (emptyMetadata) {
-
-
+            // Retail motnGetAnimOfId returns its zero-initialized 0x28-byte
+            // BSS record for an empty metadata table slot.
             static constexpr std::byte emptyMotionMetadata[0x28]{};
             return emptyMotionMetadata;
         }
@@ -562,11 +839,16 @@ std::span<const std::byte> FindMotionBankPayload(std::uint32_t runtimeId, bool m
     }
     return {};
 }
+
 } // namespace
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
-
+// MotionPropFBX: links a MOTP prop bank (a count, then {prop id, model offset} pairs) after the
+// chain tail in the first free of the five loadable slots and reads each prop model. The
+// handle is the tail's handle plus one; the native link writes precede the new record's fields.
 // @verified - p
 std::int32_t MotionPropFBX(std::span<const std::byte> motp) {
     if (motp.empty())
@@ -606,6 +888,10 @@ std::int32_t MotionPropFBX(std::span<const std::byte> motp) {
     return bank.handle;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::int32_t LoadMotionProps(const char *directory, const char *filename, shen_name allocationName) {
     std::uint64_t size{};
     std::byte *const data = ReadMotionFile(directory, filename, allocationName, size);
@@ -616,6 +902,10 @@ std::int32_t LoadMotionProps(const char *directory, const char *filename, shen_n
         HLib::FreeTaskData(data);
     return handle;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 bool DeleteMotionProps(std::int32_t handle) {
     if (handle < 1)
@@ -638,7 +928,11 @@ bool DeleteMotionProps(std::int32_t handle) {
     return true;
 }
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// Native MOTPParser: PACK's MOTP retirement unlinks a package-owned bank without freeing its storage.
 // @verified - p
 bool MOTPParser(std::int32_t handle) {
     if (handle < 1)
@@ -663,12 +957,539 @@ bool MOTPParser(std::int32_t handle) {
     return true;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void DrawMotionParts(Character *character, MotionWork *work);
+std::uint32_t ReadMoti(const char *directory, const char *filename);
+std::int32_t ReadMotiFromDirectory(std::int32_t act, shen_name map, const char *filename);
+std::int32_t ReadMotionPropsFromDirectory(std::int32_t act, shen_name map, const char *filename);
+std::uint32_t DeleteMotion(std::int32_t handle);
+#else
+float DecodeMotnFloat(std::uint16_t raw);
+std::int32_t MotionPropFBX(std::span<const std::byte> motp);
+std::int32_t LoadMotionProps(const char *directory, const char *filename, shen_name allocationName);
+bool DeleteMotionProps(std::int32_t handle);
+bool MOTPParser(std::int32_t handle);
+void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable);
+void TMNT_Callback(Character *character, void *payload);
+bool AllocateTMNM(Character *character);
+void InitializeTimedNodeMotion(TimedNodeMotion &motion, MT7Model *model, std::uint16_t id);
+std::uintptr_t ConfigureScenarioNodeMotion(shen_name name, std::int32_t motionId, float begin, float end, float frame, float speed, std::int32_t flags);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsScenarioNodeMotionFinished(shen_name name);
+#else
+bool IsScenarioNodeMotionFinished(shen_name name);
+#endif
+TimedNodeMotion *StopScenarioNodeMotion(shen_name name);
+void CopyScenarioNodeMotionTimes(shen_name name, float *begin, float *end, float *frame, float *speed);
+void ApplyNodeMotionFrame(MT7Model &model, std::span<const std::byte> data, float frame);
+void ClampTimedNodeMotionFrame(TimedNodeMotion &motion, const std::byte *data);
+bool TickTimedNodeMotion(TimedNodeMotion &motion);
+bool ReadMotnFile(std::span<const std::byte> bytes, MotnFile &file);
+const MotnSequence *FindMotnSequence(const MotnFile &file, std::uint32_t runtimeId);
+const MotnSequence *FindLoadedMotionSequence(std::uint32_t runtimeId);
+std::span<const std::byte> FindLoadedMotionData(std::uint32_t runtimeId);
+std::span<const std::byte> FindLoadedMotionMetadata(std::uint32_t runtimeId);
+std::span<const std::byte> FindLoadedMotionSecondaryEntry(std::uint32_t runtimeId, std::uint8_t requestedOpcode);
+std::span<const std::byte> FindLoadedMotionTimedCommand(
+    std::uint32_t runtimeId, std::uint8_t requestedOpcode, float beginFrame, float endFrame, std::uint32_t match);
+std::int32_t CaptureMotionSnapshot(shen_name name);
+bool RestoreMotionSnapshot(shen_name name, std::uint32_t slot);
+bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot);
+bool ReleaseMotionSnapshot(std::uint32_t slot);
+std::int32_t LoadMoti(std::span<const std::byte> bytes);
+std::int32_t LoadMOTNPCTable(const char *directory, const char *filename);
+std::int32_t ReadMotiFromDirectory(std::int32_t act, shen_name map, const char *filename);
+std::uint32_t GetMotionFrameCount(std::uint16_t animation);
+std::int32_t ReadMotionPropsFromDirectory(std::int32_t act, shen_name map, const char *filename);
+void RegisterMotionPropTrack(const void *track, std::uint32_t region);
+void RetireMotionPropTrack(const void *track, std::uint32_t region);
+void ReleaseMotionPropTracks(const MotionWork &work);
+bool DeleteMotion(std::int32_t handle);
+bool DeleteBorrowedMotion(std::int32_t handle);
+void RegisterAuthorMotionBanks(std::span<const MotnFile> banks);
+bool IsRetiredMotionId(std::uint16_t motionId);
+void QueueMotionRetirementTask(std::uint8_t nextFunctionIndex);
+void FreeMotionRetirementTask();
+float SampleMotnScalar(const MotnScalarChannel &channel, float time);
+void SampleMotnScalarPVA(const MotnScalarChannel &channel, float time, float &value, float &incomingHalfTangent, float &outgoingHalfTangent, bool linear);
+std::int64_t AllocateMotionBanks();
+void AllocateARMM();
+std::byte *AllocateAndLoadMOTFiles();
+
+namespace {
+
+void RetireMotionRange(std::uint16_t begin, std::uint16_t end);
+void MotFileManage();
+void MotFileManageTaskEntry_Callback(void *);
+MotionSnapshot *GetMotionSnapshot(std::uint32_t slot);
+Character *FindSnapshotCharacter(shen_name name);
+std::array<MotionRigClock *, 5> SnapshotClocks(MotionWork &work);
+void AllocateAndSetUNFOFlag();
+std::uint32_t InitializeUNFO();
+template <typename Value> bool ReadValue(const std::byte *data, std::uint64_t size, std::uint64_t offset, Value &value);
+std::byte *ReadMotionFile(const char *directory, const char *name, shen_name allocationName, std::uint64_t &size);
+std::byte *ReadMiscFile(const char *name, shen_name allocationName, std::uint64_t &size);
+bool BindMotionHeader(MotionRegistryEntry &bank, std::uint64_t size);
+bool BindFallbackMotionTable(std::uint64_t size);
+template <typename Value> bool ReadSpanValue(std::span<const std::byte> bytes, std::size_t offset, Value &value);
+std::uint16_t ReadMotionU16(const std::byte *source);
+template <class Visitor> void VisitMotionProps(const void *track, std::uint32_t region, Visitor &&visitor);
+MT7Model *FindMotionProp(std::uint16_t id, std::int32_t handle = -1);
+void RetireMotionBankTracks(const std::byte *data, std::uint64_t size);
+std::int32_t SampleTimedNode(const std::byte *data, MT7Node *node, std::int32_t frame, float fraction, std::int32_t index);
+void SampleTimedNodes(TimedNodeMotion &motion, std::int32_t frame, float fraction);
+bool ReadMotnTuple(std::span<const std::byte> bytes, std::size_t &cursor, float &value, float &leftSlope, float &rightSlope);
+bool IsMotnNameCharacter(std::uint8_t value);
+bool ReadMotnTimedCommands(std::span<const std::byte> bytes, std::size_t cursor, MotnSequence &sequence);
+bool ReadMotnPlaybackCommands(std::span<const std::byte> bytes, std::int32_t metadataOffset, MotnSequence &sequence);
+std::span<const std::byte> FindMotionBankPayload(std::uint32_t runtimeId, bool metadata);
+std::uint32_t RestoreMotionWorkConfiguration(MotionWork &work, const MotionSnapshot &snapshot);
+bool DeleteMotionInternal(std::int32_t handle, bool releaseStorage);
+
+} // namespace
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ReadMotiFromDirectory(std::int32_t act, shen_name map, const char *filename) {
+    char directory[64];
+    std::sprintf(directory, "scene/%02d/%c%c%c%c", act, static_cast<std::int8_t>(map), static_cast<std::int8_t>(map >> 8),
+        static_cast<std::int8_t>(static_cast<std::int32_t>(map << 8) >> 24), static_cast<std::int8_t>(static_cast<std::int32_t>(map) >> 24));
+    return static_cast<std::int32_t>(RegisterMotionBank(shenLoadFile(directory, filename, MOTION_FILE_STORAGE)));
+}
+
+#else
+
+std::int32_t ReadMotiFromDirectory(std::int32_t act, shen_name map, const char *filename) {
+    char directory[64]{};
+    const int length =
+        std::snprintf(directory, sizeof(directory), "scene/%02d/%c%c%c%c", act, map.characters[0], map.characters[1], map.characters[2], map.characters[3]);
+    if (length < 0 || static_cast<std::size_t>(length) >= sizeof(directory))
+        return -1;
+    return LoadMOTNPCTable(directory, filename);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// @verified - p
+std::uint32_t GetMotionFrameCount(std::uint16_t animation) {
+    if (animation == 0)
+        return 0;
+    const std::span<const std::byte> data = FindLoadedMotionData(animation);
+    return data.empty() ? 0U : ReadMotionU16(data.data() + 4);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+bool DeleteMotionInternal(std::int32_t handle, bool releaseStorage) {
+    if (g_motionBankCount <= 0 || handle < g_motionBankCount)
+        return false;
+    MotionRegistryEntry *bank = &g_motionRegistry[g_motionBankCount - 1];
+    while (bank && bank->motionId != handle)
+        bank = bank->next;
+    if (!bank)
+        return false;
+    const std::size_t index = static_cast<std::size_t>(bank - g_motionRegistry.data());
+    RetireMotionBankTracks(bank->data, motionBankSizes[index]);
+    std::memset(bank->data, 0, bank->motionCount);
+    if (releaseStorage)
+        HLib::FreeTaskData(bank->data);
+    if (bank->next)
+        bank->next->previous = bank->previous;
+    if (bank->previous)
+        bank->previous->next = bank->next;
+    g_totalMotionCount -= bank->motionCount;
+    RetireMotionRange(bank->firstMotion, bank->lastMotion);
+    decodedMotionBanks[index] = {};
+    motionBankSizes[index] = 0;
+    *bank = {};
+    bank->motionId = -1;
+    return true;
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t ReadMoti(const char *directory, const char *filename) {
+    return RegisterMotionBank(ReadFile(directory, filename, MOTION_FILE_STORAGE));
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::uint32_t DeleteMotion(std::int32_t handle) {
+    if (static_cast<std::uint8_t>(g_motionBankCount) > handle)
+        return 0;
+    MotionRegistryEntry *bank = &SHENMUE_MOTION_DATA(g_motionRegistry)[static_cast<std::uint8_t>(g_motionBankCount) - 1];
+    while (bank->handle != static_cast<std::uint32_t>(handle)) {
+        if (!bank->next)
+            return 0;
+        bank = bank->next;
+    }
+    std::memset(bank->data, 0, bank->dataSize);
+    FreeMotionFileData(bank->data);
+    if (bank->next)
+        bank->next->previous = bank->previous;
+    if (bank->previous)
+        bank->previous->next = bank->next;
+    g_registeredMotionBytes -= bank->dataSize;
+    RetiredMotionRange *range = SHENMUE_MOTION_DATA(g_retiredMotionRanges);
+    while (range->endAnimation)
+        ++range;
+    range->endAnimation = bank->endAnimation;
+    range->firstAnimation = bank->firstAnimation;
+    ResetMotionBankEntry(bank);
+    return 1;
+}
+
+#else
+
+bool DeleteMotion(std::int32_t handle) {
+    return DeleteMotionInternal(handle, true);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+bool DeleteBorrowedMotion(std::int32_t handle) {
+    return DeleteMotionInternal(handle, false);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void RegisterAuthorMotionBanks(std::span<const MotnFile> banks) {
+    for (const MotnFile &previous : authorMotionBanks) {
+        bool retained = false;
+        for (const MotnFile &current : banks) {
+            if (&previous == &current) {
+                retained = true;
+                break;
+            }
+        }
+        if (retained || previous.sequences.empty())
+            continue;
+        std::uint32_t last = 0;
+        for (const MotnSequence &sequence : previous.sequences) {
+            last = std::max(last, sequence.index + 1);
+            ForEachLiveCharacterInMapOrder(
+                [](Character *character, void *opaque) {
+                    const auto &sequence = *static_cast<const MotnSequence *>(opaque);
+                    MotionWork *const work =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(character);
+                    if (!work)
+                        return;
+                    for (std::uint32_t region = 0; region < 5; ++region) {
+                        for (void **track : {&work->runtime.regionTrack[region], &work->runtime.previousRegionTrack[region]}) {
+                            if (!*track || *track != sequence.regionTrack)
+                                continue;
+                            RetireMotionPropTrack(*track, region);
+                            *track = nullptr;
+                        }
+                    }
+                    if (work->runtime.rightArmTrack == sequence.armTrack)
+                        work->runtime.rightArmTrack = nullptr;
+                    if (work->runtime.leftArmTrack == sequence.armTrack)
+                        work->runtime.leftArmTrack = nullptr;
+                },
+                const_cast<MotnSequence *>(&sequence));
+        }
+        const std::uint32_t base = previous.animationIdEnd > previous.animationIdBase + 1 ? previous.animationIdBase : 0;
+        RetireMotionRange(static_cast<std::uint16_t>(base + 1), static_cast<std::uint16_t>(base + last));
+    }
+    while (d3t::ProcessObjectStore(true, -1)) {
+    }
+    authorMotionBanks = banks;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+bool IsRetiredMotionId(std::uint16_t motionId) {
+    for (const RetiredMotionRange &range : retiredMotionRanges) {
+        if (!range.end)
+            break;
+        if (motionId >= range.begin && motionId <= range.end)
+            return true;
+    }
+    return false;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// Queue_mot_Callback_MotFileManageTaskEntry.
+// @verified - p
+void QueueMotionRetirementTask(std::uint8_t nextFunctionIndex) {
+    motionRetirementTask = HLib::EnqueueTaskWithParameter(MotFileManageTaskEntry_Callback, nextFunctionIndex, 2, 4, SHEN_NAME(MOTF));
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void FreeMotionRetirementTask() {
+    retiredMotionRanges = {};
+    if (!motionRetirementTask)
+        return;
+    HLib::DestroyTask(motionRetirementTask);
+    motionRetirementTask = nullptr;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+float SampleMotnScalar(const MotnScalarChannel &channel, float time) {
+    if (channel.keys.empty())
+        return 0.0f;
+    const float frame = time * 30.0f;
+    if (frame <= channel.keys.front().frame)
+        return channel.keys.front().value;
+    const MotnKey *left = &channel.keys.front();
+    for (std::size_t index = 1; index < channel.keys.size(); ++index) {
+        const MotnKey &right = channel.keys[index];
+        if (frame >= right.frame) {
+            left = &right;
+            continue;
+        }
+        const float spanFrames = static_cast<float>(right.frame - left->frame);
+        if (std::fabs(spanFrames) <= 0.000001f)
+            return right.value;
+        const float elapsedSeconds = (frame - left->frame) / 30.0f;
+        const float spanSeconds = spanFrames / 30.0f;
+        const float amount = elapsedSeconds / spanSeconds;
+        const float square = amount * amount;
+        const float cube = square * amount;
+        return (2.0f * cube - 3.0f * square + 1.0f) * left->value + (-2.0f * cube + 3.0f * square) * right.value +
+            (cube - 2.0f * square + amount) * spanSeconds * left->rightSlope + (cube - square) * spanSeconds * right.leftSlope;
+    }
+    return channel.keys.back().value;
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void SampleMotnScalarPVA(const MotnScalarChannel &channel, float time, float &value, float &incomingHalfTangent, float &outgoingHalfTangent, bool linear) {
+    value = 0.0f;
+    incomingHalfTangent = 0.0f;
+    outgoingHalfTangent = 0.0f;
+    if (channel.keys.empty())
+        return;
+    const MotnKey *left = &channel.keys.front();
+    value = left->value;
+    float leftTime = static_cast<float>(left->frame) * 0.033333335f;
+    if (time < leftTime)
+        return;
+    for (std::size_t index = 1; index < channel.keys.size(); ++index) {
+        const MotnKey &right = channel.keys[index];
+        const float rightTime = static_cast<float>(right.frame) * 0.033333335f;
+        if (time == rightTime) {
+            value = right.value;
+            incomingHalfTangent = right.leftSlope * 0.5f;
+            outgoingHalfTangent = right.rightSlope * 0.5f;
+            return;
+        }
+        if (time > rightTime) {
+            left = &right;
+            leftTime = rightTime;
+            value = right.value;
+            continue;
+        }
+
+        const float inverseDuration = 1.0f / (rightTime - leftTime);
+        const float elapsed = time - leftTime;
+        float tangent{};
+        if (linear) {
+            const float slope = (right.value - left->value) * inverseDuration;
+            value = elapsed * slope + left->value;
+            tangent = slope * 0.5f;
+        } else {
+            const float inverseSquare = inverseDuration * inverseDuration;
+            const float square = elapsed * elapsed;
+            const float cubeTerm = (square * elapsed) * inverseSquare;
+            const float tripleSquare = (square * 3.0f) * inverseSquare;
+            const float sixSquare = ((square * 6.0f) * inverseSquare) * inverseDuration;
+            const float sixElapsed = (elapsed * 6.0f) * inverseSquare;
+            const float twiceElapsed = (elapsed + elapsed) * inverseDuration;
+            tangent = (((sixElapsed - sixSquare) * right.value + (sixSquare - sixElapsed) * left->value) +
+                          ((tripleSquare - twiceElapsed - twiceElapsed) + 1.0f) * left->rightSlope + (tripleSquare - twiceElapsed) * right.leftSlope) *
+                0.5f;
+            const float twiceCube = (cubeTerm + cubeTerm) * inverseDuration;
+            const float squareTerm = square * inverseDuration;
+            value = ((twiceCube - tripleSquare + 1.0f) * left->value + (tripleSquare - twiceCube) * right.value) +
+                ((cubeTerm - squareTerm - squareTerm) + elapsed) * left->rightSlope + (cubeTerm - squareTerm) * right.leftSlope;
+        }
+        incomingHalfTangent = tangent;
+        outgoingHalfTangent = tangent;
+        return;
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// AllocateMotionBanks: CTRL's map entry drops every bank above the resident MOTION/BATTLE
+// banks and the five loadable prop banks, clears the retired ranges, re-enables the
+// environment gate, recounts the resident motions and resets the search-hand owner.
+// @verified - p
+std::int64_t AllocateMotionBanks() {
+    InitializeUNFO();
+    const std::int32_t resident = g_motionBankCount;
+    for (std::size_t index = static_cast<std::size_t>(resident); index < g_motionRegistry.size(); ++index) {
+        MotionRegistryEntry &bank = g_motionRegistry[index];
+        bank.motionId = -1;
+        bank.data = nullptr;
+        bank.firstMotion = 0;
+        bank.lastMotion = 0;
+        bank.previous = nullptr;
+        bank.next = nullptr;
+        bank.motionCount = 0;
+        decodedMotionBanks[index] = {};
+        motionBankSizes[index] = 0;
+    }
+    for (std::size_t slot = 1; slot < motionPropBanks.size(); ++slot) {
+        MotionPropBank &bank = motionPropBanks[slot];
+        bank.handle = -1;
+        bank.data = nullptr;
+        bank.previous = nullptr;
+        bank.next = nullptr;
+        for (MT7Model &model : motionPropModels[slot])
+            ReleaseModelFormat7(model);
+        motionPropModels[slot].clear();
+    }
+    retiredMotionRanges = {};
+    g_usingEnv = 1;
+    g_totalMotionCount = 0;
+    g_motionRegistry[static_cast<std::size_t>(resident - 1)].next = nullptr;
+    for (const MotionRegistryEntry *bank = g_motionData; bank; bank = bank->next)
+        g_totalMotionCount += bank->motionCount;
+    ResetSearchHandState();
+    return mtwkSetOverridesEnabled(1);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+void AllocateARMM() {
+    g_armMotionMemory = static_cast<std::byte *>(HLib::AllocateStaticOrDynamicBlock(0x8800, SHEN_NAME(ARMM)));
+    HLib::SetTaskDataMotionFlag(g_armMotionMemory);
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+std::byte *AllocateAndLoadMOTFiles() {
+    while (motionPropBanks[0].next)
+        DeleteMotionProps(motionPropBanks[0].next->handle);
+    AllocateAndSetUNFOFlag();
+    InitializeUNFO();
+
+    for (MotionRegistryEntry &entry : g_motionRegistry) {
+        entry = {};
+        entry.motionId = -1;
+    }
+    motionBankSizes = {};
+    decodedMotionBanks = {};
+    g_motionData = &g_motionRegistry[0];
+    g_motionData->motionId = 0;
+    g_battleMotionData = &g_motionRegistry[1];
+    g_fallbackMotionTable = nullptr;
+    g_fallbackMotionSections = {};
+    g_motionBankCount = 0;
+    g_totalMotionCount = 0;
+    authorMotionBanks = {};
+    retiredMotionRanges = {};
+
+    std::uint64_t mainSize = 0;
+    g_motionData->data = ReadMiscFile("MOTION.MOT", SHEN_NAME(MOTI), mainSize);
+    motionBankSizes[0] = mainSize;
+    if (!g_motionData->data || !BindMotionHeader(*g_motionData, mainSize)) {
+        return nullptr;
+    }
+    if (!ReadMotnFile(std::span<const std::byte>{g_motionData->data, static_cast<std::size_t>(mainSize)}, decodedMotionBanks[0])) {
+        return nullptr;
+    }
+    g_totalMotionCount = g_motionData->motionCount;
+
+    std::uint64_t battleSize = 0;
+    g_battleMotionData->data = ReadMiscFile("BATTLE.MOT", SHEN_NAME(MOTI), battleSize);
+    motionBankSizes[1] = battleSize;
+
+    std::uint64_t fallbackSize = 0;
+    g_fallbackMotionTable = ReadMiscFile("FBMOTTBL.BIN", SHEN_NAME(FBMT), fallbackSize);
+    if (!g_fallbackMotionTable || !BindFallbackMotionTable(fallbackSize)) {
+        return nullptr;
+    }
+
+    if (!g_battleMotionData->data || !BindMotionHeader(*g_battleMotionData, battleSize)) {
+        g_motionBankCount = 1;
+        return g_fallbackMotionTable;
+    }
+
+    g_motionBankCount = 2;
+    g_motionData->next = g_battleMotionData;
+    g_battleMotionData->motionId = g_motionData->motionId + 1;
+    g_battleMotionData->previous = g_motionData;
+    if (!ReadMotnFile({g_battleMotionData->data, static_cast<std::size_t>(battleSize)}, decodedMotionBanks[1])) {
+        decodedMotionBanks[1] = {};
+    }
+    g_totalMotionCount += g_battleMotionData->motionCount;
+    return g_fallbackMotionTable;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+std::int32_t ReadMotionPropsFromDirectory(std::int32_t act, shen_name map, const char *filename) {
+    char directory[64];
+    std::sprintf(directory, "scene/%02d/%c%c%c%c", act, static_cast<std::int8_t>(map), static_cast<std::int8_t>(map >> 8),
+        static_cast<std::int8_t>(static_cast<std::int32_t>(map << 8) >> 24), static_cast<std::int8_t>(static_cast<std::int32_t>(map) >> 24));
+    return static_cast<std::int32_t>(RegisterMotionPropBank(shenLoadFile(directory, filename, MOTION_FILE_STORAGE)));
+}
+
+#else
+
 // @verified - p
 std::int32_t ReadMotionPropsFromDirectory(std::int32_t act, shen_name map, const char *filename) {
     char directory[64];
     std::snprintf(directory, sizeof(directory), "scene/%02d/%c%c%c%c", act, map.characters[0], map.characters[1], map.characters[2], map.characters[3]);
     return LoadMotionProps(directory, filename, SHEN_NAME(MOTI));
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 void RegisterMotionPropTrack(const void *track, std::uint32_t region) {
     VisitMotionProps(track, region, [](const MotionPropDescriptor &descriptor) {
@@ -677,9 +1498,17 @@ void RegisterMotionPropTrack(const void *track, std::uint32_t region) {
     });
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void RetireMotionPropTrack(const void *track, std::uint32_t region) {
     VisitMotionProps(track, region, [](const MotionPropDescriptor &descriptor) { d3t::RetireObjectPlacement(&descriptor); });
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 void ReleaseMotionPropTracks(const MotionWork &work) {
     for (std::uint32_t region = 0; region < 5; ++region) {
@@ -687,6 +1516,108 @@ void ReleaseMotionPropTracks(const MotionWork &work) {
         RetireMotionPropTrack(work.runtime.previousRegionTrack[region], region);
     }
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void DrawMotionParts(Character *character, MotionWork *work) {
+    const std::uint16_t *track;
+    std::int32_t region, entry, count, window;
+    const MotionPropDescriptor *descriptor;
+    std::uint16_t bone;
+    const std::uint16_t *windows;
+    float time, alpha;
+    const Matrix4x4 *matrix;
+    MT7Node *model;
+    const float opacity = character->alpha;
+    for (region = 0; region < 5; ++region) {
+        if (work->regionFlags[region] & 0x40U)
+            continue;
+        if (work->regionTrack[region]) {
+            track = work->regionTrack[region];
+            count = track[0];
+            for (entry = 0; entry < count; ++entry) {
+                descriptor = reinterpret_cast<const MotionPropDescriptor *>(reinterpret_cast<const std::byte *>(track) + track[entry + 1]);
+                if ((descriptor->bone & 0xffU) == 44)
+                    continue;
+                bone = descriptor->bone;
+                if (static_cast<std::uint16_t>(region) != (bone >> 8))
+                    continue;
+                windows = reinterpret_cast<const std::uint16_t *>(descriptor + 1);
+                for (window = 0; window < static_cast<std::int32_t>(descriptor->windowCount) - 1; ++window) {
+                    if (!(windows[window] & 0x8000U))
+                        continue;
+                    if (work->regionFlags[region] & 0x10U) {
+                        alpha = mtwkGetFrame(work, static_cast<MotionRegion>(region)) / static_cast<float>(work->blendTotalFrames[region]);
+                        time = 0.0f > work->layerSampleFrame[region] ? 0.0f : work->layerSampleFrame[region];
+                    } else {
+                        time = mtwkGetFrame(work, static_cast<MotionRegion>(region));
+                        alpha = 1.0f;
+                    }
+                    if (window && static_cast<float>(windows[window] & 0x7fffU) > time)
+                        break;
+                    if (time > static_cast<float>(windows[window + 1] & 0x7fffU))
+                        continue;
+                    matrix = mtwkGetBoneTransform(work, bone & 0xffU);
+                    model = FindMotionProp(descriptor->prop, -1);
+                    if (!matrix || !model)
+                        continue;
+                    matrix_stack::Matrix4x4_Push(0);
+                    Matrix4x4::MultiplyWithPrePassMatrix(matrix);
+                    model->position.x = motion_detail::F16ToF32(static_cast<std::int16_t>(descriptor->position[0]));
+                    model->position.y = motion_detail::F16ToF32(static_cast<std::int16_t>(descriptor->position[1]));
+                    model->position.z = motion_detail::F16ToF32(static_cast<std::int16_t>(descriptor->position[2]));
+                    model->rotation.x = descriptor->rotation[0];
+                    model->rotation.y = descriptor->rotation[1];
+                    model->rotation.z = descriptor->rotation[2];
+                    charaPrepareNodesForDraw(model, opacity * alpha);
+                    PopCurrentMatrix(1);
+                }
+            }
+        }
+        if (work->previousRegionTrack[region] && (work->regionFlags[region] & 0x10U)) {
+            track = work->previousRegionTrack[region];
+            count = track[0];
+            for (entry = 0; entry < count; ++entry) {
+                descriptor = reinterpret_cast<const MotionPropDescriptor *>(reinterpret_cast<const std::byte *>(track) + track[entry + 1]);
+                if ((descriptor->bone & 0xffU) == 44)
+                    continue;
+                bone = descriptor->bone;
+                if (static_cast<std::uint16_t>(region) != (bone >> 8))
+                    continue;
+                windows = reinterpret_cast<const std::uint16_t *>(descriptor + 1);
+                for (window = 0; window < static_cast<std::int32_t>(descriptor->windowCount) - 1; ++window) {
+                    if (!(windows[window] & 0x8000U))
+                        continue;
+                    alpha = 1.0f - mtwkGetFrame(work, static_cast<MotionRegion>(region)) / static_cast<float>(work->blendTotalFrames[region]);
+                    time = work->previousLayerSampleFrame[region];
+                    if (window && static_cast<float>(windows[window] & 0x7fffU) > time)
+                        break;
+                    if (time > static_cast<float>(windows[window + 1] & 0x7fffU))
+                        continue;
+                    matrix = mtwkGetBoneTransform(work, bone & 0xffU);
+                    model = FindMotionProp(descriptor->prop, -1);
+                    if (!matrix || !model)
+                        continue;
+                    matrix_stack::Matrix4x4_Push(0);
+                    Matrix4x4::MultiplyWithPrePassMatrix(matrix);
+                    model->position.x = motion_detail::F16ToF32(static_cast<std::int16_t>(descriptor->position[0]));
+                    model->position.y = motion_detail::F16ToF32(static_cast<std::int16_t>(descriptor->position[1]));
+                    model->position.z = motion_detail::F16ToF32(static_cast<std::int16_t>(descriptor->position[2]));
+                    model->rotation.x = descriptor->rotation[0];
+                    model->rotation.y = descriptor->rotation[1];
+                    model->rotation.z = descriptor->rotation[2];
+                    charaPrepareNodesForDraw(model, opacity * alpha);
+                    PopCurrentMatrix(1);
+                }
+            }
+        }
+    }
+}
+
+#else
 
 void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) {
     const bool previousBusy = SetLegacyBusyPreparingDraw(true);
@@ -749,11 +1680,20 @@ void DrawMotionParts(Character &character, MotionWork &work, bool forceDisable) 
     }
     SetLegacyBusyPreparingDraw(previousBusy);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 void TMNT_Callback(Character *character, void *payload) {
     auto *const motion = static_cast<TimedNodeMotion *>(payload);
     if (character && motion && motion->mode != 0)
         TickTimedNodeMotion(*motion);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 bool AllocateTMNM(Character *character) {
     auto *const motion = static_cast<TimedNodeMotion *>(AllocateModelComponent(character, TASK_TMNM, sizeof(TimedNodeMotion), TMNT_Callback));
@@ -765,6 +1705,10 @@ bool AllocateTMNM(Character *character) {
     charaAssignPrepareForDrawCallback(character, charaPrepareNodesForDraw);
     return true;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 void InitializeTimedNodeMotion(TimedNodeMotion &motion, MT7Model *model, std::uint16_t id) {
     const std::span<const std::byte> data = FindLoadedMotionData(id);
@@ -779,13 +1723,24 @@ void InitializeTimedNodeMotion(TimedNodeMotion &motion, MT7Model *model, std::ui
     motion.speed = DecodeMotnFloat(ReadMotionU16(motion.data + 4));
     motion.flags = 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // @verified - p
 std::uintptr_t ConfigureScenarioNodeMotion(shen_name name, std::int32_t motionId, float begin, float end, float frame, float speed, std::int32_t flags) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return 0;
-    TimedNodeMotion *const motion = static_cast<TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
+    TimedNodeMotion *const motion = static_cast<TimedNodeMotion *>(
+#if SHENMUE_IS_DC
+charFindComp
+#else
+FindModelComponent
+#endif
+(character, TASK_TMNM));
     if (!motion)
         return 0;
     if (motionId != 0)
@@ -807,15 +1762,33 @@ std::uintptr_t ConfigureScenarioNodeMotion(shen_name name, std::int32_t motionId
     return static_cast<std::uint32_t>(flags);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // @verified - p
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsScenarioNodeMotionFinished(shen_name name) {
+#else
 bool IsScenarioNodeMotionFinished(shen_name name) {
+#endif
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return false;
-    const TimedNodeMotion *const motion = static_cast<const TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
+    const TimedNodeMotion *const motion = static_cast<const TimedNodeMotion *>(
+#if SHENMUE_IS_DC
+charFindComp
+#else
+FindModelComponent
+#endif
+(character, TASK_TMNM));
     return motion->mode == 2;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 // @verified - p
 TimedNodeMotion *StopScenarioNodeMotion(shen_name name) {
@@ -823,10 +1796,20 @@ TimedNodeMotion *StopScenarioNodeMotion(shen_name name) {
     Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return nullptr;
-    TimedNodeMotion *const motion = static_cast<TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
+    TimedNodeMotion *const motion = static_cast<TimedNodeMotion *>(
+#if SHENMUE_IS_DC
+charFindComp
+#else
+FindModelComponent
+#endif
+(character, TASK_TMNM));
     motion->mode = 0;
     return motion;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 // @verified - p
 void CopyScenarioNodeMotionTimes(shen_name name, float *begin, float *end, float *frame, float *speed) {
@@ -834,7 +1817,13 @@ void CopyScenarioNodeMotionTimes(shen_name name, float *begin, float *end, float
     Character *const character = scenFindChara(control->scenarioTask, name);
     if (!character)
         return;
-    const TimedNodeMotion *const motion = static_cast<const TimedNodeMotion *>(FindModelComponent(character, TASK_TMNM));
+    const TimedNodeMotion *const motion = static_cast<const TimedNodeMotion *>(
+#if SHENMUE_IS_DC
+charFindComp
+#else
+FindModelComponent
+#endif
+(character, TASK_TMNM));
     if (begin)
         *begin = motion->begin;
     if (end)
@@ -844,6 +1833,10 @@ void CopyScenarioNodeMotionTimes(shen_name name, float *begin, float *end, float
     if (speed)
         *speed = motion->speed;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 void ApplyNodeMotionFrame(MT7Model &model, std::span<const std::byte> data, float frame) {
     if (data.size() < 4)
@@ -860,6 +1853,10 @@ void ApplyNodeMotionFrame(MT7Model &model, std::span<const std::byte> data, floa
     sample.model = &model;
     SampleTimedNodes(sample, index, frame - static_cast<float>(index));
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 // @verified - p
 void ClampTimedNodeMotionFrame(TimedNodeMotion &motion, const std::byte *data) {
@@ -891,6 +1888,10 @@ void ClampTimedNodeMotionFrame(TimedNodeMotion &motion, const std::byte *data) {
     motion.end = end;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // TickTimedNodeMotion: clamp or wrap before sampling, then advance.
 bool TickTimedNodeMotion(TimedNodeMotion &motion) {
     if (!motion.mode)
@@ -907,6 +1908,10 @@ bool TickTimedNodeMotion(TimedNodeMotion &motion) {
     return motion.mode == 2;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 bool ReadMotnFile(std::span<const std::byte> bytes, MotnFile &file) {
     file = {};
     if (bytes.size() < 0x1c)
@@ -920,8 +1925,7 @@ bool ReadMotnFile(std::span<const std::byte> bytes, MotnFile &file) {
     }
 #else
     shendk::MotnBankHeader header{};
-    if (!ReadSpanValue(bytes, 0x14, file.animationIdBase) || !ReadSpanValue(bytes, 0x18, file.animationIdEnd) ||
-        !shendk::ReadMotnBankHeader(bytes, header)) {
+    if (!ReadSpanValue(bytes, 0x14, file.animationIdBase) || !ReadSpanValue(bytes, 0x18, file.animationIdEnd) || !shendk::ReadMotnBankHeader(bytes, header)) {
         return false;
     }
     sequenceTableOffset = std::bit_cast<std::int32_t>(header.sequenceTableOffset);
@@ -1071,8 +2075,8 @@ bool ReadMotnFile(std::span<const std::byte> bytes, MotnFile &file) {
         return true;
     };
 
-
-
+    // Retail banks can contain non-1.2 auxiliary slots. They do not invalidate
+    // the independently indexed motion sequences that parsed successfully.
     for (std::size_t index = 0; index < sequenceCount; ++index) {
         MotnSequence sequence{};
         if (parseSequence(index, sequence)) {
@@ -1081,6 +2085,10 @@ bool ReadMotnFile(std::span<const std::byte> bytes, MotnFile &file) {
     }
     return !file.sequences.empty();
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 const MotnSequence *FindMotnSequence(const MotnFile &file, std::uint32_t runtimeId) {
     for (const MotnSequence &sequence : file.sequences) {
@@ -1091,6 +2099,10 @@ const MotnSequence *FindMotnSequence(const MotnFile &file, std::uint32_t runtime
     }
     return nullptr;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 const MotnSequence *FindLoadedMotionSequence(std::uint32_t runtimeId) {
     for (const MotnFile &bank : authorMotionBanks) {
@@ -1107,13 +2119,25 @@ const MotnSequence *FindLoadedMotionSequence(std::uint32_t runtimeId) {
     return nullptr;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::span<const std::byte> FindLoadedMotionData(std::uint32_t runtimeId) {
     return FindMotionBankPayload(runtimeId, false);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::span<const std::byte> FindLoadedMotionMetadata(std::uint32_t runtimeId) {
     return FindMotionBankPayload(runtimeId, true);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::span<const std::byte> FindLoadedMotionSecondaryEntry(std::uint32_t runtimeId, std::uint8_t requestedOpcode) {
     const auto metadata = FindLoadedMotionMetadata(runtimeId);
@@ -1135,6 +2159,10 @@ std::span<const std::byte> FindLoadedMotionSecondaryEntry(std::uint32_t runtimeI
     }
     return {};
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 std::span<const std::byte> FindLoadedMotionTimedCommand(
     std::uint32_t runtimeId, std::uint8_t requestedOpcode, float beginFrame, float endFrame, std::uint32_t match) {
@@ -1173,11 +2201,21 @@ std::span<const std::byte> FindLoadedMotionTimedCommand(
     return {};
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::int32_t CaptureMotionSnapshot(shen_name name) {
     if (unfoState == kUnfoSlotCount)
         return -1;
     Character *const character = FindSnapshotCharacter(name);
-    MotionWork *const work = FindMotionWork(character);
+    MotionWork *const work =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(character);
     if (!work)
         return -1;
     MotionSnapshot *snapshot{};
@@ -1226,6 +2264,10 @@ std::int32_t CaptureMotionSnapshot(shen_name name) {
     return snapshot->slot;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 namespace {
 
 // @verified - p
@@ -1254,16 +2296,30 @@ std::uint32_t RestoreMotionWorkConfiguration(MotionWork &work, const MotionSnaps
 
 } // namespace
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 bool RestoreMotionSnapshot(shen_name name, std::uint32_t slot) {
     const MotionSnapshot *const snapshot = GetMotionSnapshot(slot);
     if (!snapshot || snapshot->slot == -1)
         return false;
-    MotionWork *const work = FindMotionWork(FindSnapshotCharacter(name));
+    MotionWork *const work =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(FindSnapshotCharacter(name));
     if (!work)
         return false;
     RestoreMotionWorkConfiguration(*work, *snapshot);
     return true;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
 
 // @verified - p
 bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
@@ -1273,7 +2329,13 @@ bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
     Character *const character = FindSnapshotCharacter(name);
     if (!character)
         return false;
-    MotionWork *const work = FindMotionWork(character);
+    MotionWork *const work =
+#if SHENMUE_IS_DC
+charFindMotionwork
+#else
+FindMotionWork
+#endif
+(character);
     if (!work)
         return false;
     RestoreMotionWorkConfiguration(*work, *snapshot);
@@ -1306,11 +2368,15 @@ bool RestoreMotionSnapshotPlacement(shen_name name, std::uint32_t slot) {
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // @verified - p
 bool ReleaseMotionSnapshot(std::uint32_t slot) {
     if (slot > kUnfoSlotCount || !g_unfoSpace)
         return false;
-
+    // Native release admits the one-past index 16 and accesses the existing HLib arena bytes there.
     std::byte *const bytes = g_unfoSpace + slot * kUnfoSlotSize;
     std::int32_t state;
     std::memcpy(&state, bytes, sizeof(state));
@@ -1325,7 +2391,11 @@ bool ReleaseMotionSnapshot(std::uint32_t slot) {
     return true;
 }
 
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+// Native LoadMoti registers the package's MOTN allocation without copying it.
 std::int32_t LoadMoti(std::span<const std::byte> bytes) {
     if (g_motionBankCount <= 0)
         return -1;
@@ -1345,8 +2415,8 @@ std::int32_t LoadMoti(std::span<const std::byte> bytes) {
         !ReadValue(data, size, 0x18, last)) {
         return -1;
     }
-
-
+    // Human scalar decoding is supplementary. Native TMNM/prop consumers
+    // retain access to the raw bank even when it is not a humanoid clip.
     if (!ReadMotnFile({data, static_cast<std::size_t>(size)}, decodedMotionBanks[index])) {
         decodedMotionBanks[index] = {};
     }
@@ -1364,6 +2434,10 @@ std::int32_t LoadMoti(std::span<const std::byte> bytes) {
     return bank.motionId;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::int32_t LoadMOTNPCTable(const char *directory, const char *filename) {
     std::uint64_t size{};
     std::byte *const data = ReadMotionFile(directory, filename, SHEN_NAME(MOTI), size);
@@ -1375,311 +2449,27 @@ std::int32_t LoadMOTNPCTable(const char *directory, const char *filename) {
     return handle;
 }
 
-std::int32_t ReadMotiFromDirectory(std::int32_t act, shen_name map, const char *filename) {
-    char directory[64]{};
-    const int length =
-        std::snprintf(directory, sizeof(directory), "scene/%02d/%c%c%c%c", act, map.characters[0], map.characters[1], map.characters[2], map.characters[3]);
-    if (length < 0 || static_cast<std::size_t>(length) >= sizeof(directory))
-        return -1;
-    return LoadMOTNPCTable(directory, filename);
+#endif
+
+} // namespace s2
+} // namespace shenmue
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ReadMotiFromDirectory(std::int32_t act, std::uint32_t map, const char *filename) {
+    return shenmue::s2::ReadMotiFromDirectory(act, SHENMUE_MOTION_NAME(map), filename);
+}
+extern "C" std::int32_t __attribute__((renesas)) shenmue_s2_event_ReadMotionPropsFromDirectory(std::int32_t act, std::uint32_t map, const char *filename) {
+    return shenmue::s2::ReadMotionPropsFromDirectory(act, SHENMUE_MOTION_NAME(map), filename);
+}
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_DeleteMotion(std::int32_t handle) {
+    return shenmue::s2::DeleteMotion(handle);
+}
+extern "C" std::uint32_t __attribute__((renesas)) shenmue_s2_event_DeleteMotionProps(std::int32_t handle) {
+    return shenmue::s2::DeleteMotionProps(handle);
 }
 
-// @verified - p
-std::uint32_t GetMotionFrameCount(std::uint16_t animation) {
-    if (animation == 0)
-        return 0;
-    const std::span<const std::byte> data = FindLoadedMotionData(animation);
-    return data.empty() ? 0U : ReadMotionU16(data.data() + 4);
-}
-
-namespace {
-bool DeleteMotionInternal(std::int32_t handle, bool releaseStorage) {
-    if (g_motionBankCount <= 0 || handle < g_motionBankCount)
-        return false;
-    MotionRegistryEntry *bank = &g_motionRegistry[g_motionBankCount - 1];
-    while (bank && bank->motionId != handle)
-        bank = bank->next;
-    if (!bank)
-        return false;
-    const std::size_t index = static_cast<std::size_t>(bank - g_motionRegistry.data());
-    RetireMotionBankTracks(bank->data, motionBankSizes[index]);
-    std::memset(bank->data, 0, bank->motionCount);
-    if (releaseStorage)
-        HLib::FreeTaskData(bank->data);
-    if (bank->next)
-        bank->next->previous = bank->previous;
-    if (bank->previous)
-        bank->previous->next = bank->next;
-    g_totalMotionCount -= bank->motionCount;
-    RetireMotionRange(bank->firstMotion, bank->lastMotion);
-    decodedMotionBanks[index] = {};
-    motionBankSizes[index] = 0;
-    *bank = {};
-    bank->motionId = -1;
-    return true;
-}
-} // namespace
-
-bool DeleteMotion(std::int32_t handle) {
-    return DeleteMotionInternal(handle, true);
-}
-
-bool DeleteBorrowedMotion(std::int32_t handle) {
-    return DeleteMotionInternal(handle, false);
-}
-
-void RegisterAuthorMotionBanks(std::span<const MotnFile> banks) {
-    for (const MotnFile &previous : authorMotionBanks) {
-        bool retained = false;
-        for (const MotnFile &current : banks) {
-            if (&previous == &current) {
-                retained = true;
-                break;
-            }
-        }
-        if (retained || previous.sequences.empty())
-            continue;
-        std::uint32_t last = 0;
-        for (const MotnSequence &sequence : previous.sequences) {
-            last = std::max(last, sequence.index + 1);
-            ForEachLiveCharacterInMapOrder(
-                [](Character *character, void *opaque) {
-                    const auto &sequence = *static_cast<const MotnSequence *>(opaque);
-                    MotionWork *const work = FindMotionWork(character);
-                    if (!work)
-                        return;
-                    for (std::uint32_t region = 0; region < 5; ++region) {
-                        for (void **track : {&work->runtime.regionTrack[region], &work->runtime.previousRegionTrack[region]}) {
-                            if (!*track || *track != sequence.regionTrack)
-                                continue;
-                            RetireMotionPropTrack(*track, region);
-                            *track = nullptr;
-                        }
-                    }
-                    if (work->runtime.rightArmTrack == sequence.armTrack)
-                        work->runtime.rightArmTrack = nullptr;
-                    if (work->runtime.leftArmTrack == sequence.armTrack)
-                        work->runtime.leftArmTrack = nullptr;
-                },
-                const_cast<MotnSequence *>(&sequence));
-        }
-        const std::uint32_t base = previous.animationIdEnd > previous.animationIdBase + 1 ? previous.animationIdBase : 0;
-        RetireMotionRange(static_cast<std::uint16_t>(base + 1), static_cast<std::uint16_t>(base + last));
-    }
-    while (d3t::ProcessObjectStore(true, -1)) {
-    }
-    authorMotionBanks = banks;
-}
-
-bool IsRetiredMotionId(std::uint16_t motionId) {
-    for (const RetiredMotionRange &range : retiredMotionRanges) {
-        if (!range.end)
-            break;
-        if (motionId >= range.begin && motionId <= range.end)
-            return true;
-    }
-    return false;
-}
-
-// Queue_mot_Callback_MotFileManageTaskEntry.
-// @verified - p
-void QueueMotionRetirementTask(std::uint8_t nextFunctionIndex) {
-    motionRetirementTask = HLib::EnqueueTaskWithParameter(MotFileManageTaskEntry_Callback, nextFunctionIndex, 2, 4, SHEN_NAME(MOTF));
-}
-
-void FreeMotionRetirementTask() {
-    retiredMotionRanges = {};
-    if (!motionRetirementTask)
-        return;
-    HLib::DestroyTask(motionRetirementTask);
-    motionRetirementTask = nullptr;
-}
-
-float SampleMotnScalar(const MotnScalarChannel &channel, float time) {
-    if (channel.keys.empty())
-        return 0.0f;
-    const float frame = time * 30.0f;
-    if (frame <= channel.keys.front().frame)
-        return channel.keys.front().value;
-    const MotnKey *left = &channel.keys.front();
-    for (std::size_t index = 1; index < channel.keys.size(); ++index) {
-        const MotnKey &right = channel.keys[index];
-        if (frame >= right.frame) {
-            left = &right;
-            continue;
-        }
-        const float spanFrames = static_cast<float>(right.frame - left->frame);
-        if (std::fabs(spanFrames) <= 0.000001f)
-            return right.value;
-        const float elapsedSeconds = (frame - left->frame) / 30.0f;
-        const float spanSeconds = spanFrames / 30.0f;
-        const float amount = elapsedSeconds / spanSeconds;
-        const float square = amount * amount;
-        const float cube = square * amount;
-        return (2.0f * cube - 3.0f * square + 1.0f) * left->value + (-2.0f * cube + 3.0f * square) * right.value +
-            (cube - 2.0f * square + amount) * spanSeconds * left->rightSlope + (cube - square) * spanSeconds * right.leftSlope;
-    }
-    return channel.keys.back().value;
-}
-
-void SampleMotnScalarPVA(const MotnScalarChannel &channel, float time, float &value, float &incomingHalfTangent, float &outgoingHalfTangent, bool linear) {
-    value = 0.0f;
-    incomingHalfTangent = 0.0f;
-    outgoingHalfTangent = 0.0f;
-    if (channel.keys.empty())
-        return;
-    const MotnKey *left = &channel.keys.front();
-    value = left->value;
-    float leftTime = static_cast<float>(left->frame) * 0.033333335f;
-    if (time < leftTime)
-        return;
-    for (std::size_t index = 1; index < channel.keys.size(); ++index) {
-        const MotnKey &right = channel.keys[index];
-        const float rightTime = static_cast<float>(right.frame) * 0.033333335f;
-        if (time == rightTime) {
-            value = right.value;
-            incomingHalfTangent = right.leftSlope * 0.5f;
-            outgoingHalfTangent = right.rightSlope * 0.5f;
-            return;
-        }
-        if (time > rightTime) {
-            left = &right;
-            leftTime = rightTime;
-            value = right.value;
-            continue;
-        }
-
-        const float inverseDuration = 1.0f / (rightTime - leftTime);
-        const float elapsed = time - leftTime;
-        float tangent{};
-        if (linear) {
-            const float slope = (right.value - left->value) * inverseDuration;
-            value = elapsed * slope + left->value;
-            tangent = slope * 0.5f;
-        } else {
-            const float inverseSquare = inverseDuration * inverseDuration;
-            const float square = elapsed * elapsed;
-            const float cubeTerm = (square * elapsed) * inverseSquare;
-            const float tripleSquare = (square * 3.0f) * inverseSquare;
-            const float sixSquare = ((square * 6.0f) * inverseSquare) * inverseDuration;
-            const float sixElapsed = (elapsed * 6.0f) * inverseSquare;
-            const float twiceElapsed = (elapsed + elapsed) * inverseDuration;
-            tangent = (((sixElapsed - sixSquare) * right.value + (sixSquare - sixElapsed) * left->value) +
-                          ((tripleSquare - twiceElapsed - twiceElapsed) + 1.0f) * left->rightSlope + (tripleSquare - twiceElapsed) * right.leftSlope) *
-                0.5f;
-            const float twiceCube = (cubeTerm + cubeTerm) * inverseDuration;
-            const float squareTerm = square * inverseDuration;
-            value = ((twiceCube - tripleSquare + 1.0f) * left->value + (tripleSquare - twiceCube) * right.value) +
-                ((cubeTerm - squareTerm - squareTerm) + elapsed) * left->rightSlope + (cubeTerm - squareTerm) * right.leftSlope;
-        }
-        incomingHalfTangent = tangent;
-        outgoingHalfTangent = tangent;
-        return;
-    }
-}
-
-// AllocateMotionBanks: CTRL's map entry drops every bank above the resident MOTION/BATTLE
-// banks and the five loadable prop banks, clears the retired ranges, re-enables the
-// environment gate, recounts the resident motions and resets the search-hand owner.
-// @verified - p
-std::int64_t AllocateMotionBanks() {
-    InitializeUNFO();
-    const std::int32_t resident = g_motionBankCount;
-    for (std::size_t index = static_cast<std::size_t>(resident); index < g_motionRegistry.size(); ++index) {
-        MotionRegistryEntry &bank = g_motionRegistry[index];
-        bank.motionId = -1;
-        bank.data = nullptr;
-        bank.firstMotion = 0;
-        bank.lastMotion = 0;
-        bank.previous = nullptr;
-        bank.next = nullptr;
-        bank.motionCount = 0;
-        decodedMotionBanks[index] = {};
-        motionBankSizes[index] = 0;
-    }
-    for (std::size_t slot = 1; slot < motionPropBanks.size(); ++slot) {
-        MotionPropBank &bank = motionPropBanks[slot];
-        bank.handle = -1;
-        bank.data = nullptr;
-        bank.previous = nullptr;
-        bank.next = nullptr;
-        for (MT7Model &model : motionPropModels[slot])
-            ReleaseModelFormat7(model);
-        motionPropModels[slot].clear();
-    }
-    retiredMotionRanges = {};
-    g_usingEnv = 1;
-    g_totalMotionCount = 0;
-    g_motionRegistry[static_cast<std::size_t>(resident - 1)].next = nullptr;
-    for (const MotionRegistryEntry *bank = g_motionData; bank; bank = bank->next)
-        g_totalMotionCount += bank->motionCount;
-    ResetSearchHandState();
-    return mtwkSetOverridesEnabled(1);
-}
-
-void AllocateARMM() {
-    g_armMotionMemory = static_cast<std::byte *>(HLib::AllocateStaticOrDynamicBlock(0x8800, SHEN_NAME(ARMM)));
-    HLib::SetTaskDataMotionFlag(g_armMotionMemory);
-}
-
-std::byte *AllocateAndLoadMOTFiles() {
-    while (motionPropBanks[0].next)
-        DeleteMotionProps(motionPropBanks[0].next->handle);
-    AllocateAndSetUNFOFlag();
-    InitializeUNFO();
-
-    for (MotionRegistryEntry &entry : g_motionRegistry) {
-        entry = {};
-        entry.motionId = -1;
-    }
-    motionBankSizes = {};
-    decodedMotionBanks = {};
-    g_motionData = &g_motionRegistry[0];
-    g_motionData->motionId = 0;
-    g_battleMotionData = &g_motionRegistry[1];
-    g_fallbackMotionTable = nullptr;
-    g_fallbackMotionSections = {};
-    g_motionBankCount = 0;
-    g_totalMotionCount = 0;
-    authorMotionBanks = {};
-    retiredMotionRanges = {};
-
-    std::uint64_t mainSize = 0;
-    g_motionData->data = ReadMiscFile("MOTION.MOT", SHEN_NAME(MOTI), mainSize);
-    motionBankSizes[0] = mainSize;
-    if (!g_motionData->data || !BindMotionHeader(*g_motionData, mainSize)) {
-        return nullptr;
-    }
-    if (!ReadMotnFile(std::span<const std::byte>{g_motionData->data, static_cast<std::size_t>(mainSize)}, decodedMotionBanks[0])) {
-        return nullptr;
-    }
-    g_totalMotionCount = g_motionData->motionCount;
-
-    std::uint64_t battleSize = 0;
-    g_battleMotionData->data = ReadMiscFile("BATTLE.MOT", SHEN_NAME(MOTI), battleSize);
-    motionBankSizes[1] = battleSize;
-
-    std::uint64_t fallbackSize = 0;
-    g_fallbackMotionTable = ReadMiscFile("FBMOTTBL.BIN", SHEN_NAME(FBMT), fallbackSize);
-    if (!g_fallbackMotionTable || !BindFallbackMotionTable(fallbackSize)) {
-        return nullptr;
-    }
-
-    if (!g_battleMotionData->data || !BindMotionHeader(*g_battleMotionData, battleSize)) {
-        g_motionBankCount = 1;
-        return g_fallbackMotionTable;
-    }
-
-    g_motionBankCount = 2;
-    g_motionData->next = g_battleMotionData;
-    g_battleMotionData->motionId = g_motionData->motionId + 1;
-    g_battleMotionData->previous = g_motionData;
-    if (!ReadMotnFile({g_battleMotionData->data, static_cast<std::size_t>(battleSize)}, decodedMotionBanks[1])) {
-        decodedMotionBanks[1] = {};
-    }
-    g_totalMotionCount += g_battleMotionData->motionCount;
-    return g_fallbackMotionTable;
-}
-
-} // namespace shenmue::s2
-
+#undef SHENMUE_MOTION_DATA
+#undef SHENMUE_MOTION_NULL
+#undef SHENMUE_MOTION_NAME
+#else
+#endif

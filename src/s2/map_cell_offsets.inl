@@ -1,11 +1,19 @@
-
-
+// Shenmue2_v1.07: authored mapCellDirections and mapCellOffsets tables.
+// Each direction selects an unchanged prefix for one of eleven distance tiers.
 struct MapCellDirection {
     std::uint32_t firstOffset;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    std::uint32_t counts[11];
+#else
     std::array<std::uint32_t, 11> counts;
+#endif
 };
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+static const MapCellDirection mapCellDirections[16] = {
+#else
 constexpr std::array<MapCellDirection, 16> mapCellDirections{{
+#endif
     {0, {9, 17, 25, 36, 48, 64, 79, 98, 116, 137, 162}},
     {162, {9, 15, 23, 34, 45, 60, 76, 94, 114, 136, 159}},
     {321, {9, 15, 23, 34, 45, 60, 76, 94, 114, 134, 159}},
@@ -22,9 +30,17 @@ constexpr std::array<MapCellDirection, 16> mapCellDirections{{
     {2082, {9, 15, 23, 34, 45, 60, 76, 94, 114, 136, 159}},
     {2241, {9, 15, 23, 34, 45, 60, 76, 94, 114, 134, 159}},
     {2400, {9, 17, 25, 36, 48, 64, 79, 98, 116, 137, 160}},
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+};
+#else
 }};
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+static const MapCellOffset mapCellOffsets[2560] = {
+#else
 constexpr std::array<MapCellOffset, 2560> mapCellOffsets{{
+#endif
     // Direction 0.
     {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {0, 0}, {1, 0}, {-1, 1}, {0, 1},
     {1, 1}, {-2, -1}, {-1, -2}, {-2, -2}, {0, -2}, {1, -2}, {2, -1}, {2, -2},
@@ -365,4 +381,8 @@ constexpr std::array<MapCellOffset, 2560> mapCellOffsets{{
     {7, -8}, {-10, -5}, {-10, -6}, {-9, -7}, {-10, -7}, {-9, -8}, {-7, -9}, {-8, -9},
     {-6, -10}, {-7, -10}, {-4, -11}, {-5, -11}, {-3, -11}, {-2, -11}, {-1, -11}, {0, -11},
     {1, -11}, {2, -11}, {3, -11}, {4, -11}, {5, -11}, {6, -10}, {7, -9}, {7, -10},
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+};
+#else
 }};
+#endif

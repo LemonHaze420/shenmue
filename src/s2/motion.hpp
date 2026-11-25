@@ -50,7 +50,11 @@ bool TickTimedNodeMotion(TimedNodeMotion &motion);
 
 void ApplyNodeMotionFrame(MT7Model &model, std::span<const std::byte> data, float frame);
 std::uintptr_t ConfigureScenarioNodeMotion(shen_name character, std::int32_t motionId, float begin, float end, float frame, float speed, std::int32_t flags);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t IsScenarioNodeMotionFinished(shen_name character);
+#else
 bool IsScenarioNodeMotionFinished(shen_name character);
+#endif
 TimedNodeMotion *StopScenarioNodeMotion(shen_name character);
 void CopyScenarioNodeMotionTimes(shen_name character, float *begin, float *end, float *frame, float *speed);
 

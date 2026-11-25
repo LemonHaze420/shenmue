@@ -1,6 +1,10 @@
 #pragma once
 
 #include "shenmue.h"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/pak_dc.hpp"
+#else
 #include "s2/hlib.hpp"
 #include "common/types.hpp"
 
@@ -48,8 +52,8 @@ struct PakLoadTaskData {
     std::uint32_t padding64;
     std::uint64_t field68;
     std::uint64_t field70;
-
-
+    // Native request selection persists through completion: 0 = PKF then PKS,
+    // 2 = PKF only, 4 = PKS only. Directory wrappers replace it before admission.
     std::uint32_t loadFlags;
     std::int32_t padding7c;
     std::int64_t timeBudget;
@@ -125,20 +129,20 @@ struct LoadedMapPackage {
 
 HLib::Task *PakLoadTaskEntry_Enqueue(std::uint8_t nextFunctionIndex, std::int32_t taskFlag);
 bool IsPakLoadTaskReady();
-
+// Native LoadFileFromFolder: the loaded or newly requested slot, or null while a load is in progress.
 #if SHENMUE_IS_DC
 PakGlobalData *LoadMapPackage(const char *folder, const char *packageName, void *destination = nullptr);
 #else
 PakGlobalData *LoadMapPackage(const char *folder, const char *packageName);
-
-
+// Mask 0x2 takes precedence over 0x4; mask 0x1 sets package flag 0x10.
+// PKS completion publishes linkedPakEntry; PKF-only completion does not.
 PakGlobalData *ReadPakFileFromDirectory(const char *directory, const char *name, std::uint8_t flags);
 #endif
 bool PakLoadWait();
 #if !SHENMUE_IS_DC
 struct AfsArchiveSlot;
-
-
+// PC FTBL254 and NPC humans use four 0x40-byte mounted AFS descriptors over the LoadAfs archive bank. Packages
+// borrow the archive; the event caller must retire its packages before unmounting.
 struct PakAfsPartition {
     AfsArchiveSlot *afs;
     std::array<char, 32> folder;
@@ -149,7 +153,7 @@ struct PakAfsPartition {
 static_assert(sizeof(PakAfsPartition) == 0x40);
 static_assert(offsetof(PakAfsPartition, filename) == 0x28);
 static_assert(offsetof(PakAfsPartition, references) == 0x38);
-
+// Native LoadAFS, UnloadAFS and LoadFromAfsInternal (mode 0 is LoadFromAfs, mode 1 LoadFromHumansAfs, above 15 a status).
 PakAfsPartition *MountPakAfs(const char *folder, const char *filename);
 std::int64_t UnmountPakAfs(PakAfsPartition *partition);
 PakGlobalData *RequestPakFromAfs(PakAfsPartition *partition, std::int32_t firstIndex, std::int16_t secondIndex, std::uint64_t mode);
@@ -199,6 +203,10 @@ enum Value : std::uint64_t {
 };
 }
 
+// ECX category, RDX mode, R8 source, R9 target/index,
+// stack DWORD secondary index (the AFS producer consumes its low signed WORD).
+// Pointer results remain 64-bit; categories 0/11 and 2/0 sign-extend DWORDs.
+// Category 3 and unsupported modes are genuine return-one branches.
 std::int64_t EV_pakUtils(std::int32_t category, std::uint64_t mode, std::uintptr_t source, std::uintptr_t target, std::int32_t secondaryIndex = 0);
 #endif
 std::int32_t GetPakReadiness(PakGlobalData *package);
@@ -220,6 +228,7 @@ void SetupPakSpace(std::int64_t mode);
 void InitializeNamedTextureSlots();
 void InitEffect();
 std::int64_t GetPakLoadBudget();
+// Native FileLoader borrows an entry from the selected HPM slot's PKS allocation.
 void *FileLoader(PakGlobalData *package, const char *filename, shen_name extension);
 std::span<const std::byte> FileLoaderView(PakGlobalData *package, const char *filename, shen_name extension);
 std::int64_t GetPakFileSize(PakGlobalData *package, const char *filename, shen_name extension);
@@ -227,9 +236,9 @@ void *LoadCurrentPakBinary(const char *filename);
 std::int64_t GetCurrentPakBinarySize(const char *filename);
 MT7Model *LoadGameModel(PakGlobalData *package, const char *filename);
 const MT7Model *FindLoadedModelNodeOwner(const MT7Node *node, std::size_t &index);
-
+// Native package-context-first ECAM lookup; borrows PKS or current INFO.
 std::uint32_t *pakFindEventCam(std::int32_t index);
-
+// Native LoadFile; omitting size selects FTBL545's LoadFile_Wrapper boundary.
 void *LoadLegacySceneFile(const char *directory, const char *filename, shen_name token, std::uint32_t *size = nullptr);
 void *FileRead(const char *directory, const char *filename, shen_name token, std::uint32_t *size = nullptr);
 bool DoesFileExist(const char *directory, const char *filename);
@@ -238,34 +247,35 @@ std::int64_t AssignLegacySceneFilePath(d3t::FileState *file, const char *directo
 bool FlushLegacyFileReadAndRenderQueue(d3t::FileState *file);
 std::int64_t LoadLegacyFiles(const char *directory, const char *filename, void *buffer, std::uint64_t size);
 
-
+// Native LoadSprite. The caller owns the HLib allocation.
 bool LoadLegacySprite(const char *directory, const char *filename, shen_name token, void *&allocation, std::size_t &size);
 
 std::span<const LoadedMapPackage> GetLoadedMapPackages();
-
-
+// Native ready-package iteration and first-SNDP view. Views borrow the
+// package allocation; pending PACK buffers are excluded. Header is included.
 const LoadedMapPackage *GetNextReadySoundPackage(const LoadedMapPackage *previous);
 std::span<const std::byte> GetPackageSoundTable(const LoadedMapPackage &package);
 std::span<const std::byte> FindLoadedMapPackageEntry(const char *filename);
-
+// Borrowed DYNM child header from the first ready package.
 const std::byte *FindPackageDynamicMap(const std::uint8_t name[4]);
 std::uint32_t ResolveLoadedMapTexture(std::uint32_t idLow, std::uint32_t idHigh);
-
-
+// Native MT7_TXT7_Reader admission and model-release decrement of one
+// embedded texture ID; a package texture with the same ID is shared.
 std::uint32_t AcquireModelTexture(std::uint32_t idLow, std::uint32_t idHigh, std::span<const std::byte> image);
 void ReleaseModelTexture(std::uint32_t idLow, std::uint32_t idHigh);
+// Native CreatePVRForDirectX gives the image loader this fixed source size rather than the chunk size.
 inline constexpr std::size_t PVR_IMAGE_LOADER_SOURCE_SIZE = 0x100100;
 // imageOffset locates the GBIX/PVRT image: 0x1c inside a PKF TEXN chunk, zero for an MT7 TXT7 entry.
 std::uint32_t UploadTexn(std::span<const std::byte> texn, std::size_t imageOffset = 0x1c);
 
-
+// Native TEXN admission returns a signed slot index, not a D3T handle. Every successful admission owns one reference.
 std::int64_t ReadTexnTexture(const void *texn);
-
+// Native ReadTEXN_Recursive: admits consecutive TEXN chunks into textures until a non-TEXN tag; returns the count.
 std::uint32_t ReadTEXN_Recursive(const void *texn, std::int32_t *textures);
-
-
+// Native TEXNReader: walks chunks up to data + size, stopping at a zero tag. Each chunk goes through the TEXN reader
+// (a non-TEXN tag stores -1) and advances by its own size field. Returns the number of slots written.
 std::uint32_t TEXNReader(const void *data, std::int64_t size, std::int32_t *textures);
-
+// Native TXMO_Reader: an empty (-1-first) entry list or a listed entry point enables the texture-motion flag.
 void TXMO_Reader(const void *txmo, std::int32_t entryPoint);
 void MSTS_Reader(std::int16_t value0, std::int16_t value1, std::int16_t value2);
 std::int32_t texGetMotionFlag();
@@ -286,7 +296,7 @@ static_assert(offsetof(NamedSpriteTextureRecord, imageOffset) == 8);
 std::int32_t ReadNamedSpriteTexture(const NamedSpriteTextureRecord &record, const char *filename, std::size_t imageBytes);
 void RetireSceneNamedTextures();
 std::uint32_t InitSceneEffects();
-
+// Native generated surfaces share the named TEXN slot bank and own one reference.
 std::int32_t AllocateGeneratedTextureSlot(std::uint32_t width, std::uint32_t height, std::uint16_t format);
 bool UploadGeneratedTextureSlot(std::int32_t textureIndex, const void *rgbaPixels);
 struct GeneratedTextureSurface {
@@ -308,9 +318,13 @@ void CommitGeneratedSurface(GeneratedTextureSurface *surface);
 // Retiring the scratch allocation transfers, rather than releases, slot zero.
 std::int32_t RetireGeneratedSurface(GeneratedTextureSurface *surface);
 void SetNamedTextureBank(std::int32_t bank);
-
+// Native indexed update starts at +0x2c; the admitted PTX's TEXN size may already be cleared. Returns textureIndex on upload failure.
 std::uint32_t ReplacePtxTexture(std::uint32_t textureIndex, const void *ptx);
+// Native get_total_size_for_tex: a PVR image's byte size in the format, 0 for a family without one.
 std::uint32_t GetPvrTextureSize(std::uint16_t format, std::int32_t width, std::int32_t height);
+// Writes a PTX's PVR dimensions, and its DDS dimensions for the 0x8000 family; false for an unaligned PTX or a sizeless format.
 bool SetPtxDimensions(std::byte *ptx, std::int32_t height, std::int32_t width, std::uint16_t format);
 
 } // namespace shenmue::s2
+
+#endif

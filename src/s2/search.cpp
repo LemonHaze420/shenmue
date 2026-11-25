@@ -39,7 +39,7 @@ namespace {
 struct SearchTemporaryModel : MT7Model {
     void *sourceAllocation{};
 };
-}
+} // namespace
 SearchPropIKSlot g_searchPropIKSlots[4]{};
 MT7Model *g_searchTemporaryModel{};
 shen_name g_searchLastSignboard{};
@@ -143,7 +143,11 @@ void GetScenarioSearchPosition(const ScenarioFreeTalkCandidate &candidate, Vecto
         const Vector3i rotation = GetCharacterWorldRotation(candidate.character);
         Matrix4x4_Push(&transformMatrix_prePass);
         Matrix4x4::preTranslate(position.x, position.y, position.z);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+        Matrix4x4::SetViewMatrixFromEuler(rotation.x, rotation.y, rotation.z);
+#else
         Matrix4x4::SetViewMatrixFromEuler(rotation.y, rotation.x, rotation.z);
+#endif
         Matrix4x4::MultiplyWithPrePassMatrix(&matrices[candidate.flags]);
         position = {workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
         Matrix4x4::Pop(1);
@@ -234,65 +238,65 @@ static_assert(sizeof(SignModelRecord) == 20);
 
 constexpr SignModelRecord signsWN00[]{
     {SHEN_NAME(K400), "WN001M4G.MT7"},
-    {SHEN_NAME(K401), "WN001M0G.MT7"},
-    {SHEN_NAME(K402), "WN001M1G.MT7"},
-    {SHEN_NAME(K403), "WN001M2G.MT7"},
-    {SHEN_NAME(K404), "WN001M3G.MT7"},
-    {SHEN_NAME(K405), "WT001M4G.MT7"},
-};
+        {SHEN_NAME(K401), "WN001M0G.MT7"},
+            {SHEN_NAME(K402), "WN001M1G.MT7"},
+                {SHEN_NAME(K403), "WN001M2G.MT7"},
+                    {SHEN_NAME(K404), "WN001M3G.MT7"},
+                        {SHEN_NAME(K405), "WT001M4G.MT7"},
+                    };
 constexpr SignModelRecord signsWK00[]{
     {SHEN_NAME(K406), "WK001M0G.MT7"},
-    {SHEN_NAME(K407), "WK001M1G.MT7"},
-    {SHEN_NAME(K408), "WK001M2G.MT7"},
-    {SHEN_NAME(K409), "WK001M3G.MT7"},
-    {SHEN_NAME(K410), "WK001M4G.MT7"},
-    {SHEN_NAME(K411), "WK001M5G.MT7"},
-};
+        {SHEN_NAME(K407), "WK001M1G.MT7"},
+            {SHEN_NAME(K408), "WK001M2G.MT7"},
+                {SHEN_NAME(K409), "WK001M3G.MT7"},
+                    {SHEN_NAME(K410), "WK001M4G.MT7"},
+                        {SHEN_NAME(K411), "WK001M5G.MT7"},
+                    };
 constexpr SignModelRecord signsAK00[]{
     {SHEN_NAME(K404), "AK00WM0G.MT7"},
-    {SHEN_NAME(K402), "AK00WM1G.MT7"},
-    {SHEN_NAME(K400), "AK00WM2G.MT7"},
-};
+        {SHEN_NAME(K402), "AK00WM1G.MT7"},
+            {SHEN_NAME(K400), "AK00WM2G.MT7"},
+        };
 constexpr SignModelRecord signsWE00[]{
     {SHEN_NAME(K411), "WE00MM0G.MT7"},
-    {SHEN_NAME(K407), "WE00MM1G.MT7"},
-    {SHEN_NAME(K410), "WE00MM2G.MT7"},
-    {SHEN_NAME(K409), "WE00MM3G.MT7"},
-    {SHEN_NAME(K406), "WE00MM4G.MT7"},
-    {SHEN_NAME(K408), "WE00MM5G.MT7"},
-};
+        {SHEN_NAME(K407), "WE00MM1G.MT7"},
+            {SHEN_NAME(K410), "WE00MM2G.MT7"},
+                {SHEN_NAME(K409), "WE00MM3G.MT7"},
+                    {SHEN_NAME(K406), "WE00MM4G.MT7"},
+                        {SHEN_NAME(K408), "WE00MM5G.MT7"},
+                    };
 constexpr SignModelRecord signsWB00[]{
     {SHEN_NAME(K401), "WT001M4G.MT7"},
 };
 constexpr SignModelRecord signsWR00[]{
     {SHEN_NAME(K405), "WR00MM0G.MT7"},
-    {SHEN_NAME(K403), "WR00MM1G.MT7"},
-    {SHEN_NAME(K404), "WR00MM2G.MT7"},
-};
+        {SHEN_NAME(K403), "WR00MM1G.MT7"},
+            {SHEN_NAME(K404), "WR00MM2G.MT7"},
+        };
 constexpr SignModelRecord signsAR03[]{
     {SHEN_NAME(K402), "AR03WM0G.MT7"},
-    {SHEN_NAME(K403), "AR03WM1G.MT7"},
-};
+        {SHEN_NAME(K403), "AR03WM1G.MT7"},
+    };
 constexpr SignModelRecord signsAR02[]{
     {SHEN_NAME(K400), "AR02WM0G.MT7"},
-    {SHEN_NAME(K403), "AR02WM1G.MT7"},
-    {SHEN_NAME(K404), "AR02WM2G.MT7"},
-    {SHEN_NAME(K401), "AR02WM3G.MT7"},
-    {SHEN_NAME(K402), "AR02WM4G.MT7"},
-};
+        {SHEN_NAME(K403), "AR02WM1G.MT7"},
+            {SHEN_NAME(K404), "AR02WM2G.MT7"},
+                {SHEN_NAME(K401), "AR02WM3G.MT7"},
+                    {SHEN_NAME(K402), "AR02WM4G.MT7"},
+                };
 constexpr SignModelRecord signsWT00[]{
     {SHEN_NAME(K405), "WT001M0G.MT7"},
-    {SHEN_NAME(K407), "WT001M2G.MT7"},
-    {SHEN_NAME(K408), "WT001M3G.MT7"},
-    {SHEN_NAME(K409), "WT001M4G.MT7"},
-    {SHEN_NAME(K406), "WT001M5G.MT7"},
-};
+        {SHEN_NAME(K407), "WT001M2G.MT7"},
+            {SHEN_NAME(K408), "WT001M3G.MT7"},
+                {SHEN_NAME(K409), "WT001M4G.MT7"},
+                    {SHEN_NAME(K406), "WT001M5G.MT7"},
+                };
 constexpr SignModelRecord signsWS00[]{
     {SHEN_NAME(K405), "WS00MM0G.MT7"},
-    {SHEN_NAME(K408), "WS00MM1G.MT7"},
-    {SHEN_NAME(K409), "WS00MM2G.MT7"},
-    {SHEN_NAME(K406), "WS00MM3G.MT7"},
-};
+        {SHEN_NAME(K408), "WS00MM1G.MT7"},
+            {SHEN_NAME(K409), "WS00MM2G.MT7"},
+                {SHEN_NAME(K406), "WS00MM3G.MT7"},
+            };
 
 std::span<const SignModelRecord> SignModelsForCurrentArea() {
     switch (g_currentMap.name) {
@@ -1083,7 +1087,11 @@ bool srchReadFromData(SearchTaskData &search) {
     return true;
 }
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t npcGetCanInteract(shen_name name) {
+#else
 bool npcGetCanInteract(shen_name name) {
+#endif
     if (!name.name || !HasNpcRuntimeEntry(name) || IsNpcLoadedOrVisible(name))
         return false;
     if (QueryNpcRouteLiveState(name) == 10 || IsNpcRouteActive(name))

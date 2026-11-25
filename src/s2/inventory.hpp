@@ -92,7 +92,11 @@ static_assert(offsetof(InventoryItemDefinition, flags) == 0x18);
 
 std::span<const InventoryItemDefinition> GetInventoryItemDefinitions(S2InventoryBank bank) noexcept;
 const InventoryItemDefinition *FindInventoryItemDefinition(std::uint32_t itemId) noexcept;
+#if SHENMUE_S2_GCC295
+std::int32_t GetItemState(std::uint32_t itemId) noexcept;
+#else
 std::int64_t GetItemState(std::uint32_t itemId) noexcept;
+#endif
 std::uint32_t GetMaxItemsForItemType(std::uint32_t category) noexcept;
 std::uint16_t GetInventoryItemIcon(std::uint32_t category, std::uint32_t index) noexcept;
 std::uint16_t GetInventoryItemIconById(std::uint32_t itemId) noexcept;

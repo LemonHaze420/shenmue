@@ -1893,7 +1893,11 @@ void CopyRecursiveModelNodeTransform(MT7Node *node, std::uint32_t selector, Matr
         if (node->runtimeSibling)
             Matrix4x4_Push();
         Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+        Matrix4x4::SetViewMatrixFromEuler(node->rotation.x, node->rotation.y, node->rotation.z);
+#else
         Matrix4x4::SetViewMatrixFromEuler(node->rotation.y, node->rotation.x, node->rotation.z);
+#endif
         if (static_cast<std::uint32_t>(static_cast<std::int32_t>(static_cast<std::int16_t>(node->id))) == selector) {
             Matrix4x4::GetTransformMatrix(output);
         }
@@ -1915,7 +1919,11 @@ void CopyCharacterSourceTransform(const Character *source, std::uint32_t selecto
         const Vector3 position = GetCharacterWorldPosition(source);
         const Vector3i rotation = GetCharacterWorldRotation(source);
         Matrix4x4::preTranslate(position.x, position.y, position.z);
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+        Matrix4x4::SetViewMatrixFromEuler(rotation.x, rotation.y, rotation.z);
+#else
         Matrix4x4::SetViewMatrixFromEuler(rotation.y, rotation.x, rotation.z);
+#endif
         Matrix4x4::GetTransformMatrix(output);
         if (!model->nodes.empty())
             CopyRecursiveModelNodeTransform(&model->nodes.front(), selector, output);
@@ -1971,7 +1979,11 @@ void MotionWorkUpdate(Character *character, void *payload) {
         const Vector3 &offset = work.runtime.transformOffsetPosition;
         Matrix4x4::preTranslate(offset.x, offset.y, offset.z);
         const Vector3i &rotation = work.runtime.transformOffsetRotation;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+        Matrix4x4::SetViewMatrixFromEuler(rotation.x, rotation.y, rotation.z);
+#else
         Matrix4x4::SetViewMatrixFromEuler(rotation.y, rotation.x, rotation.z);
+#endif
         Matrix4x4::GetTransformMatrix(&work.runtime.overrideViewSpaceTransform);
         Matrix4x4::Pop(1);
     }

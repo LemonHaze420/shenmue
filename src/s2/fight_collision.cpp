@@ -1,3 +1,25 @@
+#include "shenmue.h"
+#include "common/native_sqrt.hpp"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/fight_stage.hpp"
+#include "s2/event_matrix_dc.hpp"
+#include "s2/motion_work_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/scenario_dc.hpp"
+#include "s2/motion_registry_dc.hpp"
+#include "s2/camera_dc.hpp"
+#include "s2/camera_conversation_dc.hpp"
+#include "s2/math.hpp"
+#include "s2/character_state_flags_dc.hpp"
+#include "s2/field_query_dc.hpp"
+#include "s2/character_placement_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#include "platform/dc/am2_vector.hpp"
+#include "s2/modifier_vertices_dc.hpp"
+#include <cstring>
+#include <cmath>
+#else
 #include "s2/fight_stage.hpp"
 #include "s2/fight.hpp"
 #include "s2/motion.hpp"
@@ -20,73 +42,243 @@
 #include <emmintrin.h>
 #endif
 #include "s2/area_names.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 std::int32_t g_vfSelectedReactionAnimation{};
-namespace {
-template <class T> T ReadFightData(const void *owner, std::size_t offset) {
-    T result;
-    std::memcpy(&result, static_cast<const std::byte *>(owner) + offset, sizeof(result));
-    return result;
-}
 
-constexpr VFCollisionShape bodyShapes[10]{
-    {{-.055f,.015f,.005f},.295f,3,0,2}, {{.025f,0,.05f},.156f,5,0,4},
-    {{.135f,.02f,-.01f},.18f,9,0,8}, {{.23f,-.005f,-.04f},.173f,12,0,16},
-    {{.135f,.02f,.01f},.18f,16,0,64}, {{.23f,-.005f,.04f},.173f,19,0,128},
-    {{.225f,0,0},.213f,23,0,1024}, {{.305f,.035f,-.005f},.232f,24,0,2048},
-    {{.225f,0,0},.213f,28,0,8192}, {{.305f,.035f,.005f},.232f,29,0,16384}};
-constexpr VFCollisionShape togyuBodyShapes[10]{
-    {{-.155f,.005f,.025f},.489f,3,0,2}, {{.015f,0,.05f},.211f,5,0,4},
-    {{.15f,-.03f,-.055f},.267f,9,0,8}, {{.33f,-.01f,.01f},.224f,12,0,16},
-    {{.15f,-.03f,.055f},.267f,16,0,64}, {{.33f,-.01f,-.01f},.224f,19,0,128},
-    {{.31f,.025f,-.005f},.325f,23,0,1024}, {{.305f,.035f,-.005f},.311f,24,0,2048},
-    {{.31f,.025f,.005f},.325f,28,0,8192}, {{.305f,.035f,.005f},.311f,29,0,16384}};
-constexpr VFCollisionShape pushShapes[3]{
-    {{.04f,-.02f,0},.4f,3,0,2}, {{.3f,0,0},.25f,24,0,2048}, {{.3f,0,0},.25f,29,0,16384}};
-constexpr VFCollisionShape togyuPushShapes[3]{
-    {{-.05f,-.145f,0},.745f,3,0,2}, {{.34f,0,0},.392f,24,0,2048}, {{.34f,0,0},.392f,29,0,16384}};
+namespace {
+
+constexpr VFCollisionShape bodyShapes[10]{{{-.055f, .015f, .005f}, .295f, 3, 0, 2}, {{.025f, 0, .05f}, .156f, 5, 0, 4}, {{.135f, .02f, -.01f}, .18f, 9, 0, 8},
+    {{.23f, -.005f, -.04f}, .173f, 12, 0, 16}, {{.135f, .02f, .01f}, .18f, 16, 0, 64}, {{.23f, -.005f, .04f}, .173f, 19, 0, 128},
+    {{.225f, 0, 0}, .213f, 23, 0, 1024}, {{.305f, .035f, -.005f}, .232f, 24, 0, 2048}, {{.225f, 0, 0}, .213f, 28, 0, 8192},
+    {{.305f, .035f, .005f}, .232f, 29, 0, 16384}};
+
+constexpr VFCollisionShape togyuBodyShapes[10]{{{-.155f, .005f, .025f}, .489f, 3, 0, 2}, {{.015f, 0, .05f}, .211f, 5, 0, 4},
+    {{.15f, -.03f, -.055f}, .267f, 9, 0, 8}, {{.33f, -.01f, .01f}, .224f, 12, 0, 16}, {{.15f, -.03f, .055f}, .267f, 16, 0, 64},
+    {{.33f, -.01f, -.01f}, .224f, 19, 0, 128}, {{.31f, .025f, -.005f}, .325f, 23, 0, 1024}, {{.305f, .035f, -.005f}, .311f, 24, 0, 2048},
+    {{.31f, .025f, .005f}, .325f, 28, 0, 8192}, {{.305f, .035f, .005f}, .311f, 29, 0, 16384}};
+
+constexpr VFCollisionShape pushShapes[3]{{{.04f, -.02f, 0}, .4f, 3, 0, 2}, {{.3f, 0, 0}, .25f, 24, 0, 2048}, {{.3f, 0, 0}, .25f, 29, 0, 16384}};
+
+constexpr VFCollisionShape togyuPushShapes[3]{{{-.05f, -.145f, 0}, .745f, 3, 0, 2}, {{.34f, 0, 0}, .392f, 24, 0, 2048}, {{.34f, 0, 0}, .392f, 29, 0, 16384}};
+
 struct HitProfile {
     float attackScale[2], impulseScale[4];
     std::int16_t angles[4];
 };
+
 static_assert(sizeof(HitProfile) == 32);
-constexpr HitProfile hitProfiles[]{
-    {.attackScale = {1, 1}, .impulseScale = {1, 1.2f, 1, 1.2f}, .angles = {11776, 6144, 9728, 4864}},
+
+constexpr HitProfile hitProfiles[]{{.attackScale = {1, 1}, .impulseScale = {1, 1.2f, 1, 1.2f}, .angles = {11776, 6144, 9728, 4864}},
     {.attackScale = {1, 1}, .impulseScale = {1.5f, 1.8f, 1.2f, 1.44f}, .angles = {13824, 9216, 12800, 6400}},
     {.attackScale = {1, 1}, .impulseScale = {2, 5, 1.2f, 1.44f}, .angles = {12288, 14336, 11264, 6144}},
     {.attackScale = {1, 1}, .impulseScale = {2.5f, 2.5f, 2.5f, 2.5f}, .angles = {14592, 14592, 14592, 14592}},
     {.attackScale = {1, 1}, .impulseScale = {1.3f, 1.2f, 1.2f, 1.2f}, .angles = {11776, 4096, 9728, 4864}},
     {.attackScale = {1, 1}, .impulseScale = {3.8f, 3.8f, 3.8f, 3.8f}, .angles = {9216, 9216, 9216, 9216}},
     {.attackScale = {1, 1}, .impulseScale = {2.5f, 2.5f, 2.5f, 2.5f}, .angles = {12800, 12800, 12800, 12800}}};
-const VFCollisionShape *PushShapes(const VFActor *actor) {
-    return reinterpret_cast<const VFCollisionShape *>(actor->parameterAe0);
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+namespace {
+
+const VFCollisionShape *PushShapes(const VFActor *actor);
+void MoveReadyEnemy(FCMG_t *group, float x, float z);
+std::int32_t StyleAnimation(const VFActor &actor, std::size_t offset);
+template <bool ActiveOpponent> Vector3 ReadyContactDisplacement(Vector3 separation, Vector3 history);
+void ResolveReadyActive(VFCLParticipantTmp &ready, VFCLParticipantTmp &active);
+void ResolveReadyReady(VFCLParticipantTmp &first, VFCLParticipantTmp &second);
+const Vector3 &ParticipantPosition(const VFCLParticipantTmp &participant);
+bool PairBlockedByWorld(const VFActor *a, const VFActor *b);
+
+} // namespace
+
+void vfSetupHitReactionAnim(VFActor *self, VFActor *other, std::uint16_t animation);
+void vfclChooseReactionAnim(VFActor *source, VFActor *destination);
+void vfclTransformContactShapes(VFActor *self);
+void vfInitializeActorCollision(VFMA_t *game, std::uint8_t index);
+void vfclMoveEntityWithContactHistory(VFActor *self, float x, float z);
+void vfclAdjustToGroundOrSlope(VFCL_t *collision);
+void vfclUpdateHeightFlagsForGrid(VFActor *self);
+void vfClCopyMotionData(VFMA_t *game);
+void vfclEnforceRingBoundary(VFCL_t *collision);
+void vfclResolvePairedContactDrift(VFMA_t *game);
+void vfClRaycastInWorldGrid();
+void vfclComputePenetrationAndOverlap(VFCL_t *collision, VFActor *defender, VFActor *attacker);
+void vfclAdjustForSlideAndStick(VFCL_t *collision);
+void vfclSetContactCategory(VFActor *a, VFActor *b, VFCL_t *collision);
+void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t second);
+void vfClGetBonePos(std::uint8_t index, VFActor *first, VFActor *second);
+bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collision);
+float vfResolveHitOutcomeAndImpulse(VFActor *self, VFActor *other, float impact);
+void vfApplyEnvAudio(float impact, VFActor *self);
+void vfSetReactionKnockbackFromProfile(VFActor *self, VFActor *other, float impulse);
+void vfStageObjectApplyImpulse(VFActor *self);
+void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFActor *other);
+void vfclApplyHitResolution(VFActor *self, VFActor *other);
+void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t second);
+void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *participants, std::int32_t count, std::uint8_t phase);
+void vfc_VF_RobCollision_Callback(void *parameter);
+HLib::Task *Queue_vfc_VF_RobCollision(VFMA_t *game);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+template <class T> T ReadFightData(const void *owner, std::size_t offset) {
+    T result;
+    std::memcpy(&result, static_cast<const std::byte *>(owner) + offset, sizeof(result));
+    return result;
 }
-Vector3 ScaleToMagnitude(const Vector3 &input, float magnitude) {
-    const float scale = magnitude / std::sqrt(input.x * input.x + input.y * input.y + input.z * input.z);
-    return {input.x * scale, input.y * scale, input.z * scale};
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::int32_t GetMoveProficiency(std::uint8_t category, std::uint8_t move);
+
+std::int32_t g_vfSelectedReactionAnimation;
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+float GetMoveProficiencyScale(std::uint8_t move);
+
+float vfclCalculateGuardKnockbackFactor(FightActorRuntimePrefix *actor, float) {
+    const std::byte *data = reinterpret_cast<const std::byte *>(actor);
+    if (*reinterpret_cast<const std::int8_t *>(data) != *(reinterpret_cast<const std::int8_t *>(actor->game) + 0x74))
+        return 1.0f;
+    const std::int8_t *const bytes = reinterpret_cast<const std::int8_t *>(data);
+    std::int8_t level;
+    if (*reinterpret_cast<const std::uint32_t *>(data + 0x2e8) & 0x40000U)
+        level = bytes[0x881];
+    else
+        level = bytes[0x87f] == 96 ? bytes[0x880] : bytes[0x87f];
+    return GetMoveProficiencyScale(level);
 }
-// A ready enemy retains its own FCMG root/position owner.
-// @verified - p
-void MoveReadyEnemy(FCMG_t *group, float x, float z) {
-    if (std::fabs(x) < 0.0000099999997f)
-        x = 0;
-    if (std::fabs(z) < 0.0000099999997f)
-        z = 0;
-    group->position.x += x;
-    group->position.z += z;
-    auto root = mtwkGetRootPosition(group->motion);
-    root.x += x;
-    root.z += z;
-    mtwkSetRootPosition(group->motion, root);
-    shenApplyTranslationToAll(&group->character->entity.node, group->position);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void EmitFightSmoke(std::uint8_t profile, FightActorRuntimePrefix *actor);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+template <class T> static inline T &FightCollisionValue(void *actor, std::size_t offset) {
+    return *reinterpret_cast<T *>(static_cast<std::byte *>(actor) + offset);
 }
-std::int32_t StyleAnimation(const VFActor &actor, std::size_t offset) {
-    const auto *data = actor.motionParameters[4] + offset;
-    const auto high = static_cast<std::int16_t>(std::uint16_t(std::to_integer<std::uint8_t>(data[0])) << 8);
-    return int(high) | std::to_integer<std::uint8_t>(data[1]);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static inline std::int32_t FightStyleAnimation(FightActorRuntimePrefix *actor, std::size_t offset) {
+    const std::byte *const *data = reinterpret_cast<const std::byte *const *>(reinterpret_cast<const std::byte *>(actor) + 0x38);
+    const std::int32_t low = static_cast<std::uint8_t>((*data + offset)[1]);
+    return low | static_cast<std::int32_t>(static_cast<std::int8_t>((*data)[offset])) << 8;
 }
+
+static std::int32_t RandomReactionVariant(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
+    static const std::uint16_t primarySlots[6] = {78, 80, 82, 84, 86, 88};
+    static const std::uint16_t secondarySlots[2] = {90, 92};
+    const std::uint8_t guard = FightCollisionValue<std::uint8_t>(source, 0x2a9);
+    const std::uint16_t *slots;
+    std::int32_t index;
+    if (guard == 3 || guard == 0 || guard == 1) {
+        index = static_cast<std::int32_t>(dc::sdk::RandomFloat() * 6.0f);
+        slots = primarySlots;
+    } else {
+        index = static_cast<std::int32_t>(dc::sdk::RandomFloat() * 2.0f);
+        slots = secondarySlots;
+    }
+    return FightStyleAnimation(target, slots[static_cast<std::uint8_t>(index)]);
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static void vfSetupHitReactionAnim(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target, std::uint16_t animation) {
+    if (!animation)
+        return;
+    if (!(source->stateFlags & 12U))
+        return;
+    const std::uint16_t *response = 0;
+    const std::uint8_t category = vfSelectHitReactionSequence(source);
+    const std::uint16_t *record;
+    for (record = reinterpret_cast<const std::uint16_t *>(g_fallbackMotionSection3); record[0]; record += 7) {
+        if (animation == record[0] || animation == record[1]) {
+            response = record + 4;
+            break;
+        }
+    }
+    if (!response)
+        return;
+    if ((FightCollisionValue<std::uint32_t>(source, 0x2ec) & 0x4000008U) || (category & 0x33U))
+        ++response;
+    if (!(FightCollisionValue<float>(target, 0x438) > static_cast<float>(FightCollisionValue<std::uint16_t>(target, 0x290)))) {
+        target->stateFlags |= 0x800U;
+        std::uint8_t mode = 0;
+        std::uint8_t particle = 0;
+        const std::uint8_t guard = FightCollisionValue<std::uint8_t>(source, 0x2a9);
+        ++response;
+        if ((category & 16U) && (guard == 2 || guard == 5 || guard == 6)) {
+            particle = 9;
+            mode = 7;
+        } else if ((category & 32U) && (guard == 2 || guard == 5 || guard == 6)) {
+            particle = 8;
+            mode = 6;
+        } else if (category & 0x28U) {
+            particle = 6;
+            mode = 4;
+        } else if (category & 0x14U) {
+            particle = 7;
+            mode = 5;
+        }
+        if (mode) {
+            figpAssignModeForCharacter(target->character, mode);
+            figpAssignMotScaleAndDirFor(target->character, 20, 1);
+        }
+        if (particle)
+            EmitFightSmoke(particle, target);
+    }
+    std::uint16_t reaction = *response;
+    if (!reaction)
+        reaction = record[5];
+    if (FightCollisionValue<std::uint16_t>(source, 0x3a6))
+        reaction = FightCollisionValue<std::uint16_t>(source, 0x3a6);
+    if (source->stateFlags & 8U)
+        animation = record[2];
+    else if ((source->stateFlags & 4U) && !(FightCollisionValue<std::uint32_t>(source, 0x2ec) & 0x4000008U) && (category & 12U))
+        animation = record[1];
+    g_vfSelectedReactionAnimation = animation;
+    if (static_cast<std::int32_t>(FightCollisionValue<std::uint8_t>(target, 0x3a5) - FightCollisionValue<std::uint8_t>(source, 0x3a5)) < 50 ||
+        !(category & 12U) || (FightCollisionValue<std::uint32_t>(source, 0x2ec) & 0x4000008U) || (target->stateFlags & 0x800U) ||
+        FightCollisionValue<std::uint8_t>(source, 0x305) == 3) {
+        FightCollisionValue<std::uint16_t>(source, 0x27e) = 30;
+        FightCollisionValue<std::uint16_t>(source, 0x3ca) = reaction;
+        source->moveFlags &= ~0x440U;
+        source->hitStateFlags &= ~0x200000U;
+        source->moveFlags = (target->moveFlags & 0x440U) | source->moveFlags;
+        source->hitStateFlags = (target->hitStateFlags & 0x200000U) | source->hitStateFlags;
+    }
+}
+
+#else
 
 // Matching FBMOTTBL records retain their borrowed seven-word layout.
 void vfSetupHitReactionAnim(VFActor *self, VFActor *other, std::uint16_t animation) {
@@ -124,7 +316,13 @@ void vfSetupHitReactionAnim(VFActor *self, VFActor *other, std::uint16_t animati
             mode = 5;
         }
         if (particle) {
-            const auto *figure = static_cast<FigurePose *>(FindModelComponent(other->character, MODEL_FIGURE_POSE));
+            const auto *figure = static_cast<FigurePose *>(
+#if SHENMUE_IS_DC
+charFindComp
+#else
+FindModelComponent
+#endif
+(other->character, MODEL_FIGURE_POSE));
             if (!figure || !(figure->flags & 1)) {
                 figpAssignModeForCharacter(other->character, mode);
                 figpAssignMotScaleAndDirFor(other->character, 20, 1);
@@ -152,6 +350,118 @@ void vfSetupHitReactionAnim(VFActor *self, VFActor *other, std::uint16_t animati
         self->hitStateFlags |= other->hitStateFlags & VFHSF_MirroredReactionAngle;
     }
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void vfclApplyHitResolution(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target);
+
+static std::uint16_t SelectStyleReactionAnimation(FightActorRuntimePrefix *source, std::uint32_t index);
+
+static std::int32_t RandomReactionVariant(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target);
+
+static void vfAdjustReactionForGround(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target);
+
+void vfclApplyHitResolutionForSlots(VFCL_t *collision, std::uint8_t self, std::uint8_t other) {
+    vfclApplyHitResolution(collision->game->actors[self], collision->game->actors[other]);
+}
+
+// @verified - d
+void vfclChooseReactionAnim(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
+    const std::uint32_t hit = target->hitStateFlags;
+    const std::uint16_t parameter = FightCollisionValue<std::uint16_t>(source, 0x2b0);
+    const std::int16_t direction = FightCollisionValue<std::int16_t>(source, 0x2b2);
+    vfSelectHitReactionSequence(source);
+    std::uintptr_t table = g_fallbackMotionSection0[static_cast<std::uint8_t>(parameter)];
+    table += reinterpret_cast<std::uintptr_t>(GetFallbackMotionTable());
+    const std::int32_t reactionClass = g_vfSelectedReactionAnimation;
+    if (reactionClass == 9) {
+        if (hit & 0x800U)
+            g_vfSelectedReactionAnimation = 108;
+        else
+            g_vfSelectedReactionAnimation = 107;
+        return;
+    }
+    if (g_vfSelectedReactionAnimation == 8 && static_cast<std::uint16_t>(FightCollisionValue<std::int16_t>(target, 2)) == 8) {
+        std::size_t slot = 78;
+        switch (FightCollisionValue<std::uint8_t>(target, 0x2a9)) {
+        case 1:
+            slot = 80;
+            break;
+        case 2:
+        case 5:
+        case 6:
+            slot = 90;
+            break;
+        case 0:
+        case 3:
+        case 4:
+            slot = 78;
+            break;
+        }
+        const std::byte *const *data = reinterpret_cast<const std::byte *const *>(reinterpret_cast<const std::byte *>(target) + 0x38);
+        g_vfSelectedReactionAnimation = static_cast<std::uint8_t>((*data + slot)[1]) | static_cast<std::int32_t>(static_cast<std::int8_t>((*data)[slot])) << 8;
+        return;
+    }
+    std::uint32_t facingSide = 0;
+    if (hit & 0x1000U)
+        table = reinterpret_cast<std::uintptr_t>(g_fallbackMotionSection2);
+    std::uint32_t side = 0;
+    if (parameter & 0x8000U)
+        ++side;
+    if (source->moveFlags & 0x40U)
+        side ^= 1U;
+    if (target->moveFlags & 0x400U)
+        side ^= 1U;
+    facingSide += side;
+    std::int32_t angle = static_cast<std::int16_t>(FightCollisionValue<std::int16_t>(source, 0x2b2) + FightCollisionValue<std::int16_t>(source, 0x164) -
+        static_cast<std::int16_t>(target->temporaryFacingAngle) + 0x4000);
+    if (FightCollisionValue<std::uint32_t>(target, 0x33c) & 0x1000000U)
+        angle = static_cast<std::int16_t>(angle + FightCollisionValue<std::int16_t>(source, 0x946));
+    if ((hit & 0x4800U) == 0x4800U)
+        angle ^= -32768;
+    if (angle >= 0)
+        facingSide += 2;
+    std::uint32_t quadrant = 0;
+    if (static_cast<std::uint16_t>(angle + 0x1fff) <= 0x3ffeU)
+        quadrant = target->moveFlags & 0x40U ? 6 : 4;
+    else if (static_cast<std::uint16_t>(angle + 0x9fff) <= 0x1ffeU)
+        quadrant = target->moveFlags & 0x40U ? 4 : 6;
+    if (direction)
+        quadrant = 6;
+    std::uint32_t index;
+    if (!quadrant)
+        index = g_vfSelectedReactionAnimation * 8 + facingSide;
+    else
+        index = side + g_vfSelectedReactionAnimation * 8 + quadrant;
+    if (g_vfSelectedReactionAnimation == 2) {
+        g_vfSelectedReactionAnimation = SelectStyleReactionAnimation(source, index);
+    } else {
+        g_vfSelectedReactionAnimation = reinterpret_cast<const std::uint16_t *>(table)[index];
+        if (FightCollisionValue<std::uint16_t>(source, 0x2da) && (index & 7U) < 2)
+            g_vfSelectedReactionAnimation = FightCollisionValue<std::uint16_t>(source, 0x2da);
+        if (static_cast<std::uint16_t>(FightCollisionValue<std::int16_t>(target, 2)) == 14 && reactionClass != 8)
+            g_vfSelectedReactionAnimation = RandomReactionVariant(source, target);
+    }
+    vfSetupHitReactionAnim(source, target, static_cast<std::uint16_t>(g_vfSelectedReactionAnimation));
+    vfAdjustReactionForGround(source, target);
+}
+
+static std::uint16_t SelectStyleReactionAnimation(FightActorRuntimePrefix *source, std::uint32_t index) {
+    static const std::uint32_t alternatives[3][2] = {{565, 566}, {566, 565}, {309, 33077}};
+    std::uint8_t sub = 0;
+    const std::uint16_t parameter = FightCollisionValue<std::uint16_t>(source, 0x2b0);
+    std::uintptr_t table = g_fallbackMotionSection0[static_cast<std::uint8_t>(parameter)];
+    table += reinterpret_cast<std::uintptr_t>(GetFallbackMotionTable());
+    if (!FightCollisionValue<std::uint8_t>(source, 0x305))
+        return reinterpret_cast<const std::uint16_t *>(table)[index];
+    if (FightCollisionValue<std::uint32_t>(source, 0x354) & 16U)
+        ++sub;
+    return alternatives[reinterpret_cast<const std::uint8_t *>(source)[0x305] - 1][sub];
+}
+
+#else
 
 // The shared selected-class word becomes the real authored animation.
 void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
@@ -201,7 +511,7 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
     const auto index = std::uint32_t(quadrant ? side + quadrant : facingSide) + 8 * reactionClass;
     std::int32_t animation;
     if (reactionClass == 2) {
-
+        // Native g_vfAlternateReactionAnimations: alternate reactions retain the interleaved zero words.
         constexpr std::uint16_t alternatives[18]{565, 0, 566, 0, 566, 0, 565, 0, 309, 0, 33077, 0, 0, 0, 968, 0, 29, 0};
         animation = source->parameter34d ? alternatives[4 * source->parameter34d - 4 + ((source->groundContactFlags >> 2) & 4) / 2] :
                                            ReadFightData<std::uint16_t>(g_fallbackMotionTable + offset, 2 * index);
@@ -227,7 +537,307 @@ void vfclChooseReactionAnim(VFActor *source, VFActor *destination) {
         g_vfSelectedReactionAnimation = double(source->targetGroundY) + 0.6 >= double(destination->contactPosition.y) ? 351 : 91;
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+static VFCollisionShape bodyShapes[10] = {{{-.055f, .015f, .005f}, .295f, 3, 0, 2}, {{.025f, 0, .05f}, .156f, 5, 0, 4}, {{.135f, .02f, -.01f}, .18f, 9, 0, 8},
+    {{.23f, -.005f, -.04f}, .173f, 12, 0, 16}, {{.135f, .02f, .01f}, .18f, 16, 0, 64}, {{.23f, -.005f, .04f}, .173f, 19, 0, 128},
+    {{.225f, 0, 0}, .213f, 23, 0, 1024}, {{.305f, .035f, -.005f}, .232f, 24, 0, 2048}, {{.225f, 0, 0}, .213f, 28, 0, 8192},
+    {{.305f, .035f, .005f}, .232f, 29, 0, 16384}};
+
+static const VFCollisionShape togyuBodyShapes[10] = {{{-.155f, .005f, .025f}, .489f, 3, 0, 2}, {{.015f, 0, .05f}, .211f, 5, 0, 4},
+    {{.15f, -.03f, -.055f}, .267f, 9, 0, 8}, {{.33f, -.01f, .01f}, .224f, 12, 0, 16}, {{.15f, -.03f, .055f}, .267f, 16, 0, 64},
+    {{.33f, -.01f, -.01f}, .224f, 19, 0, 128}, {{.31f, .025f, -.005f}, .325f, 23, 0, 1024}, {{.305f, .035f, -.005f}, .311f, 24, 0, 2048},
+    {{.31f, .025f, .005f}, .325f, 28, 0, 8192}, {{.305f, .035f, .005f}, .311f, 29, 0, 16384}};
+
+} // namespace
+
+VFCollisionShape pushShapes[3] = {{{.04f, -.02f, 0}, .4f, 3, 0, 2}, {{.3f, 0, 0}, .25f, 24, 0, 2048}, {{.3f, 0, 0}, .25f, 29, 0, 16384}};
+
+namespace {
+
+static const VFCollisionShape togyuPushShapes[3] = {
+    {{-.05f, -.145f, 0}, .745f, 3, 0, 2}, {{.34f, 0, 0}, .392f, 24, 0, 2048}, {{.34f, 0, 0}, .392f, 29, 0, 16384}};
+
+struct ActorContactState {
+    std::uint32_t priorityReset[2];
+    std::byte retained79c[4];
+    std::uint8_t flags, linked;
+    std::byte retained7a2[2];
+    Vector3 previousSamples[10];
+    std::uint32_t shapeMaskWords[10], activeShapeMask;
+    std::byte retained848[8];
+    float groundSamples[4];
+};
+
+typedef char ActorContactPreviousCheck[offsetof(ActorContactState, previousSamples) == 0x10 ? 1 : -1];
+
+typedef char ActorContactMaskCheck[offsetof(ActorContactState, activeShapeMask) == 0xb0 ? 1 : -1];
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+ActorContactState &ContactState(FightActorRuntimePrefix *actor) {
+    return *reinterpret_cast<ActorContactState *>(reinterpret_cast<std::byte *>(actor) + 0x794);
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+const VFCollisionShape *BodyShapes(FightActorRuntimePrefix *actor) {
+    return *reinterpret_cast<const VFCollisionShape **>(reinterpret_cast<std::byte *>(actor) + 0x9a8);
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+const VFCollisionShape *PushShapes(const VFActor *actor) {
+    return reinterpret_cast<const VFCollisionShape *>(actor->parameterAe0);
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+Vector3 ScaleToMagnitude(const Vector3 &input, float magnitude) {
+    const float scale = magnitude / std::sqrt(input.x * input.x + input.y * input.y + input.z * input.z);
+    return {input.x * scale, input.y * scale, input.z * scale};
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+std::uint8_t ActorSlot(FightActorRuntimePrefix *actor) {
+    return *reinterpret_cast<std::uint8_t *>(actor);
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+// @verified - d
+void MoveReadyEnemy(FCMG_t *group, float x, float z) {
+    x = ::fabsf(x) < 0.0000099999997f ? 0.0f : x;
+    z = ::fabsf(z) < 0.0000099999997f ? 0.0f : z;
+    group->position.x += x;
+    group->position.z += z;
+    Vector3 root;
+    mtwkGetRootPosition(group->motion, &root);
+    root.x += x;
+    root.z += z;
+    mtwkSetRootPosition(group->motion, &root);
+    SetCharacterWorldPosition(group->character, &group->position);
+}
+
+} // namespace
+
+#else
+
+namespace {
+
+// A ready enemy retains its own FCMG root/position owner.
+// @verified - p
+void MoveReadyEnemy(FCMG_t *group, float x, float z) {
+    if (std::fabs(x) < 0.0000099999997f)
+        x = 0;
+    if (std::fabs(z) < 0.0000099999997f)
+        z = 0;
+    group->position.x += x;
+    group->position.z += z;
+    auto root = mtwkGetRootPosition(group->motion);
+    root.x += x;
+    root.z += z;
+    mtwkSetRootPosition(group->motion, root);
+    shenApplyTranslationToAll(&group->character->entity.node, group->position);
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
+namespace {
+
+std::int32_t StyleAnimation(const VFActor &actor, std::size_t offset) {
+    const auto *data = actor.motionParameters[4] + offset;
+    const auto high = static_cast<std::int16_t>(std::uint16_t(std::to_integer<std::uint8_t>(data[0])) << 8);
+    return int(high) | std::to_integer<std::uint8_t>(data[1]);
+}
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *participants, std::int32_t count, std::int32_t phase);
+
+void vfclEnforceRingBoundary(VFCL_t *collision);
+
+void vfclResolveWorldContacts(VFCL_t *collision);
+
+void vfclAdjustToGroundOrSlope(VFCL_t *collision);
+
+void vfclUpdateHeightFlagsForGrid(FightActorRuntimePrefix *actor);
+
+void vfUpdateStageObjects(FightRuntimePrefix *game);
+
+void vfclResolvePairedContactDrift(FightRuntimePrefix *game);
+
+void vfClRaycastInWorldGrid();
+
+void vfClCopyMotionData(FightRuntimePrefix *game);
+
+void mtwkTranslateRigInterpolated(MotionWork *work, float x, float y, float z);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+float vfclGetPushRadius(FightActorRuntimePrefix *actor) {
+    const VFCollisionShape *shapes = *reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<std::byte *>(actor) + 0x9ac);
+    if (!shapes) {
+        const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+        shapes = scenGetCharaName(control->scenarioTask, actor->character) == SHEN_NAME(TGY_) ? togyuPushShapes : pushShapes;
+    }
+    float radius = 0;
+    for (std::uint8_t index = 0; index < 3; ++index, ++shapes)
+        if (shapes->radius > radius)
+            radius = shapes->radius;
+    return radius;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::uint32_t g_vfIntersectionTagSource;
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+std::byte *GetMapRetainedCharacterState();
+
+float FightIntersectionDistance(FightActorRuntimePrefix *actor, std::uint32_t yaw, float length) {
+    FightFieldProbe probe;
+    Vector3 origin;
+    if (actor->moveFlags & 0x10000000U) {
+        origin.x = actor->contactPosition.x;
+        origin.y = actor->contactPosition.y;
+        origin.z = actor->contactPosition.z;
+    } else {
+        origin.x = reinterpret_cast<const Vector3 *>(actor->retained74)->x;
+        origin.y = reinterpret_cast<const Vector3 *>(actor->retained74)->y;
+        origin.z = reinterpret_cast<const Vector3 *>(actor->retained74)->z;
+    }
+    probe.mode = 10;
+    probe.fraction = 1.0e37f;
+    probe.flags = (probe.flags & 0x1fffffffU) | 0x10000000U;
+    const std::uint32_t angle = yaw + 0x4000U;
+    probe.x = length * CalculateFixedCosine(angle);
+    probe.z = -length * CalculateFixedSine(angle);
+    probe.originX = origin.x;
+    probe.originZ = origin.z;
+    probe.radius = vfclGetPushRadius(actor) - 0.3f;
+    probe.flags &= ~0x08000000U;
+    probe.kind = 10;
+    ResolveFightFieldProbe(&probe, reinterpret_cast<MapControlData *>(GetMapRetainedCharacterState()));
+    float result;
+    switch (static_cast<std::int32_t>(probe.flags >> 29U)) {
+    case 1:
+        result = probe.fraction;
+        if (result < 1.0f) {
+            if (result < 0)
+                result = 0;
+            else {
+                result *= length;
+                g_vfIntersectionTagSource = probe.tag;
+            }
+        } else
+            result = length;
+        break;
+    case 0:
+        result = length;
+        break;
+    default:
+        result = length;
+        break;
+    case 2:
+        result = 0;
+        break;
+    }
+    if (result > 0)
+        result -= 0.3f;
+    return result;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclTransformContactShapes(FightActorRuntimePrefix *actor) {
+    std::int32_t index;
+    Vector3 *sample = reinterpret_cast<Vector3 *>(reinterpret_cast<std::byte *>(actor) + 0x74);
+    std::int32_t transformDisabled = 0;
+    for (index = 0; index < 10; ++index, ++sample) {
+        const Matrix4x4 *const bone =
+            mtwkGetBoneTransform(actor->motion, (*reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<std::byte *>(actor) + 0x9a8))[index].bone);
+        if (!transformDisabled && bone) {
+            matrix_stack::LoadMatrix(bone);
+            const VFCollisionShape *const shapes = *reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<std::byte *>(actor) + 0x9a8);
+            Vector3 point;
+            point.x = shapes[index].point.x;
+            point.y = shapes[index].point.y;
+            point.z = shapes[index].point.z;
+            Matrix4x4::TransformPoint(point, *sample);
+        }
+    }
+    Vector3 *contact = actor->game->collision->samples[*reinterpret_cast<const std::int8_t *>(actor)].points;
+    const VFCollisionShape *push = *reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<std::byte *>(actor) + 0x9ac);
+    for (index = 0; index < 3; ++index, ++contact, ++push) {
+        matrix_stack::LoadMatrix(mtwkGetBoneTransform(actor->motion, push->bone));
+        Matrix4x4::TransformPoint(push->point, *contact);
+    }
+}
+
+#else
+
+// Native GetTransformAndTransformVector3: world samples are produced from the real motion bone transforms.
 // @verified - p
 void vfclTransformContactShapes(VFActor *self) {
     const auto *const shapes = reinterpret_cast<const VFCollisionShape *>(self->parameterAd8);
@@ -244,6 +854,40 @@ void vfclTransformContactShapes(VFActor *self) {
         Matrix4x4::TransformPoint(pushes[i].point, self->game->collision->samples[self->groupIndex].points[i]);
     }
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfInitializeActorCollision(FightRuntimePrefix *game, std::uint8_t index) {
+    FightActorRuntimePrefix *const actor = game->actors[index];
+    const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+    if (scenGetCharaName(control->scenarioTask, actor->character) == SHEN_NAME(TGY_)) {
+        *reinterpret_cast<const VFCollisionShape **>(reinterpret_cast<std::byte *>(actor) + 0x9a8) = togyuBodyShapes;
+        *reinterpret_cast<const VFCollisionShape **>(reinterpret_cast<std::byte *>(actor) + 0x9ac) = togyuPushShapes;
+    } else {
+        *reinterpret_cast<const VFCollisionShape **>(reinterpret_cast<std::byte *>(actor) + 0x9a8) = bodyShapes;
+        *reinterpret_cast<const VFCollisionShape **>(reinterpret_cast<std::byte *>(actor) + 0x9ac) = pushShapes;
+    }
+    matrix_stack::Matrix4x4_Push(0);
+    vfclTransformContactShapes(actor);
+    PopCurrentMatrix(1);
+    for (std::uint8_t word = 0; word < 10; ++word)
+        (&FightCollisionValue<std::uint32_t>(actor, 0x81c))[word] = 0;
+    for (std::uint8_t sample = 0; sample < 4; ++sample)
+        (&FightCollisionValue<float>(actor, 0x850))[sample] = 0.0f;
+    *reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(actor) + 0x794) = 0;
+    *reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(actor) + 0x798) = 0;
+    FightCollisionValue<std::uint8_t>(actor, 0x7a0) = 0;
+    FightCollisionValue<std::uint8_t>(actor, 0x7a1) = 0;
+    FightCollisionValue<std::uint32_t>(actor, 0x844) = 0;
+    FightCollisionRuntimePrefix *collision = game->collision;
+    collision->ringMasks[index] = 0;
+    collision->runtimeFlags = 0;
+}
+
+#else
 
 // TOGYU's scenario identity chooses the authored geometry bank.
 void vfInitializeActorCollision(VFMA_t *game, std::uint8_t index) {
@@ -265,6 +909,155 @@ void vfInitializeActorCollision(VFMA_t *game, std::uint8_t index) {
     game->collision->ringMasks[index] = 0;
     game->collision->runtimeFlags = 0;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfClCopyMotionData(FightRuntimePrefix *game) {
+    for (std::int32_t index = 0; index < 6; ++index) {
+        if (!game->characters[index])
+            continue;
+        const Vector2 &delta = game->collision->contactDeltas[index];
+        if ((delta.x < 0 ? -delta.x : delta.x) < 0.00000011920929f && (delta.y < 0 ? -delta.y : delta.y) < 0.00000011920929f)
+            continue;
+        mtwkTranslateRigInterpolated(game->actors[index]->motion, delta.x, 0, delta.y);
+    }
+}
+
+#else
+
+// Publish accumulated collision displacement into the solved MTWK rig.
+// @verified - p
+void vfClCopyMotionData(VFMA_t *game) {
+    for (std::size_t i = 0; i != 6; ++i)
+        if (game->characters[i]) {
+            const auto &delta = game->collision->contactDeltas[i];
+            if (std::fabs(delta.x) >= 0.00000011920929f || std::fabs(delta.y) >= 0.00000011920929f)
+                mtwkApplyCollisionTranslation(game->actors[i]->motion, delta.x, 0, delta.y);
+        }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfClRaycastInWorldGrid() {
+    Vector3 point, hit;
+    for (std::uint8_t index = 0; index < g_pFightStage->enemyCount; ++index) {
+        FCMG_t *group = &g_pFightStage->enemySlots[index];
+        if (!group->character)
+            continue;
+        if (group->state == 2) {
+            const Vector3 *position = &group->fighter->game->collision->samples[group->actorIndex].points[0];
+            if (!RaycastInWorldGrid(&hit, position, pushShapes[0].radius)) {
+                FightCollisionValue<float>(group, 0xc4) = position->x;
+                FightCollisionValue<float>(group, 0xc8) = position->z;
+                FightCollisionValue<std::uint8_t>(group, 0xcc) = 1;
+            }
+        } else if (group->state == 1) {
+            if (group->group && group->group->activationState == 3)
+                continue;
+            const MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            const VFCollisionShape *shape = scenGetCharaName(control->scenarioTask, group->character) == SHEN_NAME(TGY_) ? togyuPushShapes : pushShapes;
+            matrix_stack::LoadMatrix(mtwkGetBoneTransform(group->motion, shape->bone));
+            Matrix4x4::TransformPoint(shape->point, point);
+            if (!RaycastInWorldGrid(&hit, &point, shape->radius)) {
+                FightCollisionValue<float>(group, 0xc4) = point.x;
+                FightCollisionValue<float>(group, 0xc8) = point.z;
+                FightCollisionValue<std::uint8_t>(group, 0xcc) = 1;
+            } else if (FightCollisionValue<std::uint8_t>(group, 0xcc)) {
+                MoveReadyEnemy(group, FightCollisionValue<float>(group, 0xc4) - point.x, FightCollisionValue<float>(group, 0xc8) - point.z);
+            }
+        }
+    }
+}
+
+#else
+
+// Active and ready actors use their respective real geometry owners.
+// @verified - p
+void vfClRaycastInWorldGrid() {
+    for (std::size_t i = 0; i < g_pFightStage->enemyCount; ++i) {
+        auto &group = g_pFightStage->enemySlots[i];
+        if (!group.character)
+            continue;
+        Vector3 hit;
+        if (group.state == 2) {
+            const auto &point = group.fighter->game->collision->samples[group.actorIndex].points[0];
+            if (!RaycastInWorldGrid(hit, point, 0.4f)) {
+                group.offsetX = point.x;
+                group.offsetZ = point.z;
+                group.setPosition = 1;
+            }
+        } else if (group.state == 1 && (!group.group || static_cast<std::uint8_t>(group.group->activationState) != 3)) {
+            const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
+            const bool togyu = scenGetCharaName(control->scenarioTask, group.character).name == SHEN_NAME(TGY_);
+            const auto &shape = togyu ? togyuPushShapes[0] : pushShapes[0];
+            Vector3 point;
+            Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(group.motion, shape.bone));
+            Matrix4x4::TransformPoint(shape.point, point);
+            if (RaycastInWorldGrid(hit, point, shape.radius)) {
+                if (group.setPosition)
+                    MoveReadyEnemy(&group, group.offsetX - point.x, group.offsetZ - point.z);
+            } else {
+                group.offsetX = point.x;
+                group.offsetZ = point.z;
+                group.setPosition = 1;
+            }
+        }
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void vfclApplyDeltaToContactHistory(FightActorRuntimePrefix *actor, float x, float z) {
+    Vector3 *point = reinterpret_cast<Vector3 *>(reinterpret_cast<std::byte *>(actor) + 0x74);
+    std::int32_t index;
+    for (index = 0; index < 10; ++index, ++point) {
+        point->x += x;
+        point->z += z;
+    }
+    point = actor->game->collision->samples[*reinterpret_cast<const std::int8_t *>(actor)].points;
+    for (index = 0; index < 3; ++index, ++point) {
+        point->x += x;
+        point->z += z;
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclMoveEntityWithContactHistory(FightActorRuntimePrefix *actor, float x, float z) {
+    Vector3 world, root;
+    if ((x < 0 ? -x : x) < 0.00000011920929f && (z < 0 ? -z : z) < 0.00000011920929f)
+        return;
+    mtwkGetRootPosition(actor->motion, &root);
+    root.x += x;
+    root.z += z;
+    mtwkSetRootPosition(actor->motion, &root);
+    actor->contactPosition.x += x;
+    actor->contactPosition.z += z;
+    actor->position.x += x;
+    actor->position.z += z;
+    GetCharacterWorldPosition(actor->character, &world);
+    world.x += x;
+    world.z += z;
+    SetCharacterWorldPosition(actor->character, &world);
+    Vector2 *const delta = &actor->game->collision->contactDeltas[*reinterpret_cast<const std::int8_t *>(actor)];
+    delta->x += x;
+    delta->y += z;
+    vfclApplyDeltaToContactHistory(actor, x, z);
+}
+
+#else
 
 // Calls vfclApplyDeltaToContactHistory: movement preserves root, character and contact-history ownership.
 // @verified - p
@@ -296,7 +1089,84 @@ void vfclMoveEntityWithContactHistory(VFActor *self, float x, float z) {
     }
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
+    struct ActorView {
+        std::byte retained000[2];
+        std::uint16_t fightStyle;
+        std::byte retained004[0x790];
+        ActorContactState contact;
+    };
+    std::int32_t index, slot;
+    FightRuntimePrefix *game;
+    FightActorRuntimePrefix *actor;
+    std::int32_t collided;
+    const VFCollisionShape *shape;
+    Vector3 *point, *previous;
+    float radius, distance, largest;
+    Vector3 delta, hit, best, direction;
+    if (collision->runtimeFlags & 1U)
+        return;
+    game = collision->game;
+    delta.y = 0.0f;
+    for (index = 0; index < 6; ++index) {
+        if (!game->characters[index] || !game->actors[index] || reinterpret_cast<ActorView *>(game->actors[index])->fightStyle == 1)
+            continue;
+        actor = game->actors[index];
+        if (!(actor->stateFlags & 0x40U))
+            continue;
+        actor->stateFlags &= ~0x40U;
+        collided = 0;
+        largest = 0.0f;
+        shape = *reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<const std::byte *>(actor) + 0x9ac);
+        for (slot = 0; slot < 3; ++slot, ++shape) {
+            point = &collision->samples[index].points[slot];
+            previous = &collision->previousSamples[index].points[slot];
+            radius = shape->radius;
+            if (FindNearestRayIntersection(&hit, point, previous)) {
+                direction.x = point->x - previous->x;
+                direction.y = point->y - previous->y;
+                direction.z = point->z - previous->z;
+                am2Vector3NormalizeFast(&direction);
+                hit.x -= direction.x * radius;
+                hit.z -= direction.z * radius;
+                delta.x = hit.x - point->x;
+                delta.z = hit.z - point->z;
+                distance = delta.x * delta.x + delta.z * delta.z;
+                if (distance > largest) {
+                    largest = distance;
+                    collided = 1;
+                    best.x = delta.x;
+                    best.z = delta.z;
+                    reinterpret_cast<ActorView *>(actor)->contact.activeShapeMask = reinterpret_cast<ActorView *>(actor)->contact.activeShapeMask | shape->mask;
+                }
+            } else if (RaycastInWorldGrid(&hit, point, radius)) {
+                delta.x = hit.x - point->x;
+                delta.z = hit.z - point->z;
+                distance = delta.x * delta.x + delta.z * delta.z;
+                if (distance > largest) {
+                    largest = distance;
+                    collided = 1;
+                    best.x = delta.x;
+                    best.z = delta.z;
+                    reinterpret_cast<ActorView *>(actor)->contact.activeShapeMask = reinterpret_cast<ActorView *>(actor)->contact.activeShapeMask | shape->mask;
+                }
+            }
+        }
+        if (collided) {
+            actor->moveFlags |= 0x8000U;
+            vfclMoveEntityWithContactHistory(actor, best.x, best.z);
+        }
+    }
+}
+
+#else
+
+// Resolve the largest native static/transformed world push.
 // @verified - p
 void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
     if (collision->runtimeFlags & 1)
@@ -339,6 +1209,72 @@ void vfclAdjustToGroundOrSlope(VFCL_t *collision) {
         }
     }
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclUpdateHeightFlagsForGrid(FightActorRuntimePrefix *actor) {
+    std::uint8_t index;
+    std::uint16_t snap, local, outside, inside, floor;
+    float localY, floorY, snapY;
+    std::uint32_t fixedGround;
+    FightRuntimePrefix *game;
+    const VFCollisionShape *shape;
+    Vector3 *point;
+    inside = 0;
+    outside = 0;
+    local = 0;
+    snap = 0;
+    floor = 0;
+    localY = actor->position.y + 0.05f;
+    game = actor->game;
+    floorY = game->floorIntersectionY;
+    snapY = game->floorSnapY;
+    fixedGround = g_pFightStage->battleFlags & 0x800U;
+    point = reinterpret_cast<Vector3 *>(reinterpret_cast<std::byte *>(actor) + 0x74);
+    shape = bodyShapes;
+    for (index = 0; index < 10; ++index, ++shape, ++point) {
+        const std::uint16_t mask = shape->mask;
+        const float bottom = point->y - bodyShapes[0].radius;
+        if (game->type != 8) {
+            float ground;
+            if (fixedGround)
+                ground = actor->targetGroundY;
+            else {
+                point->y += 1.0f;
+                ground = flddFindIntersectionBy(*point);
+                point->y -= 1.0f;
+            }
+            if (ground + 0.05f > bottom)
+                floor |= mask;
+            if (localY > bottom)
+                local |= mask;
+            inside |= mask;
+        } else {
+            if (floorY + 0.05f > bottom)
+                floor |= mask;
+            if (snapY + 0.05f > bottom)
+                snap |= mask;
+            if (localY > bottom)
+                local |= mask;
+            if (vfIsWithinFightFloor(*point))
+                inside |= mask;
+            else
+                outside |= mask;
+        }
+    }
+    FightCollisionValue<std::uint16_t>(actor, 0x3de) = inside & floor;
+    FightCollisionValue<std::uint16_t>(actor, 0x3ec) = inside;
+    FightCollisionValue<std::uint16_t>(actor, 0x3ea) = outside;
+    FightCollisionValue<std::uint16_t>(actor, 0x3e8) = outside & snap;
+    FightCollisionValue<std::uint16_t>(actor, 0x3e6) = local;
+    FightCollisionValue<std::uint16_t>(actor, 0x3f0) = FightCollisionValue<std::uint16_t>(actor, 0x3ee);
+    FightCollisionValue<std::uint16_t>(actor, 0x3ee) = FightCollisionValue<std::uint16_t>(actor, 0x3de) | FightCollisionValue<std::uint16_t>(actor, 0x3e8);
+}
+
+#else
 
 // The fixed height-tag bank is independent of TOGYU geometry selection.
 // @verified - p
@@ -385,16 +1321,172 @@ void vfclUpdateHeightFlagsForGrid(VFActor *self) {
     self->previousGroundContactMask = previous;
 }
 
-// Publish accumulated collision displacement into the solved MTWK rig.
-// @verified - p
-void vfClCopyMotionData(VFMA_t *game) {
-    for (std::size_t i = 0; i != 6; ++i)
-        if (game->characters[i]) {
-            const auto &delta = game->collision->contactDeltas[i];
-            if (std::fabs(delta.x) >= 0.00000011920929f || std::fabs(delta.y) >= 0.00000011920929f)
-                mtwkApplyCollisionTranslation(game->actors[i]->motion, delta.x, 0, delta.y);
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclResolvePairedContactDrift(FightRuntimePrefix *game) {
+    FightCollisionRuntimePrefix *collision = game->collision;
+    std::int32_t index;
+    for (index = 0; index < 6; ++index) {
+        FightActorRuntimePrefix *self, *other;
+        Vector2 *first, *second;
+        if (!game->characters[index])
+            continue;
+        self = game->actors[index];
+        if (!(self->hitStateFlags & 0x80000U) || (self->activeMotionFlags & 0x80U))
+            continue;
+        if (!self->secondActor || !(self->secondActor->hitStateFlags & 0x40000U))
+            continue;
+        other = self->secondActor;
+        first = &collision->contactDeltas[index];
+        second = &collision->contactDeltas[other->groupIndex];
+        if (collision->ringMasks[index] && collision->ringMasks[other->groupIndex] &&
+            !*reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(self) + 0x844) && !(self->stateFlags & 0x20U) &&
+            !*reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(other) + 0x844) && !(other->stateFlags & 0x20U)) {
+            if ((first->x < 0.0f ? -first->x : first->x) < 0.00000011920929f && (first->y < 0.0f ? -first->y : first->y) < 0.00000011920929f &&
+                (second->x < 0.0f ? -second->x : second->x) < 0.00000011920929f && (second->y < 0.0f ? -second->y : second->y) < 0.00000011920929f)
+                continue;
+            if (first->x * first->x + first->y * first->y > second->x * second->x + second->y * second->y) {
+                vfclMoveEntityWithContactHistory(other, first->x - second->x, first->y - second->y);
+                other->stateFlags |= 0x40U;
+            } else {
+                vfclMoveEntityWithContactHistory(self, second->x - first->x, second->y - first->y);
+                self->stateFlags |= 0x40U;
+            }
+        } else if (*reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(self) + 0x844) || collision->ringMasks[index] ||
+            (self->stateFlags & 0x20U)) {
+            if (!*reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(other) + 0x844) && !collision->ringMasks[other->groupIndex] &&
+                !(other->stateFlags & 0x20U)) {
+                vfclMoveEntityWithContactHistory(other, first->x - second->x, first->y - second->y);
+                other->stateFlags |= 0x40U;
+            }
+        } else {
+            vfclMoveEntityWithContactHistory(self, second->x - first->x, second->y - first->y);
+            self->stateFlags |= 0x40U;
         }
+    }
 }
+
+#else
+
+// Paired throw actors share the winning real contact displacement.
+// @verified - p
+void vfclResolvePairedContactDrift(VFMA_t *game) {
+    auto &collision = *game->collision;
+    for (std::size_t i = 0; i != 6; ++i) {
+        if (!game->characters[i])
+            continue;
+        VFActor *const self = game->actors[i];
+        if (!(self->hitStateFlags & VFHSF_AirborneOrDowned) || (self->activeMotionFlags & VFSMF_Unknown80))
+            continue;
+        VFActor *const other = self->secondActor;
+        if (!other || !(other->hitStateFlags & VFHSF_MidAirRecovery))
+            continue;
+        const auto index = static_cast<std::int8_t>(other->groupIndex);
+        const auto &a = collision.contactDeltas[i];
+        const auto &b = collision.contactDeltas[index];
+        const auto selfHit = self->contact.activeShapeMask;
+        const auto otherHit = other->contact.activeShapeMask;
+        const auto moveSelf = [&] {
+            vfclMoveEntityWithContactHistory(self, b.x - a.x, b.y - a.y);
+            self->stateFlags |= VFSF_Unknown40;
+        };
+        const auto moveOther = [&] {
+            vfclMoveEntityWithContactHistory(other, a.x - b.x, a.y - b.y);
+            other->stateFlags |= VFSF_Unknown40;
+        };
+        if (collision.ringMasks[i] && collision.ringMasks[index] && !selfHit && !(self->stateFlags & VFSF_Unknown20) && !otherHit &&
+            !(other->stateFlags & VFSF_Unknown20)) {
+            if (std::fabs(a.x) < 0.00000011920929f && std::fabs(a.y) < 0.00000011920929f && std::fabs(b.x) < 0.00000011920929f &&
+                std::fabs(b.y) < 0.00000011920929f)
+                continue;
+            if (a.x * a.x + a.y * a.y <= b.x * b.x + b.y * b.y)
+                moveSelf();
+            else
+                moveOther();
+        } else if (!selfHit && !collision.ringMasks[i] && !(self->stateFlags & VFSF_Unknown20))
+            moveSelf();
+        else if (!otherHit && !collision.ringMasks[index] && !(other->stateFlags & VFSF_Unknown20))
+            moveOther();
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclEnforceRingBoundary(VFCL_t *collision) {
+    std::uint8_t index, selected;
+    FightRuntimePrefix *game;
+    FightActorRuntimePrefix *actor;
+    const VFCollisionShape *shape;
+    std::uint8_t point, spawn;
+    float boundaryX, boundaryZ, radius, x, z, square, extent, largest, distance;
+    Vector3 push, step;
+    if (collision->runtimeFlags & 2U)
+        return;
+    game = collision->game;
+    if (!game->spawnPointCount)
+        return;
+    for (index = 0; index < 6; ++index) {
+        if (!game->characters[index])
+            continue;
+        actor = game->actors[index];
+        actor->stateFlags &= ~1U;
+        if ((actor->retained350 & 1U) && !(g_pFightStage->battleFlags & 2U))
+            continue;
+        spawn = actor->nearestSpawnPoint;
+        boundaryX = game->spawnPoints[spawn].x;
+        boundaryZ = game->spawnPoints[spawn].z;
+        radius = game->spawnPoints[spawn].parameter;
+        collision->ringMasks[index] = largest = selected = distance = 0;
+        shape = *reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<const std::byte *>(actor) + 0x9ac);
+        for (point = 0; point < 3; ++point, ++shape) {
+            x = collision->samples[index].points[point].x;
+            z = collision->samples[index].points[point].z;
+            x -= boundaryX;
+            z -= boundaryZ;
+            square = x * x + z * z;
+            if ((radius - shape->radius) * (radius - shape->radius) > square)
+                continue;
+            collision->ringMasks[index] |= shape->mask;
+            square = ::sqrtf(square);
+            extent = shape->radius + square;
+            if (extent > largest) {
+                largest = extent;
+                selected = point;
+                distance = square;
+            }
+        }
+        if (largest < 0.00000011920929f) {
+            actor->stateFlags &= ~0x400U;
+            continue;
+        }
+        if (actor->stateFlags & 0x4000U)
+            actor->stateFlags |= 0x400U;
+        else if (actor->game->type == 8 && !(g_pFightStage->battleFlags & 0x402U) && game->elapsedTicks > 450U &&
+            (((actor->hitStateFlags & 0x10U) && (actor->hitStateFlags & 0x24000U)) || (actor->activeMotionFlags & 0x80U) || (actor->retained350 & 1U) ||
+                (actor->stateFlags & 0x600U)))
+            actor->stateFlags |= 0x400U;
+        else {
+            shape = *reinterpret_cast<const VFCollisionShape *const *>(reinterpret_cast<const std::byte *>(actor) + 0x9ac) + selected;
+            distance -= radius - shape->radius - 0.01f;
+            if (distance < 0.00000011920929f)
+                continue;
+            push.x = boundaryX - collision->samples[index].points[selected].x;
+            push.z = boundaryZ - collision->samples[index].points[selected].z;
+            push.y = 0.0f;
+            dc::sdk::SetVectorLength(&step, &push, distance);
+            vfclMoveEntityWithContactHistory(actor, step.x, step.z);
+            actor->stateFlags |= 1U;
+        }
+    }
+}
+
+#else
 
 // Authored circular fight boundaries publish tags before applying push.
 // @verified - p
@@ -460,82 +1552,318 @@ void vfclEnforceRingBoundary(VFCL_t *collision) {
     }
 }
 
-// Paired throw actors share the winning real contact displacement.
-// @verified - p
-void vfclResolvePairedContactDrift(VFMA_t *game) {
-    auto &collision = *game->collision;
-    for (std::size_t i = 0; i != 6; ++i) {
-        if (!game->characters[i])
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclResolveWorldContacts(VFCL_t *collision) {
+    std::int32_t index;
+    FightRuntimePrefix *const game = collision->game;
+    Vector3 point, step;
+    step.y = 0.0f;
+    for (index = 0; index < 6; ++index) {
+        if (!game->characters[index])
             continue;
-        VFActor *const self = game->actors[i];
-        if (!(self->hitStateFlags & VFHSF_AirborneOrDowned) || (self->activeMotionFlags & VFSMF_Unknown80))
+        FightActorRuntimePrefix *const actor = game->actors[index];
+        const Vector3 &previous = collision->previousSamples[index].points[0];
+        const Vector3 &current = collision->samples[index].points[0];
+        step.x = current.x - previous.x;
+        step.z = current.z - previous.z;
+        if ((step.x < 0.0f ? -step.x : step.x) < 0.00000011920929f && (step.z < 0.0f ? -step.z : step.z) < 0.00000011920929f)
             continue;
-        VFActor *const other = self->secondActor;
-        if (!other || !(other->hitStateFlags & VFHSF_MidAirRecovery))
-            continue;
-        const auto index = static_cast<std::int8_t>(other->groupIndex);
-        const auto &a = collision.contactDeltas[i];
-        const auto &b = collision.contactDeltas[index];
-        const auto selfHit = self->contact.activeShapeMask;
-        const auto otherHit = other->contact.activeShapeMask;
-        const auto moveSelf = [&] {
-            vfclMoveEntityWithContactHistory(self, b.x - a.x, b.y - a.y);
-            self->stateFlags |= VFSF_Unknown40;
-        };
-        const auto moveOther = [&] {
-            vfclMoveEntityWithContactHistory(other, a.x - b.x, a.y - b.y);
-            other->stateFlags |= VFSF_Unknown40;
-        };
-        if (collision.ringMasks[i] && collision.ringMasks[index] && !selfHit && !(self->stateFlags & VFSF_Unknown20) && !otherHit &&
-            !(other->stateFlags & VFSF_Unknown20)) {
-            if (std::fabs(a.x) < 0.00000011920929f && std::fabs(a.y) < 0.00000011920929f && std::fabs(b.x) < 0.00000011920929f &&
-                std::fabs(b.y) < 0.00000011920929f)
+        point.x = current.x;
+        point.y = current.y;
+        point.z = current.z;
+        am2Vector3NormalizeFast(&step);
+        step.x *= 0.2f;
+        step.z *= 0.2f;
+        point.x += step.x * 3;
+        point.z += step.z * 3;
+        const float first = flddGetIntersectionFor(actor->character, point) - actor->targetGroundY;
+        point.x += step.x;
+        point.y += first;
+        point.z += step.z;
+        const float second = flddGetIntersectionFor(actor->character, point) - actor->targetGroundY;
+        float change = second - first;
+        if (game->type != 8)
+            change = ::fabsf(change);
+        if (change < 0.5f) {
+            point.x += step.x;
+            point.y += second;
+            point.z += step.z;
+            const float third = flddGetIntersectionFor(actor->character, point) - actor->targetGroundY;
+            change = third - second;
+            if (game->type != 8)
+                change = ::fabsf(change);
+            if (change < 0.5f)
                 continue;
-            if (a.x * a.x + a.y * a.y <= b.x * b.x + b.y * b.y)
-                moveSelf();
-            else
-                moveOther();
-        } else if (!selfHit && !collision.ringMasks[i] && !(self->stateFlags & VFSF_Unknown20))
-            moveSelf();
-        else if (!otherHit && !collision.ringMasks[index] && !(other->stateFlags & VFSF_Unknown20))
-            moveOther();
+        }
+        vfclMoveEntityWithContactHistory(actor, previous.x - current.x, previous.z - current.z);
     }
 }
 
-// Active and ready actors use their respective real geometry owners.
+std::uint8_t vfclFindBodyShapeForBone(std::uint8_t bone) {
+    std::uint8_t index;
+    for (index = 0; index < 10; ++index) {
+        if (bodyShapes[index].bone == bone)
+            break;
+    }
+    return index;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void vfclSetContactCategory(FightActorRuntimePrefix *a, FightActorRuntimePrefix *b, VFCL_t *collision) {
+    struct ContactMask {
+        std::uint32_t first, second;
+        float slide, stick;
+    };
+    static const ContactMask entries[7] = {{0xffffffffU, 0xffffffffU, .5f, .5f}, {0xffffffffU, 0xffffffffU, 0, 1}, {0xffffffffU, 0xffffffffU, 1, 0},
+        {0x202, 0x202, 0, 1}, {0x202, 0x202, 1, 0}, {0xffffffffU, 0xffffffffU, 0, 1}, {0xffffffffU, 0xffffffffU, 1, 0}};
+    const std::uint32_t first = a->hitStateFlags, second = b->hitStateFlags, either = first | second;
+    std::uint32_t flags = 0, type = 0;
+    if ((either & 0xc0000U) == 0xc0000U)
+        flags = 1;
+    else if (FightCollisionValue<std::uint8_t>(b, 2) == 1) {
+        type = 1;
+        goto publish;
+    } else if (FightCollisionValue<std::uint8_t>(a, 2) == 1) {
+        type = 2;
+        goto publish;
+    } else if (a->game->type == 9) {
+        type = 2;
+        goto publish;
+    } else if (((first ^ second) & 0x100U) && a->moveId != 41 && b->moveId != 41)
+        flags = 2;
+    else if (first & second & 0x100U)
+        flags = 4;
+    if (either & 0x4000U)
+        flags |= 8;
+    if (!(flags & 5U)) {
+        if (either & 0x10000U) {
+            if (!(first & 0x10000U))
+                type = !(second & 0x8000U) && (first & 0x400000U) && (a->motionFlags & 0x1010U) ? 6 : 2;
+            else
+                type = !(first & 0x8000U) && (second & 0x400000U) && (b->motionFlags & 0x1010U) ? 5 : 1;
+        } else if (ContactState(a).linked)
+            type = 1;
+        else if (ContactState(b).linked)
+            type = 2;
+        else if (ContactState(a).activeShapeMask)
+            type = 1;
+        else if (ContactState(b).activeShapeMask)
+            type = 2;
+        else if (first & 0xc0000U)
+            type = 1;
+        else if (second & 0xc0000U)
+            type = 2;
+        else if (flags & 2U) {
+            type = 4;
+            if (first & 0x100U)
+                type = (second & 0x10002000U) != 0x10002000U && !(b->activeMotionFlags & 0x200000U) ? 3 : 1;
+        }
+    }
+publish:
+    collision->flagsWord = flags;
+    collision->contactType = type;
+    collision->maskA = entries[type].first;
+    collision->maskB = entries[type].second;
+    collision->slideScale = entries[type].slide;
+    collision->stickScale = entries[type].stick;
+    const std::int16_t animationA = FightCollisionValue<std::int16_t>(a, 0x42c), animationB = FightCollisionValue<std::int16_t>(b, 0x42c);
+    if (animationA == 283 || animationA == 571)
+        collision->maskA &= 0xffff93ffU;
+    if (animationB == 283 || animationB == 571)
+        collision->maskB &= 0xffff93ffU;
+}
+
+#else
+
+// The PC exception-animation list contains only its native -1 terminator.
 // @verified - p
-void vfClRaycastInWorldGrid() {
-    for (std::size_t i = 0; i < g_pFightStage->enemyCount; ++i) {
-        auto &group = g_pFightStage->enemySlots[i];
-        if (!group.character)
-            continue;
-        Vector3 hit;
-        if (group.state == 2) {
-            const auto &point = group.fighter->game->collision->samples[group.actorIndex].points[0];
-            if (!RaycastInWorldGrid(hit, point, 0.4f)) {
-                group.offsetX = point.x;
-                group.offsetZ = point.z;
-                group.setPosition = 1;
-            }
-        } else if (group.state == 1 && (!group.group || static_cast<std::uint8_t>(group.group->activationState) != 3)) {
-            const auto *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-            const bool togyu = scenGetCharaName(control->scenarioTask, group.character).name == SHEN_NAME(TGY_);
-            const auto &shape = togyu ? togyuPushShapes[0] : pushShapes[0];
-            Vector3 point;
-            Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(group.motion, shape.bone));
-            Matrix4x4::TransformPoint(shape.point, point);
-            if (RaycastInWorldGrid(hit, point, shape.radius)) {
-                if (group.setPosition)
-                    MoveReadyEnemy(&group, group.offsetX - point.x, group.offsetZ - point.z);
-            } else {
-                group.offsetX = point.x;
-                group.offsetZ = point.z;
-                group.setPosition = 1;
+void vfclSetContactCategory(VFActor *a, VFActor *b, VFCL_t *collision) {
+    struct MaskEntry {
+        std::uint32_t first, second;
+        float slide, stick;
+    };
+    static constexpr MaskEntry entries[]{{0xffffffff, 0xffffffff, .5f, .5f}, {0xffffffff, 0xffffffff, 0, 1}, {0xffffffff, 0xffffffff, 1, 0},
+        {0x202, 0x202, 0, 1}, {0x202, 0x202, 1, 0}, {0xffffffff, 0xffffffff, 0, 1}, {0xffffffff, 0xffffffff, 1, 0}};
+    const auto first = a->hitStateFlags, second = b->hitStateFlags, either = first | second;
+    std::uint32_t flags = 0, type = 0;
+    if ((either & 0xc0000) == 0xc0000)
+        flags = 1;
+    else if (a->fightStyle == 1 || b->fightStyle == 1)
+        type = 1;
+    else if (a->game->type == 9)
+        type = 2;
+    else {
+        if (((first ^ second) & 0x100) && a->moveId != 41 && b->moveId != 41)
+            flags = 2;
+        if (first & second & 0x100)
+            flags |= 4;
+    }
+    if (!type) {
+        if (either & 0x4000)
+            flags |= 8;
+        if (!(flags & 5)) {
+            if (either & 0x10000) {
+                if (!(first & 0x10000))
+                    type = !(second & 0x8000) && (first & 0x400000) && (a->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) ? 6 : 2;
+                else
+                    type = !(first & 0x8000) && (second & 0x400000) && (b->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) ? 5 : 1;
+            } else if (a->contact.linked || b->contact.linked || a->contact.activeShapeMask)
+                type = 1;
+            else if (b->contact.activeShapeMask)
+                type = 2;
+            else if (first & 0xc0000)
+                type = 1;
+            else if (second & 0xc0000)
+                type = 2;
+            else if (flags & 2) {
+                type = 3;
+                if ((first & 0x100) && ((second & 0x10002000) == 0x10002000 || (b->activeMotionFlags & VFSMF_Unknown200000)))
+                    type = 2;
             }
         }
     }
+    collision->flagsWord = flags;
+    collision->contactType = type;
+    collision->maskA = entries[type].first;
+    collision->maskB = entries[type].second;
+    collision->slideScale = entries[type].slide;
+    collision->stickScale = entries[type].stick;
+    if (a->currentAnimation == 283 || a->currentAnimation == 571)
+        collision->maskA &= 0xffff93ff;
+    if (b->currentAnimation == 283 || b->currentAnimation == 571)
+        collision->maskB &= 0xffff93ff;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+namespace {
+
+struct ActorCollisionView {
+    std::int8_t groupIndex;
+    std::byte retained01[0x73];
+    Vector3 currentSamples[10];
+    std::byte retainedEc[0x6a8];
+    ActorContactState contact;
+    std::byte retained860[0x148];
+    const VFCollisionShape *bodyShapes;
+};
+
+typedef char ActorCollisionViewCheck[offsetof(ActorCollisionView, bodyShapes) == 0x9a8 ? 1 : -1];
+
+} // namespace
+
+static void vfclComputePenetrationAndOverlap(VFCL_t *collision, FightActorRuntimePrefix *defender, FightActorRuntimePrefix *attacker) {
+    ActorCollisionView *a = reinterpret_cast<ActorCollisionView *>(defender), *b = reinterpret_cast<ActorCollisionView *>(attacker);
+    std::int32_t i, j;
+    float penetration = 0, radiusB, radius, distance, x, y, z, movementSquared, fraction, projected;
+    Vector3 movement, previous, current;
+    if (collision->contactType - 5U < 2) {
+        for (j = 0; j < 10; ++j) {
+            radiusB = b->bodyShapes[j].radius;
+            for (i = 0; i < 10; ++i) {
+                x = b->currentSamples[j].x - a->currentSamples[i].x;
+                y = b->currentSamples[j].y - a->currentSamples[i].y;
+                z = b->currentSamples[j].z - a->currentSamples[i].z;
+                distance = x * x + y * y + z * z;
+                distance = NativeSqrt(distance);
+                radius = radiusB + a->bodyShapes[i].radius;
+                if (distance < radius) {
+                    a->contact.shapeMaskWords[i] |= b->bodyShapes[j].mask;
+                    b->contact.shapeMaskWords[j] |= a->bodyShapes[i].mask;
+                    radius -= distance;
+                    if (radius > penetration)
+                        penetration = radius;
+                }
+            }
+        }
+        collision->penetrationCharacter = 0;
+        collision->penetrationSpecial = penetration;
+    } else {
+        const Vector3 &previousA = collision->previousSamples[a->groupIndex].points[0];
+        const Vector3 &previousB = collision->previousSamples[b->groupIndex].points[0];
+        const float separationX = previousB.x - previousA.x, separationZ = previousB.z - previousA.z;
+        distance = separationX * separationX + separationZ * separationZ;
+        if (distance < 0.00000011920929f) {
+            collision->separation.x = 0;
+            collision->separation.z = 0;
+            collision->separationLength = 0;
+        } else {
+            distance = NativeSqrt(distance);
+            collision->separation.x = separationX / distance;
+            collision->separation.z = separationZ / distance;
+            collision->separationLength = distance;
+        }
+        collision->separation.y = 0;
+        std::uint32_t attackerMask = collision->attackerMask, defenderMask = collision->defenderMask;
+        std::uint32_t maskA = collision->maskA, maskB = collision->maskB;
+        std::int32_t excluded, swept;
+        for (j = 0; j < 10; ++j) {
+            radiusB = b->bodyShapes[j].radius;
+            excluded = 0;
+            if (defenderMask != maskB && ((defenderMask & b->bodyShapes[j].mask) || !(maskB & b->bodyShapes[j].mask)))
+                excluded = 1;
+            for (i = 0; i < 10; ++i) {
+                am2Vector3Subtract(&current, &b->currentSamples[j], &a->currentSamples[i]);
+                am2Vector3Subtract(&previous, &b->contact.previousSamples[j], &a->contact.previousSamples[i]);
+                am2Vector3Subtract(&movement, &current, &previous);
+                distance = previous.x * movement.x + previous.y * movement.y + previous.z * movement.z;
+                swept = 0;
+                movementSquared = 0;
+                fraction = 0;
+                if (distance < 0) {
+                    distance = -distance;
+                    if (distance > 0.00000011920929f) {
+                        movementSquared = am2Vector3LengthSquared(&movement);
+                        if (movementSquared > distance) {
+                            swept = 2;
+                            fraction = distance / movementSquared;
+                            current.x = fraction * movement.x + previous.x;
+                            current.y = fraction * movement.y + previous.y;
+                            current.z = fraction * movement.z + previous.z;
+                        }
+                    }
+                }
+                distance = am2Vector3LengthSquared(&current);
+                radius = radiusB + a->bodyShapes[i].radius;
+                radius *= radius;
+                if (distance < radius) {
+                    a->contact.shapeMaskWords[i] |= b->bodyShapes[j].mask;
+                    b->contact.shapeMaskWords[j] |= a->bodyShapes[i].mask;
+                    if (!excluded && (attackerMask == maskA || (!(attackerMask & a->bodyShapes[i].mask) && (maskA & a->bodyShapes[i].mask)))) {
+                        if (!swept) {
+                            projected = collision->separation.x * current.x + collision->separation.z * current.z;
+                            if (projected > 0)
+                                radius = NativeSqrt(radius - (distance - projected * projected)) - projected;
+                            else
+                                radius = NativeSqrt(radius - (distance - projected * projected)) + projected;
+                        } else {
+                            const float movementLength = NativeSqrt(movementSquared);
+                            radius = NativeSqrt(radius - distance) + movementLength * (1 - fraction);
+                        }
+                        if (radius > penetration)
+                            penetration = radius;
+                    }
+                }
+            }
+        }
+        collision->penetrationCharacter = penetration;
+        collision->penetrationSpecial = 0;
+    }
+}
+
+#else
+
+// Continuous body-sphere overlap keeps both native per-bone mask banks.
 // @verified - p
 void vfclComputePenetrationAndOverlap(VFCL_t *collision, VFActor *defender, VFActor *attacker) {
     const auto *a = reinterpret_cast<const VFCollisionShape *>(defender->parameterAd8);
@@ -608,6 +1936,57 @@ void vfclComputePenetrationAndOverlap(VFCL_t *collision, VFActor *defender, VFAc
     collision->penetrationCharacter = special ? 0 : penetration;
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void vfclAdjustForSlideAndStick(VFCL_t *collision) {
+    FightActorRuntimePrefix *defender = collision->defender, *attacker = collision->attacker;
+    float factor;
+    if (collision->contactType - 5U < 2) {
+        factor = collision->penetrationSpecial + *reinterpret_cast<float *>(reinterpret_cast<std::byte *>(defender) + 0x84c);
+        float floor = defender->targetGroundY, lift = 0.2f;
+        if (!(factor > floor + lift))
+            factor = floor + lift;
+        FightCollisionValue<float>(defender, 0x850) = factor;
+    } else {
+        Vector3 a, b;
+        factor = -collision->slideScale * collision->penetrationCharacter;
+        a.x = factor * collision->separation.x;
+        a.z = factor * collision->separation.z;
+        factor = collision->stickScale * collision->penetrationCharacter;
+        b.x = factor * collision->separation.x;
+        b.z = factor * collision->separation.z;
+        const Vector3 &pa = collision->samples[*reinterpret_cast<const std::int8_t *>(defender)].points[0];
+        const Vector3 &pb = collision->samples[*reinterpret_cast<const std::int8_t *>(attacker)].points[0];
+        float z, x;
+        x = (pb.x + b.x) - (pa.x + a.x);
+        z = (pb.z + b.z) - (pa.z + a.z);
+        float distance;
+        distance = shenmue::NativeSqrt(x * x + z * z);
+        if (distance > 0.00000011920929f) {
+            const float midpoint = (collision->separationLength + distance) * 0.5f;
+            x = x * midpoint / distance;
+            z = z * midpoint / distance;
+            x -= pb.x - pa.x;
+            z -= pb.z - pa.z;
+            factor = -collision->slideScale;
+            a.x = factor * x * FightCollisionValue<float>(defender, 0x26c);
+            a.z = factor * z * FightCollisionValue<float>(defender, 0x26c);
+            factor = collision->stickScale;
+            b.x = factor * x * FightCollisionValue<float>(attacker, 0x26c);
+            b.z = factor * z * FightCollisionValue<float>(attacker, 0x26c);
+        }
+        vfclMoveEntityWithContactHistory(defender, a.x, a.z);
+        vfclMoveEntityWithContactHistory(attacker, b.x, b.z);
+    }
+    if (collision->penetrationSpecial < 0.05f)
+        FightCollisionValue<float>(defender, 0x850) = 0;
+}
+
+#else
+
 // Owner motion scales are applied after the midpoint correction.
 // @verified - p
 void vfclAdjustForSlideAndStick(VFCL_t *collision) {
@@ -641,66 +2020,32 @@ void vfclAdjustForSlideAndStick(VFCL_t *collision) {
         defender->contact.groundSamples[0] = 0.0f;
 }
 
+#endif
 
-// @verified - p
-void vfclSetContactCategory(VFActor *a, VFActor *b, VFCL_t *collision) {
-    struct MaskEntry {
-        std::uint32_t first, second;
-        float slide, stick;
-    };
-    static constexpr MaskEntry entries[]{
-        {0xffffffff,0xffffffff,.5f,.5f}, {0xffffffff,0xffffffff,0,1},
-        {0xffffffff,0xffffffff,1,0}, {0x202,0x202,0,1}, {0x202,0x202,1,0},
-        {0xffffffff,0xffffffff,0,1}, {0xffffffff,0xffffffff,1,0}};
-    const auto first = a->hitStateFlags, second = b->hitStateFlags, either = first | second;
-    std::uint32_t flags = 0, type = 0;
-    if ((either & 0xc0000) == 0xc0000)
-        flags = 1;
-    else if (a->fightStyle == 1 || b->fightStyle == 1)
-        type = 1;
-    else if (a->game->type == 9)
-        type = 2;
-    else {
-        if (((first ^ second) & 0x100) && a->moveId != 41 && b->moveId != 41)
-            flags = 2;
-        if (first & second & 0x100)
-            flags |= 4;
-    }
-    if (!type) {
-        if (either & 0x4000)
-            flags |= 8;
-        if (!(flags & 5)) {
-            if (either & 0x10000) {
-                if (!(first & 0x10000))
-                    type = !(second & 0x8000) && (first & 0x400000) && (a->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) ? 6 : 2;
-                else
-                    type = !(first & 0x8000) && (second & 0x400000) && (b->motionFlags & (VFMOF_Unknown10 | VFMOF_Unknown1000)) ? 5 : 1;
-            } else if (a->contact.linked || b->contact.linked || a->contact.activeShapeMask)
-                type = 1;
-            else if (b->contact.activeShapeMask)
-                type = 2;
-            else if (first & 0xc0000)
-                type = 1;
-            else if (second & 0xc0000)
-                type = 2;
-            else if (flags & 2) {
-                type = 3;
-                if ((first & 0x100) && ((second & 0x10002000) == 0x10002000 || (b->activeMotionFlags & VFSMF_Unknown200000)))
-                    type = 2;
-            }
-        }
-    }
-    collision->flagsWord = flags;
-    collision->contactType = type;
-    collision->maskA = entries[type].first;
-    collision->maskB = entries[type].second;
-    collision->slideScale = entries[type].slide;
-    collision->stickScale = entries[type].stick;
-    if (a->currentAnimation == 283 || a->currentAnimation == 571)
-        collision->maskA &= 0xffff93ff;
-    if (b->currentAnimation == 283 || b->currentAnimation == 571)
-        collision->maskB &= 0xffff93ff;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t second) {
+    FightActorRuntimePrefix *a = collision->game->actors[first], *b = collision->game->actors[second];
+    collision->defender = a;
+    collision->attacker = b;
+    vfclSetContactCategory(a, b, collision);
+    if (collision->flagsWord & 1U)
+        return;
+    collision->attackerMask = (a->hitStateFlags & 0x102U) == 0x102U && a->moveId != 41 ? vfGetMoveCategoryMaskFor(a) : 0;
+    collision->defenderMask = (b->hitStateFlags & 0x102U) == 0x102U && b->moveId != 41 ? vfGetMoveCategoryMaskFor(b) : 0;
+    vfclComputePenetrationAndOverlap(collision, a, b);
+    float *history = ContactState(a).groundSamples;
+    const float oldest = history[3], previous = history[2], recent = history[1], current = history[0];
+    history[3] = previous;
+    history[2] = recent;
+    history[1] = current;
+    FightCollisionValue<float>(a, 0x84c) = ((current + recent) + previous + oldest) / 4.0f;
+    if (collision->penetrationSpecial + collision->penetrationCharacter + oldest != 0)
+        vfclAdjustForSlideAndStick(collision);
 }
+
+#else
 
 // Only the defender maintains this ordered four-frame penetration history.
 // @verified - p
@@ -727,77 +2072,61 @@ void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t seco
         vfclAdjustForSlideAndStick(collision);
 }
 
-// Guard exclusion uses the motion owner's solved bone translations.
-// @verified - p
-void vfClGetBonePos(std::uint8_t index, VFActor *first, VFActor *second) {
-    VFActor *const self = index ? first : second;
-    VFActor *const source = index ? second : first;
-    self->contact.excludedMask = 0u;
-    if ((source->hitStateFlags & (VFHSF_HitTimeout | VFHSF_AttackActive)) != 0x100)
-        return;
-    const auto guard = static_cast<std::uint8_t>(source->guardState);
-    if ((self->hitStateFlags & VFHSF_SpecialGuardOrParry) && guard != 4) {
-        const float height = 0.4f + self->targetGroundY;
-        const auto *const shapes = reinterpret_cast<const VFCollisionShape *>(self->parameterAd8);
-        std::uint32_t mask = 0;
-        Vector3 position;
-        for (std::size_t i = 0; i != 10; ++i) {
-            (void)mtwkGetBonePosition(self->motion, static_cast<MotionBoneId>(shapes[i].bone), &position);
-            if (height > position.y)
-                mask |= shapes[i].tag;
-        }
-        self->contact.excludedMask = mask;
-    } else if (self->footContactState &&
-        (((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && guard != 4) ||
-            (!(self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && guard == 4))) {
-        self->contact.excludedMask = 0xffffffffu;
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void vfclPrepareContact(VFCL_t *collision, std::uint8_t first, std::uint8_t second);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static float vfResolveHitOutcomeAndImpulse(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target, float impact) {
+    const std::uint32_t hit = target->hitStateFlags;
+    if (target->moveFlags & 0x20000000U) {
+        if (!(hit & 0x14000U))
+            *static_cast<volatile std::uint32_t *>(&target->moveFlags) &= ~0x20000000U;
+        impact *= 1.2f;
+    } else if (hit & 0x100U) {
+        impact *= 1.05f;
+        FightCollisionValue<std::uint32_t>(source, 0x868) = 6;
+        FightCollisionValue<std::uint32_t>(source, 0x320) = 0x0c000004U;
+    } else if ((hit & 0x4010U) == 0x10U) {
+        impact *= 1.1f;
+    } else if ((target->motionFlags & 0x100U) && (hit & 1U)) {
+        impact = impact * 1.03f + 2.0f;
+        FightCollisionValue<std::uint32_t>(source, 0x868) = 37;
+    } else if (target->activeMotionFlags & 4U) {
+        const std::byte *profile = static_cast<std::byte *>(target->slot);
+        profile += 0x175;
+        if (static_cast<std::uint32_t>(static_cast<std::int8_t>(*profile)) == 1U)
+            FightCollisionValue<float>(target, 0x9dc) = 25;
+        else
+            impact *= 1.3f;
+    } else if ((source->motionFlags & 0x100000U) && (target->motionFlags & 0x80000U)) {
+        const std::byte *profile = static_cast<std::byte *>(target->slot);
+        profile += 0x175;
+        if (static_cast<std::uint32_t>(static_cast<std::int8_t>(*profile)) == 2U)
+            FightCollisionValue<float>(target, 0x9dc) = 20;
+    } else if (target->secondaryMotionFlags & 16U) {
+        const std::byte *profile = static_cast<std::byte *>(target->slot);
+        profile += 0x175;
+        if (static_cast<std::uint32_t>(static_cast<std::int8_t>(*profile)) == 3U)
+            FightCollisionValue<float>(target, 0x9dc) = 3;
+    } else if (target->hitStateFlags & 0x80000U) {
+        impact *= 1.25f;
+    } else if (!(hit & 0x14000U) &&
+        static_cast<std::int16_t>(FightCollisionValue<std::int16_t>(source, 0x2b2) + source->facingAngle - target->temporaryFacingAngle + 0x4000) >= 0) {
+        impact *= 1.1f;
+        FightCollisionValue<std::uint32_t>(source, 0x868) = 37;
     }
+    return impact;
 }
 
-// Contact edges are latched per attacker/opponent, not per render.
-// @verified - p
-bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collision) {
-    auto *const a = collision->game->actors[first];
-    auto *const b = collision->game->actors[second];
-    const auto bit = static_cast<std::uint8_t>(1u << second);
-    auto latch = a->contact.processed;
-    if ((!(b->activeMotionFlags & (VFSMF_Unknown4000 | VFSMF_Unknown200000)) &&
-            ((b->activeMotionFlags & VFSMF_Unknown200) || (b->moveFlags & VFMF_NoContactPairing))) ||
-        !(a->hitStateFlags & VFHSF_AttackActive) || (b->hitStateFlags & (VFHSF_MidAirRecovery | VFHSF_AlignedToGround)) ||
-        ((b->hitStateFlags & VFHSF_AirborneOrDowned) && (!b->secondActor || (b->secondActor->hitStateFlags & 0x40000)))) {
-        a->contact.processed = static_cast<std::uint8_t>(latch & ~bit);
-        return false;
-    }
-    if (a->currentAnimation != a->previousAnimation) {
-        latch &= ~bit;
-        a->contact.processed = latch;
-    }
-    if ((latch & bit) || (a->hitStateFlags & VFHSF_HitTimeout))
-        return false;
-    const auto *const shapesA = reinterpret_cast<const VFCollisionShape *>(a->parameterAd8);
-    const auto *const shapesB = reinterpret_cast<const VFCollisionShape *>(b->parameterAd8);
-    const auto categories = vfGetMoveCategoryMaskFor(a);
-    std::uint32_t mask = 0;
-    for (std::size_t i = 0; i != 10; ++i) {
-        if (!(shapesA[i].tag & categories))
-            continue;
-        for (std::size_t j = 0; j != 10; ++j)
-            if (shapesA[i].tag & b->contact.shapeMasks[j])
-                mask |= shapesB[j].tag;
-    }
-    mask &= ~b->contact.excludedMask;
-    b->contact.pendingMask = mask;
-    if (!mask)
-        return false;
-    a->contact.processed = static_cast<std::uint8_t>(latch | bit);
-    const auto move = a->hitImpulseMove;
-    if ((a->formationFlags & 2) && move == a->formationCameraTimerWords[0])
-        a->formationRuntimeFlags |= 2;
-    b->reactionImpulseBytes[2] = static_cast<std::uint8_t>(move);
-    return true;
-}
+#else
 
-
+// Defender phase and native guard counters select the authored multiplier.
 float vfResolveHitOutcomeAndImpulse(VFActor *self, VFActor *other, float impact) {
     const auto hit = other->hitStateFlags;
     if (other->moveFlags & VFMF_Unknown20000000) {
@@ -842,7 +2171,37 @@ float vfResolveHitOutcomeAndImpulse(VFActor *self, VFActor *other, float impact)
     return impact * 1.1f;
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void vfApplyEnvAudio(float impact, FightActorRuntimePrefix *source) {
+    static std::uint32_t vfEnvAudioParameterSounds[3] = {0, 968, 29};
+    if (impact == 0 || (source->hitStateFlags & 0x40100U) == 0x40000U)
+        return;
+    const std::uint8_t parameter = FightCollisionValue<std::uint8_t>(source, 0x2ab);
+    if (static_cast<std::uint32_t>(parameter - 1) < 2) {
+        vfPlayFightSfx(vfEnvAudioParameterSounds[parameter], source);
+        return;
+    }
+    std::int32_t level = 0;
+    if (impact >= 20)
+        level = 1;
+    if (impact >= 40)
+        ++level;
+    if (static_cast<std::uint8_t>(source->moveId - 5) < 2) {
+        if (!level)
+            vfPlayFightSfx(22, source);
+        else
+            vfPlayFightSfx(23, source);
+    } else
+        vfPlayFightSfx(16, source);
+}
+
+#else
+
+// The fixed PC sound owner ignores the legacy impact-volume parameter.
 void vfApplyEnvAudio(float impact, VFActor *self) {
     if (impact == 0 || (self->hitStateFlags & (VFHSF_AttackActive | VFHSF_MidAirRecovery)) == 0x40000)
         return;
@@ -857,7 +2216,105 @@ void vfApplyEnvAudio(float impact, VFActor *self) {
     vfPlayFightSfx(sound, self, 0);
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+struct HitProfile {
+    float attackScale[2], impulseScale[4];
+    std::int16_t angles[4];
+};
+
+static const HitProfile hitProfiles[7] = {{{1, 1}, {1, 1.2f, 1, 1.2f}, {11776, 6144, 9728, 4864}},
+    {{1, 1}, {1.5f, 1.8f, 1.2f, 1.44f}, {13824, 9216, 12800, 6400}}, {{1, 1}, {2, 5, 1.2f, 1.44f}, {12288, 14336, 11264, 6144}},
+    {{1, 1}, {2.5f, 2.5f, 2.5f, 2.5f}, {14592, 14592, 14592, 14592}}, {{1, 1}, {1.3f, 1.2f, 1.2f, 1.2f}, {11776, 4096, 9728, 4864}},
+    {{1, 1}, {3.8f, 3.8f, 3.8f, 3.8f}, {9216, 9216, 9216, 9216}}, {{1, 1}, {2.5f, 2.5f, 2.5f, 2.5f}, {12800, 12800, 12800, 12800}}};
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfmaUpdateCollisionCounter(FightRuntimePrefix *game, std::uint8_t event, std::uint16_t move) {
+    struct CollisionCounters {
+        std::byte retained000[0x23c];
+        std::int16_t total;
+        std::uint16_t contacts[128], hits[128];
+    };
+    if (static_cast<std::uint8_t>(game->type - 4) < 2)
+        return;
+    switch (event) {
+    case 0:
+        if (reinterpret_cast<CollisionCounters *>(game)->contacts[move] < 0xffff)
+            ++reinterpret_cast<CollisionCounters *>(game)->contacts[move];
+        game->stateFlags &= ~0x440U;
+        if (move != 96)
+            ++reinterpret_cast<CollisionCounters *>(game)->total;
+        break;
+    case 1:
+        if (reinterpret_cast<CollisionCounters *>(game)->hits[move] < 0xffff && !(game->stateFlags & 0x40U)) {
+            ++reinterpret_cast<CollisionCounters *>(game)->hits[move];
+            game->stateFlags |= 0x40U;
+        }
+        break;
+    case 2:
+        if (reinterpret_cast<CollisionCounters *>(game)->contacts[move] && reinterpret_cast<CollisionCounters *>(game)->hits[move] &&
+            !(game->stateFlags & 0x400U)) {
+            --reinterpret_cast<CollisionCounters *>(game)->hits[move];
+            game->stateFlags |= 0x400U;
+        }
+        break;
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static void vfSetReactionKnockbackFromProfile(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target, float impulse) {
+    const std::uint8_t *entry =
+        reinterpret_cast<const std::uint8_t *>(MOTN_FindAnimationExtraRecord(static_cast<std::uint16_t>(g_vfSelectedReactionAnimation) & 0xfffU, 17));
+    if (entry) {
+        FightCollisionValue<std::uint16_t>(source, 0x87c) = *reinterpret_cast<const std::uint16_t *>(entry + 2);
+        FightCollisionValue<float>(source, 0x878) = static_cast<float>(static_cast<std::int32_t>(static_cast<std::uint16_t>(entry[7] | entry[6] << 8) |
+                                                        static_cast<std::uint16_t>(entry[5] | entry[4] << 8) << 16)) *
+            0.000015258789f * impulse;
+        return;
+    }
+    std::uint32_t value = FightCollisionValue<std::uint8_t>(source, 0x2c6);
+    if (!(target->hitStateFlags & 0x10U)) {
+        if (FightCollisionValue<std::uint32_t>(source, 0x868) != 6) {
+            FightCollisionValue<float>(source, 0x874) = hitProfiles[value].angles[0];
+            FightCollisionValue<float>(source, 0x870) = hitProfiles[value].impulseScale[0];
+        } else {
+            FightCollisionValue<float>(source, 0x874) = hitProfiles[value].angles[1];
+            FightCollisionValue<float>(source, 0x870) = hitProfiles[value].impulseScale[1];
+        }
+    } else if (FightCollisionValue<std::uint32_t>(source, 0x868) != 6) {
+        FightCollisionValue<float>(source, 0x874) = hitProfiles[value].angles[2];
+        FightCollisionValue<float>(source, 0x870) = hitProfiles[value].impulseScale[2];
+    } else {
+        FightCollisionValue<float>(source, 0x874) = hitProfiles[value].angles[3];
+        FightCollisionValue<float>(source, 0x870) = hitProfiles[value].impulseScale[3];
+    }
+    FightCollisionValue<std::int16_t>(source, 0x87c) = static_cast<std::int16_t>(FightCollisionValue<float>(source, 0x874));
+    FightCollisionValue<float>(source, 0x878) = FightCollisionValue<float>(source, 0x870) * impulse;
+    value = FightCollisionValue<std::uint8_t>(target, 0x3dd);
+    if (value > 1) {
+        value = (value - 1) * 0x580;
+        const std::int32_t previous = FightCollisionValue<std::int16_t>(source, 0x87c);
+        FightCollisionValue<std::int16_t>(source, 0x87c) -= value;
+        const std::uint32_t minimum = static_cast<std::uint32_t>(previous) > 0x1000 ? 0x1000 : 0;
+        if (static_cast<std::int16_t>(minimum) > FightCollisionValue<std::int16_t>(source, 0x87c))
+            FightCollisionValue<std::int16_t>(source, 0x87c) = minimum;
+        if (FightCollisionValue<std::int16_t>(source, 0x87c) > 0x3600)
+            FightCollisionValue<std::int16_t>(source, 0x87c) = 0x3600;
+    }
+}
+
+#else
+
+// Authored opcode 17 takes precedence over the seven native hit profiles.
 void vfSetReactionKnockbackFromProfile(VFActor *self, VFActor *other, float impulse) {
     const auto entry = FindLoadedMotionSecondaryEntry(std::uint32_t(g_vfSelectedReactionAnimation) & 0xfff, 17);
     if (!entry.empty()) {
@@ -887,6 +2344,22 @@ void vfSetReactionKnockbackFromProfile(VFActor *self, VFActor *other, float impu
     }
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void vfAdjustReactionForGround(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
+    if (g_vfSelectedReactionAnimation == 349 && target->contactPosition.y <= source->targetGroundY + 0.9f) {
+        const std::int32_t animation = target->contactPosition.y <= source->targetGroundY + 0.6f ? 351 : 91;
+        g_vfSelectedReactionAnimation = animation;
+    }
+}
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+
 // The attached stage object retains its own velocity and reset state.
 void vfStageObjectApplyImpulse(VFActor *self) {
     const auto index = self->parameterAd7;
@@ -894,6 +2367,167 @@ void vfStageObjectApplyImpulse(VFActor *self) {
     g_fightStageObjects[index]->object.velocity = {
         sin_fixed16(static_cast<std::int16_t>(self->hitDirection)) * (-.2f), .1f, cos_fixed16(self->hitDirection) * (-.2f)};
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static void vfAssignKnockbackReaction(float impact, float impulse, FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
+    static float durationScale = 0.4f;
+    std::uint32_t hit, received, parameter, type;
+    std::uint8_t guard;
+    FightRuntimePrefix *game;
+    game = source->game;
+    hit = source->hitStateFlags;
+    received = target->hitStateFlags;
+    parameter = FightCollisionValue<std::uint16_t>(source, 0x2b0);
+    guard = FightCollisionValue<std::uint8_t>(source, 0x2a9);
+    type = 0;
+    if (FightCollisionValue<std::uint16_t>(source, 0x2da)) {
+        const std::uint32_t *metadata = reinterpret_cast<const std::uint32_t *>(MOTN_GetDataForAnimId(FightCollisionValue<std::uint16_t>(source, 0x2da)));
+        if (metadata)
+            type = *metadata;
+    }
+    if (((received & 0x18000U) && !(target->moveFlags & 0x20000000U)) || ((received & 0x4010U) == 0x4000U && (hit & 0x400000U)))
+        type = 0;
+    else if (type & 0x4000U)
+        type = 2;
+    else if (received & 0x4000U)
+        type = (hit & 0x400000U) ? 1 : 2;
+    else if ((received & 0x1010U) || (parameter & 0x4000U))
+        type = 2;
+    else if (parameter & 0x400U)
+        type = 3;
+    else if ((parameter & 0x100U) && (received & 8U))
+        type = 2;
+    else if (guard != 1)
+        type = 3;
+    else
+        type = received & 0x1000000U ? 2 : 3;
+    if (target->activeMotionFlags & 0x1000000U)
+        type = 2;
+    if (type == 2) {
+        if (!(target->hitStateFlags & 0x4000U) && (target->stateFlags & 2U) && !(target->moveFlags & 0x20000000U) && !(target->hitStateFlags & 0x1c000U) &&
+            !(parameter & 0x200U))
+            type = 3;
+        if (type == 2 && FightCollisionValue<float>(target, 0x420) > 150.0f)
+            type = 3;
+    }
+    if (type > 1) {
+        float damage = impact;
+        if (target->groupIndex == source->game->playerSlot) {
+            damage = impact * (1.0f - game->playerAssistScale);
+            if (damage < 1.0f)
+                damage = 1.0f;
+        }
+        damage *= FightCollisionValue<float>(target, 0x9dc);
+        const std::uint8_t flags = FightCollisionValue<std::uint8_t>(game->formations[target->groupIndex], 0x18);
+        if ((((flags & 0x80U) && (source->secondaryMotionFlags & 0x4000008U)) || ((flags & 0x20U) && (source->secondaryMotionFlags & 0x4000000U))) &&
+            !(g_pFightStage->battleFlags & 0x20U))
+            damage = target->hp;
+        if (target->hp <= FightCollisionValue<std::uint8_t>(source, 0x2aa) && (source->secondaryMotionFlags & 0x40000U))
+            damage = target->hp - 1.0f;
+        if (damage >= target->hp) {
+            type = 4;
+            target->stateFlags |= 0x40000U;
+        }
+        if (type == 4 || type == 2 || damage >= 40.0f)
+            target->stateFlags |= 0x200U;
+    }
+    if (target->activeMotionFlags & 0x800000U) {
+        switch (type) {
+        case 3:
+            switch (guard) {
+            case 0:
+            case 1:
+            case 3:
+                vfTossActorStageObject(target);
+                break;
+            case 2:
+            case 5:
+            case 6:
+                vfReleaseActorStageObject(target);
+                break;
+            }
+            break;
+        case 0:
+        case 1:
+        case 2:
+            vfReleaseActorStageObject(target);
+            break;
+        default:
+            vfReleaseActorStageObject(target);
+        }
+    }
+    switch (type) {
+    case 1:
+        FightCollisionValue<std::uint8_t>(target, 0x3dd) = 1;
+    case 2: {
+        if ((hit & 0x400000U) && (received & 0x810U) == 0x800U)
+            goto settle;
+        g_vfSelectedReactionAnimation = 7;
+        vfclChooseReactionAnim(source, target);
+        vfAdjustReactionForGround(source, target);
+        FightCollisionValue<std::uint32_t>(target, 0x318) = g_vfSelectedReactionAnimation + 0x05000000U;
+        if (impact > 14.0f)
+            type = static_cast<std::uint8_t>(static_cast<std::int32_t>(impact - 14.0f + 0.5f));
+        else
+            type = 1;
+        if (type > 30)
+            type = 30;
+        *reinterpret_cast<std::uint16_t *>(reinterpret_cast<std::byte *>(target) + 0x3a0) =
+            static_cast<std::int32_t>(*reinterpret_cast<float *>(reinterpret_cast<std::byte *>(target) + 0x270) * type);
+        *reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(target) + 0x790) |= 2U;
+        vfSetReactionKnockbackFromProfile(source, target, impulse);
+        break;
+    }
+    case 3: {
+        g_vfSelectedReactionAnimation = FightCollisionValue<std::uint32_t>(source, 0x868) & 31U;
+        if (vfCompareFightGuardLevels(target, source) > 10)
+            g_vfSelectedReactionAnimation = 4;
+        vfclChooseReactionAnim(source, target);
+        FightCollisionValue<std::uint32_t>(target, 0x318) = g_vfSelectedReactionAnimation + 0x07000000U;
+        type = FightCollisionValue<std::uint32_t>(source, 0x868) == 6 ? FightCollisionValue<std::uint8_t>(source, 0x2e6) :
+                                                                        FightCollisionValue<std::uint8_t>(source, 0x2e5);
+        float duration = type;
+        if (!type)
+            duration = durationScale * impact + 3.0f;
+        type = static_cast<std::uint32_t>(duration * FightCollisionValue<float>(target, 0x270) + 0.5f);
+        FightCollisionValue<std::uint16_t>(target, 0x3a0) = type;
+        std::uint32_t stop = type + 4;
+        if (FightCollisionValue<std::uint32_t>(source, 0x868) == 37 || FightCollisionValue<std::uint32_t>(source, 0x868) == 6)
+            stop = type + 2;
+        stop = static_cast<std::int32_t>(FightCollisionValue<float>(source, 0x270) * stop);
+        game->retained44 = stop + 1;
+        FightCollisionValue<std::uint16_t>(source, 0x87c) = 0;
+        FightCollisionValue<float>(source, 0x878) = impulse;
+        break;
+    }
+    case 0:
+    settle:
+        g_vfSelectedReactionAnimation = 9;
+        vfclChooseReactionAnim(source, target);
+        FightCollisionValue<std::uint32_t>(target, 0x318) = g_vfSelectedReactionAnimation + 0x05010000U;
+        FightCollisionValue<std::uint16_t>(target, 0x3a0) = 0;
+        FightCollisionValue<FightActorRuntimePrefix *>(target, 0x9c8) = source;
+        vfHandleImpactSfxAndDefeat(target, static_cast<std::int32_t>(impact + 0.5f), 1);
+        FightCollisionValue<std::uint8_t>(source, 0x87e) = 1;
+        break;
+    case 4:
+        if (target->moveFlags & 4U)
+            g_vfSelectedReactionAnimation = 7;
+        else
+            g_vfSelectedReactionAnimation = 8;
+        vfclChooseReactionAnim(source, target);
+        *reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(target) + 0x318) = g_vfSelectedReactionAnimation + 0x05000000U;
+        vfSetReactionKnockbackFromProfile(source, target, impulse);
+        if (target->activeMotionFlags & 0x800U)
+            *reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(target->secondActor) + 0x318) = 0x01000000U;
+        break;
+    }
+}
+
+#else
 
 // Hit classification publishes real queued reactions and paired impulses.
 void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFActor *other) {
@@ -1030,6 +2664,228 @@ void vfAssignKnockbackReaction(float impact, float impulse, VFActor *self, VFAct
     other->hitPhaseWords[0] = static_cast<std::uint16_t>(static_cast<std::int32_t>(float(frames) * other->inverseScale));
     vfSetReactionKnockbackFromProfile(self, other, impulse);
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#define FIGHT_ACTOR_VALUE(T, actor, offset) (*reinterpret_cast<T *>(reinterpret_cast<std::byte *>(actor) + (offset)))
+
+// @verified - d
+static inline void vfRestoreAuthoredHitProgram(FightActorRuntimePrefix *actor, std::uint16_t flag) {
+    if (!(FIGHT_ACTOR_VALUE(std::uint16_t, actor, 0x5c8) & flag))
+        return;
+    FIGHT_ACTOR_VALUE(const void *, actor, 0x5b8) = FIGHT_ACTOR_VALUE(const void *, actor, 0x5cc);
+    FIGHT_ACTOR_VALUE(std::uint16_t, actor, 0x5bc) = FIGHT_ACTOR_VALUE(std::uint16_t, actor, 0x5c0);
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfclApplyHitResolution(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
+    FightRuntimePrefix *game = target->game;
+    const std::uint32_t sourceHit = source->hitStateFlags, hit = target->hitStateFlags, active = target->activeMotionFlags;
+    std::int32_t guarded;
+    ++FIGHT_ACTOR_VALUE(std::int16_t, source, 0x3d6);
+    const std::int8_t state = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x32b);
+    if (state == 14)
+        return;
+    const std::uint32_t guard = FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x2a9);
+    if (state == 23) {
+        --FIGHT_ACTOR_VALUE(std::int16_t, source, 0x3d6);
+        return;
+    }
+    if ((!guard && (active & 0x2000000U)) ||
+        ((hit & 0x8000U) && target->animationTime >= static_cast<float>(FIGHT_ACTOR_VALUE(std::uint16_t, target, 0x290)) && !(hit & 4U))) {
+        --FIGHT_ACTOR_VALUE(std::int16_t, source, 0x3d6);
+        return;
+    }
+    if (FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x2a9) < 2) {
+        if ((target->moveFlags & 4U) && target->position.y < target->targetGroundY + 0.5f)
+            return;
+        if ((target->activeMotionFlags & 1U) && target->animationTime > static_cast<float>(FIGHT_ACTOR_VALUE(std::uint16_t, target, 0x292)))
+            return;
+    }
+    const std::int16_t direction = FIGHT_ACTOR_VALUE(std::int16_t, source, 0x2b2) + source->facingAngle;
+    float impact = FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x2aa);
+    float impulse = std::sqrt(impact * 0.033333335f) * 30.0f * 0.0098000001f;
+    if (hit & 0x100U)
+        FIGHT_ACTOR_VALUE(float, source, 0x870) = hitProfiles[FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x2c6)].attackScale[1];
+    else
+        FIGHT_ACTOR_VALUE(float, source, 0x870) = hitProfiles[FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x2c6)].attackScale[0];
+    impulse *= FIGHT_ACTOR_VALUE(float, source, 0x870);
+    if ((sourceHit & 0x1010U) == 0x1010U && static_cast<std::int16_t>(FIGHT_ACTOR_VALUE(std::int16_t, source, 0x17c) - direction + 0x4000) >= 0) {
+        FIGHT_ACTOR_VALUE(float, source, 0x454) *= 0.5f;
+        FIGHT_ACTOR_VALUE(float, source, 0x45c) *= 0.5f;
+    }
+    std::int16_t delta = target->actorFacingAngles[source->groupIndex] - target->temporaryFacingAngle;
+    delta = std::fabs(delta);
+    std::int16_t maximum;
+    if (FIGHT_ACTOR_VALUE(std::uint16_t, target, 2) == 13)
+        maximum = 0x5550;
+    else
+        maximum = 0x2000;
+    std::uint16_t type;
+    if ((FIGHT_ACTOR_VALUE(std::uint32_t, source, 0x2b0) & 0x1200U) == 0x1200U)
+        type = 1;
+    else if ((active & 0x204000U) && delta < maximum) {
+        if ((sourceHit & 0x81010U) && !(FIGHT_ACTOR_VALUE(std::uint32_t, source, 0x2c8) & 0x400000U))
+            type = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x305) == 0;
+        else
+            type = 0;
+    } else if ((hit & 0x2000U) && delta < 0x2000) {
+        const std::uint32_t parameter = FIGHT_ACTOR_VALUE(std::uint16_t, source, 0x2b0);
+        if (!(hit & 8U)) {
+            type = 1;
+            if (guard != 2 && guard != 5 && guard != 6 && ((parameter >> 9) & 1) == 0)
+                type = (source->activeMotionFlags >> 31) != 0;
+        } else if (FIGHT_ACTOR_VALUE(std::uint32_t, source, 0x2c8) & 2U)
+            type = 4;
+        else if (guard == 5 || guard == 6 || guard == 2)
+            type = (parameter >> 9) & 1;
+        else if (parameter & 0x2000U)
+            type = 3;
+        else if (guard != 1)
+            type = 1;
+        else
+            type = 2;
+    } else
+        type = 1;
+    if (source->activeMotionFlags & 0x20000U)
+        type = 1;
+    guarded = 0;
+    switch (type) {
+    case 4: {
+        FIGHT_ACTOR_VALUE(std::uint32_t, target, 0x318) = FIGHT_ACTOR_VALUE(std::uint32_t, source, 0x2cc);
+        const std::byte *entry = MOTN_FindAnimationExtraRecord(FIGHT_ACTOR_VALUE(std::uint32_t, target, 0x318) & 0xfff, 5);
+        FIGHT_ACTOR_VALUE(std::int32_t, source, 0x318) = *reinterpret_cast<const std::int16_t *>(entry + 2) + 0x09000000;
+        FIGHT_ACTOR_VALUE(std::byte, source, 0x2aa) = entry[1];
+        return;
+    }
+    case 1:
+        if (source->formationFlags & 8U)
+            source->runtimeFlags |= 8U;
+        FIGHT_ACTOR_VALUE(std::int32_t, source, 0x868) = 5;
+        break;
+    case 2:
+        impact *= 0.75f;
+        impulse *= 0.75f;
+        FIGHT_ACTOR_VALUE(std::int32_t, source, 0x868) = 5;
+        break;
+    case 3:
+        g_vfSelectedReactionAnimation = 3;
+        guarded = 1;
+        break;
+    case 0:
+        --FIGHT_ACTOR_VALUE(std::int16_t, source, 0x3d6);
+        ++FIGHT_ACTOR_VALUE(std::int16_t, source, 0x3d8);
+        g_vfSelectedReactionAnimation = 0;
+        guarded = 1;
+        break;
+    }
+    FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x87e) = 0;
+    FIGHT_ACTOR_VALUE(float, source, 0x878) = impulse;
+    FIGHT_ACTOR_VALUE(FightActorRuntimePrefix *, target, 0x9c8) = source;
+    if (!guarded) {
+        if (source->motionFlags & 0x80000U)
+            target->activeMotionFlags |= 0x1000000U;
+        FIGHT_ACTOR_VALUE(std::int32_t, source, 0x320) = 0x0c000001;
+        vfRestoreAuthoredHitProgram(source, 1);
+        if (!FIGHT_ACTOR_VALUE(std::int16_t, source, 2)) {
+            if (FIGHT_ACTOR_VALUE(std::int8_t, source, 0x87f) != 103)
+                vfmaUpdateCollisionCounter(game, 1, FIGHT_ACTOR_VALUE(std::int8_t, source, 0x87f));
+            else
+                vfmaUpdateCollisionCounter(game, 1, FIGHT_ACTOR_VALUE(std::int8_t, source, 0x880));
+            FIGHT_ACTOR_VALUE(std::int8_t, source, 0x87f) = 96;
+        }
+        impact *= vfclCalculateGuardKnockbackFactor(source, 1.0f);
+        impact = vfResolveHitOutcomeAndImpulse(source, target, impact);
+        if (FIGHT_ACTOR_VALUE(std::uint16_t, target, 2) == 14 && static_cast<std::int8_t>(game->strikesLeft) > 0) {
+            --game->strikesLeft;
+            FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59a) = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59d);
+            FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59b) = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59d);
+            vfResetReactionProgram(source);
+            if (!game->strikesLeft) {
+                game->elapsedFrames = 30;
+                source->game->stateFlags |= 0x20U;
+            }
+        }
+        vfApplyEnvAudio(impact, source);
+        vfAssignKnockbackReaction(impact, impulse, source, target);
+        if (!FIGHT_ACTOR_VALUE(std::int16_t, target, 2) && (FIGHT_ACTOR_VALUE(std::uint32_t, target, 0x318) & 0xfffU) == 0x1b6U)
+            FIGHT_ACTOR_VALUE(std::uint32_t, target, 0x318) = (FIGHT_ACTOR_VALUE(std::uint32_t, target, 0x318) & ~0xfffU) | 0x5fU;
+        target->hitResolutionFlags |= 2U;
+        if (!FIGHT_ACTOR_VALUE(std::int16_t, target, 2) && camCtrlGetInterpMode() == 3)
+            camCtrlShakeFightCamera(0.12f);
+    } else {
+        const std::uint8_t sourceMode = source->retainedMode, targetMode = target->retainedMode;
+        if (!(target->stateFlags & 12U) && (sourceMode > targetMode || (sourceMode == targetMode && !(source->secondaryMotionFlags & 0x4000008U)))) {
+            FIGHT_ACTOR_VALUE(std::int32_t, source, 0x868) = 0;
+            FIGHT_ACTOR_VALUE(std::int32_t, source, 0x320) = 0x0c000002;
+            vfclChooseReactionAnim(source, target);
+            FIGHT_ACTOR_VALUE(std::int32_t, target, 0x318) = g_vfSelectedReactionAnimation + 0x04000000;
+            if (source->activeMotionFlags & 0x10000000U) {
+                FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59a) = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59d);
+                FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59b) = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59d);
+                vfResetReactionProgram(source);
+            }
+        } else {
+            FIGHT_ACTOR_VALUE(std::int32_t, source, 0x868) = 2;
+            g_vfSelectedReactionAnimation = 2;
+            vfclChooseReactionAnim(source, target);
+            FIGHT_ACTOR_VALUE(std::int32_t, target, 0x318) = g_vfSelectedReactionAnimation + 0x21000000;
+            if ((vfSelectHitReactionSequence(source) & 0x33U) || FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x305) == 3) {
+                FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59a) = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59d);
+                FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59b) = FIGHT_ACTOR_VALUE(std::int8_t, source, 0x59d);
+                vfResetReactionProgram(source);
+            }
+        }
+        FIGHT_ACTOR_VALUE(std::int16_t, target, 0x3da) = FIGHT_ACTOR_VALUE(std::int16_t, source, 0x3d4);
+        vfRestoreAuthoredHitProgram(source, 2);
+        if (target->formationFlags & 0x20U)
+            target->runtimeFlags |= 0x20U;
+        std::int32_t frames = FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x2e4);
+        if (!frames) {
+            frames = static_cast<std::uint8_t>(static_cast<std::int32_t>(impact * 0.60000002f + 3.0f + 0.5f));
+            const std::uint32_t limit = ScaleFightTransitionFrames(FIGHT_ACTOR_VALUE(float, source, 0x270), 10);
+            if (static_cast<std::uint16_t>(frames) > limit)
+                frames = static_cast<std::uint8_t>(ScaleFightTransitionFrames(FIGHT_ACTOR_VALUE(float, source, 0x270), 10));
+        }
+        FIGHT_ACTOR_VALUE(std::uint16_t, target, 0x3a0) = frames;
+        frames = static_cast<std::uint8_t>(frames + 4);
+        const std::int32_t stop = FIGHT_ACTOR_VALUE(float, target, 0x270) * static_cast<float>(frames);
+        game->retained44 = stop;
+        FIGHT_ACTOR_VALUE(std::int16_t, source, 0x87c) = 0;
+        impact = 0;
+        target->hitResolutionFlags |= 1U;
+    }
+    FIGHT_ACTOR_VALUE(float, target, 0x46c) = 0;
+    FIGHT_ACTOR_VALUE(float, target, 0x470) = 0;
+    FIGHT_ACTOR_VALUE(float, target, 0x474) = 0;
+    if (FIGHT_ACTOR_VALUE(std::uint8_t, source, 0x87e))
+        return;
+    impulse = FIGHT_ACTOR_VALUE(float, target, 0x420);
+    impulse = (impulse - 60.0f) * g_fightKnockbackMaterialBlend + 60.0f;
+    impulse = std::sqrt(FIGHT_ACTOR_VALUE(float, source, 0x878) / impulse);
+    const float vertical = CalculateFixedSine(FIGHT_ACTOR_VALUE(std::int16_t, source, 0x87c)) * impulse;
+    impulse *= CalculateFixedCosine(FIGHT_ACTOR_VALUE(std::int16_t, source, 0x87c));
+    if (source->game->type != 9 && FIGHT_ACTOR_VALUE(std::uint16_t, target, 2) != 32) {
+        FIGHT_ACTOR_VALUE(float, target, 0x470) = target->game->knockbackAmount * target->game->knockbackAmount * vertical;
+        FIGHT_ACTOR_VALUE(float, target, 0x46c) = target->game->knockbackAmount * target->game->knockbackAmount * (CalculateFixedSine(-direction) * impulse);
+        FIGHT_ACTOR_VALUE(float, target, 0x474) = target->game->knockbackAmount * target->game->knockbackAmount * (-CalculateFixedCosine(-direction) * impulse);
+    }
+    if (!guarded) {
+        const std::uint8_t flags = FIGHT_ACTOR_VALUE(std::uint8_t, game->formations[target->groupIndex], 0x18);
+        if (((flags & 0x80U) && (source->secondaryMotionFlags & 0x4000008U)) || ((flags & 0x20U) && (source->secondaryMotionFlags & 0x4000000U)))
+            if (!(g_pFightStage->battleFlags & 0x20U))
+                impact = target->hp + 1.0f;
+    }
+    vfHandleImpactSfxAndDefeat(target, static_cast<std::int32_t>(impact + 0.5f), 1);
+}
+
+#else
 
 // This is the actual hit producer, including guard and paired-reaction paths.
 // @verified - p
@@ -1225,7 +3081,190 @@ void vfclApplyHitResolution(VFActor *self, VFActor *other) {
     vfHandleImpactSfxAndDefeat(other, static_cast<std::int16_t>(static_cast<std::int32_t>(impact + .5f)), 1);
 }
 
+#endif
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static void vfClGetBonePos(FightActorRuntimePrefix *source, FightActorRuntimePrefix *target) {
+    std::uint32_t &excluded = FightCollisionValue<std::uint32_t>(target, 0x798);
+    excluded = 0;
+    if ((source->hitStateFlags & 0x102U) != 0x100U)
+        return;
+    const std::uint8_t guard = FightCollisionValue<std::uint8_t>(source, 0x2a9);
+    if ((target->hitStateFlags & 0x4000U) && guard != 4) {
+        const float height = target->targetGroundY + 0.4f;
+        const VFCollisionShape *shapes = BodyShapes(target);
+        std::uint32_t mask = 0;
+        for (std::int32_t index = 0; index < 10; ++index) {
+            Vector3 position;
+            mtwkGetBonePosition(target->motion, static_cast<MotionBoneId>(shapes[index].bone), &position);
+            if (position.y < height)
+                mask |= shapes[index].mask;
+        }
+        excluded = mask;
+    } else if (FightCollisionValue<std::int8_t>(target, 0x3de) &&
+        (((target->hitStateFlags & 0x1c000U) && guard != 4) || (!(target->hitStateFlags & 0x1c000U) && guard == 4))) {
+        excluded = 0xffffffffU;
+    }
+}
+
+#else
+
+// Guard exclusion uses the motion owner's solved bone translations.
+// @verified - p
+void vfClGetBonePos(std::uint8_t index, VFActor *first, VFActor *second) {
+    VFActor *const self = index ? first : second;
+    VFActor *const source = index ? second : first;
+    self->contact.excludedMask = 0u;
+    if ((source->hitStateFlags & (VFHSF_HitTimeout | VFHSF_AttackActive)) != 0x100)
+        return;
+    const auto guard = static_cast<std::uint8_t>(source->guardState);
+    if ((self->hitStateFlags & VFHSF_SpecialGuardOrParry) && guard != 4) {
+        const float height = 0.4f + self->targetGroundY;
+        const auto *const shapes = reinterpret_cast<const VFCollisionShape *>(self->parameterAd8);
+        std::uint32_t mask = 0;
+        Vector3 position;
+        for (std::size_t i = 0; i != 10; ++i) {
+            (void)mtwkGetBonePosition(self->motion, static_cast<MotionBoneId>(shapes[i].bone), &position);
+            if (height > position.y)
+                mask |= shapes[i].tag;
+        }
+        self->contact.excludedMask = mask;
+    } else if (self->footContactState &&
+        (((self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && guard != 4) ||
+            (!(self->hitStateFlags & (VFHSF_SpecialGuardOrParry | VFHSF_SpecialThrow | VFHSF_GuardState)) && guard == 4))) {
+        self->contact.excludedMask = 0xffffffffu;
+    }
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collision) {
+    FightActorRuntimePrefix *a = collision->game->actors[first], *b = collision->game->actors[second];
+    const std::uint8_t bit = static_cast<std::uint8_t>(1U << second);
+    std::uint8_t &latch = ContactState(a).flags;
+    if ((!(b->activeMotionFlags & 0x4000U) && ((b->activeMotionFlags & 0x200U) || (b->moveFlags & 0x40000U))) || !(a->hitStateFlags & 0x100U) ||
+        (b->hitStateFlags & 0x840000U) || ((b->hitStateFlags & 0x80000U) && (!b->secondActor || (b->secondActor->hitStateFlags & 0x40000U)))) {
+        latch &= static_cast<std::uint8_t>(~bit);
+        return false;
+    }
+    if (FightCollisionValue<std::int16_t>(a, 0x42c) != FightCollisionValue<std::int16_t>(a, 0x430))
+        latch &= static_cast<std::uint8_t>(~bit);
+    if ((latch & bit) || (a->hitStateFlags & 2U))
+        return false;
+    const VFCollisionShape *shapesA = BodyShapes(a), *shapesB = BodyShapes(b);
+    const std::uint32_t categories = vfGetMoveCategoryMaskFor(a);
+    std::uint32_t mask = 0;
+    for (std::int32_t i = 0; i < 10; ++i) {
+        if (!(shapesA[i].mask & categories))
+            continue;
+        for (std::int32_t j = 0; j < 10; ++j)
+            if (shapesA[i].mask & ContactState(b).shapeMaskWords[j])
+                mask |= shapesB[j].mask;
+    }
+    mask &= ~FightCollisionValue<std::uint32_t>(b, 0x798);
+    FightCollisionValue<std::uint32_t>(b, 0x79c) = mask;
+    if (!mask)
+        return false;
+    latch |= bit;
+    const std::int8_t move = FightCollisionValue<std::int8_t>(a, 0x87f);
+    if ((a->formationFlags & 2U) && FightCollisionValue<std::int16_t>(a, 0x934) == move)
+        a->runtimeFlags |= 2U;
+    FightCollisionValue<std::uint8_t>(b, 0x882) = static_cast<std::uint8_t>(move);
+    return true;
+}
+
+#else
+
+// Contact edges are latched per attacker/opponent, not per render.
+// @verified - p
+bool vfClGetBoneStates(std::uint8_t first, std::uint8_t second, VFCL_t *collision) {
+    auto *const a = collision->game->actors[first];
+    auto *const b = collision->game->actors[second];
+    const auto bit = static_cast<std::uint8_t>(1u << second);
+    auto latch = a->contact.processed;
+    if ((!(b->activeMotionFlags & (VFSMF_Unknown4000 | VFSMF_Unknown200000)) &&
+            ((b->activeMotionFlags & VFSMF_Unknown200) || (b->moveFlags & VFMF_NoContactPairing))) ||
+        !(a->hitStateFlags & VFHSF_AttackActive) || (b->hitStateFlags & (VFHSF_MidAirRecovery | VFHSF_AlignedToGround)) ||
+        ((b->hitStateFlags & VFHSF_AirborneOrDowned) && (!b->secondActor || (b->secondActor->hitStateFlags & 0x40000)))) {
+        a->contact.processed = static_cast<std::uint8_t>(latch & ~bit);
+        return false;
+    }
+    if (a->currentAnimation != a->previousAnimation) {
+        latch &= ~bit;
+        a->contact.processed = latch;
+    }
+    if ((latch & bit) || (a->hitStateFlags & VFHSF_HitTimeout))
+        return false;
+    const auto *const shapesA = reinterpret_cast<const VFCollisionShape *>(a->parameterAd8);
+    const auto *const shapesB = reinterpret_cast<const VFCollisionShape *>(b->parameterAd8);
+    const auto categories = vfGetMoveCategoryMaskFor(a);
+    std::uint32_t mask = 0;
+    for (std::size_t i = 0; i != 10; ++i) {
+        if (!(shapesA[i].tag & categories))
+            continue;
+        for (std::size_t j = 0; j != 10; ++j)
+            if (shapesA[i].tag & b->contact.shapeMasks[j])
+                mask |= shapesB[j].tag;
+    }
+    mask &= ~b->contact.excludedMask;
+    b->contact.pendingMask = mask;
+    if (!mask)
+        return false;
+    a->contact.processed = static_cast<std::uint8_t>(latch | bit);
+    const auto move = a->hitImpulseMove;
+    if ((a->formationFlags & 2) && move == a->formationCameraTimerWords[0])
+        a->formationRuntimeFlags |= 2;
+    b->reactionImpulseBytes[2] = static_cast<std::uint8_t>(move);
+    return true;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t second) {
+    FightActorRuntimePrefix *a = collision->game->actors[first], *b = collision->game->actors[second];
+    vfClGetBonePos(a, b);
+    vfClGetBonePos(b, a);
+    const bool firstHit = vfClGetBoneStates(first, second, collision), secondHit = vfClGetBoneStates(second, first, collision);
+    std::uint8_t result = 0;
+    if (!firstHit) {
+        if (secondHit)
+            result = 1;
+    } else if (!secondHit)
+        result = 2;
+    else if ((a->motionFlags ^ b->motionFlags) & 0x8000U)
+        result = b->motionFlags & 0x8000U ? 1 : 2;
+    else {
+        const std::int8_t strengthA = FightCollisionValue<std::int8_t>(a, 0x2aa), strengthB = FightCollisionValue<std::int8_t>(b, 0x2aa);
+        if (strengthA > strengthB)
+            result = 2;
+        else if (strengthB > strengthA)
+            result = 1;
+        else {
+            const std::int16_t frameA = FightCollisionValue<std::int16_t>(a, 0x290), frameB = FightCollisionValue<std::int16_t>(b, 0x290);
+            result = frameA > frameB ? 2 : frameB > frameA ? 1 : 3;
+        }
+    }
+    if (result == 1)
+        vfclApplyHitResolutionForSlots(collision, second, first);
+    else if (result == 2)
+        vfclApplyHitResolutionForSlots(collision, first, second);
+    else if (result == 3) {
+        vfclApplyHitResolutionForSlots(collision, first, second);
+        vfclApplyHitResolutionForSlots(collision, second, first);
+    }
+}
+
+#else
+
+// Attack priority determines native hit publication order on a clash.
 // @verified - p
 void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t second) {
     auto *const a = collision->game->actors[first];
@@ -1261,14 +3300,56 @@ void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t s
         vfclApplyHitResolution(b, a);
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void vfRob_ResolveHitClash(VFCL_t *collision, std::uint8_t first, std::uint8_t second);
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static Vector3 ScaleContactDisplacement(const Vector3 &value, float length) {
+    const float scale = length / ::sqrtf((value.y * value.y + value.x * value.x) + value.z * value.z);
+    Vector3 result = {value.x * scale, value.y * scale, value.z * scale};
+    return result;
+}
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static Vector3 ReadyContactDisplacement(const Vector3 &separation, const Vector3 &history) {
+    const float squared = separation.x * separation.x + separation.z * separation.z;
+    if (!(squared > 0))
+        return ScaleContactDisplacement(history, 0.8f);
+    const float dot = history.x * separation.x + history.z * separation.z;
+    const float penetration = 0.8f - ::sqrtf(squared);
+    if (dot < 0) {
+        const std::uint16_t turn = static_cast<std::uint16_t>(0x8000 - 2 * dc::sdk::ArcTan2Fixed(history.z * separation.x - history.x * separation.z, dot));
+        Matrix4x4::SetPrePassToTempTransform();
+        Matrix4x4::RotateAroundY_Wrapper(turn);
+        Vector3 rotated;
+        Matrix4x4::Transform(separation, rotated);
+        const Vector3 scaled = ScaleContactDisplacement(rotated, penetration);
+        Vector3 result = {rotated.x - separation.x + scaled.x, 0, rotated.z - separation.z + scaled.z};
+        return result;
+    }
+    return ScaleContactDisplacement(separation, penetration);
+}
+
+#else
+
 namespace {
+
 template <bool ActiveOpponent> Vector3 ReadyContactDisplacement(Vector3 separation, Vector3 history) {
     const float squared = separation.z * separation.z + separation.x * separation.x;
     if (squared <= 0)
         return ScaleToMagnitude(history, .8f);
     float dot = history.z * separation.z + history.x * separation.x;
     if constexpr (ActiveOpponent)
-        dot = float(std::sqrt(double(dot)));
+        dot = float(std::sqrt(double(dot))); // As native, including its NaN result.
     const float penetration = .8f - std::sqrt(squared);
     if (dot < 0) {
         const auto turn = static_cast<std::uint16_t>(2 * (-0x4000 - FixedAtan2(history.z * separation.x - history.x * separation.z, dot)));
@@ -1282,6 +3363,38 @@ template <bool ActiveOpponent> Vector3 ReadyContactDisplacement(Vector3 separati
     }
     return ScaleToMagnitude(separation, penetration);
 }
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static void ResolveReadyActive(VFCLParticipantTmp *participants, std::int32_t readyIndex, std::int32_t activeIndex) {
+    VFCLParticipantTmp &ready = participants[readyIndex], &active = participants[activeIndex];
+    FCMG_t *group = static_cast<FCMG_t *>(ready.owner);
+    FightActorRuntimePrefix *actor = static_cast<FightActorRuntimePrefix *>(active.owner);
+    if (actor->hitStateFlags & 0xc0000U)
+        return;
+    std::uint32_t coefficient = 0;
+    if (group->group && static_cast<std::uint8_t>(group->group->activationState - 3) <= 2)
+        coefficient = 1;
+    else if ((actor->hitStateFlags & 0x10000U) || FightCollisionValue<std::uint32_t>(actor, 0x844) || (actor->activeMotionFlags & 0xc00U))
+        coefficient = 2;
+    const Vector3 separation = {group->position.x - actor->contactPosition.x, 0, group->position.z - actor->contactPosition.z};
+    if (!(separation.x * separation.x + separation.z * separation.z < 0.8f * 0.8f))
+        return;
+    const Vector3 history = {ready.x - active.x, 0, ready.z - active.z};
+    const Vector3 displacement = ReadyContactDisplacement(separation, history);
+    static const float weights[3][2] = {{0.5f, 0.5f}, {0, 1}, {1, 0}};
+    MoveReadyEnemy(group, displacement.x * weights[coefficient][0], displacement.z * weights[coefficient][0]);
+    vfclMoveEntityWithContactHistory(actor, -(displacement.x * weights[coefficient][1]), -(displacement.z * weights[coefficient][1]));
+}
+
+#else
+
+namespace {
+
 // Ready entities retain FCMG ownership; active actors publish VFCL history.
 // @verified - p
 void ResolveReadyActive(VFCLParticipantTmp &ready, VFCLParticipantTmp &active) {
@@ -1303,6 +3416,36 @@ void ResolveReadyActive(VFCLParticipantTmp &ready, VFCLParticipantTmp &active) {
     vfclMoveEntityWithContactHistory(actor, -(displacement.x * weights[coefficient][1]), -(displacement.z * weights[coefficient][1]));
 }
 
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static void ResolveReadyReady(VFCLParticipantTmp *participants, std::int32_t firstIndex, std::int32_t secondIndex) {
+    VFCLParticipantTmp &first = participants[firstIndex], &second = participants[secondIndex];
+    FCMG_t *a = static_cast<FCMG_t *>(first.owner), *b = static_cast<FCMG_t *>(second.owner);
+    std::uint32_t coefficient = a->group && static_cast<std::uint8_t>(a->group->activationState - 3) <= 2 ? 1 : 0;
+    if (b->group && static_cast<std::uint8_t>(b->group->activationState - 3) <= 2) {
+        if (coefficient == 1)
+            return;
+        coefficient = 2;
+    }
+    const Vector3 separation = {a->position.x - b->position.x, 0, a->position.z - b->position.z};
+    if (!(separation.x * separation.x + separation.z * separation.z < 0.8f * 0.8f))
+        return;
+    const Vector3 history = {first.x - second.x, 0, first.z - second.z};
+    const Vector3 displacement = ReadyContactDisplacement(separation, history);
+    static const float weights[3][2] = {{0.5f, 0.5f}, {0, 1}, {1, 0}};
+    MoveReadyEnemy(a, displacement.x * weights[coefficient][0], displacement.z * weights[coefficient][0]);
+    MoveReadyEnemy(b, -(displacement.x * weights[coefficient][1]), -(displacement.z * weights[coefficient][1]));
+}
+
+#else
+
+namespace {
+
+// The native null-second-formation branch reads absolute address 0x50.
 // @verified - p
 void ResolveReadyReady(VFCLParticipantTmp &first, VFCLParticipantTmp &second) {
     auto *const a = static_cast<FCMG_t *>(first.owner);
@@ -1321,12 +3464,70 @@ void ResolveReadyReady(VFCLParticipantTmp &first, VFCLParticipantTmp &second) {
     MoveReadyEnemy(a, displacement.x * weights[coefficient][0], displacement.z * weights[coefficient][0]);
     MoveReadyEnemy(b, -(displacement.x * weights[coefficient][1]), -(displacement.z * weights[coefficient][1]));
 }
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+static std::int32_t ParticipantPairInContactRange(VFCLParticipantTmp *participants, std::uint8_t first, std::uint8_t second) {
+    const Vector3 *a, *b;
+    if (participants[first].type == 1) {
+        const FightActorRuntimePrefix *actor = reinterpret_cast<const FightActorRuntimePrefix *>(participants[first].owner);
+        a = &actor->game->collision->samples[*reinterpret_cast<const std::int8_t *>(actor)].points[0];
+    } else {
+        a = &reinterpret_cast<const FCMG_t *>(participants[first].owner)->position;
+    }
+    if (participants[second].type == 1) {
+        const FightActorRuntimePrefix *actor = reinterpret_cast<const FightActorRuntimePrefix *>(participants[second].owner);
+        b = &actor->game->collision->samples[*reinterpret_cast<const std::int8_t *>(actor)].points[0];
+    } else {
+        b = &reinterpret_cast<const FCMG_t *>(participants[second].owner)->position;
+    }
+    Vector3 delta;
+    delta.x = b->x - a->x;
+    delta.y = b->y - a->y;
+    delta.z = b->z - a->z;
+    if (delta.x * delta.x + delta.y * delta.y + delta.z * delta.z < 4.409999370574951f)
+        return 1;
+    return 0;
+}
+
+#else
+
+namespace {
+
 const Vector3 &ParticipantPosition(const VFCLParticipantTmp &participant) {
     if (participant.type != 1)
         return static_cast<const FCMG_t *>(participant.owner)->position;
     const auto *const actor = static_cast<const VFActor *>(participant.owner);
     return actor->game->collision->samples[actor->groupIndex].points[0];
 }
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+static bool PairBlockedByWorld(VFCL_t *collision, const FightActorRuntimePrefix *a, const FightActorRuntimePrefix *b) {
+    Vector3 hit;
+    const Vector3 *first = &collision->samples[*reinterpret_cast<const std::int8_t *>(a)].points[0];
+    const Vector3 *second = &collision->samples[*reinterpret_cast<const std::int8_t *>(b)].points[0];
+    const float dx = second->x - first->x, dz = second->z - first->z;
+    if ((dx < 0 ? -dx : dx) < 0.00000011920929f && (dz < 0 ? -dz : dz) < 0.00000011920929f)
+        return false;
+    if (FindNearestRayIntersection(&hit, first, second))
+        return true;
+    return false;
+}
+
+#else
+
+namespace {
+
 // @verified - p
 bool PairBlockedByWorld(const VFActor *a, const VFActor *b) {
     const auto &first = a->game->collision->samples[a->groupIndex].points[0];
@@ -1336,7 +3537,66 @@ bool PairBlockedByWorld(const VFActor *a, const VFActor *b) {
     Vector3 hit;
     return FindNearestRayIntersection(&hit, &first, &second);
 }
+
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *participants, std::int32_t count, std::int32_t phase) {
+    FightRuntimePrefix *game = collision->game;
+    std::int32_t i, j;
+    for (i = count - 2; i >= 0; --i) {
+        for (j = i + 1; j < count; ++j) {
+            if (phase) {
+                if (participants[i].link || participants[j].link)
+                    continue;
+            } else if (!participants[i].link && !participants[j].link)
+                continue;
+            if (ParticipantPairInContactRange(participants, i, j) != 1)
+                continue;
+            if (participants[i].type != 1) {
+                if (participants[j].type != 1)
+                    ResolveReadyReady(participants, i, j);
+                else
+                    do {
+                        ResolveReadyActive(participants, i, j);
+                    } while (0);
+            } else if (participants[j].type != 1)
+                ResolveReadyActive(participants, j, i);
+            else {
+                std::int32_t first = participants[i].index, second = participants[j].index;
+                vfclPrepareContact(collision, first, second);
+                FightActorRuntimePrefix *self = game->actors[first], *other = game->actors[second];
+                std::int32_t hit;
+                if (game->slotTeams[first] != game->slotTeams[second] || static_cast<std::int32_t>(self->activeMotionFlags | other->activeMotionFlags) < 0)
+                    hit = 1;
+                else
+                    hit = 0;
+                if (hit == 1) {
+                    FightCollisionValue<std::uint8_t>(other, 0x884) = 2;
+                    FightCollisionValue<std::uint8_t>(self, 0x884) = 2;
+                } else {
+                    FightCollisionValue<std::uint8_t>(other, 0x884) = 0;
+                    FightCollisionValue<std::uint8_t>(self, 0x884) = 0;
+                }
+                if (FightCollisionValue<std::int16_t>(self, 2) == 0)
+                    FightCollisionValue<std::uint8_t>(other, 0x884) |= 1;
+                if (FightCollisionValue<std::int16_t>(other, 2) == 0)
+                    FightCollisionValue<std::uint8_t>(self, 0x884) |= 1;
+                if ((self->activeMotionFlags | other->activeMotionFlags) & 0x800U)
+                    hit = 0;
+                if (hit && PairBlockedByWorld(collision, self, other))
+                    hit = 0;
+                if (hit == 1)
+                    vfRob_ResolveHitClash(collision, first, second);
+            }
+        }
+    }
 }
+
+#else
 
 // Backwards sweep visits linked contacts first, then unlinked contacts.
 // @verified - p
@@ -1375,6 +3635,99 @@ void vfBuildContactsAndResolvePushOrHit(VFCL_t *collision, VFCLParticipantTmp *p
         }
     }
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+void vfc_VF_RobCollision_Callback(void *parameter) {
+    VFCL_t *const collision = static_cast<VFCL_t *>(parameter);
+    matrix_stack::Matrix4x4_Push(0);
+    FightRuntimePrefix *const game = collision->game;
+    std::uint8_t index;
+    FightActorRuntimePrefix *actor;
+    for (index = 0; index < 6; ++index) {
+        collision->contactDeltas[index].x = 0, collision->contactDeltas[index].y = 0;
+        if (game->characters[index]) {
+            actor = game->actors[index];
+            if (actor->moveFlags & 0x10000000U) {
+                actor->moveFlags &= ~0x10000000U;
+                vfclTransformContactShapes(actor);
+                std::memcpy(reinterpret_cast<std::byte *>(actor) + 0x794 + offsetof(ActorContactState, previousSamples),
+                    reinterpret_cast<std::byte *>(actor) + 0x74, 10 * sizeof(Vector3));
+                collision->previousSamples[index] = collision->samples[index];
+            } else {
+                std::memcpy(reinterpret_cast<std::byte *>(actor) + 0x794 + offsetof(ActorContactState, previousSamples),
+                    reinterpret_cast<std::byte *>(actor) + 0x74, 10 * sizeof(Vector3));
+                collision->previousSamples[index] = collision->samples[index];
+                vfclTransformContactShapes(actor);
+            }
+            for (std::uint8_t word = 0; word < 10; ++word)
+                reinterpret_cast<ActorContactState *>(reinterpret_cast<std::byte *>(actor) + 0x794)->shapeMaskWords[word] = 0;
+            actor->stateFlags = (actor->stateFlags & ~0x20U) | 0x40U;
+        }
+    }
+    VFCLParticipantTmp participants[16];
+    std::int32_t count = 0;
+    for (index = 0; index < g_pFightStage->enemyCount; ++index) {
+        FCMG_t *const enemy = &g_pFightStage->enemySlots[index];
+        if (!enemy->character)
+            continue;
+        if (enemy->state == 1) {
+            participants[count].type = 2;
+            participants[count].index = index;
+            participants[count].link = 0;
+            participants[count].owner = enemy;
+            participants[count].x = enemy->position.x;
+            participants[count].z = enemy->position.z;
+            ++count;
+        } else if (enemy->state == 2) {
+            actor = enemy->fighter;
+            participants[count].type = 1;
+            participants[count].index = *reinterpret_cast<std::uint8_t *>(actor);
+            if (reinterpret_cast<ActorContactState *>(reinterpret_cast<std::byte *>(actor) + 0x794)->activeShapeMask)
+                participants[count].link = 1;
+            else
+                participants[count].link = 0;
+            participants[count].owner = actor;
+            participants[count].x = actor->contactPosition.x;
+            participants[count].z = actor->contactPosition.z;
+            ++count;
+        }
+    }
+    if (g_pFightStage->battleFlags & 0x10U) {
+        g_pFightStage->battleFlags &= ~0x10U;
+        PopCurrentMatrix(1);
+        return;
+    }
+    vfBuildContactsAndResolvePushOrHit(collision, participants, count, 0);
+    vfBuildContactsAndResolvePushOrHit(collision, participants, count, 1);
+    vfclEnforceRingBoundary(collision);
+    if (!(g_pFightStage->battleFlags & 0x800U))
+        vfclResolveWorldContacts(collision);
+    for (index = 0; index < 6; ++index) {
+        collision->contactMasks[index] = 0;
+        if (game->characters[index]) {
+            actor = game->actors[index];
+            *reinterpret_cast<std::uint8_t *>(reinterpret_cast<std::byte *>(actor) + 0x794 + offsetof(ActorContactState, linked)) = 0;
+            *reinterpret_cast<std::uint32_t *>(reinterpret_cast<std::byte *>(actor) + 0x794 + offsetof(ActorContactState, activeShapeMask)) = 0;
+            actor->moveFlags &= ~0x8000U;
+        }
+    }
+    vfclAdjustToGroundOrSlope(collision);
+    for (index = 0; index < 6; ++index)
+        if (game->characters[index])
+            vfclUpdateHeightFlagsForGrid(game->actors[index]);
+    vfUpdateStageObjects(game);
+    vfclResolvePairedContactDrift(game);
+    vfclAdjustToGroundOrSlope(collision);
+    vfClRaycastInWorldGrid();
+    vfClCopyMotionData(game);
+    PopCurrentMatrix(1);
+}
+
+#else
 
 // Preserve current/previous pose ordering before both contact sweeps.
 // @verified - p
@@ -1454,6 +3807,22 @@ void vfc_VF_RobCollision_Callback(void *parameter) {
     Matrix4x4::Pop(1);
 }
 
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2 && defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+// @verified - d
+HLib::Task *Queue_vfc_VF_RobCollision(FightRuntimePrefix *game) {
+    HLib::Task *const task = HLib::EnqueueTaskWithParameter(vfc_VF_RobCollision_Callback, 12, 2, sizeof(VFCL_t), SHEN_NAME4('V', 'F', 'C', 'L'));
+    VFCL_t *const collision = static_cast<VFCL_t *>(HLib::GetTaskParameter(task));
+    collision->name = SHEN_NAME4('F', 'C', 'O', 'L');
+    collision->game = game;
+    game->collision = collision;
+    return task;
+}
+
+#else
+
 // Task-owned collision storage is published to the genuine VFMA owner.
 // @verified - p
 HLib::Task *Queue_vfc_VF_RobCollision(VFMA_t *game) {
@@ -1465,4 +3834,7 @@ HLib::Task *Queue_vfc_VF_RobCollision(VFMA_t *game) {
     return task;
 }
 
-} // namespace shenmue::s2
+#endif
+
+} // namespace s2
+} // namespace shenmue

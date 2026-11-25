@@ -1,3 +1,18 @@
+#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/title_dc.hpp"
+
+#include "platform/dc/sdk.hpp"
+#include "s2/calendar_dc.hpp"
+#include "s2/conversation_dc.hpp"
+#include "s2/input_dc.hpp"
+#include "s2/legacy_sprite_dc.hpp"
+#include "s2/load_title_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include "s2/screen_film.hpp"
+#include "s2/system_modules_dc.hpp"
+#include <cstring>
+#else
 #include "s2/title.hpp"
 
 #include "s2/date_time.hpp"
@@ -36,89 +51,244 @@
 #if defined(_WIN32)
 #include "imgui.h"
 #endif
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+namespace {
+
+std::int32_t InitializeTitleDebugGame(UIElement);
+void DebugTitleSceneSelector();
+void SwitchSystemModuleTaskForFrontend(void *);
+void TitleMenuControl(void *data);
+void TitleMenuDisplay(void *);
+void TitleOptionsControl(void *data);
+void TitleOptionsDisplay(void *);
+void StartTitleCreditsMovie(void *);
+void DrawTitleCreditsFrame(void *);
+void StartNextTitleMenuSequence(void *data);
+void ShowTitleStorageWarning(void *data);
+void ShowTitleOptionsWarning(void *data);
+void ShowTitleArcadeWarning(void *data);
+void StartTitleHangOnMovie(void *);
+
+} // namespace
+
+std::uint16_t InterpretTitleAnalogInput();
+void ReturnToTitleControlTasks();
+std::int64_t ExecuteTitleMenuCallback(TitleControlData *control, SystemModule module);
+void SetPressStart(void *);
+void TitleDisplayNullsub(void *);
+const char *GetShenNameString(shen_name name);
+void ResetTitleMenuState();
+std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene);
+void TitleAudioControl(std::int32_t sceneIndex);
+void ApplyTitleMenuOptions();
 void TitleControl(void *taskData);
+void TitleModule(void *taskData);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+void TitleControl(void *taskData);
+
 std::uint16_t g_previousTitleInputUserHandle = 0;
+
 std::int32_t g_titleFlagShouldRun = 0;
+
 std::uint32_t g_titleVersionOverride{};
+
+std::int32_t g_titleMenuSelection = -1;
+
+std::int32_t g_previousTitleMenuSelection = -1;
+
+std::int32_t g_titleMenuUIState{};
+
+std::int32_t g_titleMenuTransitionRequested{};
+
+namespace {
+
+constexpr std::uint32_t kHasCurrentLogo = 0x4;
+
+constexpr std::uint32_t kFadeInProgress = 0x80;
+
+constexpr std::uint32_t kLeaving = 0x40;
+
+constexpr std::uint32_t kTimerMask = 0x1c0;
+
+constexpr std::uint32_t kTimerPattern = 0x140;
+
+constexpr std::uint32_t kQueueYsMark = 0x200;
+
+constexpr std::uint32_t kQueueAm2Logo = 0x400;
+
+HLib::Task *titleControlTask = nullptr;
+
+TitleSequence titleLoopSequence = TitleSequence::PressStart;
+
+std::uint32_t logoFlags = 0;
+
+std::int32_t needsTitleSequenceDraw;
+
+std::int32_t setPressStartPending;
+
+std::int32_t pressStartSelected = 0;
+
+float titleSequenceTime;
+
+std::int32_t titleAttractSkipRequested{};
+
+std::int32_t titleWheelTransitionAngle{};
+
+ConversationBuffer *currentTitleLogo = nullptr;
+std::array<std::int32_t, 3> titleMenuOptions{};
+std::int32_t titleOptionsInputLocked{};
+
+std::int32_t titleOptionsRow{};
+
+std::int32_t titleOptionsPage1Row{};
+
+std::array<std::int32_t, 2> titleOptionsPage1Values{};
+std::int32_t titleOptionsPage2Mode{};
+
+std::int32_t titleOptionsPage2Row{};
+
+std::array<std::int32_t, 11> titleOptionsPage2Values{};
+
+std::int32_t titleOptionsPage{};
+
+std::array<std::int32_t, 5> titleOptionItems{};
+
+const std::int16_t *titleOptionColumnMarker{};
+
+std::int32_t debugModuleChangeRequested{};
+
+SystemModule debugModuleChange{};
+
+std::int32_t debugSceneAct{};
+
+shen_name debugSceneArea{};
+
+std::int32_t debugSceneEntry{};
+
+std::array<MapEventAreaDefinition, 128> titleDebugSceneAreas{};
+
+std::array<char, 5> shenNameString{};
+
+std::int16_t titleSelectedAct = -1;
+
+std::int32_t titleDebugAct = 0;
+
+std::int32_t titleDebugSaveSlot = -1;
+
+std::int8_t titleDebugSaveLoaded{};
+
+std::int32_t titleCurrentAreaIndex = 0;
+
+std::int32_t titleDebugSelection;
+
+std::int32_t titleDebugAreaCharacter;
+
+std::int32_t titleCurrentCoreModule;
+
+std::int32_t titleAnalogInputLatched{};
+
+const std::array<TitleDebugModuleEntry, 6> TITLE_DEBUG_MODULES{{
+    {.name = "             ", .module = SystemModule::Game, .control = DebugTitleSceneSelector, .initialize = InitializeTitleDebugGame},
+    {.name = " STAFF ROLL  ", .module = SystemModule::Credits, .initialize = GetDebugForceUIEnabled},
+    {.name = "   OUTRUN    ", .module = SystemModule::OutRun, .initialize = GetDebugForceUIEnabled},
+    {.name = "  HARRIER    ", .module = SystemModule::SpaceHarrier, .initialize = GetDebugForceUIEnabled},
+    {.name = "   HANGON    ", .module = SystemModule::HangOn, .initialize = GetDebugForceUIEnabled},
+    {.name = "AFTER BURNER ", .module = SystemModule::AfterBurner, .initialize = GetDebugForceUIEnabled},
+}};
+
+const std::array<TitleCallbackPair, 2> TITLE_SECOND_CALLBACKS{{
+    {.control = SwitchSystemModuleTaskForFrontend, .display = SetPressStart},
+    {.control = TitleMenuControl, .display = TitleMenuDisplay},
+}};
+
+const std::array<TitleMenuDispatchEntry, 12> titleMenuDispatch{{
+    {.control = TitleMenuControl, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = TitleOptionsControl, .display = TitleOptionsDisplay, .initialize = nullptr},
+    {.control = TitleContinueControl, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleContinueFlags},
+    {.control = StartTitleNewGame, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleNewGameFlags},
+    {.control = ShowTitleOptionsWarning, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartTitleCollection, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleCollectionFlags},
+    {.control = StartTitleCreditsMovie, .display = DrawTitleCreditsFrame, .initialize = nullptr},
+    {.control = ShowTitleStorageWarning, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = ShowTitleArcadeWarning, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartNextTitleMenuSequence, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartTitleHangOnMovie, .display = TitleMenuDisplay, .initialize = nullptr},
+    {.control = StartTitleSnapshotViewer, .display = TFSEL_DispFileSelect, .initialize = nullptr},
+}};
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 std::uint32_t GetTitleVersionOverride() noexcept {
     return g_titleVersionOverride;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 void SetTitleVersionOverride(std::uint32_t value) noexcept {
     g_titleVersionOverride = value;
 }
-std::int32_t g_titleMenuSelection = -1;
-std::int32_t g_previousTitleMenuSelection = -1;
-std::int32_t g_titleMenuUIState{};
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 std::int64_t (*g_titleMenuTransitionCallback)(){};
-std::int32_t g_titleMenuTransitionRequested{};
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetTitleMenuUIState(std::int32_t state) noexcept {
     g_titleMenuUIState = state;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetTitleMenuTransitionCallback(std::int64_t (*callback)()) noexcept {
     g_titleMenuTransitionCallback = callback;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void RequestTitleMenuTransition() noexcept {
     g_titleMenuTransitionRequested = 1;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool shenIsInIntro() noexcept {
     // shenIsInIntro reads a DWORD at Version+0xdc, not a byte at +0x37.
     return GetS2AudioSettings().dialogueMode != 3 || (g_actNumber == 1 && g_currentMap == AREA_OP02);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 namespace {
-
-constexpr std::uint32_t kHasCurrentLogo = 0x4;
-constexpr std::uint32_t kFadeInProgress = 0x80;
-constexpr std::uint32_t kLeaving = 0x40;
-constexpr std::uint32_t kTimerMask = 0x1c0;
-constexpr std::uint32_t kTimerPattern = 0x140;
-constexpr std::uint32_t kQueueYsMark = 0x200;
-constexpr std::uint32_t kQueueAm2Logo = 0x400;
-
-HLib::Task *titleControlTask = nullptr;
-TitleSequence titleLoopSequence = TitleSequence::PressStart;
-std::uint32_t logoFlags = 0;
-std::int32_t needsTitleSequenceDraw = 0;
-std::int32_t setPressStartPending = 0;
-std::int32_t pressStartSelected = 0;
-float titleSequenceTime = 0.0f;
-std::int32_t titleAttractSkipRequested{};
-std::int32_t titleWheelTransitionAngle{};
-ConversationBuffer *currentTitleLogo = nullptr;
-std::array<std::int32_t, 3> titleMenuOptions{};
-std::int32_t titleOptionsInputLocked{};
-std::int32_t titleOptionsRow{};
-std::int32_t titleOptionsPage1Row{};
-std::array<std::int32_t, 2> titleOptionsPage1Values{};
-std::int32_t titleOptionsPage2Mode{};
-std::int32_t titleOptionsPage2Row{};
-std::array<std::int32_t, 11> titleOptionsPage2Values{};
-std::int32_t titleOptionsPage{};
-std::array<std::int32_t, 5> titleOptionItems{};
-const std::int16_t *titleOptionColumnMarker{};
-std::int32_t debugModuleChangeRequested{};
-SystemModule debugModuleChange{};
-std::int32_t debugSceneAct{};
-shen_name debugSceneArea{};
-std::int32_t debugSceneEntry{};
-std::array<MapEventAreaDefinition, 128> titleDebugSceneAreas{};
-std::array<char, 5> shenNameString{};
-std::int16_t titleSelectedAct = -1;
-std::int32_t titleDebugAct = 0;
-std::int32_t titleDebugSaveSlot = -1;
-std::int8_t titleDebugSaveLoaded{};
-std::int32_t titleCurrentAreaIndex = 0;
-std::int32_t titleDebugSelection = 0;
-std::int32_t titleDebugAreaCharacter = 0;
-std::int32_t titleCurrentCoreModule = 0;
-std::int32_t titleAnalogInputLatched{};
 
 // @verified - p
 std::int32_t FindLastTitleSceneGroup(const TitleSceneGroup *groups) {
@@ -127,6 +297,14 @@ std::int32_t FindLastTitleSceneGroup(const TitleSceneGroup *groups) {
         ++count;
     return count - 1;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void SelectTitleSceneGroup(const TitleSceneGroup *groups) {
@@ -148,6 +326,14 @@ void SelectTitleSceneGroup(const TitleSceneGroup *groups) {
     SetTitleSceneInfo(groups[titleDebugAct].scenes[titleCurrentAreaIndex]);
     titleDebugSaveLoaded = 0;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void SelectTitleArea(const TitleSceneEntry *scenes) {
@@ -178,6 +364,14 @@ void SelectTitleArea(const TitleSceneEntry *scenes) {
     titleDebugSaveLoaded = 0;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 void SetTitleDebugStartTime(shen_name area) {
     DateTime time;
@@ -198,6 +392,14 @@ void SetTitleDebugStartTime(shen_name area) {
     SetCurrentDateTimeTo(time);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 std::int32_t InitializeTitleDebugGame(UIElement) {
     if (titleDebugSaveSlot < 0) {
@@ -210,6 +412,14 @@ std::int32_t InitializeTitleDebugGame(UIElement) {
     ApplyTitleMenuOptions();
     return 1;
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void DebugTitleSceneSelector() {
@@ -332,14 +542,13 @@ void DebugTitleSceneSelector() {
         DebugTextPrintf("(%2d:%2d)", titleDebugAct, titleCurrentAreaIndex);
 }
 
-const std::array<TitleDebugModuleEntry, 6> TITLE_DEBUG_MODULES{{
-    {.name = "             ", .module = SystemModule::Game, .control = DebugTitleSceneSelector, .initialize = InitializeTitleDebugGame},
-    {.name = " STAFF ROLL  ", .module = SystemModule::Credits, .initialize = GetDebugForceUIEnabled},
-    {.name = "   OUTRUN    ", .module = SystemModule::OutRun, .initialize = GetDebugForceUIEnabled},
-    {.name = "  HARRIER    ", .module = SystemModule::SpaceHarrier, .initialize = GetDebugForceUIEnabled},
-    {.name = "   HANGON    ", .module = SystemModule::HangOn, .initialize = GetDebugForceUIEnabled},
-    {.name = "AFTER BURNER ", .module = SystemModule::AfterBurner, .initialize = GetDebugForceUIEnabled},
-}};
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void SwitchSystemModuleTaskForFrontend(void *) {
@@ -369,6 +578,14 @@ void SwitchSystemModuleTaskForFrontend(void *) {
         }
     }
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 const MapEventAreaDefinition *BuildTitleDebugSceneAreas(std::int32_t scene, std::int32_t filter) {
@@ -407,13 +624,31 @@ const MapEventAreaDefinition *BuildTitleDebugSceneAreas(std::int32_t scene, std:
     return titleDebugSceneAreas.data();
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 #if defined(_WIN32)
 // @verified - p
 void TitleDebugMenuHeader() {
     ImGui::SameLine(0.0f, -1.0f);
     ImGui::Text("Disk %u: %s", static_cast<std::uint32_t>(g_actNumber), GetShenNameString(g_currentMap));
 }
+#endif
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+#if defined(_WIN32)
 // @verified - p
 void TitleDebugMenuBody() {
     char label[512];
@@ -463,8 +698,44 @@ void TitleDebugMenuBody() {
 }
 #endif
 
+} // namespace
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+OmakeSelection omakeSelection = {};
+
+HLib::Task *titleControlTask = 0;
+
+std::uint32_t logoFlags = 0;
+
+std::int32_t titleLoopSequence, needsTitleSequenceDraw = 0, setPressStartPending = 0, titleSequenceTime = 0;
+
+std::int32_t titleDebugSelection, titleDebugAreaCharacter = 0, titleCurrentCoreModule = 0;
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
 void NativeTitleNoOp(void *) {
 }
+
+#else
+
+namespace {
+
+void NativeTitleNoOp(void *) {
+}
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void TitleMenuControl(void *data) {
     if (titleAttractSkipRequested != 0) {
@@ -527,6 +798,14 @@ void TitleMenuControl(void *data) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 void DrawTitleMenuWheel() {
     std::int32_t angle = titleWheelTransitionAngle;
@@ -576,6 +855,14 @@ void DrawTitleMenuWheel() {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 void TitleMenuDisplay(void *) {
     if (GetDebugForceUIEnabled(UIElement::MainMenu) && g_debugImGuiRenderMode != 1) {
@@ -607,10 +894,13 @@ void TitleMenuDisplay(void *) {
     DrawTitleFrame(3);
 }
 
-const std::array<TitleCallbackPair, 2> TITLE_SECOND_CALLBACKS{{
-    {.control = SwitchSystemModuleTaskForFrontend, .display = SetPressStart},
-    {.control = TitleMenuControl, .display = TitleMenuDisplay},
-}};
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 // @verified - p
 void TitleOptionsControl(void *data) {
@@ -690,6 +980,14 @@ void TitleOptionsControl(void *data) {
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 const std::uint16_t *TitleOptionSpriteUv(std::int32_t texture, std::int32_t index) {
     const std::size_t entry = static_cast<std::size_t>(index);
     switch (texture) {
@@ -708,6 +1006,14 @@ const std::uint16_t *TitleOptionSpriteUv(std::int32_t texture, std::int32_t inde
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 void DrawTitleOptionColumns(std::int32_t texture, const std::int16_t *labels, std::int32_t value, float y) {
     Vector3 position{.y = y};
@@ -724,6 +1030,14 @@ void DrawTitleOptionColumns(std::int32_t texture, const std::int16_t *labels, st
     }
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 // @verified - p
 void DrawTitleOptionStepper(Vector3 position, std::int32_t first, std::int32_t row) {
     const std::size_t index = static_cast<std::size_t>(row);
@@ -737,6 +1051,15 @@ void DrawTitleOptionStepper(Vector3 position, std::int32_t first, std::int32_t r
     DrawTitleSpriteRect(TITLE_OPTION_FRAME_UV[titleOptionsPage1Values[index] == TITLE_OPTION_PAGE1_COUNTS[index] - 1 ? 10 : 8].data(), position, 8, 1.0f);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
+// Native page 2 also has a selector-1 branch; its selector is never written and that branch reads the column positions as a UV pointer.
 // @verified - p
 void TitleOptionsDisplay(void *) {
     if (GetDebugForceUIEnabled(UIElement::Options))
@@ -857,13 +1180,37 @@ void TitleOptionsDisplay(void *) {
     DrawTitleFrame(7);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void StartTitleCreditsMovie(void *) {
     ChangeSystemModule(SystemModule ::Movie, 0);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void DrawTitleCreditsFrame(void *) {
     DrawTitleFrame(1);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void StartNextTitleMenuSequence(void *data) {
     if ((g_inputBuffer[0].pressedPriority & 0x0e00U) == 0)
@@ -875,39 +1222,64 @@ void StartNextTitleMenuSequence(void *data) {
         HLib::AssignCallbackForTask(control->titleSequenceTask, TitleMenuDisplay);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ShowTitleStorageWarning(void *data) {
     SetTitleWarningLogo(42, static_cast<TitleControlData *>(data)->warningParameters);
     vfSubmitQuad(0x7f000000U, -2.5900004f);
 }
+
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 void ShowTitleOptionsWarning(void *data) {
     SetTitleWarningLogo(45, static_cast<TitleControlData *>(data)->warningParameters);
     vfSubmitQuad(0x7f000000U, -2.5900004f);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void ShowTitleArcadeWarning(void *data) {
     SetTitleWarningLogo(44, static_cast<TitleControlData *>(data)->warningParameters);
     vfSubmitQuad(0x7f000000U, -2.5900004f);
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 void StartTitleHangOnMovie(void *) {
     ChangeSystemModule(SystemModule::Movie, 0);
 }
 
-const std::array<TitleMenuDispatchEntry, 12> titleMenuDispatch{{
-    {.control = TitleMenuControl, .display = TitleMenuDisplay, .initialize = nullptr},
-    {.control = TitleOptionsControl, .display = TitleOptionsDisplay, .initialize = nullptr},
-    {.control = TitleContinueControl, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleContinueFlags},
-    {.control = StartTitleNewGame, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleNewGameFlags},
-    {.control = ShowTitleOptionsWarning, .display = TitleMenuDisplay, .initialize = nullptr},
-    {.control = StartTitleCollection, .display = TFSEL_DispFileSelect, .initialize = InitializeTitleCollectionFlags},
-    {.control = StartTitleCreditsMovie, .display = DrawTitleCreditsFrame, .initialize = nullptr},
-    {.control = ShowTitleStorageWarning, .display = TitleMenuDisplay, .initialize = nullptr},
-    {.control = ShowTitleArcadeWarning, .display = TitleMenuDisplay, .initialize = nullptr},
-    {.control = StartNextTitleMenuSequence, .display = TitleMenuDisplay, .initialize = nullptr},
-    {.control = StartTitleHangOnMovie, .display = TitleMenuDisplay, .initialize = nullptr},
-    {.control = StartTitleSnapshotViewer, .display = TFSEL_DispFileSelect, .initialize = nullptr},
-}};
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
 
 bool AssignTitleCallbacks(HLib::TaskCallback controlCallback, HLib::TaskCallback displayCallback) {
     auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
@@ -919,6 +1291,14 @@ bool AssignTitleCallbacks(HLib::TaskCallback controlCallback, HLib::TaskCallback
     return true;
 }
 
+} // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+namespace {
+
 std::uint32_t TitleAlphaColour(float alpha) {
     const float scaled = alpha * 255.0f;
     const std::int64_t truncated =
@@ -927,6 +1307,10 @@ std::uint32_t TitleAlphaColour(float alpha) {
 }
 
 } // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 // @verified - p
@@ -949,6 +1333,10 @@ std::uint16_t InterpretTitleAnalogInput() {
     return result;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetupTitleMenuTask(std::int32_t mode) {
     TitleControlData *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
@@ -965,6 +1353,10 @@ void SetupTitleMenuTask(std::int32_t mode) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void ReturnToTitleControlTasks() {
     titleAttractSkipRequested = 0;
@@ -975,10 +1367,19 @@ void ReturnToTitleControlTasks() {
     logoFlags |= kLeaving;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void RequestTitleAttractSkip() {
     titleAttractSkipRequested = 1;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 std::int64_t ExecuteTitleMenuCallback(TitleControlData *control, SystemModule module) {
     const TitleMenuDispatchEntry &entry = titleMenuDispatch[static_cast<std::size_t>(module)];
@@ -998,6 +1399,10 @@ std::int64_t ExecuteTitleMenuCallback(TitleControlData *control, SystemModule mo
 
 } // namespace
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SubmitTitleScreenQuad(std::int32_t texture, float alpha) {
     d3t::SetSceneClearColour(0xffffffffU);
@@ -1006,6 +1411,10 @@ void SubmitTitleScreenQuad(std::int32_t texture, float alpha) {
     AdjustScreenAspectRatio(packet.quad, ScreenAlignment::HorizontalStretch, 320, 240, dimensions[0], dimensions[1], ScreenMode::Centered);
     LegacySpriteNullsub(packet, static_cast<std::uint32_t>(titleSpriteTextures[texture]), -2.9f);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void SetPressStart(void *) {
@@ -1019,41 +1428,95 @@ void SetPressStart(void *) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleDisc(void *data) {
     SubmitTitleScreenQuad(4, static_cast<TitleDisplayData *>(data)->currentStateFrame);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleYsMark(void *data) {
     SubmitTitleScreenQuad(5, static_cast<TitleDisplayData *>(data)->currentStateFrame);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleSegaLogo(void *data) {
     SubmitTitleScreenQuad(3, static_cast<TitleDisplayData *>(data)->currentStateFrame);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleAm2Logo(void *data) {
     SubmitTitleScreenQuad(2, static_cast<TitleDisplayData *>(data)->currentStateFrame);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleAdditionalLogo(void *data) {
     SubmitTitleScreenQuad(6, static_cast<TitleDisplayData *>(data)->currentStateFrame);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleWarning41(void *) {
     SetTitleWarningLogo(41, nullptr);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleWarning40(void *) {
     SetTitleWarningLogo(40, nullptr);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void DrawTitleWarning1(void *) {
     SetTitleWarningLogo(1, nullptr);
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void TitleDisplayNullsub(void *) {
+}
+
+#else
+
 // @verified - p
 void TitleDisplayNullsub(void *) {
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void DrawTitleEsrb(void *data) {
@@ -1072,10 +1535,18 @@ void DrawTitleEsrb(void *data) {
     LegacySpriteNullsub(packet, static_cast<std::uint32_t>(titleEsrbTexture), -2.9f);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetTitleLogoPresent() {
     logoFlags |= kHasCurrentLogo;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void HandleSceneTransitionForModule() {
@@ -1102,12 +1573,20 @@ void HandleSceneTransitionForModule() {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 const char *GetShenNameString(shen_name name) {
     std::memcpy(shenNameString.data(), &name.name, 4);
     shenNameString[4] = 0;
     return shenNameString.data();
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void ResetTitleMenuState() {
@@ -1121,11 +1600,19 @@ void ResetTitleMenuState() {
     titleOptionItems[4] = 4;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SetTitleMenuSelection(std::int32_t selection) {
     g_titleMenuSelection = selection;
     g_previousTitleMenuSelection = selection;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene) {
     if (scene.act == 255) {
@@ -1141,6 +1628,10 @@ std::int32_t SetTitleSceneInfo(const TitleSceneEntry &scene) {
     return scene.entry;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void TitleAudioControl(std::int32_t sceneIndex) {
     LoadSoundProgram("0002S000.sbt", static_cast<std::uint32_t>(sceneIndex >> 31), 0xffffffffU);
@@ -1150,12 +1641,20 @@ void TitleAudioControl(std::int32_t sceneIndex) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void ApplyTitleMenuOptions() {
     ApplyS2TriggerSwapMode(titleMenuOptions[2]);
     ApplyS2DialogueMode(static_cast<std::uint8_t>(GetS2AudioSettings().dialogueMode));
     ApplyS2ControlMode(titleMenuOptions[1]);
 } // namespace
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void CheckTitleDebugInput(void *data) {
@@ -1165,6 +1664,10 @@ void CheckTitleDebugInput(void *data) {
         control->state = 1;
     }
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void AcceptTitlePressStart(void *data) {
@@ -1182,6 +1685,10 @@ void AcceptTitlePressStart(void *data) {
     }
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void LoadTitleIntroArea(void *) {
     g_actNumber = 1;
@@ -1190,6 +1697,10 @@ void LoadTitleIntroArea(void *) {
     ExecuteAicaCommand(0x1200a0, 5, 0);
     ChangeSystemModule(SystemModule::Game, 0);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void LoadTitleAttractArea(void *) {
@@ -1201,6 +1712,10 @@ void LoadTitleAttractArea(void *) {
     ChangeSystemModule(SystemModule::Game, 0);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void SkipTitleWarning(void *data) {
     if ((g_inputBuffer[0].pressedPriority & 0x0e01U) == 0)
@@ -1211,6 +1726,10 @@ void SkipTitleWarning(void *data) {
     control->display->currentStateFrame = 1.0f;
     control->display->stateFrame = -0.062745102f;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 // @verified - p
 void MoveToAm2LogoOrYsMark(void *taskData) {
@@ -1245,6 +1764,10 @@ void MoveToAm2LogoOrYsMark(void *taskData) {
         }
     }
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 void TitleControl(void *taskData) {
     TitleControlData *const control = static_cast<TitleControlData *>(taskData);
@@ -1307,10 +1830,18 @@ void TitleControl(void *taskData) {
     g_previousTitleInputUserHandle = g_inputBuffer[0].connectionState;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 // @verified - p
 void ClearTitlePressStartSelection() {
     pressStartSelected = 0;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool SelectTitlePressStart() {
     auto *const control = static_cast<TitleControlData *>(HLib::GetTaskParameter(titleControlTask));
@@ -1321,13 +1852,25 @@ bool SelectTitlePressStart() {
     return true;
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 bool BeginTitleOptionsTask() {
     return AssignTitleCallbacks(TitleOptionsControl, TitleOptionsDisplay);
 }
 
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 bool BeginTitlePlatformTask(void (*callback)(void *)) {
     return AssignTitleCallbacks(callback, NativeTitleNoOp);
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool ReturnToTitleMenuTask() {
     if (!AssignTitleCallbacks(TitleMenuControl, TitleMenuDisplay)) {
@@ -1336,6 +1879,10 @@ bool ReturnToTitleMenuTask() {
     ReturnToTitleWheel();
     return true;
 }
+
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 bool ReturnToTitlePressStartTask() {
     if (!AssignTitleCallbacks(TitleControl, SetPressStart)) {
@@ -1350,6 +1897,110 @@ bool ReturnToTitlePressStartTask() {
     ShowElementByIndex(UIElement::PressStart);
     return true;
 }
+
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+// @verified - d
+void TitleModule(void *data) {
+    SystemModuleTaskData &module = *static_cast<SystemModuleTaskData *>(data);
+    bool forceAlpha = false;
+    bool resumedIntro = false;
+    ResetTempTextureReferences();
+    ResetLegacySpriteSlotDrawState();
+    g_gamePauseState = 1;
+    SetTitleMenuUIState(0);
+    InitializeTitleWarnings();
+    const shen_name previousMap = g_currentMap;
+    g_currentMap = TITLE_AREA;
+    ResetMapRenderState();
+    g_currentMap = previousMap;
+    HLib::Task *task = HLib::EnqueueTaskWithParameter(TitleControl, 8, 0, sizeof(TitleControlData), TITLE_CONTROL_TASK);
+    TitleControlData &control = *static_cast<TitleControlData *>(HLib::GetTaskParameter(task));
+    std::memset(&control, 0, sizeof(control));
+    titleControlTask = task;
+    TitleModuleWork &work = *static_cast<TitleModuleWork *>(module.work);
+    work.frames = 300;
+    work.screenFilmTask = Queue_SCF_Callback_ScreenFilmTaskEntry(15);
+    InitCalendar();
+    InitShotsImages();
+    ResetTitleMenuSelection();
+    HPLG_Enqueue();
+    HPLG_RegisterCallback(TitleBackupCallback);
+    logoFlags |= 0x80U;
+    if (g_loadedActNumber == 1) {
+        needsTitleSequenceDraw = 8;
+        if (module.previousModule == SystemModule_Hot) {
+            titleLoopSequence = 1;
+        } else if (module.previousModule == SystemModule_Logo) {
+            titleLoopSequence = 9;
+        } else if (g_entryPoint == 49 && titleLoopSequence == 1) {
+            titleLoopSequence = 2;
+            SetTitleMenuUIState(1);
+            forceAlpha = true;
+            ResetTitleMenuState();
+            control.state = 2;
+            resumedIntro = true;
+            logoFlags &= ~0x80U;
+        } else if (g_entryPoint == 0 && titleLoopSequence == 1) {
+            titleLoopSequence = 3;
+        } else if (g_entryPoint == 49 && titleLoopSequence == 6) {
+            titleLoopSequence = 1;
+        } else if (titleLoopSequence == 6) {
+            titleLoopSequence = 7;
+        } else {
+            titleLoopSequence = 1;
+        }
+        logoFlags |= 0x40U;
+        setPressStartPending = 1;
+    } else {
+        titleLoopSequence = 2;
+        needsTitleSequenceDraw = 2;
+        setPressStartPending = 2;
+        forceAlpha = true;
+        logoFlags &= ~0x40U;
+    }
+    if (module.previousModule == SystemModule_Hot && (g_inputBuffer[0].held & 0xc0U) == 0xc0U)
+        titleLoopSequence = 0;
+    titleSequenceTime = titleSequenceDurations[titleLoopSequence];
+    Queue_KeyRepeat(0);
+    HLib::SetCurrentTaskTo(NativeTitleNoOp);
+    task = HLib::EnqueueTaskWithParameter(titleDisplayCallbacks[titleLoopSequence], 9, 0, sizeof(TitleDisplayData), TITLE_DISPLAY_TASK);
+    control.titleSequenceTask = task;
+    TitleDisplayData &display = *static_cast<TitleDisplayData *>(HLib::GetTaskParameter(task));
+    control.display = &display;
+    if (titleLoopSequence == 0) {
+        display.currentStateFrame = 1.0f;
+        display.stateFrame = -0.062745102f;
+    } else {
+        display.currentStateFrame = 0.0f;
+        display.stateFrame = 0.062745102f;
+    }
+    dc::sdk::njSetBackColor(0xff000000U, 0xff000000U, 0xff000000U);
+    InitializeTitleAreaSelection();
+    titleDebugSelection = 0;
+    titleDebugAreaCharacter = -1;
+    titleCurrentCoreModule = 0;
+    SM_Init_Enqueue(1);
+    CVS_CtrlConversTask_Enqueue(0);
+    QueueSoundProgramControl();
+    LoadTitleSoundData();
+    if (resumedIntro)
+        LoadTitleSoundProgram(0);
+    else
+        LoadTitleSoundProgram(-1);
+    if (forceAlpha) {
+        display.currentStateFrame = 1.0f;
+        display.stateFrame = -0.062745102f;
+    }
+}
+
+void ChangeTitleModuleTask(HLib::TaskCallback callback) {
+    HLib::SetCurrentTaskTo(callback);
+}
+
+#else
 
 void TitleModule(void *taskData) {
     SystemModuleTaskData *const module = static_cast<SystemModuleTaskData *>(taskData);
@@ -1478,4 +2129,7 @@ void TitleModule(void *taskData) {
     AssignActiveTCRL(control);
 }
 
-} // namespace shenmue::s2
+#endif
+
+} // namespace s2
+} // namespace shenmue

@@ -295,8 +295,8 @@ void EVT_AT_SetFaceLooks(shen_name character, int expression, int duration, floa
 void EVT_AT_SetPoint_Callback(void *data);
 void EVT_AT_SetPoint(shen_name character, shen_name target, int targetBone, int trackingMode, int positionMode, int delay, int duration, unsigned int flags);
 void EVT_AT_PlayDynamix_Callback(void *data);
-HLibTask *Queue_EVT_AT_PlayDynamix(shen_name character, const void *resource, float frame, float endFrame, int trackCount, const int *parts, float frameStep,
-    int delay);
+HLibTask *Queue_EVT_AT_PlayDynamix(
+    shen_name character, const void *resource, float frame, float endFrame, int trackCount, const int *parts, float frameStep, int delay);
 void QueueClearNpcs(void (*callback)(void *parameter), void *parameter);
 void ClearNpcs(void *data);
 void SaveEventDateTime(void);

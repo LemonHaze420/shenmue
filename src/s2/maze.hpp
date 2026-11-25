@@ -1,9 +1,9 @@
 #pragma once
-
 #include "shenmue.h"
 
-
-#include "shenmue.h"
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/maze_dc.hpp"
+#else
 
 #include "common/math.hpp"
 #include "common/types.hpp"
@@ -260,8 +260,8 @@ void mazeSetCurrentRefCount(std::uint32_t count);
 HLib::Task *MAZ_fishCtrl();
 void MAZ_fishCtrl_Callback(void *taskData);
 void MAZ_fishCtrlUpdate(const Vector3 *boxMin, const Vector3 *boxMax, std::uint32_t count, std::int32_t seed, const MT7Model *fish);
-
+// Native SetFish takes CHAR_t and retains its MT7 model at +0x48, not the character's transform or draw-control flags.
 void SetFish(const Vector3 *boxMin, const Vector3 *boxMax, std::int32_t count, std::int32_t seed, Character *fish);
 
 } // namespace shenmue::s2
-
+#endif

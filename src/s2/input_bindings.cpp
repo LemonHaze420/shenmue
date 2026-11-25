@@ -1,3 +1,5 @@
+#include "enhancements/misc_mods.hpp"
+#include "s2/frame_pacing.hpp"
 #include "s2/input_bindings.hpp"
 #include "enhancements/misc_mods.hpp"
 #include "s2/frame_pacing.hpp"
@@ -42,9 +44,9 @@ std::int32_t WriteUserSettingsTask(void *data) {
 }
 
 void CompleteUserSettingsWrite(void *data) {
-    std::free(static_cast<UserSettingsWriteRequest*>(data)->text);
+    std::free(static_cast<UserSettingsWriteRequest *>(data)->text);
 }
-}
+} // namespace
 std::array<std::int32_t, 50> g_gameKeyMappings{};
 bool FormatUIInputKeyName(std::int32_t key, std::array<char, 64> &name) {
     if (key >= 256) {
@@ -218,8 +220,8 @@ void ProcessUserSettingsConfig() {
     if (!text)
         return;
 #if defined(SHENMUE_STEAM)
-    QueueSaveFileWrite("Settings", text, static_cast<std::uint32_t>(std::strlen(text)),
-        [](std::int32_t, const void *buffer) { std::free(const_cast<void *>(buffer)); });
+    QueueSaveFileWrite(
+        "Settings", text, static_cast<std::uint32_t>(std::strlen(text)), [](std::int32_t, const void *buffer) { std::free(const_cast<void *>(buffer)); });
 #else
     const std::filesystem::path path = S2Save_GetDirectory() / "Settings";
     std::error_code error;

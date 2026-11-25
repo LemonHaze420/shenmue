@@ -2,6 +2,7 @@
 
 #include "common/math.hpp"
 #include "common/types.hpp"
+#include "s2/search_data.hpp"
 
 #include <array>
 #include <cstddef>
@@ -20,15 +21,6 @@ struct MT7Model;
 
 
 
-struct SearchTarget {
-    shen_name name;
-    std::uint32_t flags;
-    std::uint32_t field08;
-    Vector3 position;
-    float lockonAngle;
-    std::int16_t yaw;
-    std::uint16_t yawLimit;
-};
 
 // SnapshotSearchCandidate stores camera-space range and projected-center distance.
 struct SnapshotSearchCandidate {
@@ -49,14 +41,6 @@ struct SearchSavedState {
     std::int32_t characterDisplay;
 };
 
-struct SearchResourceContext {
-    std::byte *resource;
-    std::byte *cursor;
-    std::byte *strings;
-    std::uint64_t field18;
-    std::uint32_t flags;
-    float remainingTicks;
-};
 
 struct SearchPropIKSlot {
     std::int32_t state;
@@ -106,16 +90,19 @@ struct SearchTaskData {
     SearchSavedState *savedState;
 };
 
-static_assert(sizeof(SearchTarget) == 0x20);
-static_assert(offsetof(SearchTarget, position) == 0x0c);
-static_assert(offsetof(SearchTarget, yawLimit) == 0x1e);
+
+
 static_assert(sizeof(SearchSavedState) == 0x14);
-static_assert(sizeof(SearchResourceContext) == 0x28);
+
 static_assert(sizeof(SearchTaskData) == 0xe0);
 static_assert(alignof(SearchTaskData) == 8);
 static_assert(offsetof(SearchTaskData, currentTarget) == 0x10);
 bool IsSpecialSignModeForCurrentArea();
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t npcGetCanInteract(shen_name name);
+#else
 bool npcGetCanInteract(shen_name name);
+#endif
 static_assert(offsetof(SearchTaskData, targets) == 0x18);
 static_assert(offsetof(SearchTaskData, input) == 0x48);
 static_assert(offsetof(SearchTaskData, context) == 0x50);

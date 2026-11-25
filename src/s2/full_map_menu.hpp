@@ -1,5 +1,20 @@
 #pragma once
 
+#include "shenmue.h"
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+
+#include <cstdint>
+
+namespace shenmue { namespace s2 {
+void InitializeFullMapMenu();
+std::int32_t OpenFullMapMenu();
+std::int32_t UpdateFullMapMenu();
+void CloseFullMapMenu();
+} } // namespace shenmue::s2
+
+#else
+
 #include "common/types.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -47,3 +62,5 @@ std::span<const FullMapFloor> GetFullMapFloors(std::int32_t index) noexcept;
 std::uint32_t GetFullMapFloorMask(std::int32_t index, std::uint16_t excludedFlags);
 
 } // namespace shenmue::s2
+
+#endif

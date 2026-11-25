@@ -1,6 +1,10 @@
-
-
+// S2 retail nl_motion defaults: g_motion_const_data -> 17 authored 0x114-byte records.
+// Raw IEEE-754/channel/limit words are retained without decimal rounding.
+#if SHENMUE_S2_GCC295
+static const std::uint32_t motionRigDefaults[17][69] = {
+#else
 static constexpr std::uint32_t motionRigDefaults[17][69]{
+#endif
     {
         0x3f8ccccdU, 0x3e051eb8U, 0x00000000U, 0x3ecba344U, 0xbe6147aeU, 0x3e6147aeU, 0x00000000U, 0x00000000U,
         0x00000000U, 0x00000000U, 0x3d7df3b6U, 0x00000000U, 0x3deb851fU, 0x3d4ccccdU, 0x00000000U, 0x00000000U,

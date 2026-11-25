@@ -1,8 +1,32 @@
-#include "s2/player_internal.hpp"
+#include "shenmue.h"
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+#include "s2/player_model_dc.hpp"
+#include "s2/player_movement_dc.hpp"
+#include "s2/player_control_state_dc.hpp"
+#include "s2/character_components_dc.hpp"
+#include "s2/character_yaw_dc.hpp"
+#include "s2/calendar_dc.hpp"
+#include "s2/camera_state_query_dc.hpp"
+#include "s2/map_control_dc.hpp"
+#include "s2/scene_state_dc.hpp"
+#include <cmath>
+#include <cstring>
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/enhancements/tai_chi.hpp"
+#include "s2/player_internal.hpp"
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
 
+namespace s2 {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+PlayerPersistentState g_pendingPlayerPersistentState = {};
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 PlayerRuntimeState g_playerRuntime{};
 
 static std::array<std::uint64_t, 7> playerRetainedResetWords{};
@@ -26,66 +50,219 @@ void SetCharacterControlModelFlags(Character *character, std::uint32_t flags) {
     }
     state->flags = flags;
 }
+#endif
 
-} // namespace shenmue::s2
+namespace player_detail {
 
-namespace shenmue::s2::player_detail {
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+void SynchronizePlayerModelState(Character *character, PlayerModelState &state);
+void plymUpdateRyoBag(PlayerModelState &state);
+void plymUpdateHeldState(PlayerModelState &state);
+void plymSampleInput(PlayerModelState &state);
+void UpdatePlayerMovement(PlayerModelState &state);
+void UpdateExternalPlayerMovement(PlayerModelState &state);
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 LegacyInputSlot playerInputSnapshot{};
 
 Vector3 publishedPlayerSearchLocation{};
 
 std::int16_t movingFrames{}, stationaryFrames{}, turningFrames{};
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+// @verified - d
 void UpdatePlayerDisplayAlpha(PlayerModelState &state) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const std::uint32_t restore = state.padFlags & 0x8000U;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     using enum CameraState;
     const bool useSavedAlpha = (state.padFlags & 0x8000U) != 0;
+#endif
     state.padFlags &= ~0x8000U;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (!(state.flags & 0x4000000U))
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if ((state.flags & 0x04000000U) == 0 || !state.characterNode)
+#endif
         return;
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    const std::int32_t cameraState = camCtrlGetState();
+    float alpha = state.character->alpha;
+    if (cameraState == 22 && restore)
+        alpha = state.savedDisplayAlpha;
+    if (cameraState == 24 && restore)
+        alpha = state.savedDisplayAlpha;
+    if (!cameraState) {
+        if (alpha < 1.0f) {
+            alpha = ((1.0f - alpha) * (0.09000000357627869f) + (alpha));
+            if (alpha > 0.9800000190734863f)
+                alpha = 1.0f;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     float alpha = state.characterNode->alpha;
     const CameraState cameraState = g_cameraControl ? g_cameraControl->state : Init;
     if ((cameraState == LookAround || cameraState == LockedOn || cameraState == Init) && useSavedAlpha) {
         alpha = state.field7c4;
+#endif
+        }
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+        if (restore)
+            alpha = state.savedDisplayAlpha;
     }
+    state.character->alpha = alpha;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     modelSetCharaAlpha(state.characterNode, std::clamp(alpha, 0.0f, 1.0f));
+#endif
 }
+
 
 void InitializePlayerModelState(PlayerModelState &state) {
     std::memset(static_cast<void *>(&state), 0, sizeof(state));
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    std::int32_t sample = 0;
+    std::int32_t lastSample = 2;
+    do {
+        std::byte *const historyX = reinterpret_cast<std::byte *>(&state) + offsetof(PlayerModelState, stickHistoryX);
+        std::byte zero = static_cast<std::byte>(0);
+        std::byte *const historyY = reinterpret_cast<std::byte *>(&state) + offsetof(PlayerModelState, stickHistoryY);
+        historyX[sample] = zero;
+        historyY[sample] = zero;
+    } while (++sample <= lastSample);
+    state.flags = 0;
+    state.padFlags = 0;
+    state.useExternalMovementState = 0;
+    state.motionInputState = 0;
+    state.character = 0;
+    state.motion = 0;
+    state.activeHelperMode = 0;
+    state.helperCharacter = 0;
+    state.primaryInteractionDistanceLimit = 20.0f;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.movementState = &state.embeddedMovementState;
     InitializePlayerMovementState(state.embeddedMovementState);
     state.field37c = 20.0f;
+#endif
     state.secondaryInteractionDistanceLimit = 20.0f;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    state.specialModeTargetCharacter = 0;
+    state.specialModeState = 0;
+    state.specialModeFlags = 0;
+    state.specialModeAuxState = 0;
+    reinterpret_cast<std::byte *>(&state)[offsetof(PlayerModelState, specialModeCounter)] = static_cast<std::byte>(0);
+    state.specialModeTargetId = 0;
+    *reinterpret_cast<std::uint16_t *>(&state.specialModeOrbitPhase) = 0;
+    float *minimum = &state.specialModeOrbitMinimum;
+    float orbitMaximum = 0.5f;
+    float *maximum = &state.specialModeOrbitMaximum;
+    *minimum = 0.0f;
+    *maximum = orbitMaximum;
+    state.searchRegionKey = 0;
+    state.regionInteractionState = 0;
+    state.turnaroundFrames = 0;
+    state.turnaroundPhase = 0;
+    state.turnaroundState = 0;
+    state.movementState = reinterpret_cast<PlayerMovementState *>(&state.retainedSecondaryController);
+    InitializePlayerMovementController(state.movementState);
+    state.retainedPlacementSelector = 63;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.specialModeOrbitMinimum = 0.25f;
     state.specialModeOrbitMaximum = 0.75f;
     state.field436 = 63;
+#endif
     state.placementQueryHandle = -1;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    PlayerPlacementNode *const placementRoot = &state.placementRoot;
+    std::size_t placementSize = sizeof(PlayerPlacementNode);
+    void *(*clearPlacement)(void *, int, std::size_t) = std::memset;
+    clearPlacement(placementRoot, 0, placementSize);
+    clearPlacement(&state.placementScratch, 0, placementSize);
+#endif
 }
+#endif
 
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+void PlayerCameraInputNullsub(PlayerModelState &) {
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t largeTurnInputFrames = 0;
+#endif
 
-} // namespace shenmue::s2::player_detail
+} // namespace player_detail
 
-namespace shenmue::s2 {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Character *authFindChara(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
+#endif
 
-} // namespace shenmue::s2
+namespace player_detail {
 
-namespace shenmue::s2::player_detail {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
 void PlayerModelUpdate(Character *character, void *payload) {
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    PlayerModelState *const state = static_cast<PlayerModelState *>(payload);
+    PlayerRuntimeState *const runtime = g_playerRuntimePointer;
+    if ((runtime->flags & 0x8000U) == 0)
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     auto &state = *static_cast<PlayerModelState *>(payload);
-
-
-
+    
+    
+    
     if (!(g_playerRuntime.flags & 0x8000U))
+#endif
         return;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    if (++state->frameCount == 0)
+        state->frameCount = 1;
+    SynchronizePlayerModelState(character, *state);
+    UpdatePlayerDisplayAlpha(*state);
+    plymUpdateRyoBag(*state);
+    plymUpdateHeldState(*state);
+    const std::uint32_t flags = runtime->flags;
+    if (flags & 2U)
+        goto sampleInput;
+    if ((flags & 0x4000U) == 0)
+        return;
+sampleInput:
+    if (state->activeFrameCount <= 0xfffeU)
+        ++state->activeFrameCount;
+    plymSampleInput(*state);
+    PlayerCameraInputNullsub(*state);
+    if (state->useExternalMovementState == 0)
+        UpdatePlayerMovement(*state);
+    else
+        UpdateExternalPlayerMovement(*state);
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     if (++state.frameCount == 0)
         ++state.frameCount;
     SynchronizePlayerModelState(character, state);
@@ -117,12 +294,13 @@ void PlayerModelUpdate(Character *character, void *payload) {
         }
         UpdateReachedPlayerYawWriteback(state);
     }
+#endif
 }
+#endif
 
-} // namespace shenmue::s2::player_detail
+} // namespace player_detail
 
-namespace shenmue::s2 {
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::uint64_t ReturnZero() noexcept {
     return 0;
@@ -154,15 +332,127 @@ void plymSetDefaultFlags() {
     g_playerRuntime.flags &= ~0x00204003U;
     g_playerRuntime.model = nullptr;
 }
+#endif
 
-// @verified - p
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2) || ((SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)))
+ // namespace player_detail
+
+// @verified - d
 void plymInitializeRyoBagState(PlayerModelState &state) {
     state.helperFlags = 0;
     state.activeHelperMode = 0;
     state.pendingHelperMode = -1;
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+    state.helperCharacter = 0;
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     state.helperCharacter = nullptr;
+#endif
+}
+#endif
+
+#if (SHENMUE_IS_DC && SHENMUE_IS_S2) && (defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM))
+// @verified - d
+void InitializePlayerSceneContexts(PlayerModelState &state) {
+    g_playerRuntimePointer->currentDay = g_currentDateTime.day;
+    state.heldStateFlags = 0;
+    state.heldStateMode = 0;
+    state.pendingHeldStateMode = 0;
+    state.heldStateStep = 0;
+    state.heldStateTimer = 0;
+    state.heldStateCallback = 0;
+    state.heldStateTriggerMinute = 0;
+    plymSetSceneContext(1350, 1410, static_cast<std::int16_t>(g_loadedActNumber), SHEN_NAME(AR02), 25);
+    plymSetRequestedSceneContext(1260, static_cast<std::int16_t>(g_loadedActNumber), SHEN_NAME(AR02), 25);
+    state.timeAdvanceTargetHour = 21;
+    state.timeAdvanceTargetMinute = 0;
+    state.timeAdvanceMinutesPerTick = 3;
+    state.retainedTimeState[0] = static_cast<std::byte>(0);
+    state.retainedTimeState[15] = static_cast<std::byte>(0);
+    *reinterpret_cast<std::uint32_t *>(state.retainedTimeState + 18) = 0;
 }
 
+
+// @verified - d
+std::int32_t plymScheduleOneShotFlagCallback(std::int16_t minute) {
+    PlayerRuntimeState *const runtime = g_playerRuntimePointer;
+    PlayerModelState *const state = runtime->model;
+    if (!state || state->heldStateMode)
+        return -1;
+    state->heldStateFlags &= 0xbfffU;
+    if (minute)
+        state->heldStateFlags |= 0x4000U;
+    state->heldStateTriggerMinute = minute;
+    if (state->heldStateFlags & 0x4000U)
+        runtime->field08 |= 0x10;
+    else
+        runtime->field08 &= ~0x10;
+    runtime->scheduledCallbackMinute = minute;
+    return 0;
+}
+
+
+Character *SetMapControlRyo(Character *character);
+
+// @verified - d
+std::int32_t AttachPlayerModelInternal(Character *character) {
+    PlayerRuntimeState *const runtime = g_playerRuntimePointer;
+    if (runtime->flags & 1U)
+        return -1;
+    PlayerModelState *const state = static_cast<PlayerModelState *>(
+        AllocateModelComponent(character, SHEN_NAME4('P', 'L', 'Y', 'M'), sizeof(PlayerModelState), player_detail::PlayerModelUpdate));
+    std::uint32_t flags = runtime->flags;
+    std::uint32_t modelFlags = 0x8035U;
+    runtime->model = state;
+    runtime->character = character;
+    flags |= modelFlags;
+    flags |= 0x400U;
+    flags |= 0x4000000U;
+    flags |= 0x10000008U;
+    flags |= 0x800000U;
+    flags &= ~0x40000U;
+    flags |= 0x20000U;
+    runtime->flags = flags;
+    player_detail::InitializePlayerModelState(*state);
+    state->character = character;
+    state->secondaryCharacter = character;
+    state->yaw = static_cast<std::int16_t>(GetCharacterWorldYaw(character));
+    state->flags |= 0x100U;
+    state->flags |= 0x20U;
+    if (runtime->flags & 0x10U)
+        state->flags |= 0x10U;
+    SetMapControlRyo(character);
+    SetCharacterType(character, 4);
+    plymInitializeRyoBagState(*state);
+    InitializePlayerSceneContexts(*state);
+    if (g_pendingPlayerPersistentStatePointer->present) {
+        runtime->field08 = g_pendingPlayerPersistentStatePointer->runtimeState;
+        state->heldStateFlags = g_pendingPlayerPersistentStatePointer->playerStateFlags;
+        state->heldStateTriggerMinute = static_cast<std::int16_t>(g_pendingPlayerPersistentStatePointer->callbackValue);
+        g_pendingPlayerPersistentStatePointer->present = 0;
+        runtime->savedHeldStateFlags = g_pendingPlayerPersistentStatePointer->playerStateFlags;
+        runtime->scheduledCallbackMinute = static_cast<std::int16_t>(g_pendingPlayerPersistentStatePointer->callbackValue);
+    }
+    if (runtime->field08 & 0x10)
+        plymScheduleCycleFlagCallback(runtime->scheduledCallbackMinute);
+    return 0;
+}
+
+
+// @verified - d
+void AttachPlayerModel(Character *character) {
+    AttachPlayerModelInternal(character);
+}
+
+
+std::int32_t PlayerPassThroughNullsub(std::int32_t value) {
+    return value;
+}
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t InitializePlayerSceneContexts(PlayerModelState &state) {
     g_playerRuntime.currentDay = g_currentDateTime.day;
@@ -259,7 +549,7 @@ std::uint64_t SetPlayerControlEnabled(std::int32_t mode) {
         }
     }
 
-
+    // Remaining state mutations are the PC v1.07 control boundary.
     if (mode != 0) {
         g_playerRuntime.flags = (g_playerRuntime.flags & 0xffff2ffdU) | 0x00008002U;
         state->padFlags &= 0xfbf7ffffU;
@@ -601,7 +891,7 @@ bool plymCheckAuthorTargetRequested() {
 }
 
 // @verified - p
-
+// When the scenario scripts take over an RDTB press, PLYM's region walk finishes (4 to 5).
 std::int64_t plymFinishRegionInteraction() {
     PlayerModelState *const state = g_playerRuntime.model;
     if (!state || !(state->padFlags & 0x800U) || state->regionInteractionState != 4)
@@ -634,5 +924,8 @@ bool shenGetIsPlayerInMenu() {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return IsScreenFilmNotShowing(control->screenFilmTask) && !IsAnyItemSelectActive() && !IsScenarioBusy() && ReturnZero() == 0;
 }
+#endif
 
-} // namespace shenmue::s2
+} // namespace s2
+
+} // namespace shenmue

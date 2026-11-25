@@ -1531,7 +1531,11 @@ void ApplyConversationSpecialModeOverride(Vector3 &eye, Vector3 &target, std::ui
     Matrix4x4::SetActiveTransform(mtwkGetBoneTransform(FindMotionWork(state.root), 14));
     Matrix4x4::preTranslate(0.17f, 0.050000001f, -0.029999999f);
     Vector3 specialTarget{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    Matrix4x4::SetViewMatrixFromEuler(25486, 16384, 16384);
+#else
     Matrix4x4::SetViewMatrixFromEuler(16384, 25486, 16384);
+#endif
     Matrix4x4::preTranslate(0.0f, 0.0f, 1.0f);
     const Vector3 facing{workTransformMatrix.rows[3].x, workTransformMatrix.rows[3].y, workTransformMatrix.rows[3].z};
     Matrix4x4::SetPrePassToTempTransform();
@@ -4104,7 +4108,11 @@ CameraSplineState *camCtrlInitSplines() noexcept {
 }
 
 // @verified - p
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t camCtrlCheckIsEventCam() noexcept {
+#else
 bool camCtrlCheckIsEventCam() noexcept {
+#endif
     using enum CameraState;
     return (g_currentCameraSplines->state & SplineRecompute) && camCtrlGetState() == Scripted;
 }
@@ -5956,16 +5964,11 @@ void camCtrlResetClipDistances() {
 }
 
 // @verified - p
-
-
-// @verified - p
-
-
-// @verified - p
-
-
-// @verified - p
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+std::int32_t camCtrlToggleSmoothing(std::int32_t enabled) noexcept {
+#else
 bool camCtrlToggleSmoothing(std::int32_t enabled) noexcept {
+#endif
     CameraRuntime &camera = *g_cameraControl;
     const bool previous = (camera.flags & CameraSmoothMotion) != 0;
     if (enabled)

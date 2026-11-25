@@ -1,7 +1,21 @@
-#include "enhancements/misc_mods.hpp"
 #include "shenmue.h"
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 
+#include "s2/character_draw_tasks_dc.hpp"
+#include "s2/event_matrix_dc.hpp"
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+#include "s2/motion_work_dc.hpp"
+#include "s2/model_image_component_dc.hpp"
+#include "s2/character_model_dc.hpp"
+#include "s2/character_transparency_dc.hpp"
+#include "s2/hand_dc.hpp"
+#endif
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
+#include "enhancements/misc_mods.hpp"
 #include "s2/character.hpp"
 #include "s2/scene_data.hpp"
 
@@ -40,7 +54,23 @@
 #include "s2/blur_figure_pose.hpp"
 #include "s2/hand.hpp"
 #include "s2/osage.hpp"
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #include "s2/pause.hpp"
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+
+#include "s2/model_render_dc.hpp"
+#include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
+#endif
+#endif
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 #if defined(_WIN32)
 #include "imgui.h"
 #endif
@@ -50,7 +80,11 @@
 #include <cmath>
 #include <bit>
 #include <cstdio>
+#endif
+
 #include <cstring>
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+
 #include <ctime>
 #include <limits>
 #include <memory>
@@ -62,8 +96,33 @@
 #if SHENMUE_IS_PC
 #include <xmmintrin.h>
 #endif
+#endif
 
-namespace shenmue::s2 {
+namespace shenmue {
+namespace s2 {
+
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float g_motionVertexLinkDistance = 12.0f;
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float mtwkSetVertexLinkDistance(float distance) {
+    const float previous = g_motionVertexLinkDistance;
+    g_motionVertexLinkDistance = distance;
+    return previous;
+}
+#endif
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+float mtwkGetVertexLinkDistance() {
+    return g_motionVertexLinkDistance;
+}
+#endif
+
+
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 Matrix4x4 g_characterNodeSavedTransform;
 Matrix4x4 g_characterChildRotationTransform;
@@ -71,6 +130,8 @@ Matrix4x4 g_characterNodeEulerTransform;
 Matrix4x4 g_characterNodePositionTransform;
 Matrix4x4 g_characterNodeInverseTransform;
 std::int32_t g_characterMirroredTransformEnabled;
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 Matrix4x4 characterMirrorMatrix{};
 Matrix4x4 *characterMirroredControllerMatrices{};
@@ -97,22 +158,30 @@ void ApplyCharacterMirrorPlaneTransform(const CharacterMirrorPlane *plane) {
             {(n.x * -2.0f) * n.z, (n.y * -2.0f) * n.z, 1.0f - (n.z + n.z) * n.z, 0.0f}, {twiceDistance * n.x, twiceDistance * n.y, twiceDistance * n.z, 1.0f}}};
     Matrix4x4::MultiplyWithPrePassMatrix(&characterMirrorPlaneTransform);
 }
-}
+} // namespace
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 const Matrix4x4 *GetCharacterMirrorMatrix() {
     return &characterMirrorMatrix;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ResetCharacterMirrorAdmission() {
     g_characterMirroredTransformEnabled = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void RetireCharacterMirrorStorage() {
     AllocateCharacterMirrorMatrices(0);
     g_characterMirroredTransformEnabled = 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetCharacterMirrorPlane(const CharacterMirrorPlane *plane, const Vector3i *rotation) {
     (void)Matrix4x4_Push(&transformMatrix_prePass);
@@ -137,7 +206,9 @@ void SetCharacterMirrorPlane(const CharacterMirrorPlane *plane, const Vector3i *
     Matrix4x4::GetTransformMatrix(&characterMirrorMatrix);
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void mtwkBindMirroredControllerMatricesToModelNodes(MotionWork *work, MT7Model *model) {
     (void)Matrix4x4_Push();
@@ -174,7 +245,9 @@ void mtwkBindMirroredControllerMatricesToModelNodes(MotionWork *work, MT7Model *
     }
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetChildObjectFlagByIndex(Character *character, std::uint8_t mode) {
     if (mode > 4U || !character->model)
@@ -190,12 +263,16 @@ void SetChildObjectFlagByIndex(Character *character, std::uint8_t mode) {
     rightElbow->mdcVertexLinkFlags = (rightElbow->mdcVertexLinkFlags & 0xffffU) | selector;
     leftElbow->mdcVertexLinkFlags = (leftElbow->mdcVertexLinkFlags & 0xffffU) | selector;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 bool IsCharacterMirroredForDraw(const Character *character) {
     return charaHasMirroredFlags(character) != 0 && g_characterMirroredTransformEnabled != 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 float GetCharacterDisplayRadius(const Character *character) {
     if (!character)
@@ -203,7 +280,9 @@ float GetCharacterDisplayRadius(const Character *character) {
     const float radius = character->radius;
     return radius < 5.0f && IsCharacterMirroredForDraw(character) ? 5.0f : radius;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 float SetScenarioCharacterRadius(shen_name name, float radius) {
     Character *const character = ctrlGetCharaByName(name);
@@ -212,14 +291,18 @@ float SetScenarioCharacterRadius(shen_name name, float radius) {
         SetCharacterRadius(character, radius);
     return previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ApplyRecursiveCharacterNodeRotations(const CharacterNode *node) {
     if (node->child)
         ApplyRecursiveCharacterNodeRotations(node->child);
     Matrix4x4::SetViewMatrixFromEuler(node->rotation[1], node->rotation[0], node->rotation[2]);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void TransformVectorToCharacterChildSpace(const CharacterNode *node, Vector3 *vector) {
     Matrix4x4::GetTransformMatrix(&g_characterNodeSavedTransform);
@@ -237,7 +320,9 @@ void TransformVectorToCharacterChildSpace(const CharacterNode *node, Vector3 *ve
     vector->z = (transform.rows[2].y * y + transform.rows[2].x * x) + transform.rows[2].z * z;
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AssignCharacterChildSpacePosition(Character *character, const Vector3 *position) {
     if (!character)
@@ -247,7 +332,9 @@ void AssignCharacterChildSpacePosition(Character *character, const Vector3 *posi
         TransformVectorToCharacterChildSpace(character->entity.node.child, &local);
     character->position = local;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void AddCharacterChildSpacePosition(Character *character, const Vector3 *delta) {
     if (!character)
@@ -259,7 +346,9 @@ void AddCharacterChildSpacePosition(Character *character, const Vector3 *delta) 
     character->position.y = local.y + character->position.y;
     character->position.z = local.z + character->position.z;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void mtwkUpdateRootDeltaVector(const MotionWork *work, Vector4 *vector) {
     if (work->runtime.motnFlags & 1U) {
@@ -272,13 +361,19 @@ void mtwkUpdateRootDeltaVector(const MotionWork *work, Vector4 *vector) {
         vector->z = work->runtime.rootDelta.z;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetCharaTargetTransformOffset(shen_name name, const Vector3 *factor, std::int32_t rotation) {
     Character *const character = ctrlGetCharaByName(name);
     if (!character)
         return;
+#if SHENMUE_IS_DC
+    const MotionWork *const work = charFindMotionwork(character);
+#else
     const MotionWork *const work = FindMotionWork(character);
+#endif
     if (!work)
         return;
     Vector4 rootDelta;
@@ -306,41 +401,65 @@ void SetCharaTargetTransformOffset(shen_name name, const Vector3 *factor, std::i
         AddCharacterChildSpacePosition(character, &delta);
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 bool HasCharacterMotionWork(const Character *character) {
+#if SHENMUE_IS_DC
+    return charFindMotionwork(character) != nullptr;
+#else
     return FindMotionWork(character) != nullptr;
+#endif
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t GetCharacterMotionCompatibilityResult(const Character *character) {
     HasCharacterMotionWork(character);
     return -1;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterNode *GetCharacterNode(Character *character) {
     return character ? &character->entity.node : nullptr;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t *GetControllerForNode(Character *character) {
     return character ? &character->fieldE8 : nullptr;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GetCharacterLocalPosition(const Character *character, Vector3 *output) {
     *output = character ? character->entity.node.position : Vector3{};
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GetCharacterLocalRotation(const Character *character, Vector3i *output) {
     if (character)
         *output = {character->entity.node.rotation[0], character->entity.node.rotation[1], character->entity.node.rotation[2]};
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t shenGetRotYFromNode(const Character *character) {
     return character ? character->entity.node.rotation[1] : 0;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float GetCharacterLocalPositionY(const Character *character) {
     return character ? character->entity.node.position.y : 0.0f;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterLocalPosition(Character *character, const Vector3 *position) {
     if (character)
         character->entity.node.position = *position;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterLocalRotation(Character *character, const Vector3i *rotation) {
     if (!character)
         return;
@@ -348,18 +467,26 @@ void SetCharacterLocalRotation(Character *character, const Vector3i *rotation) {
     character->entity.node.rotation[1] = rotation->y;
     character->entity.node.rotation[2] = rotation->z;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void shenSetRotY(Character *character, std::int32_t yaw) {
     if (character)
         character->entity.node.rotation[1] = yaw;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void shenGetNodePosY(const Character *character, Vector3 *output) {
     if (character)
         *output = character->position;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterCollisionPosition(Character *character, const Vector3 *position) {
     if (character)
         character->position = *position;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void coliPositionAdd(Character *character, const Vector3 *delta) {
     if (!character)
         return;
@@ -367,10 +494,14 @@ void coliPositionAdd(Character *character, const Vector3 *delta) {
     character->position.y = delta->y + character->position.y;
     character->position.z += delta->z;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GetCharacterScale(const Character *character, Vector3 *output) {
     if (character)
         *output = character->scale;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterScale(Character *character, const Vector3 *scale) {
     if (!character)
         return;
@@ -381,36 +512,56 @@ void SetCharacterScale(Character *character, const Vector3 *scale) {
     std::memcpy(&scaleZ, reinterpret_cast<const unsigned char *>(scale) + sizeof(scaleXY), sizeof(scaleZ));
     std::memcpy(reinterpret_cast<unsigned char *>(&character->scale) + sizeof(scaleXY), &scaleZ, sizeof(scaleZ));
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint8_t GetCharaFlag(const Character *character) {
     return character->field99;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharaFlag(Character *character, std::uint8_t flag) {
     character->field99 = flag;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetCharacterInternalState(const Character *character) {
     return character ? character->internalState : 0;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterInternalState(Character *character, std::int32_t state) {
     if (character)
         character->internalState = state;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float charaGetAlphaDraw(const Character *character) {
     return character ? character->alpha : 0.0f;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 float charaGetShadowY(const Character *character) {
     return character ? std::bit_cast<float>(character->shadowY) : 0.0f;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetCharacterShadowYaw(const Character *character) {
     return character ? character->field88 : 0;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GetCharacterShadowScale(const Character *character, Vector3 *output) {
     if (character)
         *output = {character->field7c, character->field80, character->field84};
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void GetCharacterShadowOffset(const Character *character, Vector3 *output) {
     if (character)
         std::memcpy(output, &character->field70, sizeof(*output));
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterShadowScale(Character *character, const Vector3 *scale) {
     if (!character)
         return;
@@ -418,75 +569,107 @@ void SetCharacterShadowScale(Character *character, const Vector3 *scale) {
     character->field80 = scale->y;
     character->field84 = scale->z;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterShadowOffset(Character *character, const Vector3 *offset) {
     if (character)
         std::memcpy(&character->field70, offset, sizeof(*offset));
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterShadowYaw(Character *character, std::int32_t yaw) {
     if (character)
         character->field88 = yaw;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterShadowY(Character *character, float height) {
     if (character)
         character->shadowY = std::bit_cast<std::int32_t>(height);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int32_t GetEntityType(const Character *character) {
     return character ? character->type : -1;
 }
+#endif
 
-
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t charaHasMirroredFlags(const Character *character) {
     return character ? character->flags & CF_DrawMirrored : 0;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsCharacterActive(const Character *character) {
     return character && (character->flags & CF_Active) != 0;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsCharacterUsingStoredShadowY(const Character *character) {
     return character && (character->flags & CF_UseStoredShadowY) != 0;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool HasCharacterFacialModel(const Character *character) {
     return character && character->facialModel != nullptr;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ClearCharacterFacialModel(Character *character) {
     if (character)
         character->facialModel = nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void charaSetFlags(Character *character, std::int32_t enabled) {
     if (character)
         character->flags = enabled ? character->flags | CF_Active : character->flags & ~CF_Active;
 }
+#endif
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void charaSetFlagFor(Character *character, std::int32_t flag) {
     if (character)
         character->field94 = flag;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterRadius(Character *character, float radius) {
     if (character)
         character->radius = radius;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 shen_name GetCharacterModelName(const Character *character) {
     return character ? shen_name{character->fieldA0} : CHARACTER_INVALID_NAME;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterModelName(Character *character, shen_name name) {
     if (character)
         character->fieldA0 = name.name;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterUnknownFlag(Character *character, std::uint32_t flag) {
     if (character)
         character->useUnknownFlag = flag;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void *GetCharacterAuxiliaryData(const Character *character) {
     return character ? character->data2 : nullptr;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterAuxiliaryData(Character *character, void *data) {
     if (character && data)
         character->data2 = data;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterCoreCallback charaAssignCoreCallback(Character *character, CharacterCoreCallback callback) {
     if (!character)
         return nullptr;
@@ -494,9 +677,13 @@ CharacterCoreCallback charaAssignCoreCallback(Character *character, CharacterCor
     character->core = callback;
     return previous;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterUpdateCallback GetMotionCallback(const Character *character) {
     return character ? character->applyScale : nullptr;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterUpdateCallback imgmAssignUpdateCallback(Character *character, CharacterUpdateCallback callback) {
     if (!character)
         return nullptr;
@@ -504,6 +691,8 @@ CharacterUpdateCallback imgmAssignUpdateCallback(Character *character, Character
     character->applyScale = callback;
     return previous;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDrawCallback callback) {
     if (!character)
         return nullptr;
@@ -511,6 +700,8 @@ CharacterDrawCallback mtwkAssignDrawCallback(Character *character, CharacterDraw
     character->collisionCheck = callback;
     return previous;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterUpdateCallback charaAssignPrepareForDrawCallback(Character *character, CharacterUpdateCallback callback) {
     if (!character)
         return nullptr;
@@ -518,30 +709,40 @@ CharacterUpdateCallback charaAssignPrepareForDrawCallback(Character *character, 
     character->prepareForDraw = callback;
     return previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterType(Character *character, std::int32_t type) {
     if (character && character->type != CharacterTypePlayer && character->type != CharacterTypePlayerInverted)
         character->type = type;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void modelSetCharaAlpha(Character *character, float alpha) {
     if (character)
         character->alpha = alpha;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint16_t SetPluralControlFor(Character *character, std::int16_t enabled) {
     if (!character)
         return 1;
     const std::uint16_t previous = static_cast<std::uint16_t>(character->fieldE8 & 1U);
-
+    // Native g_prev_pluralCtrlFlag is 2, with no game writer.
     character->fieldE8 = (character->fieldE8 & 0x00fffffeU) | (enabled ? 0x01000001U : 0x02000000U);
     return previous;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsCharacterDrawControlEnabled(const Character *character) {
     return character && (character->fieldE8 & 0x00ff0000U) != 0;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void SetCharacterDrawControlEnabled(Character *character, bool enabled) {
     if (!character)
         return;
@@ -550,7 +751,9 @@ void SetCharacterDrawControlEnabled(Character *character, bool enabled) {
     else if (!(character->fieldE8 & 0x00ff0000U))
         character->fieldE8 |= 0x00010000U;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::int16_t GetAllAngYForNode(const CharacterNode *root) {
     std::uint16_t rotation = 0;
     for (const CharacterNode *node = root; node; node = node->child) {
@@ -558,7 +761,9 @@ std::int16_t GetAllAngYForNode(const CharacterNode *root) {
     }
     return static_cast<std::int16_t>(rotation);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void shenDecrementRotYAllNodes(CharacterNode *root, std::int16_t rotationY) {
     if (!root)
         return;
@@ -568,6 +773,8 @@ void shenDecrementRotYAllNodes(CharacterNode *root, std::int16_t rotationY) {
     }
     root->rotation[1] = static_cast<std::int16_t>(rootRotation);
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyRecursiveCharacterNodeTransforms(const CharacterNode *node) {
     if (!node)
         return;
@@ -576,7 +783,9 @@ void ApplyRecursiveCharacterNodeTransforms(const CharacterNode *node) {
     Matrix4x4::preTranslate(node->position.x, node->position.y, node->position.z);
     Matrix4x4::SetViewMatrixFromEuler(node->rotation[1], node->rotation[0], node->rotation[2]);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void TransformPointToCharacterNodeSpace(const CharacterNode *node, Vector3 *point) {
     Matrix4x4::GetTransformMatrix(&g_characterNodeSavedTransform);
@@ -592,7 +801,9 @@ void TransformPointToCharacterNodeSpace(const CharacterNode *node, Vector3 *poin
     point->z = (transform.rows[2].y * y + transform.rows[2].x * x) + transform.rows[2].z * z;
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void TransformPointByCharacterNode(const CharacterNode *node, Vector3 *point) {
     Matrix4x4::GetTransformMatrix(&g_characterNodeSavedTransform);
@@ -601,6 +812,8 @@ void TransformPointByCharacterNode(const CharacterNode *node, Vector3 *point) {
     Matrix4x4::TransformPoint(*point, *point);
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 Vector3i ExtractCharacterRotation(const Matrix4x4 &transform) {
@@ -629,6 +842,8 @@ Vector3i ExtractCharacterRotation(const Matrix4x4 &transform) {
 }
 
 } // namespace
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void TransformCharacterPoseByMatrix(const Matrix4x4 *transform, Vector3 *position, Vector3i *rotation) {
     Matrix4x4_Push();
@@ -641,7 +856,9 @@ void TransformCharacterPoseByMatrix(const Matrix4x4 *transform, Vector3 *positio
     Matrix4x4::Pop(1);
     *rotation = ExtractCharacterRotation(composed);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void InverseTransformCharacterPoseByMatrix(const Matrix4x4 *transform, Vector3 *position, Vector3i *rotation) {
     Matrix4x4_Push();
@@ -655,12 +872,16 @@ void InverseTransformCharacterPoseByMatrix(const Matrix4x4 *transform, Vector3 *
     Matrix4x4::Pop(1);
     ExtractMatrixEulerAnglesFixed(&composed, rotation);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ApplyCharacterEntityTransform(const Character *character) {
     if (character)
         ApplyRecursiveCharacterNodeTransforms(&character->entity.node);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 Vector3 GetCharacterWorldPosition(const Character *character) {
     if (!character)
@@ -676,7 +897,9 @@ Vector3 GetCharacterWorldPosition(const Character *character) {
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
     return position;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 Vector3i GetCharacterWorldRotation(const Character *character) {
     if (!character)
@@ -693,7 +916,9 @@ Vector3i GetCharacterWorldRotation(const Character *character) {
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
     return rotation;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void shenApplyTranslationToAll(CharacterNode *root, const Vector3 &translation) {
     if (!root)
@@ -721,7 +946,9 @@ void shenApplyTranslationToAll(CharacterNode *root, const Vector3 &translation) 
         tmpTransform.rows[2].y * deltaY + tmpTransform.rows[2].x * deltaX + tmpTransform.rows[2].z * deltaZ};
     Matrix4x4::SetActiveTransform(&g_characterNodeSavedTransform);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetCharacterNodeWorldRotation(CharacterNode *node, const Vector3i &rotation) {
     Vector3i local;
@@ -748,19 +975,25 @@ void SetCharacterNodeWorldRotation(CharacterNode *node, const Vector3i &rotation
     node->rotation[1] = local.y;
     node->rotation[2] = local.z;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void charaSetWorldRot(Character *character, const Vector3i &rotation) {
     if (character)
         SetCharacterNodeWorldRotation(&character->entity.node, rotation);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 float GetHorizontalDistance(const Vector3 *first, const Vector3 *second) {
     const float x = first->x - second->x, z = first->z - second->z;
     return std::sqrt(x * x + z * z);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 enum class ArgumentType : std::uint8_t {
@@ -911,7 +1144,9 @@ bool ResolveStaticModelNodeTransform(const CharacterResource &resource, std::uin
 }
 
 } // namespace
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void charaCore(Character *character) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
@@ -956,7 +1191,9 @@ void charaCore(Character *character) {
     Matrix4x4::Pop(1);
     SetScriptedModelEntity(nullptr);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void DrawDummyCharacterCore(Character *character) {
     const MT7Model *const model = static_cast<const MT7Model *>(character->model);
@@ -969,14 +1206,86 @@ void DrawDummyCharacterCore(Character *character) {
     DrawDummyCharacterModel(*model);
     Matrix4x4::Pop(1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 CharacterCoreCallback charaAssignDummyCore(Character *character) {
     return charaAssignCoreCallback(character, DrawDummyCharacterCore);
 }
+#endif
 
+
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM) || !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void mtwkDrawCharacterCore(Character *character) {
+#if defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    MotionWork *work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
+    IKRig &rig = reinterpret_cast<MotionWorkBindings *>(work)->rig;
+    g_characterSkinBoneSources[0] = &rig.chest.upperChestWorld;
+    g_characterSkinBoneSources[1] = &rig.rightArm.shoulderWorld;
+    g_characterSkinBoneSources[2] = &rig.rightArm.upperArmWorld;
+    g_characterSkinBoneSources[3] = &rig.leftArm.shoulderWorld;
+    g_characterSkinBoneSources[4] = &rig.leftArm.upperArmWorld;
+    g_characterSkinBoneSources[5] = &rig.rightArm.wristWorld;
+    g_characterSkinBoneSources[6] = &rig.leftArm.wristWorld;
+    Vector3 root;
+    Vector3 position;
+    Vector3i rotation;
+    if (g_motionDrawOverridesEnabled) {
+        mtwkGetBonePosition(work, static_cast<MotionBoneId>(0), &root);
+        Matrix4x4::TransformPoint(root, root);
+        const float distance = Vector3::CalcMagnitude(root);
+        if (g_motionVertexLinkDistance > distance && 0.0f > root.z)
+            g_characterVertexBlendEnabled = 1;
+        else
+            g_characterVertexBlendEnabled = 0;
+    }
+    g_motionDrawOverrideFlags = mtwkGetCustomOverrideFlags(work);
+    MT7Node *const model = character->model;
+    if (model) {
+        const CharacterUpdateCallback callback = GetMotionCallback(character);
+        do {
+            PrepareClothForDraw(character);
+        } while (0);
+        UpdateClothNodeTree(model);
+        UpdateCharacterOsage(model, character);
+        if (IsCharacterMirroredForDraw(character)) {
+            if (g_loadingFlag)
+                BindMotionControllerMatricesToModelNodes(work, model);
+            callback(model, character->alpha);
+            DrawMotionParts(character, work);
+            mtwkBindMirroredControllerMatricesToModelNodes(work, model);
+            work->sequenceFlags &= ~MSF_ModelMatricesBound;
+            dc::sdk::SetMirroredModelDrawMode(1);
+            callback(model, 1.0f);
+            dc::sdk::SetMirroredModelDrawMode(0);
+            BindMotionControllerMatricesToModelNodes(work, model);
+        } else {
+            work = static_cast<MotionWork *>(charFindComp(character, CHARACTER_MOTION));
+            if (work->drawOverrideData) {
+                GetCharacterWorldPosition(character, &position);
+                GetCharacterWorldRotation(character, &rotation);
+                matrix_stack::Matrix4x4_Push();
+                Matrix4x4::preTranslate(position.x, position.y, position.z);
+                Matrix4x4::SetViewMatrixFromEuler(rotation.x, rotation.y, rotation.z);
+                const float alpha = character->alpha;
+                DrawCharacterMatrixFrames(model, alpha, reinterpret_cast<const Matrix4x4 *>(work->drawOverrideData));
+                PopCurrentMatrix(1);
+            } else {
+                callback(model, character->alpha);
+                DrawMotionParts(character, work);
+            }
+        }
+    }
+    if (g_motionDrawOverridesEnabled)
+        g_characterVertexBlendEnabled = 1;
+    g_motionDrawOverrideFlags = 0;
+#else
+#if SHENMUE_IS_DC
+    MotionWork *const motionWork = charFindMotionwork(character);
+#else
     MotionWork *const motionWork = FindMotionWork(character);
+#endif
     if (!motionWork)
         return;
     g_motionDeformationEnabled = 1;
@@ -1072,8 +1381,12 @@ void mtwkDrawCharacterCore(Character *character) {
         if (g_motionDrawOverridesEnabled)
             g_motionDeformationEnabled = 1;
     }
+#endif
 }
+#endif
 
+
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 // @verified - p
@@ -1408,7 +1721,7 @@ const std::vector<Record> *FindNestedRecords(const Record &record) {
     return argument ? &argument->records : nullptr;
 }
 
-
+// Native TokenFinder_0 compares authored tokens after folding ASCII a-z.
 bool EqualCharacterToken(std::string_view left, std::string_view right) {
     if (left.size() != right.size())
         return false;
@@ -1961,9 +2274,9 @@ bool ApplyCharacterTableComponentRecords(CharacterResource *resource, const std:
             FreeCharacter(&character);
             return false;
         }
-
-
-
+        // Native "Cloth" record: without arguments the cloth is assigned in mode 0. With one, native reads its first
+        // argument as the mode and compares it, as a string, with "ON", skipping the cloth on a match. Its sign test reads the
+        // zero-extended mode byte, so negative modes are assigned too (-1 only clears the root's cloth-source slot).
         bool assignCloth = true;
         std::int8_t clothMode = 0;
         if (const Record *cloth = FindRecord(*components, "Cloth"); cloth && !cloth->arguments.empty()) {
@@ -1995,8 +2308,7 @@ bool ApplyCharacterTableComponentRecords(CharacterResource *resource, const std:
             }
             ApplyCharacterTableCollisionFlags(&character, FindRecord(*components, "Coli"));
             if (!hasHumanComponent)
-                FindCharacterControlModel(&character)->flags |=
-                    CCMF_UpdateHeight | CCMF_VoxelSweep | CCMF_Unknown10 | CCMF_StairMode;
+                FindCharacterControlModel(&character)->flags |= CCMF_UpdateHeight | CCMF_VoxelSweep | CCMF_Unknown10 | CCMF_StairMode;
         }
         if (const Record *const hand = FindRecord(*components, "Hand"); hand || (hasHumanComponent && hasPlayerComponent)) {
             const std::uint8_t handFlags =
@@ -2014,8 +2326,8 @@ bool ApplyCharacterTableComponentRecords(CharacterResource *resource, const std:
         if (const Record *range = FindRecord(*components, "Range"))
             SetCharacterRadius(&character, FloatFromBits(range->arguments.front().value));
     }
-
-
+    // Native pack slot 27 ("TinyMot"): after hand/derived-node setup,
+    // before init callbacks and MAPEV admission. MotOnly slot 22 jumps past it.
     if (FindRecord(*components, "TinyMot") && !FindRecord(*components, "MotOnly"))
         AllocateTMNM(&character);
     if (FindRecord(*components, "DummyChara"))
@@ -2043,6 +2355,7 @@ bool ApplyCharacterTableComponentRecords(CharacterResource *resource, const std:
     return true;
 }
 
+// Native CHRS_CharacterCreation_StaticObjects: the 55-slot component table lives in STCH global-heap scratch for the creation.
 bool ApplyCharacterTableComponents(CharacterResource *resource, const std::vector<Record> &authoredComponents, shen_name owner, std::int32_t entryId) {
     std::byte *const pack = allocateInGlobalHeap(55 * 0x100);
     for (std::size_t slot = 0; slot < 55; ++slot)
@@ -2087,7 +2400,9 @@ bool CreateCharacter(const Record &record, shen_name owner, std::int32_t entryId
 }
 
 } // namespace
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void DrawImageCharacterModel(Character *character, std::int32_t draw) {
     ImageModuleComponent *const image = static_cast<ImageModuleComponent *>(FindModelComponent(character, TASK_IMGM));
@@ -2105,25 +2420,35 @@ void DrawImageCharacterModel(Character *character, std::int32_t draw) {
     image->field30 = accumulator;
     image->field24 = flags;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void DrawImageCharacterCore(Character *character) {
     DrawImageCharacterModel(character, 1);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ResolveCharacterWorldTransform(const Character *character, Matrix4x4 &transform) {
     if (!character)
         return false;
     transform = CharacterEntityTransform(*character);
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ResolveCharacterDrawNodeTransform(const Character *character, std::uint32_t nodeId, Matrix4x4 &transform) {
     if (!character)
         return false;
 
     const CharacterCoreDrawContext *const context = currentCharacterCoreDrawContext;
+#if SHENMUE_IS_DC
+    if (const Matrix4x4 *const frame = mtwkGetDrawOverrideData(charFindMotionwork(character))) {
+#else
     if (const Matrix4x4 *const frame = mtwkGetDrawOverrideData(FindMotionWork(character))) {
+#endif
         if (!character->model)
             return false;
         const auto &model = *static_cast<const MT7Model *>(character->model);
@@ -2135,7 +2460,11 @@ bool ResolveCharacterDrawNodeTransform(const Character *character, std::uint32_t
         transform = MultiplyTransforms(*local, world);
         return true;
     }
+#if SHENMUE_IS_DC
+    if (const MotionWork *const motionWork = charFindMotionwork(character)) {
+#else
     if (const MotionWork *const motionWork = FindMotionWork(character)) {
+#endif
         MotionPose pose{};
         if (mtwkEvaluateCurrentPose(motionWork, pose) && nodeId < pose.hasNodeMatrix.size() && pose.hasNodeMatrix[nodeId]) {
             transform = MultiplyTransforms(pose.nodeMatrices[nodeId], CharacterEntityTransform(*character));
@@ -2146,7 +2475,9 @@ bool ResolveCharacterDrawNodeTransform(const Character *character, std::uint32_t
     const CharacterResource *const resource = FindCharacterResource(character);
     return resource && ResolveStaticModelNodeTransform(*resource, nodeId, transform);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ResolveCharacterDrawNodeTranslation(const Character *character, std::uint32_t nodeId, Vector3 &translation) {
     Matrix4x4 transform{};
     if (!ResolveCharacterDrawNodeTransform(character, nodeId, transform) && !ResolveCharacterWorldTransform(character, transform)) {
@@ -2159,6 +2490,8 @@ bool ResolveCharacterDrawNodeTranslation(const Character *character, std::uint32
     };
     return true;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 shen_name CreateEventCharacter(std::int32_t type, const std::byte *data, shen_name name) {
     CharacterResource *const resource = AddCharacterHandler(type);
@@ -2190,7 +2523,9 @@ shen_name CreateEventCharacter(std::int32_t type, const std::byte *data, shen_na
     }
     return name;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Character *AddHighModelCharacter(shen_name scenarioName, HLib::Task *&handlerTask) {
     handlerTask = nullptr;
     auto resource = std::make_unique<CharacterResource>();
@@ -2212,7 +2547,9 @@ Character *AddHighModelCharacter(shen_name scenarioName, HLib::Task *&handlerTas
     BindNpcRouteCharacter(scenarioName, character);
     return character;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ApplyNpcPackageCharacterDisplay(Character *character, std::span<const std::byte> characterTable) {
     const CharacterResource *const resource = FindCharacterResource(character);
     if (!resource)
@@ -2235,7 +2572,9 @@ bool ApplyNpcPackageCharacterDisplay(Character *character, std::span<const std::
     }
     return false;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool ConfigureScenarioStepHighModelCharacter(Character *character, const ScenarioStepHighModelState &state) {
     if (!character || character->model || (state.modelLoadMask & ~scenarioStepModelMask) != 0 || state.nativeMode < -1 ||
         state.nativeMode >= static_cast<std::int32_t>(scenarioStepModelCount)) {
@@ -2285,7 +2624,9 @@ bool ConfigureScenarioStepHighModelCharacter(Character *character, const Scenari
     character->alpha = 0.0f;
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // SetModePerCurrentStep's model swap: the mode indexes the step-model objects, which stay null when not loaded.
 void SetScenarioStepModel(Character *character, std::int32_t mode) {
     for (const std::unique_ptr<CharacterResource> &resource : characters) {
@@ -2300,7 +2641,9 @@ void SetScenarioStepModel(Character *character, std::int32_t mode) {
         return;
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool GetScenarioStepHighModelState(const Character *character, ScenarioStepHighModelState &state) {
     const auto resource = std::find_if(characters.begin(), characters.end(),
         [character](const std::unique_ptr<CharacterResource> &candidate) { return candidate && candidate->character == character; });
@@ -2310,12 +2653,16 @@ bool GetScenarioStepHighModelState(const Character *character, ScenarioStepHighM
     state = (*resource)->pendingHighModel;
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 CharacterControlSlot *GetCharacterInMapControlTask(std::int32_t characterId) {
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control->characterControlTable.data() + characterId;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 HLib::Task *GetCharacterHandlerTask(const Character *character) {
     auto *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     if (!control)
@@ -2327,7 +2674,9 @@ HLib::Task *GetCharacterHandlerTask(const Character *character) {
     }
     return nullptr;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void ForEachLiveCharacterInMapOrder(CharacterMapVisitor visitor, void *context) {
     if (!visitor || !g_mapControlTask)
         return;
@@ -2345,44 +2694,66 @@ void ForEachLiveCharacterInMapOrder(CharacterMapVisitor visitor, void *context) 
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t GetCharacterBoneId(const Character *character) {
     return GetMotionBoneIdForEntityType(GetCharacterImageSourceType(character));
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 shen_name ctrlGetScenarioCharaName(const Character *character) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? scenGetCharaName(control->scenarioTask, const_cast<Character *>(character)) : shen_name{};
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 Character *ctrlGetScenarioChara(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     return control ? scenFindChara(control->scenarioTask, name) : nullptr;
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 MotionWork *scenFindMotionwork(shen_name name) {
     const MapControlData *const control = static_cast<const MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
     Character *const character = scenFindChara(control->scenarioTask, name);
+#if SHENMUE_IS_DC
+    return character ? charFindMotionwork(character) : nullptr;
+#else
     return character ? FindMotionWork(character) : nullptr;
+#endif
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void EV_SetCharacterScale(shen_name name, const Vector3 &scale) {
     Character *const character = ctrlGetScenarioChara(name);
+#if SHENMUE_IS_DC
+    if (character && !charFindMotionwork(character))
+#else
     if (character && !FindMotionWork(character))
+#endif
         character->scale = scale;
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// The previous map's characters are released by the scene teardown (ReleaseMapControlOwners), before
+// the next map's packages create theirs, so the map CHRD adds to them as native does.
 bool CHRS_Reader(const MapInfoChunk *chrd, std::int32_t entryId, shen_name chunkName) {
     if (!chrd || chrd->nextByteOffset < 16)
         return false;
     const std::byte *const payload = reinterpret_cast<const std::byte *>(chrd) + sizeof(MapInfoChunk);
     return CHRS_ReadTable({payload, chrd->nextByteOffset - sizeof(MapInfoChunk)}, entryId, chunkName);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool CHRS_ReadTable(std::span<const std::byte> table, std::int32_t entryId, shen_name owner) {
     if (table.size() < 8 || ReadU32(table.data()) != SHEN_NAME(CHRS)) {
         return false;
@@ -2418,7 +2789,9 @@ bool CHRS_ReadTable(std::span<const std::byte> table, std::int32_t entryId, shen
     }
     return true;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeCharacter(Character *character) {
     const auto resource = std::find_if(characters.begin(), characters.end(),
         [character](const std::unique_ptr<CharacterResource> &candidate) { return candidate && candidate->character == character; });
@@ -2446,15 +2819,20 @@ void FreeCharacter(Character *character) {
     UnregisterCharacterFromMapControl(**resource);
     characters.erase(resource);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void FreeCharacters() {
     while (!characters.empty()) {
         FreeCharacter(characters.back()->character);
     }
 }
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 
 std::int32_t g_npcLoggerEnabled{};
-
+#endif
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 constexpr std::array<std::uint8_t, 7> visibilityModes{CRF_All, CRF_Unknown01, CRF_Unknown02, CRF_DisplayEnabled, CRF_Unknown08, CRF_InRange, CRF_Unknown20};
@@ -2493,10 +2871,12 @@ std::int32_t npcLogDisplayChange(Character *character, std::int32_t visible) {
 }
 
 } // namespace
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint8_t EV_SetCharDisplay(Character *character, CharaVisibilityMode visibilityType, std::int32_t enabled) {
     if (!character || visibilityType >= CVM_Count)
-        return 0;
+        return 0; // Native leaves the return register unspecified on these paths.
     const std::uint8_t mask = visibilityModes[static_cast<std::size_t>(visibilityType)];
     const std::uint8_t previous = character->renderFlags;
     character->renderFlags = static_cast<std::uint8_t>(enabled != 0 ? previous | mask : previous & ~mask);
@@ -2508,7 +2888,9 @@ std::uint8_t EV_SetCharDisplay(Character *character, CharaVisibilityMode visibil
         return static_cast<std::uint8_t>(npcLogDisplayChange(character, visible));
     return result;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void charaSetVisibilityFlagTo(Character *character, std::uint32_t set) {
     if (!character)
         return;
@@ -2517,12 +2899,16 @@ void charaSetVisibilityFlagTo(Character *character, std::uint32_t set) {
     else
         character->flags &= ~CF_VisibleThisCheck;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 bool IsOfThisVisibilityType(const Character *character, std::uint32_t mode) {
     constexpr std::uint8_t masks[]{CRF_All, CRF_Unknown01, CRF_Unknown02, CRF_DisplayEnabled, CRF_Unknown08, CRF_InRange, CRF_Unknown20};
     return character && mode < std::size(masks) && (character->renderFlags & masks[mode]) == masks[mode];
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 std::int32_t characterLightMode = 1;
 Vector3 characterLightRoot{};
@@ -2547,9 +2933,11 @@ void SetupCharacterLightFrame() {
         Vector4{0.0f, 1.0f, 1.0f, 1.0f};
 }
 } // namespace
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// DrawLights: CPU candidates retain their native six-slot persistent fade,
+// rather than borrowing the renderer's truncated shader-light selection.
 // @verified - p
 void DrawLights(Character *character) {
     if (!character)
@@ -2626,13 +3014,13 @@ void DrawLights(Character *character) {
                 (static_cast<double>(score) + 0.04 > static_cast<double>(ranked[insert].score) && ranked[insert].id < id)))
             ++insert;
         if (insert < ranked.size()) {
-            for (std::size_t slot = std::min(count, ranked.size()-1); slot > insert; --slot)
+            for (std::size_t slot = std::min(count, ranked.size() - 1); slot > insert; --slot)
                 ranked[slot] = ranked[slot - 1];
             ranked[insert] = {id, score, attenuation};
             if (static_cast<double>(attenuation) > 0.003)
                 authorFallback = false;
         }
-        count = std::min(count+1, ranked.size());
+        count = std::min(count + 1, ranked.size());
     }
     std::int32_t fadeLimit = static_cast<std::int8_t>(character->fieldE8 >> 24);
     if (authorFallback || character->fieldEc[0] == 0)
@@ -2684,7 +3072,9 @@ void DrawLights(Character *character) {
         }
     }
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void shenDrawCharaLighting(Character *character) {
     if (!GetControllerForNode(character))
@@ -2787,9 +3177,11 @@ void shenDrawCharaLighting(Character *character) {
         SetLegacySelectedLightEnabled(destination, false);
     UpdateLegacyLightTransforms();
 }
+#endif
 
-
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+// Native charaCollisionDistanceChecks retains separate prepared-model,
+// fixed-XB01 and stencil hierarchy downstream owners.
 void charaCollisionDistanceChecks(void *parameter) {
     auto *character = static_cast<Character *>(parameter);
     if (!character)
@@ -2862,12 +3254,16 @@ void charaCollisionDistanceChecks(void *parameter) {
     }
     RestoreEngineFlag(0x43);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 void shenExecuteCharaDrawCallbacks(Character *character) {
     if (character && (character->flags & CF_VisibleThisCheck) != 0 && character->collisionCheck)
         HLib::ExecuteCallbackNow(character->collisionCheck, character);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 namespace {
 
 std::uint32_t DrawCharacterResource(Character *character, bool executeNow = false) {
@@ -2884,7 +3280,11 @@ std::uint32_t DrawCharacterResource(Character *character, bool executeNow = fals
             runCore();
         return 0;
     }
+#if SHENMUE_IS_DC
+    const MotionWork *const motionWork = charFindMotionwork(character);
+#else
     const MotionWork *const motionWork = FindMotionWork(character);
+#endif
     const MT7Model &model = *static_cast<const MT7Model *>(character->model);
     const Matrix4x4 saved = workTransformMatrix;
     const Matrix4x4 *const matrixFrames = IsCharacterMirroredForDraw(character) ? nullptr : mtwkGetDrawOverrideData(motionWork);
@@ -2908,7 +3308,11 @@ void GatherCharacterDrawLists(Character *character, void *taskData) {
     auto &parameters = *static_cast<CharacterDrawTaskParameters *>(taskData);
     if (character != parameters.player) {
         bool listed = false;
+#if SHENMUE_IS_DC
+        if (charFindMotionwork(character)) {
+#else
         if (FindMotionWork(character)) {
+#endif
             if (IsOfThisVisibilityType(character, 0)) {
                 const float distance = std::fabs(character->drawDistance);
                 std::uint32_t index = 0;
@@ -2975,7 +3379,11 @@ std::uint32_t DrawCharacterHumanPhase(Character *character) {
         Matrix4x4::Scale(character->scale.x, character->scale.y, character->scale.z);
     MT7Model *const model = static_cast<MT7Model *>(character->model);
     bool handled = GetLegacyPerspectiveProjection() == 1;
+#if SHENMUE_IS_DC
+    MotionWork *const motionWork = charFindMotionwork(character);
+#else
     MotionWork *const motionWork = FindMotionWork(character);
+#endif
     if (handled) {
         if (left)
             AdvanceHandDrawState(*left);
@@ -3122,7 +3530,11 @@ void TestCharacterVisibility(Character *character, void *) {
     bool shouldBeVisible = false;
     if ((character->renderFlags & CRF_DisplayEnabled) != 0) {
         bool cameraVisible = true;
+#if SHENMUE_IS_DC
+        if (const MotionWork *const work = charFindMotionwork(character)) {
+#else
         if (const MotionWork *const work = FindMotionWork(character)) {
+#endif
             if ((character->renderFlags & CRF_InRange) != 0) {
                 if (pointCount != 0 && (character->flags & CF_Unknown40) != 0) {
                     const Vector4 &root = work->rig.lowerBody.pelvisWorld.rows[3];
@@ -3251,38 +3663,50 @@ void CharDrawObject_Callback(void *) {
 }
 
 } // namespace
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 std::uint32_t ExecuteCharacterCoreDraw(Character *character) {
     return DrawCharacterResource(character, true);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void CharDispCheck_Callback(void *) {
     characterClipPointCount = GetFieldDepthPointCount();
     ForEachLiveCharacterInMapOrder(TestCharacterVisibility, nullptr);
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 std::int32_t GetNpcBatchCountOverride(std::int32_t) {
     return npcBatchCountOverride;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void SetNewNpcBatchCountOverride(NpcFillType fillType, std::int32_t count) {
     npcFillType = fillType;
     npcBatchCountOverride = static_cast<std::int32_t>(fillType) == 0 ? 49 : count >= 50 ? 49 : count;
 }
+#endif
 
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - p
 void ExchangeCharacterDrawVector(const Vector4 *colour, Vector4 *previous) {
     if (previous)
         *previous = characterDrawVector;
     characterDrawVector = *colour;
 }
+#endif
 
 // @verified - p
+// @verified - pd
 
-
+#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
 #if defined(_WIN32)
 CharacterDebugCallback g_characterDebugCallback{};
 std::int32_t g_characterDebugSnapCamera{};
@@ -3352,16 +3776,30 @@ CharacterDebugCallback SetupCharacterDebug() {
     return DrawRegisteredCharacterDebug;
 }
 #endif
+#endif
 
-} // namespace shenmue::s2
 
-namespace shenmue { namespace s2 {
 
 // @verified - pd
 HLib::Task *CharDraw_Human_Object_Enqueue(std::uint8_t nextFunctionIndex) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    const std::int8_t functionIndex = static_cast<std::int8_t>(nextFunctionIndex);
+    characterDrawTask = HLib::EnqueueTaskWithParameter(CharDraw_Callback, functionIndex, 2, sizeof(CharacterDrawTaskParameters), CHARACTER_DRAW_TASK);
+    HLib::EnqueueTaskWithoutParameter(CharDrawHuman_Callback, functionIndex, 2, static_cast<std::int32_t>(SHEN_NAME(DRWH)));
+    HLib::EnqueueTaskWithoutParameter(CharDrawObject_Callback, functionIndex, 2, static_cast<std::int32_t>(SHEN_NAME(DRWO)));
+#else
     characterDrawTask = HLib::EnqueueTaskWithParameter(CharDraw_Callback, nextFunctionIndex, 2, sizeof(CharacterDrawTaskParameters), CHARACTER_DRAW_TASK);
     HLib::EnqueueTaskWithoutParameter(CharDrawHuman_Callback, nextFunctionIndex, 2, static_cast<std::int32_t>(SHEN_NAME(DRWH)));
     HLib::EnqueueTaskWithoutParameter(CharDrawObject_Callback, nextFunctionIndex, 2, static_cast<std::int32_t>(SHEN_NAME(DRWO)));
+#endif
+#if SHENMUE_IS_DC
+    if (characterDrawTask) {
+        CharacterDrawTaskParameters *const parameters = static_cast<CharacterDrawTaskParameters *>(HLib::GetTaskParameter(characterDrawTask));
+        if (parameters)
+            std::memset(parameters, 0, sizeof(*parameters));
+    }
+    npcPoolSizingModeOrOverride = -5;
+#else
     npcBatchCountOverride = 49;
     npcFillType = static_cast<NpcFillType>(0);
     characterHumanDrawBudget = 10.0f;
@@ -3371,28 +3809,49 @@ HLib::Task *CharDraw_Human_Object_Enqueue(std::uint8_t nextFunctionIndex) {
         std::memset(parameters, 0, sizeof(*parameters));
     }
 
-
+    // This is the native whitelist written by CharDraw_Human_Object_Enqueue.
     constexpr std::array<std::uint32_t, 25> authorSpawnMaps{SHEN_NAME(WB01), SHEN_NAME(QRR0), SHEN_NAME(ARC0), SHEN_NAME(WKA0), SHEN_NAME(ARA0),
         SHEN_NAME(WTA0), SHEN_NAME(WEG0), SHEN_NAME(ARM0), SHEN_NAME(AKS0), SHEN_NAME(WET0), SHEN_NAME(AKT0), SHEN_NAME(AKY0), SHEN_NAME(WSY0), SHEN_NAME(AKT2),
         SHEN_NAME(AKS1), SHEN_NAME(WSG1), SHEN_NAME(WEM1), SHEN_NAME(WES1), SHEN_NAME(AKT1), SHEN_NAME(WRS2), SHEN_NAME(AKA3), SHEN_NAME(AKT3), SHEN_NAME(AKA4),
         SHEN_NAME(QCAE), SHEN_NAME(WESM)};
     mapAllowsAuthorSpawn = std::find(authorSpawnMaps.begin(), authorSpawnMaps.end(), g_currentMap.name) != authorSpawnMaps.end();
+#endif
     return characterDrawTask;
 }
 
 
-} }
 
-namespace shenmue { namespace s2 {
 // @verified - pd
 bool charaCheckFlags(const Character *character) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (character->flags & CF_Unknown40)
+            return true;
+        return false;
+#else
     return character && (character->flags & CF_Unknown40) != 0;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    return false;
 }
+#endif
 
 // @verified - pd
 bool charaIsDisplayCheckEnabled(const Character *character) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (character->flags & CF_DisplayCheckEnabled)
+            return true;
+        return false;
+#else
     return character && (character->flags & CF_DisplayCheckEnabled) != 0;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    return false;
 }
+#endif
 
 // @verified - pd
 bool charaGetWasVisible(const Character *character) {
@@ -3401,31 +3860,89 @@ bool charaGetWasVisible(const Character *character) {
 
 // @verified - pd
 bool charaForceVisibleCheck(const Character *character) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (character->flags & CF_ForceVisibleCheck)
+            return true;
+        return false;
+#else
     return character && (character->flags & CF_ForceVisibleCheck) != 0;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    return false;
 }
+#endif
 
 // @verified - pd
 void charaSetDisplayEnabledFlag(Character *character, std::int32_t enabled) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (enabled)
+            character->flags |= CF_DisplayCheckEnabled;
+        else
+            character->flags &= ~CF_DisplayCheckEnabled;
+#else
     if (character)
         character->flags = enabled ? character->flags | CF_DisplayCheckEnabled : character->flags & ~CF_DisplayCheckEnabled;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 }
+#endif
 
 // @verified - pd
 void charaToggleFlag(Character *character, std::int32_t enabled) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (enabled)
+            character->flags |= CF_Unknown40;
+        else
+            character->flags &= ~CF_Unknown40;
+#else
     if (character)
         character->flags = enabled ? character->flags | CF_Unknown40 : character->flags & ~CF_Unknown40;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 }
+#endif
 
 // @verified - pd
 void SetMirrored(Character *character, std::int32_t enabled) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (enabled)
+            character->flags |= CF_DrawMirrored;
+        else
+            character->flags &= ~CF_DrawMirrored;
+#else
     if (character)
         character->flags = enabled ? character->flags | CF_DrawMirrored : character->flags & ~CF_DrawMirrored;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 }
+#endif
 
 // @verified - pd
 void SetCharacterStoredShadowYEnabled(Character *character, std::int32_t enabled) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    if (character) {
+        if (enabled)
+            character->flags |= CF_UseStoredShadowY;
+        else
+            character->flags &= ~CF_UseStoredShadowY;
+#else
     if (character)
         character->flags = enabled ? character->flags | CF_UseStoredShadowY : character->flags & ~CF_UseStoredShadowY;
+#endif
+    }
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
 }
+#endif
 
-} } // namespace shenmue::s2
+
+
+} // namespace s2
+} // namespace shenmue
