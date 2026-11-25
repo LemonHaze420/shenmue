@@ -141,6 +141,10 @@ void ResetCamera() { camera = {}; }
 bool FreeCameraActive() { return camera.free && Enabled(Id::PhotoMode); }
 bool FirstPersonActive() { return camera.firstPerson && Enabled(Id::FirstPerson) && !FreeCameraActive(); }
 bool AdjustCamera(bool allowed, float seconds, std::uint32_t area, CameraKey key, Vector3 &eye, Vector3 &target) {
+    if (Enabled(Id::PhotoMode) && key(0x76)) {
+        Set(Id::PhotoMode, 0);
+        camera.free = false;
+    }
     const bool fHeld = key('F');
     if (!allowed || area != camera.area) {
         camera = {};

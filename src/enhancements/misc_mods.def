@@ -21,7 +21,7 @@ SHEN_MOD(Widescreen, Toggle, "Widescreen", "Widescreen cutscenes", "Use the full
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
 SHEN_MOD(FirstPerson, Toggle, "FirstPerson", "First-person toggle", "Press F during normal gameplay to toggle first-person view.", 0, 0, 1)
-SHEN_MOD(PhotoMode, Toggle, "PhotoMode", "Free camera", "Detach the camera during gameplay. Use WASD to move, Q/E for height and the arrow keys to look.", 0, 0, 1)
+SHEN_MOD(PhotoMode, Toggle, "PhotoMode", "Free camera", "Use WASD to move, Q/E for height and the arrow keys to look. Press F7 or the controller cancel button to return to Ryo.", 0, 0, 1)
 SHEN_MOD(CameraDistance, List, "CameraDistance", "Camera distance", "Override the follow-camera distance, or keep the original setting.", 0, 0, 10)
 #endif
 #if SHENMUE_ENHANCEMENT_MISC_MODS_HUD

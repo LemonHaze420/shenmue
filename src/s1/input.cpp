@@ -809,6 +809,8 @@ void UpdateInputsFromInputDevices() {
         g_xinputReserved = 0;
 #if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_CAMERA
     if (mods::FreeCameraActive() && GetCurrentInputType() == InputMode::Game) {
+        if ((processed->buttonsPressed & 2U) != 0)
+            mods::Set(mods::Id::PhotoMode, 0);
         input.held &= 0x0800U;
         input.pressedPriority &= 0x0800U;
         input.triggers = 0;
