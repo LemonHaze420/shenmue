@@ -17,6 +17,7 @@ typedef struct Vector3 {
 typedef struct Vector3i {
     int x, y, z;
 } Vector3i;
+typedef struct MagicRoomFloorGroup MagicRoomFloorGroup;
 typedef struct MotionWork MotionWork;
 typedef struct DateTime DateTime;
 typedef struct HLibTask HLibTask;

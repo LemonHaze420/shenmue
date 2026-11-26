@@ -8,6 +8,9 @@
 void AreaMain(unsigned int startParameters);
 void AreaCleanup(int afternoon);
 void WESMSpringLoop(void *taskData);
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void WESMUpdateFloor(void);
+#endif
 void LoadWESMNpcs(void);
 void InitializeWESMFireBreather(void);
 void WESMFireBreatherLoop(void *taskData);

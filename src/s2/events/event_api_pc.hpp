@@ -241,6 +241,8 @@ struct EventFunctionBindings {
     static constexpr auto SetParticleEffectBirthRate = s2::SetParticleEffectBirthRate;
     static constexpr auto SetParticleEffectColour = s2::SetParticleEffectColour;
     static constexpr auto SetParticleEffectPosition = s2::SetParticleEffectPosition;
+    static constexpr auto SetFireInstanceSize = s2::SetFireInstanceSize;
+    static constexpr auto ToggleFlagOnFieldEntity = s2::ToggleFlagOnFieldEntity;
     static constexpr auto SetParticleEffectSize = s2::SetParticleEffectSize;
     static SHENMUE_EVENT_INLINE std::uint64_t SetPlayerControlEnabled(std::int32_t mode) {
         return s2::SetPlayerControlEnabled(mode);

@@ -922,6 +922,21 @@ endif()
 
 # EVs stored inside scene packages.
 if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_EU" OR SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_1003" OR SHENMUE_DC_EVENT_TARGET STREQUAL "S2_US")
+  shenmue_add_event_overlay(PACK_QF01 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QF01/MPK00.PKF/QF01.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qf01.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_QF06 C OPTIONAL TYPE EV1
+    REFERENCE SCENE/03/QF06/MPK00.PKF/QF06.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_qf06.cpp s2/areas/common/src/et_areabase.c)
+
+  shenmue_add_event_overlay(PACK_WESM C OPTIONAL TYPE EV1
+    REFERENCE SCENE/01/WESM/MPK00.PKF/WESM.EV1
+    ENTRY s2/areas/common/src/et_areabase.c
+    SOURCES s2/areas/area_wesm.cpp s2/areas/area_wesm.cpp@SHENMUE_EVENT_WESM_NPCS=1 s2/areas/common/src/et_areabase.c)
+
   shenmue_add_event_overlay(PACK_0007 C OPTIONAL TYPE EV3
     REFERENCE SCENE/01/AR02/0007A.PKF/0007.EV3
     ENTRY s2/areas/area_0007.cpp

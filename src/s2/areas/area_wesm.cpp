@@ -12,6 +12,9 @@ static unsigned int fireId;
 #endif
 
 #if !defined(SHENMUE_EVENT_WESM_NPCS)
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+static unsigned short previousFloorMode = 1;
+#endif
 void AreaMain(unsigned int startParameters)
 {
     FTBL.EV_SetWeatherInstruction(0x780, 0);
@@ -36,7 +39,30 @@ void WESMSpringLoop(void *taskData)
     FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(3));
     FTBL.nlSetTexanimUV(0.0f, 0.027f);
     FTBL.RecursiveApplyTexAnimUVs(FTBL.GetMapModelRoot(4));
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+    WESMUpdateFloor();
+#endif
 }
+
+#if !defined(SHENMUE_TARGET_S2_DC_JP_GAMEJAM)
+void WESMUpdateFloor(void)
+{
+    Vector3 position;
+    int mode, enabled;
+    FTBL.GetCharaPosition(SHEN_NAME4('R', 'Y', 'O', '_'), 0xffffffff, &position, 0x40000000);
+    if (position.y < 107.78f) {
+        mode = 1;
+        enabled = 1;
+    } else {
+        mode = 2;
+        enabled = 0;
+    }
+    if (previousFloorMode != mode) {
+        FTBL.SetMapFieldDepthSlotEnabled(enabled, 5);
+        previousFloorMode = mode;
+    }
+}
+#endif
 
 #else
 void LoadWESMNpcs(void)
