@@ -380,7 +380,7 @@ void scenSetTaskFlags(std::uint8_t mode) {
     }
 }
 
-void ST_LoadTitleFadeIn_Main(void *);
+void ST_LoadTitleFadeIn_Main();
 
 // @verified - d
 void SetLoadingDrawFlags(std::int32_t mode) {
@@ -409,7 +409,7 @@ void DrawLoadingSpinner(std::int32_t x, std::int32_t y) {
         DrawLoadingLabel(0xff000000U);
         break;
     case 1:
-        reinterpret_cast<void (*)()>(ST_LoadTitleFadeIn_Main)();
+        ST_LoadTitleFadeIn_Main();
         break;
     }
     g_loadingSpin =
@@ -432,7 +432,7 @@ void DrawLoadingDots(std::int32_t x, std::int32_t y) {
         DrawLoadingLabel(0xff000000U);
         break;
     case 1:
-        ST_LoadTitleFadeIn_Main(0);
+        ST_LoadTitleFadeIn_Main();
         break;
     }
     ++g_loadingDotFrame;
@@ -471,7 +471,7 @@ void DrawLoadingDots(std::int32_t x, std::int32_t y) {
     if (!g_loadingDrawMode)
         DrawLoadingLabel(0xff000000U);
     else if (g_loadingDrawMode == 1)
-        ST_LoadTitleFadeIn_Main(0);
+        ST_LoadTitleFadeIn_Main();
     ++g_loadingDotFrame;
     if (g_loadingDotFrame > 83)
         g_loadingDotFrame = 0;

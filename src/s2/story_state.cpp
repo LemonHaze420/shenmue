@@ -168,15 +168,8 @@ bool ScenarioEventStateField(std::uint8_t mode, std::uint8_t &shift, std::uint8_
 
 std::int32_t g_storyStep __attribute__((section(".data.dc_story_step"))) = 0;
 
-std::uint32_t g_stepElapsedFrames;
-
-std::uint32_t g_stepDebugFrames = 0;
-
-std::int32_t g_stepElapsedSeconds;
-
-std::uint32_t g_stepRangeElapsedFrames;
-
-std::int32_t g_previousStoryStep = 0, g_stepRangeStart = 0, g_stepRangeEnd = 0;
+StepDebugTiming g_stepDebugTiming = {};
+StepDebugRange g_stepDebugRange = {};
 
 FacialModelCacheEntry facialModelCache[facialModelCacheCount] = {};
 
@@ -323,19 +316,19 @@ std::uint8_t LoadCachedFacialModel(const char *directory, const char *filename, 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void ResetStepTiming(std::int32_t step) {
-    g_previousStoryStep = step;
-    g_stepRangeStart = step;
-    g_stepRangeEnd = step;
+    g_stepDebugRange.previousStoryStep = step;
+    g_stepDebugRange.stepRangeStart = step;
+    g_stepDebugRange.stepRangeEnd = step;
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int32_t slot = GetStepCounterSlot(step);
 #else
     const std::int32_t slot = GetStepCounterSlot();
 #endif
     const std::int32_t *const elapsed = &g_combatStatistics.stepElapsedSeconds;
-    g_stepElapsedFrames = static_cast<std::uint32_t>(elapsed[slot]) * 30U;
-    g_stepDebugFrames = 0;
-    g_stepElapsedSeconds = static_cast<std::int32_t>(static_cast<std::uint32_t>(elapsed[slot]) * 30U);
-    g_stepRangeElapsedFrames = 0;
+    g_stepDebugTiming.stepElapsedFrames = static_cast<std::uint32_t>(elapsed[slot]) * 30U;
+    g_stepDebugTiming.stepDebugFrames = 0;
+    g_stepDebugTiming.stepElapsedSeconds = static_cast<std::int32_t>(static_cast<std::uint32_t>(elapsed[slot]) * 30U);
+    g_stepDebugTiming.stepRangeElapsedFrames = 0;
 }
 
 #endif
@@ -546,22 +539,22 @@ std::int32_t GetStepCounterSlot() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 void UpdateStepDebugCounters() {
     const std::int32_t previous = g_storyStep;
-    ++g_stepElapsedFrames;
-    ++g_stepDebugFrames;
+    ++g_stepDebugTiming.stepElapsedFrames;
+    ++g_stepDebugTiming.stepDebugFrames;
     const std::int32_t slot = GetStepCounterSlot(previous);
     std::int32_t *const elapsed = &g_combatStatistics.stepElapsedSeconds;
-    const std::int32_t seconds = static_cast<std::int32_t>(g_stepElapsedFrames) / 30;
+    const std::int32_t seconds = static_cast<std::int32_t>(g_stepDebugTiming.stepElapsedFrames) / 30;
     elapsed[slot] = seconds;
     if (previous != g_storyStep) {
-        g_stepElapsedSeconds = seconds;
-        g_stepElapsedFrames = static_cast<std::uint32_t>(elapsed[GetStepCounterSlot(g_storyStep)]) * 30U;
-        g_previousStoryStep = previous;
+        g_stepDebugTiming.stepElapsedSeconds = seconds;
+        g_stepDebugTiming.stepElapsedFrames = static_cast<std::uint32_t>(elapsed[GetStepCounterSlot(g_storyStep)]) * 30U;
+        g_stepDebugRange.previousStoryStep = previous;
         const std::int32_t current = g_storyStep;
         if (current / 10000 > previous / 10000) {
-            g_stepRangeElapsedFrames = static_cast<std::uint32_t>(static_cast<std::int32_t>(g_stepDebugFrames) / 30);
-            g_stepDebugFrames = 0;
-            g_stepRangeStart = previous;
-            g_stepRangeEnd = current;
+            g_stepDebugTiming.stepRangeElapsedFrames = static_cast<std::uint32_t>(static_cast<std::int32_t>(g_stepDebugTiming.stepDebugFrames) / 30);
+            g_stepDebugTiming.stepDebugFrames = 0;
+            g_stepDebugRange.stepRangeStart = previous;
+            g_stepDebugRange.stepRangeEnd = current;
             AwardStepMoveTraining();
         }
         SetScenarioTransientState(4, 0);
@@ -573,29 +566,29 @@ void UpdateStepDebugCounters() {
     if (!stepRangeDebugDisplay)
         return;
     const char *const format = "%2d.%1d>%2d.%1d %2d:%02d:%02d";
-    std::int32_t stepSeconds = g_stepElapsedSeconds;
+    std::int32_t stepSeconds = g_stepDebugTiming.stepElapsedSeconds;
     std::int32_t hours = stepSeconds / 3600;
     stepSeconds -= hours * 3600;
     std::int32_t minutes = stepSeconds / 60;
     std::int32_t secondsWithinMinute = stepSeconds - minutes * 60;
     SetDebugScreenTextPosition(9, 3);
-    std::int32_t rangeStart = g_previousStoryStep;
+    std::int32_t rangeStart = g_stepDebugRange.previousStoryStep;
     std::int32_t rangeStartChapter = rangeStart / 10000;
     rangeStart -= rangeStartChapter * 10000;
     std::int32_t rangeEnd = g_storyStep;
     std::int32_t rangeEndChapter = rangeEnd / 10000;
     rangeEnd -= rangeEndChapter * 10000;
     shenmue_s2_event_DebugLogToScreen(format, rangeStartChapter, rangeStart, rangeEndChapter, rangeEnd, hours, minutes, secondsWithinMinute);
-    stepSeconds = static_cast<std::int32_t>(g_stepRangeElapsedFrames);
+    stepSeconds = static_cast<std::int32_t>(g_stepDebugTiming.stepRangeElapsedFrames);
     hours = stepSeconds / 3600;
     stepSeconds -= hours * 3600;
     minutes = stepSeconds / 60;
     secondsWithinMinute = stepSeconds - minutes * 60;
     SetDebugScreenTextPosition(9, 4);
-    rangeStart = g_stepRangeStart;
+    rangeStart = g_stepDebugRange.stepRangeStart;
     rangeStartChapter = rangeStart / 10000;
     rangeStart -= rangeStartChapter * 10000;
-    rangeEnd = g_stepRangeEnd;
+    rangeEnd = g_stepDebugRange.stepRangeEnd;
     rangeEndChapter = rangeEnd / 10000;
     rangeEnd -= rangeEndChapter * 10000;
     shenmue_s2_event_DebugLogToScreen(format, rangeStartChapter, rangeStart, rangeEndChapter, rangeEnd, hours, minutes, secondsWithinMinute);

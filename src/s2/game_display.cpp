@@ -314,9 +314,10 @@ void RunGameCallback(Character *character, void *payload) {
 
 // @verified - d
 void AttachGameDisplayComponent(Character *character) {
-    if (charFindComp(character, MODEL_COMPONENT_GAME))
+    GameDisplayWork *game = static_cast<GameDisplayWork *>(charFindComp(character, MODEL_COMPONENT_GAME));
+    if (game)
         return;
-    GameDisplayWork *const game =
+    game =
         static_cast<GameDisplayWork *>(AllocateModelComponent(character, MODEL_COMPONENT_GAME, sizeof(GameDisplayWork), RunGameCallback));
     std::memset(game, 0, sizeof(*game));
     game->baseNodeId = 0x100;
@@ -326,10 +327,17 @@ void AttachGameDisplayComponent(Character *character) {
     game->retainedState = 0;
     MT7Node *const root = character->model;
     MT7Node *previous = 0;
-    MT7Node *node = root ? root->child : 0;
-    while (node && node->id != 255) {
-        previous = node;
-        node = node->sibling;
+    MT7Node *node = 0;
+    if (root) {
+        MT7Node *current = root->child;
+        while (current) {
+            if (current->id == 255) {
+                node = current;
+                break;
+            }
+            previous = current;
+            current = current->sibling;
+        }
     }
     game->inserted = node;
     if (node) {
@@ -394,14 +402,14 @@ void StageGameDisplayNode(GameDisplayWork *game, std::int32_t nodeId, const Vect
         return;
     GameDisplayEntry &entry = game->staged[game->stagedCount];
     entry.node = node;
-    std::memcpy(&entry.position.x, &position->x, sizeof(float));
-    std::memcpy(&entry.position.y, &position->y, sizeof(float));
-    std::memcpy(&entry.position.z, &position->z, sizeof(float));
+    entry.position.x = position->x;
+    entry.position.y = position->y;
+    entry.position.z = position->z;
     entry.alpha = alpha;
     if (scale) {
-        std::memcpy(&entry.scale.x, &scale->x, sizeof(float));
-        std::memcpy(&entry.scale.y, &scale->y, sizeof(float));
-        std::memcpy(&entry.scale.z, &scale->z, sizeof(float));
+        entry.scale.x = scale->x;
+        entry.scale.y = scale->y;
+        entry.scale.z = scale->z;
     } else {
         entry.scale.x = 1.0f;
         entry.scale.y = 1.0f;

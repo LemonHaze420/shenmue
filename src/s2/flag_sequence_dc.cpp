@@ -97,7 +97,7 @@ std::int32_t flagIsPlayerNearPoint(const FlagRecord *record);
 bool ryoCheckInRangeForFlag(const FlagRecord *record);
 std::int32_t LockFlagPlayerControl(std::int32_t mode);
 void shenMoveToFreeQuest();
-void FlagBranch(FlagRecord **record, std::int32_t condition);
+std::uint32_t FlagBranch(FlagRecord **record, std::int32_t condition);
 void flagResetNpcLoad();
 std::int32_t *FlagContextTable();
 FlagRecord *FlagRecordAt(std::int32_t *table, std::int32_t offset);
@@ -194,7 +194,6 @@ ShenPlayerData shenPlayerData;
 FlagRecord *g_selectedFlagCandidate;
 char systemManageSource[0x14];
 std::int32_t systemManageFrames;
-std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag);
 std::byte *g_flagDescriptorData = 0;
 std::uint16_t *g_flagWork;
 std::uint32_t g_flagCountOverride = 0;
@@ -500,7 +499,7 @@ void PrintFlagDefinition(std::int32_t flag, std::uint32_t mode) {
                                                                                                                                                 0x9fffffffU);
                 const std::int32_t stat = static_cast<std::int16_t>(operand >> 16);
                 shenmue_s2_event_DebugLogToScreen(
-                    "COUNTER[%d](%d)>=%d\n", stat, EV_GetPlayerFlag(PlayerFlagReadMode_Stat, stat), static_cast<std::int16_t>(operand));
+                    "COUNTER[%d](%d)>=%d\n", stat, EV_GetPlayerFlag(PlayerFlagReadMode_Stat, static_cast<std::int16_t>(stat)), static_cast<std::int16_t>(operand));
             }
             break;
         case StepRangeOp_LowerStat:
@@ -510,7 +509,7 @@ void PrintFlagDefinition(std::int32_t flag, std::uint32_t mode) {
                                                                                                                                                0x9fffffffU);
                 const std::int32_t stat = static_cast<std::int16_t>(operand >> 16);
                 shenmue_s2_event_DebugLogToScreen(
-                    "COUNTER[%d](%d)<%d\n", stat, EV_GetPlayerFlag(PlayerFlagReadMode_Stat, stat), static_cast<std::int16_t>(operand));
+                    "COUNTER[%d](%d)<%d\n", stat, EV_GetPlayerFlag(PlayerFlagReadMode_Stat, static_cast<std::int16_t>(stat)), static_cast<std::int16_t>(operand));
             }
             break;
         case 13:
@@ -1908,15 +1907,20 @@ void shenMoveToFreeQuest() {
     shenPlayerData.freeQuestActive = 1;
 }
 
-void FlagBranch(FlagRecord **record, std::int32_t condition) {
+// @verified - d
+std::uint32_t FlagBranch(FlagRecord **record, std::int32_t condition) {
     std::uint32_t count;
     if (*reinterpret_cast<std::int32_t *>(*record) < 0)
         condition ^= 1;
     if (condition)
         count = (*reinterpret_cast<std::uint32_t *>(*record) >> 8) & 0xffU;
-    else
-        count = (*reinterpret_cast<std::uint32_t *>(*record) << 1) >> 17;
+    else {
+        std::uint32_t packed = *reinterpret_cast<std::uint32_t *>(*record);
+        packed <<= 1;
+        count = packed >> 17;
+    }
     *record = reinterpret_cast<FlagRecord *>(reinterpret_cast<std::uint32_t *>(*record) + count);
+    return count;
 }
 
 std::int32_t *FlagContextTable() {

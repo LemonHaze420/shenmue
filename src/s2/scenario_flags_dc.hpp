@@ -89,7 +89,7 @@ void UpdateGameplayFlags();
 bool GetInternalFlag(std::int32_t flag);
 bool GetStoryFlag(std::int32_t flag);
 std::uint8_t GetScenarioByteStat(std::int32_t index);
-std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag);
+std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int32_t flag);
 void EV_SetPlayerFlag(PlayerFlagWriteMode mode, std::int32_t flag, std::int32_t value);
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 void ResetScenarioPersistentFlags();

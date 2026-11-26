@@ -7,14 +7,6 @@ namespace s2 {
 
 shen_name g_currentTaskName;
 
-void ExecuteTasks() {
-    for (;;) {
-        g_currentTaskName = static_cast<std::uint32_t>(HLib::CurrentTask->taskToken);
-        HLib::CurrentTask->activeCallback(HLib::CurrentTask->taskData);
-        HLib::CurrentTask = HLib::CurrentTask->nextInQueue;
-    }
-}
-
 } // namespace s2
 } // namespace shenmue
 

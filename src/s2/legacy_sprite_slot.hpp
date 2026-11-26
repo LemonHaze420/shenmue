@@ -12,7 +12,11 @@ namespace shenmue {
 namespace s2 {
 struct BorrowedLegacySpriteSlot {
     const std::uint16_t *rectangles;
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    std::int16_t slot;
+#else
     std::uint16_t slot;
+#endif
     std::int16_t texture;
     float inverseWidth;
     float inverseHeight;
@@ -32,6 +36,10 @@ bool RegisterBorrowedLegacySpriteSlot(std::int32_t texture, std::int32_t width, 
 #else
 bool RegisterBorrowedLegacySpriteSlot(std::int16_t texture, std::int32_t width, std::int32_t height, std::uint16_t slot, const std::uint16_t *rectangles);
 #endif
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+void ReleaseBorrowedLegacySpriteSlot(std::int32_t slot);
+#else
 void ReleaseBorrowedLegacySpriteSlot(std::uint16_t slot);
+#endif
 }
 }

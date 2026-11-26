@@ -18,7 +18,7 @@ struct FigurePoseControlPrefix {
 };
 typedef char Layout_character_state_flags_dc_0[(sizeof(FigurePoseControlPrefix) == 5) ? 1 : -1];
 typedef char Layout_character_state_flags_dc_1[(offsetof(FigurePoseControlPrefix, flags) == 4) ? 1 : -1];
-std::uint32_t figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction);
+void figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction);
 struct MotionWork;
 void figpToggleMotionworkFlag(Character *character, MotionWork *work);
 FigurePoseControlPrefix *EV_figpAssignFlagsFor(Character *character, std::uint8_t bitIndex, std::uint8_t enabled);

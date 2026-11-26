@@ -4099,7 +4099,7 @@ Character *EnqueueCharacterHandler(std::int8_t index, HLib::Task **outputTask) {
     character->tokenTree = 0;
     character->core = charaCore;
     character->collisionCheck = charaCollisionDistanceChecks;
-    character->applyScale = charaApplyScale;
+    character->applyScale = reinterpret_cast<CharacterUpdateCallback>(charaApplyScale);
     character->prepareForDraw = charaPrepareNodesForDraw;
     character->auxiliaryComponentStorage = 0;
     character->retainedComponentState[0] = -1;
@@ -5551,7 +5551,9 @@ void DrawImageModelSelection(Character *character, std::uint32_t flags) {
     callback(root, GetCharacterAlpha(character));
     callback(group, GetCharacterAlpha(character));
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-    DrawCharacterModelBranch(frame);
+    const float alpha = GetCharacterAlpha(character);
+    CharacterUpdateCallback drawBranch = reinterpret_cast<CharacterUpdateCallback>(DrawCharacterModelBranch);
+    drawBranch(frame, alpha);
 #else
     DrawCharacterModelBranch(frame, GetCharacterAlpha(character));
 #endif
@@ -5567,7 +5569,7 @@ void DrawImageModelSelection(Character *character, std::uint32_t flags) {
         callback(root, 1.0f);
         callback(group, 1.0f);
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-        DrawCharacterModelBranch(frame);
+        drawBranch(frame, 1.0f);
 #else
         DrawCharacterModelBranch(frame, 1.0f);
 #endif

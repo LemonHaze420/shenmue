@@ -29,7 +29,7 @@ typedef char LegacyCollectionWorkPageCheck[offsetof(LegacyCollectionWork, page) 
 void InitializeLegacyCollectionMenu();
 std::int32_t OpenLegacyCollectionMenu(std::int32_t mode);
 std::uint8_t UpdateLegacyCollectionMenu();
-void CloseLegacyCollectionMenu(std::int32_t force);
+std::int32_t CloseLegacyCollectionMenu(std::int32_t force);
 } } // namespace shenmue::s2
 
 #else

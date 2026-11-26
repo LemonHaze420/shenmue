@@ -871,7 +871,7 @@ void ST_LoadTitleFadeIn_Callback(void *) {
         if (g_loadTitleAlpha > 255)
             g_loadTitleAlpha = 255;
     }
-    HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, 0);
+    HLib::ExecuteCallbackNow(reinterpret_cast<void (*)(void *)>(ST_LoadTitleFadeIn_Main), 0);
 }
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
@@ -881,7 +881,7 @@ void ST_LoadTitleFadeOut_Callback(void *) {
     if (!(g_loadingFlag & 0x102U))
         g_loadTitleAlpha = static_cast<std::int16_t>(g_loadTitleAlpha - 8);
     if (g_loadTitleAlpha >= 0) {
-        HLib::ExecuteCallbackNow(ST_LoadTitleFadeIn_Main, 0);
+        HLib::ExecuteCallbackNow(reinterpret_cast<void (*)(void *)>(ST_LoadTitleFadeIn_Main), 0);
         return;
     }
     if (g_loadFloorTexture != -1)
@@ -1575,7 +1575,7 @@ void ST_LoadTitleFadeIn() {
     DoLoadStuff(0, false);
     g_loadTitleAlpha = 0;
     do {
-        reinterpret_cast<void (*)()>(ST_LoadTitleFadeIn_Main)();
+        ST_LoadTitleFadeIn_Main();
         dc::sdk::SubmitFrame();
         g_loadTitleAlpha = static_cast<std::int16_t>(g_loadTitleAlpha + 8);
     } while (g_loadTitleAlpha < 256);

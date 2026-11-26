@@ -881,6 +881,7 @@ void AllocateScenarioFreeTalkCharacter(Character *character) {
 }
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
+// @verified - d
 bool AttachScenarioFreeTalkCharacter(Character *character, const std::byte *source) {
     ScenarioFreeTalkCharacter *record = 0;
     bool result = false;
@@ -894,7 +895,8 @@ bool AttachScenarioFreeTalkCharacter(Character *character, const std::byte *sour
         record = static_cast<ScenarioFreeTalkCharacter *>(charFindComp(character, CHARACTER_FREE_TALK));
         if (record) {
             if (source) {
-                if (SHEN_NAME(SCNF) == *reinterpret_cast<const std::uint32_t *>(source))
+                const std::uint32_t token = *reinterpret_cast<const std::uint32_t *>(source);
+                if (token == SHEN_NAME(SCNF))
                     selected = source + 0x10;
                 else
                     selected = 0;
@@ -4683,7 +4685,7 @@ void AssignScenarioValue(const ScenarioValueOperand &operand, std::int32_t value
 }
 
 // @verified - d
-std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag) {
+std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int32_t flag) {
     ScenarioValueOperand operand;
     switch (mode) {
     case PlayerFlagReadMode_Internal:
@@ -4696,7 +4698,7 @@ std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag) {
         operand.mode = 4;
         break;
     }
-    operand.index = flag;
+    operand.index = static_cast<std::int16_t>(flag);
     return ResolveScenarioValue(operand);
 }
 

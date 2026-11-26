@@ -2385,13 +2385,21 @@ void InitializeLightRuntimeTables() {
 
 // @verified - d
 void SetLightRuntimeColour(std::uint32_t index, const Vector4 &colour) {
-    if (index >= SHENMUE_LIGHT_COUNT(g_lightRuntimeEntries))
-        return;
-    LightRuntimeEntry &light = g_lightRuntimeEntries[index];
-    light.vectors[0].x = colour.x;
-    light.vectors[0].y = colour.y < 0.00001f ? 0.0f : colour.y;
-    light.vectors[0].z = colour.z < 0.00001f ? 0.0f : colour.z;
-    light.vectors[1].x = colour.w < 0.00001f ? 0.0f : colour.w;
+    if (index < SHENMUE_LIGHT_COUNT(g_lightRuntimeEntries)) {
+        g_lightRuntimeEntries[index].vectors[0].x = colour.x;
+        if (colour.y < 0.00001f)
+            g_lightRuntimeEntries[index].vectors[0].y = 0.0f;
+        else
+            g_lightRuntimeEntries[index].vectors[0].y = colour.y;
+        if (colour.z < 0.00001f)
+            g_lightRuntimeEntries[index].vectors[0].z = 0.0f;
+        else
+            g_lightRuntimeEntries[index].vectors[0].z = colour.z;
+        if (colour.w < 0.00001f)
+            g_lightRuntimeEntries[index].vectors[1].x = 0.0f;
+        else
+            g_lightRuntimeEntries[index].vectors[1].x = colour.w;
+    }
 }
 
 #else
@@ -2411,7 +2419,7 @@ void SetLightRuntimeColour(std::uint32_t index, const Vector4 &colour) {
 
 // @verified - d
 void SetLightSceneIntensity(std::uint32_t index, float intensity) {
-    if (SHENMUE_LIGHT_FABS(intensity) < 0.0001f)
+    if ((intensity < 0.0f ? -intensity : intensity) < 0.0001f)
         intensity = 0.0f;
     if (index < SHENMUE_LIGHT_COUNT(g_lightRuntimeEntries))
         g_lightRuntimeEntries[index].vectors[1].y = intensity;
@@ -2526,8 +2534,14 @@ void ResetLightRuntimeEntry(std::uint32_t index) {
 
 // @verified - d
 void UpdateGlobalLighting(const Vector4 &colour) {
-    g_globalLighting = colour;
-    const Vector4 scaled = {colour.x, colour.y * 1.4f, colour.z * 1.4f, colour.w * 1.4f};
+    g_globalLighting.x = colour.x;
+    g_globalLighting.y = colour.y;
+    g_globalLighting.z = colour.z;
+    g_globalLighting.w = colour.w;
+    Vector4 scaled;
+    scaled.y = colour.y * 1.4f;
+    scaled.z = colour.z * 1.4f;
+    scaled.w = colour.w * 1.4f;
     dc::sdk::SetAmbientLight(&scaled);
     dc::sdk::SetMT7AmbientIntensity(dc::sdk::g_ambientLight.x);
 }
@@ -2546,7 +2560,10 @@ void UpdateGlobalLighting(const Vector4 &colour) {
 
 // @verified - d
 void GetGlobalLighting(Vector4 *colour) {
-    *colour = g_globalLighting;
+    colour->x = g_globalLighting.x;
+    colour->y = g_globalLighting.y;
+    colour->z = g_globalLighting.z;
+    colour->w = g_globalLighting.w;
 }
 
 #else

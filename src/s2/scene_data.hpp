@@ -48,7 +48,11 @@ std::byte *allocateInGlobalHeap(std::intptr_t size);
 void SetTaskHeapData(void *allocation);
 std::byte *AllocateLCDM();
 std::byte *LoadSystemTalk();
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+void InitializeWeatherParameters();
+#else
 bool InitializeWeatherParameters();
+#endif
 bool LoadWeatherConditionData();
 #if SHENMUE_S2_GCC295
 namespace FilepathGenMode {

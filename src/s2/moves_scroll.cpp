@@ -1070,9 +1070,10 @@ void InitializeEventWindowState() {
         const std::int8_t *const initial = initialMoveProficiencies[category];
         const std::int32_t count = counts[category];
         for (std::int32_t move = 0; move < 40; ++move) {
-            if (move < count)
-                proficiency[move] = initial[move];
-            else
+            if (move < count) {
+                std::int16_t *entry = proficiency + move;
+                *entry = initial[move];
+            } else
                 proficiency[move] = 0;
         }
     }
@@ -1360,7 +1361,8 @@ void ApplyMoveProficiencyUsage() {
         std::int16_t *const gains = moveTrainingGainTables[category];
         for (std::int16_t move = 0; move < 40; ++move) {
             std::int16_t value;
-            const std::int16_t previous = proficiency[move];
+            const std::int16_t *entry = proficiency + move;
+            const std::int16_t previous = *entry;
             if (category == 3)
                 value = static_cast<std::int16_t>(previous + gains[move] * category);
             else

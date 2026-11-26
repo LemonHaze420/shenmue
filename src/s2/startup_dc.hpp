@@ -12,7 +12,7 @@ namespace s2 {
 extern shen_name g_currentTaskName;
 void InitializeMemoryAndHLib();
 void StartupNullsub();
-void ExecuteTasks() __attribute__((noreturn));
+void ExecuteTasks();
 
 } } // namespace shenmue::s2
 

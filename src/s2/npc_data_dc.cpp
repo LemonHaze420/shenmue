@@ -29,13 +29,14 @@ void ResetNpcScheduleSeeds();
 
 void ClearNpcScheduleSeeds();
 
+NpcFileState g_npcFileState;
+
+static const char *npcDefaultBinaryFilenames[5] = {"NPC.BIN", "NPC.BIN", "NPC.BIN", "NPC_YUAN.BIN", "NPC.BIN"};
+static const char *npcAreaBinaryFilenames[6] = {"NPC.BIN", "NPC.BIN", "NPC.BIN", "NPC_Q100.BIN", "NPC_KRN1.BIN", 0};
+
 std::byte *npcHumanIndex = SHENMUE_NPC_NULL;
 
 NpcHumanPakSlot *npcHumanSlots = SHENMUE_NPC_NULL;
-
-std::byte *npcBinaryStorage = SHENMUE_NPC_NULL;
-
-std::uint32_t npcBinaryStorageSize = 0;
 
 std::byte *npcEntryStorage = SHENMUE_NPC_NULL;
 
@@ -44,10 +45,6 @@ std::byte *npcAreaRouteStore = SHENMUE_NPC_NULL;
 std::uint32_t npcNewLoadState = 0;
 
 shen_name npcScheduleSeedNames[2];
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-char npcScheduleFilename[32] = {};
-#endif
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 const Matrix4x4 *npcMotionClipFrames[8] = {};
@@ -115,22 +112,6 @@ NpcRouteStateContextPrefix *npcActiveRouteContext;
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 HLib::Task *npcPendingRegistryTask = 0, *npcRegistryRetainedTask = 0;
-#endif
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-std::int32_t npcScheduleAct;
-#endif
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-shen_name npcScheduleArea;
-#endif
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-std::uint32_t npcScheduleVersion = 0, npcScheduleFlags = 0;
-#endif
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-std::byte *npcScheduleOriginData = 0, *npcScheduleEntryData = 0;
 #endif
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
@@ -207,8 +188,8 @@ HLib::Task *npc_Callback_Enqueue(std::int8_t index, std::int32_t act, shen_name 
     npcHumansReady = 0;
     EV_NPC_NewLoadSw(0);
     npcPendingRegistryTask = HLib::EnqueueTaskWithoutParameter(NpcRegistryTask_Callback, index, 2, SHEN_NAME4('N', 'P', 'C', 'T'));
-    npcScheduleAct = act;
-    npcScheduleArea = area;
+    g_npcFileState.act = act;
+    g_npcFileState.area = area;
     npcSetupHumans();
     if (area != SHEN_NAME4('0', '0', '1', '5') && area != SHEN_NAME4('0', '1', '3', '8')) {
         switch (area & 0xff) {
@@ -230,8 +211,8 @@ HLib::Task *npc_Callback_Enqueue(std::int8_t index, std::int32_t act, shen_name 
 // @verified - d
 void ResetNpcRouteOrigin() {
     npcRouteOrigin.x = npcRouteOrigin.z = 0.0f;
-    const char *const data = reinterpret_cast<const char *>(npcScheduleOriginData);
-    const char area = reinterpret_cast<const char *>(&npcScheduleArea)[0];
+    const char *const data = reinterpret_cast<const char *>(g_npcFileState.origins);
+    const char area = reinterpret_cast<const char *>(&g_npcFileState.area)[0];
     for (std::int32_t index = 0; index < 8; ++index) {
         if (data[index] == area) {
             const float *const points = reinterpret_cast<const float *>(data + 8);
@@ -249,35 +230,38 @@ void LoadCurrentNpcSchedule(const char *filename, std::int32_t loadResources) {
     if (!loadResources)
         EV_ResetFreeTalkFlags();
     npcScheduleFloor = static_cast<std::int32_t>(GetQronNextStream());
-    if (!ReadNPCArea(npcScheduleArea, loadResources, filename)) {
-        ResetNpcRouteOrigin();
-        if (!(npcScheduleFlags & 1U)) {
-            ProjectNpcRouteHeights(npcRouteNodes);
-            RebuildNpcRouteLanes(npcRouteNodes, 1, 8);
+    if (ReadNPCArea(g_npcFileState.area, loadResources, filename)) {
+        g_npcFileState.version = g_npcFileState.binaryWords[0];
+        g_npcFileState.flags = g_npcFileState.binaryWords[1];
+        if (g_npcFileState.version == 4) {
+            npcScheduleRecordCount = g_npcFileState.binaryWords[2];
+            g_npcFileState.records = reinterpret_cast<std::byte **>(
+                g_npcFileState.binaryStorage + g_npcFileState.binaryWords[3]);
+            npcScheduleAreaPointCount = g_npcFileState.binaryWords[4];
+            g_npcFileState.points = reinterpret_cast<NpcAreaPoint *>(
+                g_npcFileState.binaryStorage + g_npcFileState.binaryWords[5]);
+            npcScheduleRouteCount = g_npcFileState.binaryWords[6];
+            g_npcFileState.routes = reinterpret_cast<NpcRouteSpline *>(
+                g_npcFileState.binaryStorage + g_npcFileState.binaryWords[7]);
+            g_npcFileState.origins = g_npcFileState.binaryStorage + 0x20;
+            g_npcFileState.resetGroups = reinterpret_cast<NpcRouteResetGroupHeader *>(
+                g_npcFileState.binaryStorage + g_npcFileState.binaryWords[0x1a]);
+            g_npcFileState.entries = g_npcFileState.binaryStorage + g_npcFileState.binaryWords[0x1b];
         }
-        RebuildNpcAreaPointGround(npcAreaPoints);
-        RebuildNpcRuntimeAfterReload();
+        ResetNpcRouteOrigin();
+        InitializeNpcRouteTable(g_npcFileState.routes, g_npcFileState.flags & 1U);
+        InitializeNpcAreaPointTable(g_npcFileState.points);
+        RegisterAuthoredNpcEntries(g_npcFileState.records, g_npcFileState.routes);
     } else {
-        const std::uint32_t *const header = reinterpret_cast<const std::uint32_t *>(npcBinaryStorage);
-        npcScheduleVersion = header[0];
-        npcScheduleFlags = header[1];
-        if (npcScheduleVersion == 4) {
-            npcScheduleRecordCount = header[2];
-            npcScheduleRecords = reinterpret_cast<std::byte **>(npcBinaryStorage + header[3]);
-            npcScheduleAreaPointCount = header[4];
-            npcAreaPoints = reinterpret_cast<NpcAreaPoint *>(npcBinaryStorage + header[5]);
-            npcScheduleRouteCount = header[6];
-            npcRouteNodes = reinterpret_cast<NpcRouteSpline *>(npcBinaryStorage + header[7]);
-            npcScheduleOriginData = npcBinaryStorage + 0x20;
-            npcRouteResetGroup = reinterpret_cast<NpcRouteResetGroupHeader *>(npcBinaryStorage + header[0x1a]);
-            npcScheduleEntryData = npcBinaryStorage + header[0x1b];
-        }
         ResetNpcRouteOrigin();
-        InitializeNpcRouteTable(npcRouteNodes, npcScheduleFlags & 1U);
-        InitializeNpcAreaPointTable(npcAreaPoints);
-        RegisterAuthoredNpcEntries(npcScheduleRecords, npcRouteNodes);
+        if ((g_npcFileState.flags & 1U) == 0) {
+            ProjectNpcRouteHeights(g_npcFileState.routes);
+            RebuildNpcRouteLanes(g_npcFileState.routes, 1, 8);
+        }
+        RebuildNpcAreaPointGround(g_npcFileState.points);
+        RebuildNpcRuntimeAfterReload();
     }
-    InitializeNpcRouteResetGroups(npcRouteResetGroup);
+    InitializeNpcRouteResetGroups(g_npcFileState.resetGroups);
 }
 #endif
 
@@ -532,16 +516,16 @@ std::int32_t ReadNPCArea(shen_name area, std::int32_t loadResources, const char 
     }
     changed = 0;
     if (!selected) {
-        if (std::strcmp(npcScheduleFilename, kNpcBinaryFilenames[g_loadedActNumber])) {
-            shenLoadFile(directory, kNpcBinaryFilenames[g_loadedActNumber], npcBinaryStorage, npcBinaryStorageSize);
-            std::strcpy(npcScheduleFilename, kNpcBinaryFilenames[g_loadedActNumber]);
+        if (std::strcmp(g_npcFileState.filename, npcAreaBinaryFilenames[g_loadedActNumber])) {
+            shenLoadFile(directory, npcAreaBinaryFilenames[g_loadedActNumber], g_npcFileState.binaryStorage, g_npcFileState.capacity);
+            std::strcpy(g_npcFileState.filename, npcAreaBinaryFilenames[g_loadedActNumber]);
             changed = 1;
         }
         npcPoolTarget = 32;
     } else if (version == 4) {
-        if (std::strcmp(npcScheduleFilename, profile->filename)) {
-            shenLoadFile(directory, profile->filename, npcBinaryStorage, npcBinaryStorageSize);
-            std::strcpy(npcScheduleFilename, profile->filename);
+        if (std::strcmp(g_npcFileState.filename, profile->filename)) {
+            shenLoadFile(directory, profile->filename, g_npcFileState.binaryStorage, g_npcFileState.capacity);
+            std::strcpy(g_npcFileState.filename, profile->filename);
             changed = 1;
         }
         npcPoolTarget = profile->maximumLiveCount;
@@ -621,9 +605,9 @@ void InitializeNpcEntryStorage() {
 bool npcInitDataInternal() {
     char directory[64];
     std::sprintf(directory, "scene/%02d/npc", g_loadedActNumber);
-    npcBinaryStorageSize = shenOpenFile(directory, kNpcBinaryFilenames[g_loadedActNumber]);
-    npcBinaryStorage = static_cast<std::byte *>(HLib::AllocateStaticOrDynamicBlock(npcBinaryStorageSize, NPC_BINARY_MEMORY));
-    HLib::SetTaskDataMotionFlag(npcBinaryStorage);
+    g_npcFileState.capacity = shenOpenFile(directory, npcDefaultBinaryFilenames[g_loadedActNumber]);
+    g_npcFileState.binaryStorage = static_cast<std::byte *>(HLib::AllocateStaticOrDynamicBlock(g_npcFileState.capacity, NPC_BINARY_MEMORY));
+    HLib::SetTaskDataMotionFlag(g_npcFileState.binaryStorage);
     InitializeNpcEntryStorage();
     return InitializeNpcAreaRouteStore();
 }
@@ -650,7 +634,7 @@ std::int32_t npcCancelHumanPak(shen_name name) {
 // @verified - d
 void ResetNpcLoadState() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-    npcScheduleFilename[0] = 0;
+    g_npcFileState.filename[0] = 0;
 #else
     npcNewLoadState = 0;
 #endif
@@ -658,15 +642,17 @@ void ResetNpcLoadState() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 char *GetNpcScheduleFilename() {
-    return npcScheduleFilename;
+    return g_npcFileState.filename;
 }
 
 std::uint32_t GetNpcScheduleVersion() {
-    return npcScheduleVersion;
+    NpcFileState *state = &g_npcFileState;
+    return state->version;
 }
 
 std::byte *GetNpcScheduleEntryData() {
-    return npcScheduleEntryData;
+    NpcFileState *state = &g_npcFileState;
+    return state->entries;
 }
 #endif
 

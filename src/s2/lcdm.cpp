@@ -39,18 +39,17 @@ std::byte *g_lcdMemory;
 const std::uint8_t *FindLcdmImageData(const void *resource, const char *name) {
     const std::byte *const base = reinterpret_cast<const std::byte *>(resource);
     const LcdmImageDirectory *const directory = reinterpret_cast<const LcdmImageDirectory *>(resource);
+    std::int32_t remaining = directory->imageCount;
     const LcdmImageEntry *entry = reinterpret_cast<const LcdmImageEntry *>(base + directory->tableOffset);
-    if (!directory->imageCount)
-        return 0;
-    std::uint32_t first;
-    std::memcpy(&first, name, sizeof(first));
-    for (std::uint32_t remaining = directory->imageCount; remaining; --remaining, ++entry) {
-        if (entry->name[0] == first) {
-            std::uint32_t second;
-            std::memcpy(&second, name + 4, sizeof(second));
-            if (entry->name[1] == second)
+    const std::uint32_t *const key = reinterpret_cast<const std::uint32_t *>(name);
+    --remaining;
+    if (remaining != -1) {
+        do {
+            if (entry->name[0] == key[0] && entry->name[1] == key[1])
                 return reinterpret_cast<const std::uint8_t *>(base + entry->dataOffset);
-        }
+            --remaining;
+            ++entry;
+        } while (remaining != -1);
     }
     return 0;
 }

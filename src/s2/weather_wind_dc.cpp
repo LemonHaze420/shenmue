@@ -839,12 +839,10 @@ std::int32_t WriteWindowCharacter(WindowSlot *window, std::uint16_t character, s
         } else
             result = WriteWindowGlyphByte(window, 0, static_cast<std::uint8_t>(character));
     } else {
-        std::uint16_t (*convert)(std::uint16_t);
         if (encodingMode == 1)
-            convert = StripWindowCharacterHighBits;
+            character = StripWindowCharacterHighBits(character);
         else
-            convert = ConvertWindowShiftJisCharacter;
-        character = convert(character);
+            character = ConvertWindowShiftJisCharacter(character);
         result = WriteWindowGlyphByte(window, 1, static_cast<std::uint8_t>(character >> 8U));
         if (result)
             return result;

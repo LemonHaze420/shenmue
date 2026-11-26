@@ -464,23 +464,27 @@ std::int32_t InitializeNewGameFromSaveSlot() {
 // @verified - d
 std::int32_t LoadGameFromSaveSlot(std::int32_t slot, std::int32_t restorePlacement) {
     const std::uint32_t configuration = g_nativePlayerStats.gameConfigurationFlags;
-    if (slot > 2)
+    const std::uint32_t index = slot;
+    if (static_cast<std::int32_t>(index) > 2)
         return 0;
     ResetGameForSaveLoad(1);
     ReadSaveDataSection(3);
-    if (WaitForBackupOperation(0) != 0 || ReadSaveDataSection(slot) != 0) {
+    std::int32_t result = WaitForBackupOperationPort0();
+    if (result == 0)
+        result = ReadSaveDataSection(static_cast<std::int32_t>(index));
+    if (result == 0) {
+        SetRetainedSaveSelection(slot);
+        RestoreGameSaveSlot(index);
+        SetScenarioSaveRestoreState(1);
+        if (restorePlacement)
+            ActivateSavedAreaJumpLocation();
+        SetUnusedCtrlFlag(1);
         g_nativePlayerStats.gameConfigurationFlags = configuration;
-        return 0;
+        RestoreMagicRoomModelVariant();
+        return 1;
     }
-    SetRetainedSaveSelection(slot);
-    RestoreGameSaveSlot(static_cast<std::uint32_t>(slot));
-    SetScenarioSaveRestoreState(1);
-    if (restorePlacement)
-        ActivateSavedAreaJumpLocation();
-    SetUnusedCtrlFlag(1);
     g_nativePlayerStats.gameConfigurationFlags = configuration;
-    RestoreMagicRoomModelVariant();
-    return 1;
+    return 0;
 }
 
 } // namespace s2

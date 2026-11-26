@@ -91,6 +91,21 @@ void RotateZSinCos(float sine, float cosine) {
 }
 
 
+#if SHENMUE_IS_S2
+void RotateXRadians(float angle) {
+    const float sine = dc::sdk::SinRadians(angle);
+    const float cosine = dc::sdk::CosRadians(angle);
+    RotateXSinCos(sine, cosine);
+}
+
+void RotateYRadians(float angle) {
+    const float sine = dc::sdk::SinRadians(angle);
+    const float cosine = dc::sdk::CosRadians(angle);
+    RotateYSinCos(sine, cosine);
+}
+
+#endif
+
 // @verified - d
 void CalcCameraTransform(const Vector4 &eye, const Vector4 &target, std::int16_t zAngle) {
     if (static_cast<std::uint16_t>(zAngle))

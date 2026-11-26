@@ -623,12 +623,16 @@ void OpenWfScrollWidget() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-void CloseWfScrollMenu(std::int32_t force) {
-    if (!force || !GetwfMainControlState() || !wfMainControl)
-        return;
-    NativeWfTaskData *const wf = static_cast<NativeWfTaskData *>(HLib::GetTaskParameter(wfMainControl));
+std::int32_t CloseWfScrollMenu(std::int32_t force) {
+    if (!force || !GetwfMainControlState())
+        return 1;
+    HLib::Task *const task = wfMainControl;
+    if (!task)
+        return 1;
+    NativeWfTaskData *const wf = static_cast<NativeWfTaskData *>(HLib::GetTaskParameter(task));
     if (wf)
         ReleaseWf(*wf);
+    return 1;
 }
 
 #else

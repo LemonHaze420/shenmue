@@ -1108,14 +1108,13 @@ void CaptureNpcScheduleSeeds(std::span<std::byte, NpcScheduleSeedBufferSize> des
 
 const std::byte *FindNextNpcTimedCommand(const std::byte *cursor) {
     const std::uint32_t *command = reinterpret_cast<const std::uint32_t *>(cursor);
-    const std::byte *result = 0;
-    for (; *command < 56U; command += npcOpcodeSizeDwords[*command]) {
-        if (*command == 1) {
-            result = reinterpret_cast<const std::byte *>(command);
+    for (; ; command += npcOpcodeSizeDwords[*command]) {
+        if (*command >= 56U)
+            return 0;
+        if (*command == 1)
             break;
-        }
     }
-    return result;
+    return reinterpret_cast<const std::byte *>(command);
 }
 
 #endif

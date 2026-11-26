@@ -625,13 +625,13 @@ std::int32_t UpdateFullMapMenu();
 void CloseFullMapMenu();
 std::int32_t OpenLegacyCollectionMenu(std::int32_t mode);
 std::uint8_t UpdateLegacyCollectionMenu();
-void CloseLegacyCollectionMenu(std::int32_t force);
+std::int32_t CloseLegacyCollectionMenu(std::int32_t force);
 std::int32_t OpenNaviWindow();
 std::int32_t UpdateNaviWindow();
 std::int32_t CloseNaviWindow(std::int32_t force);
 std::int32_t OpenWfScrollMenu();
 std::int32_t GetwfMainControlState();
-void CloseWfScrollMenu(std::int32_t force);
+std::int32_t CloseWfScrollMenu(std::int32_t force);
 bool UpdateWazamakiMenu();
 void CloseWazamakiMenu();
 
@@ -640,9 +640,9 @@ static const NativeItemSelectorActionCallbacks itemSelectorActions[12] = {
     {OpenFullMapMenu, UpdateFullMapMenu, CloseFullMapMenu, (void (*)(std::int32_t))CancelSelectorFullMap},
     {BeginSelectorItemLook, UpdateSelectorItemLook, 0, CancelSelectorItemLook}, {BeginSelectorSave, UpdateSelectorSave, CompleteSelectorSave, 0},
     {BeginSelectorEasyOptions, UpdateSelectorEasyOptions, 0, 0}, {0, UpdateSelectorMoves, 0, (void (*)(std::int32_t))CancelSelectorMoves},
-    {BeginSelectorCollection, UpdateSelectorCollection, 0, CloseLegacyCollectionMenu}, {BeginSelectorPhotos, UpdateSelectorPhotos, 0, 0},
+    {BeginSelectorCollection, UpdateSelectorCollection, 0, (void (*)(std::int32_t))CloseLegacyCollectionMenu}, {BeginSelectorPhotos, UpdateSelectorPhotos, 0, 0},
     {OpenNaviWindow, UpdateNaviWindow, 0, (void (*)(std::int32_t))CloseNaviWindow}, {BeginSelectorPawn, UpdateSelectorPawn, 0, 0},
-    {OpenWfScrollMenu, GetwfMainControlState, 0, CloseWfScrollMenu}};
+    {OpenWfScrollMenu, GetwfMainControlState, 0, (void (*)(std::int32_t))CloseWfScrollMenu}};
 
 bool ParseGuiPtx(TextureChunk *texture, std::int32_t height, std::int32_t width, std::uint32_t idLow, std::uint32_t idHigh, std::uint32_t format);
 std::int32_t ReplacePtxTexture(std::int32_t index, const TextureChunk *texture);

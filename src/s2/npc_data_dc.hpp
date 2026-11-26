@@ -33,16 +33,9 @@ static const std::uint32_t NPC_BINARY_MEMORY = SHEN_NAME4('N', 'P', 'C', 'B'), N
 static const std::uint32_t NPC_AREA_ROUTE_MEMORY = SHEN_NAME4('S', 'T', 'R', 'L');
 static const std::size_t kNpcEntryMemoryBytes = 0x73eac;
 static const std::size_t kNpcAreaRouteMemoryBytes = 0x2000;
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-static const char *const kNpcBinaryFilenames[6] = {"NPC.BIN", "NPC.BIN", "NPC.BIN", "NPC_Q100.BIN", "NPC_KRN1.BIN", 0};
-#else
-static const char *const kNpcBinaryFilenames[6] = {"NPC.BIN", "NPC.BIN", "NPC.BIN", "NPC_YUAN.BIN", "NPC.BIN", "NPC.BIN"};
-#endif
 
 extern std::byte *npcHumanIndex;
 extern NpcHumanPakSlot *npcHumanSlots;
-extern std::byte *npcBinaryStorage;
-extern std::uint32_t npcBinaryStorageSize;
 extern std::byte *npcEntryStorage;
 extern std::byte *npcAreaRouteStore;
 extern std::uint32_t npcNewLoadState;
@@ -92,7 +85,6 @@ static const std::uint32_t NPC_AREA_PROFILE_MEMORY = SHEN_NAME4('N', 'P', 'C', '
 static const std::uint32_t NPC_MOTION_CLIP_MEMORY = SHEN_NAME4('N', 'P', 'C', 'M');
 static const std::uint32_t NPC_BASE_MOTION_PROP_MEMORY = SHEN_NAME4('N', 'P', 'C', 'P');
 static const std::uint32_t NPC_PROFILE_MOTION_PROP_MEMORY = SHEN_NAME4('N', 'P', 'C', 'p');
-extern char npcScheduleFilename[32];
 extern const Matrix4x4 *npcMotionClipFrames[8];
 extern std::uint32_t npcMotionClipBoneCounts[8], npcMotionClipFrameCounts[8];
 extern std::uint16_t npcMotionClipFallbackAnimations[8];
@@ -421,8 +413,6 @@ void LoadNPCFiles(NpcRouteSpline *routes);
 HLib::Task *npc_Callback_Enqueue(std::int8_t index, std::int32_t act, shen_name area);
 void NPC_Route_Control();
 void LoadCurrentNpcSchedule(const char *filename, std::int32_t loadResources);
-extern std::uint32_t npcScheduleVersion, npcScheduleFlags;
-extern std::byte *npcScheduleOriginData, *npcScheduleEntryData;
 char *GetNpcScheduleFilename();
 std::uint32_t GetNpcScheduleVersion();
 std::byte *GetNpcScheduleEntryData();
@@ -571,6 +561,44 @@ void InitializeNpcEntryStorage();
 bool InitializeNpcAreaRouteStore();
 void ResetNpcLoadState();
 void ResetNpcScheduleSeeds();
+
+struct NpcAreaPoint;
+
+struct NpcFileState {
+    std::byte retained00[4];
+    union {
+        std::byte *binaryStorage;
+        std::uint32_t *binaryWords;
+    };
+    NpcRouteSpline *routes;
+    NpcAreaPoint *points;
+    std::byte **records;
+    std::byte *origins;
+    NpcRouteResetGroupHeader *resetGroups;
+    std::byte *entries;
+    std::int32_t act;
+    shen_name area;
+    char filename[32];
+    std::uint32_t capacity;
+    std::uint32_t version;
+    std::uint32_t flags;
+};
+SHENMUE_NPC_LAYOUT(sizeof(NpcFileState) == 0x54);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, binaryStorage) == 4);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, binaryWords) == 4);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, routes) == 8);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, points) == 0xc);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, records) == 0x10);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, origins) == 0x14);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, resetGroups) == 0x18);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, entries) == 0x1c);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, act) == 0x20);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, area) == 0x24);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, filename) == 0x28);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, capacity) == 0x48);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, version) == 0x4c);
+SHENMUE_NPC_LAYOUT(offsetof(NpcFileState, flags) == 0x50);
+extern NpcFileState g_npcFileState;
 
 } // namespace s2
 } // namespace shenmue

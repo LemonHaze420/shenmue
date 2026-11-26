@@ -244,7 +244,7 @@ void TMNT_Callback(Character *character, void *data) {
 
 // @verified - d
 void DrawTimedNodeModel(const MT7Node *node, float alpha) {
-    charaApplyScale(node, alpha);
+    charaApplyScale(node);
 }
 
 // @verified - d

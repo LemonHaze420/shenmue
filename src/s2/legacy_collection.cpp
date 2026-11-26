@@ -301,7 +301,7 @@ static std::int32_t NavigateLegacyCollection(LegacyCollectionWindow &window, std
 static void UpdateLegacyCollectionInput();
 static void CompleteLegacyCollection();
 void InitializeLegacyCollectionMenu();
-void CloseLegacyCollectionMenu(std::int32_t force);
+std::int32_t CloseLegacyCollectionMenu(std::int32_t force);
 std::int32_t OpenLegacyCollectionMenu(std::int32_t mode);
 std::uint8_t UpdateLegacyCollectionMenu();
 #else
@@ -568,11 +568,12 @@ void InitializeLegacyCollectionMenu() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-void CloseLegacyCollectionMenu(std::int32_t force) {
+std::int32_t CloseLegacyCollectionMenu(std::int32_t force) {
     if (!IsLegacyCollectionMenuOpen() || !force)
-        return;
+        return 0;
     ResetLegacyCollectionLabel();
     InitializeLegacyCollectionMenu();
+    return 1;
 }
 
 #else

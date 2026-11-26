@@ -100,8 +100,10 @@ void CheckHelpIcon(std::uint32_t visible, std::uint32_t selected, CheckHelpIconO
 
 // @verified - d
 std::uint32_t GetPersistentHelpIconFlags(std::uint32_t index) {
-    if (index <= 1)
-        return (&helpIconPersistent.visible)[index];
+    if (index <= 1) {
+        const std::uint32_t *flags = &helpIconPersistent.visible;
+        return flags[index];
+    }
     return 0;
 }
 

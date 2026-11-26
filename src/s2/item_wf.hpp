@@ -55,7 +55,7 @@ void wf_MainControl_Callback(void *parameter);
 std::int32_t GetwfMainControlState();
 std::int32_t OpenWfScrollMenu();
 void OpenWfScrollWidget();
-void CloseWfScrollMenu(std::int32_t force);
+std::int32_t CloseWfScrollMenu(std::int32_t force);
 void StopWfScrollMenu();
 void LearnWfScroll(std::int32_t index);
 void InspectWfScroll(std::int32_t index);

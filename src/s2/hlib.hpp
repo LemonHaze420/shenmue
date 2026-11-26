@@ -186,7 +186,11 @@ std::uint32_t GetTaskDataName(const void *taskData);
 std::size_t GetTaskDataSize(const void *taskData);
 bool ShrinkTaskData(void *taskData, std::size_t size);
 
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+void InitializeTasks(TaskCallback callback);
+#else
 Task *InitializeTasks(TaskCallback callback);
+#endif
 void MainLoop();
 #if SHENMUE_IS_DC
 Task *EnqueueTaskWithoutParameter(TaskCallback callback, std::int8_t nextFunctionIndex, std::int8_t taskFlags, std::int32_t taskToken);

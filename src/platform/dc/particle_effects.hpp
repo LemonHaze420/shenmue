@@ -70,6 +70,10 @@ static const float kFftPhaseTurn = 6.283185005187988f;
 static const float kFftPhasePi = 3.141592502593994f;
 static const float kFftTwiddleStep = 0.39269906282424927f;
 #endif
+#if SHENMUE_IS_S2
+#define SHENMUE_DC_FFT_SINCOS(phase, sine, cosine) \
+    asm("fsca fpul,dr4" : "=f"(sine), "=f"(cosine) : "y"(static_cast<std::int32_t>(((phase) * 65536.0f) / ::shenmue::dc::sdk::kFftPhaseTurn)))
+#endif
 static const float kFftInverse16Scale = 0.0625f;
 #if SHENMUE_IS_S1 || SHENMUE_IS_S2
 static const std::int32_t kFftPhaseModes[8][8] = {{0, 1, 1, 1, 2, 2, 2, 2}, {1, 2, 2, 2, 2, 2, 2, 2}, {1, 2, 2, 2, 2, 2, 2, 2}, {1, 2, 2, 2, 2, 2, 2, 2},

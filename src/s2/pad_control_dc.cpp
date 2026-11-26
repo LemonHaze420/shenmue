@@ -29,14 +29,13 @@ void Queue_PadControlTask(std::int8_t nextFunctionIndex) {
 // @verified - d
 void PadControl_Callback(void *data) {
     PadControlTaskData &control = *static_cast<PadControlTaskData *>(data);
-    for (std::size_t rangeIndex151 = 0; rangeIndex151 < sizeof(control.entries) / sizeof((control.entries)[0]); ++rangeIndex151) {
-        PadControlEntry &entry = (control.entries)[rangeIndex151];
-
-        if (entry.flags & 1U) {
-            if (entry.flags & 2U)
-                std::memcpy(&entry.input, &g_inputBuffer[0], sizeof(entry.input));
-            else
-                ResetProcessedInput(entry.input);
+    for (std::int32_t index = 0; index < 16; ++index) {
+        if (control.entries[index].flags & 1U) {
+            if (control.entries[index].flags & 2U) {
+                PadControlEntry *entry = control.entries + index;
+                std::memcpy(&entry->input, &g_inputBuffer[0], sizeof(entry->input));
+            } else
+                ResetProcessedInput(control.entries[index].input);
         }
     }
 }
@@ -57,18 +56,15 @@ void ResetProcessedInput(LegacyInputSlot &input) {
 // @verified - d
 PadControlEntry *AllocatePadControlEntry() {
     PadControlTaskData *const control = static_cast<PadControlTaskData *>(HLib::GetTaskParameter(g_padControlTask));
-    std::size_t index = 0;
-    while (index < 16 && (control->entries[index].flags & 1U))
-        ++index;
-    std::byte *const memory = reinterpret_cast<std::byte *>(control) + index * sizeof(PadControlEntry);
-    std::uint32_t flags;
-    std::memcpy(&flags, memory, sizeof(flags));
-    flags |= 1U;
-    std::memcpy(memory, &flags, sizeof(flags));
-    PadControlEntry *const entry = reinterpret_cast<PadControlEntry *>(memory);
-    entry->input.held = 0;
-    ResetProcessedInput(entry->input);
-    return entry;
+    std::int32_t index;
+    for (index = 0; index < 16; ++index) {
+        if ((control->entries[index].flags & 1U) == 0)
+            break;
+    }
+    control->entries[index].flags |= 1U;
+    control->entries[index].input.held = 0;
+    ResetProcessedInput(control->entries[index].input);
+    return &control->entries[index];
 }
 
 // @verified - d

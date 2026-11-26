@@ -450,8 +450,8 @@ extern "C" void __attribute__((renesas)) shenmue_s2_event_plymAdvanceTime(std::u
 namespace shenmue {
 namespace s2 {
 
-std::uint32_t InstructionAssignMotScaleAndDir(Character *character, std::uint8_t scale, std::uint8_t direction) {
-    return figpAssignMotScaleAndDirFor(character, scale, direction);
+void InstructionAssignMotScaleAndDir(Character *character, std::uint8_t scale, std::uint8_t direction) {
+    figpAssignMotScaleAndDirFor(character, scale, direction);
 }
 
 std::uint8_t *InstructionAssignFigureMode(Character *character, std::uint8_t mode) {

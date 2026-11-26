@@ -667,54 +667,72 @@ float GetCinemaBarHeight(HLib::Task *task) {
 
 // @verified - d
 void WaitForNextTask_0(HLib::Task *filmTask, std::int32_t mode, std::uint32_t durationFrames) {
-
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-    ScreenFilmColourRequest request = {};
+    ScreenFilmColourRequest request;
     request.durationFrames = SHENMUE_FILM_SIGNED_FRAMES(durationFrames);
-#endif
-
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
+    switch (mode) {
+    case 2:
+        request.start[0] = 255;
+        request.start[1] = 255;
+        request.start[2] = 255;
+        request.start[3] = 255;
+        request.target[0] = 0;
+        request.target[1] = 255;
+        request.target[2] = 255;
+        request.target[3] = 255;
+        break;
+    case 3:
+        request.start[0] = 0;
+        request.start[1] = 255;
+        request.start[2] = 255;
+        request.start[3] = 255;
+        request.target[0] = 255;
+        request.target[1] = 255;
+        request.target[2] = 255;
+        request.target[3] = 255;
+        break;
+    case 0:
+        request.start[0] = 255;
+        request.start[1] = 0;
+        request.start[2] = 0;
+        request.start[3] = 0;
+        request.target[0] = 0;
+        request.target[1] = 0;
+        request.target[2] = 0;
+        request.target[3] = 0;
+        break;
+    case 1:
+    default:
+        request.start[0] = 0;
+        request.start[1] = 0;
+        request.start[2] = 0;
+        request.start[3] = 0;
+        request.target[0] = 255;
+        request.target[1] = 0;
+        request.target[2] = 0;
+        request.target[3] = 0;
+        break;
+    }
+#else
     ScreenFilmColourRequest request{};
     request.durationFrames = std::bit_cast<std::int32_t>(durationFrames);
-#endif
     switch (mode) {
     case 0:
         request.start[0] = 255;
         break;
     case 2:
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-        for (unsigned i = 0; i < 4; ++i)
-            request.start[i] = 255;
-        request.target[0] = 0;
-        for (unsigned i = 1; i < 4; ++i)
-            request.target[i] = 255;
-#endif
-
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
         request.start = {255, 255, 255, 255};
         request.target = {0, 255, 255, 255};
-#endif
         break;
     case 3:
-
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-        request.start[0] = 0;
-        for (unsigned i = 1; i < 4; ++i)
-            request.start[i] = 255;
-        for (unsigned i = 0; i < 4; ++i)
-            request.target[i] = 255;
-#endif
-
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
         request.start = {0, 255, 255, 255};
         request.target = {255, 255, 255, 255};
-#endif
         break;
     default:
         request.target[0] = 255;
         break;
     }
+#endif
     WaitForNextTask(filmTask, request, 0);
 }
 

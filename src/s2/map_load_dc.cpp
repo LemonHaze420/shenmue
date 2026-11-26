@@ -648,12 +648,11 @@ void LoadPROPs(std::int32_t act, shen_name area) {
     char filename[16];
     std::memcpy(filename, "PROP.MT7", sizeof("PROP.MT7"));
     std::int32_t index = 0;
-    while (shenOpenFile(directory, filename)) {
+    while (shenFileExists(directory, filename)) {
         LoadPROP(directory, filename);
         ++index;
-        const std::int32_t tens = index / 10;
-        filename[4] = static_cast<char>(tens + '0');
-        filename[5] = static_cast<char>(index - tens * 10 + '0');
+        filename[4] = static_cast<char>(index / 10 + '0');
+        filename[5] = static_cast<char>(index % 10 + '0');
         filename[6] = '\0';
         std::strcat(filename, ".MT7");
     }
@@ -1240,7 +1239,8 @@ void AllocateGeometryLightPositionScratch() {
     for (; index < 256; ++index, ++saved) {
         if (GetLightRuntimeKind(index) == 4)
             continue;
-        *saved = g_lightRuntimeEntries[index].vector20;
+        LightRuntimeEntry *light = &g_lightRuntimeEntries[index];
+        *saved = light->vector20;
         g_lightRuntimeEntries[index].vector20.x += root.x;
         g_lightRuntimeEntries[index].vector20.y += root.y;
         g_lightRuntimeEntries[index].vector20.z += root.z;

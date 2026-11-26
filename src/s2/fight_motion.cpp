@@ -3871,13 +3871,11 @@ void vfUpdateMotionTargetPointAndParams(FightActorRuntimePrefix *actor) {
         target = 1;
     else if (active & 0x200000U)
         target = 1;
-    else {
-        target = 0;
-        if (MOTION_VALUE(std::uint16_t, actor, 2) == 30 &&
+    else
+        target = (MOTION_VALUE(std::uint16_t, actor, 2) == 30 &&
             std::fabs(static_cast<float>(
                 actor->actorFacingAngles[MOTION_VALUE(std::int8_t, actor, 1)] - static_cast<std::int16_t>(actor->temporaryFacingAngle))) < 8192)
-            target = 1;
-    }
+            ? 1 : 0;
     if (target) {
         charaGetMotWorldPos(MOTION_VALUE(Character *, actor, 0x10), 5, &bone);
         charaLatchBoneTarget(actor->character, 7, &bone);

@@ -811,8 +811,13 @@ void EndConversationCameraStream() {
         camCtrlGetRot(&cameraAngles);
         am2Vector3Subtract(&delta, &eye, &root);
         Vector3_ToFixed16EulerAngles(delta, *reinterpret_cast<Vector3s *>(directionAngles));
-        const int dy = static_cast<std::int16_t>(directionAngles[1] - yaw);
-        if (0x2aaa < (dy < 0 ? -dy : dy)) {
+        const std::int16_t dy = static_cast<std::int16_t>(directionAngles[1] - yaw);
+        int magnitude;
+        if (dy < 0)
+            magnitude = -dy;
+        else
+            magnitude = dy;
+        if (0x2aaa < magnitude) {
             int cx = cameraAngles.x;
             int cy = static_cast<std::int16_t>(cameraAngles.y - yaw);
             if (cy < 0)
@@ -5670,11 +5675,6 @@ std::uint32_t EV_camCtrlToggleCombatCamera(std::uint32_t mask, std::int32_t acti
     else if (action > 0)
         g_combatCameraFlags |= mask;
     return previous;
-}
-
-// @verified - d
-void PrepareBattleEventSprite(void *parameter) {
-    PrepareDrawWithMode(*reinterpret_cast<const LegacyIconSprite *>(parameter));
 }
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2

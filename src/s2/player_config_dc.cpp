@@ -150,8 +150,8 @@ std::int32_t g_transferredYen = 0;
 std::uint8_t g_fightActive = 0, g_fightUiActive = 0;
 std::uint32_t g_minigameScores[26] = {};
 std::uint8_t g_playerRetainedResetWords[16] = {};
-std::byte g_playerRetainedResetStorage[1024] = {};
-std::uint16_t g_playerResetCounter = 0;
+std::int16_t g_playerRetainedResetStorage[512] = {};
+std::int16_t g_playerResetCounter = 0;
 ArcadeStatistics g_arcadeStatistics[4] = {};
 std::int16_t g_playerSaveSelections[3] = {};
 std::uint16_t g_playerSelectionCounter = 0;
@@ -397,16 +397,10 @@ void ApplyS2ControlMode(std::int32_t mode) {
 }
 
 void SetMGOTOSIDAMA(std::int32_t bit, std::int32_t enabled) {
-    const std::uint32_t shift = static_cast<std::uint32_t>(bit) & 31U;
-#if SHENMUE_IS_DC && SHENMUE_IS_S2
-    const std::uint32_t mask = static_cast<std::uint32_t>(bit >= 0) << shift;
-#else
-    const std::uint32_t mask = bit >= 0 ? 1U << shift : (shift ? 1U >> (32U - shift) : 0U);
-#endif
     if (enabled)
-        g_mgOtoshidamaFlag |= mask;
+        g_mgOtoshidamaFlag |= 1U << bit;
     else
-        g_mgOtoshidamaFlag &= ~mask;
+        g_mgOtoshidamaFlag &= ~(1U << bit);
 }
 
 // @verified - d
@@ -495,15 +489,13 @@ void SetSavedMinigameScore(std::uint32_t index, std::uint32_t score) {
 void RecordScenarioTalkGroup(std::int32_t index) {
     std::int32_t found = -1;
     for (std::int32_t slot = 0; slot < static_cast<std::int16_t>(g_playerResetCounter); ++slot) {
-        if (index == reinterpret_cast<std::int16_t *>(g_playerRetainedResetStorage)[slot]) {
+        if (index == g_playerRetainedResetStorage[slot]) {
             found = slot;
             break;
         }
     }
     if (found < 0 && static_cast<std::int16_t>(g_playerResetCounter) < 512) {
-        const std::int16_t cursor = static_cast<std::int16_t>(g_playerResetCounter);
-        ++g_playerResetCounter;
-        reinterpret_cast<std::int16_t *>(g_playerRetainedResetStorage)[cursor] = static_cast<std::int16_t>(index);
+        g_playerRetainedResetStorage[g_playerResetCounter++] = static_cast<std::int16_t>(index);
     }
 }
 #endif

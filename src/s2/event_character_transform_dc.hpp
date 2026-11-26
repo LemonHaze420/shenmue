@@ -28,7 +28,7 @@ ObjectXFormsParams *AttachScenarioCharacterPreservingPlacement(
 void AttachScenarioCharacter(shen_name target, shen_name source, std::int32_t bone, const Vector3 *position, const Vector3i *rotation);
 ObjectXFormsParams *ResetScenarioCharacterAttachment(shen_name name);
 void SetScenarioCharacterInversePlacement(shen_name name, const Vector3 *position, const Vector3i *rotation);
-std::int32_t SetScenarioCharacterInverseChildPlacement(shen_name name, std::int16_t childId);
+std::int32_t SetScenarioCharacterInverseChildPlacement(shen_name name, std::int32_t childId);
 std::int32_t RotateCharacter(Character *character, std::uint32_t flags, const Vector3i *rotation, const std::uint16_t *customMotions);
 float AssignCharacterMotionYaw(Character *character, std::int32_t yaw, const std::uint16_t *customMotions, std::uint32_t flags);
 std::int32_t EV_AT_SetAngY(shen_name name, std::uint32_t flags, const Vector3i &rotation, const std::uint16_t *customMotions);

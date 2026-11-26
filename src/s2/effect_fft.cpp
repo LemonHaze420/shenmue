@@ -621,26 +621,24 @@ namespace {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::uint32_t FireTextureSize(std::uint32_t size) {
-    switch (size) {
-    case 8:
-        return 0;
-    case 16:
-        return 1;
-    case 32:
-        return 2;
-    case 64:
-        return 3;
-    case 128:
-        return 4;
-    case 256:
-        return 5;
-    case 512:
-        return 6;
-    case 1024:
-        return 7;
-    default:
-        return size;
+    std::uint32_t result = 0;
+    if (size != 8) {
+        if (size == 16)
+            result = 1;
+        else if (size == 32)
+            result = 2;
+        else if (size == 64)
+            result = 3;
+        else if (size == 128)
+            result = 4;
+        else if (size == 256)
+            result = 5;
+        else if (size == 512)
+            result = 6;
+        else if (size == 1024)
+            result = 7;
     }
+    return result;
 }
 #endif
 

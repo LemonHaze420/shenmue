@@ -33,7 +33,8 @@ void ColourBarBackground(void *) {
 
 // @verified - d
 void InitializeColourBar(ColourBarWork &work) {
-    INIT_LEGACY_SPRITE_PACKET(work.packet);
+    LegacySpritePacket &packet = work.packet;
+    INIT_LEGACY_SPRITE_PACKET(packet);
     AdjustScreenAspectRatio(work.packet.quad, HorizontalStretch, 320, 240, 1024, 512);
 }
 

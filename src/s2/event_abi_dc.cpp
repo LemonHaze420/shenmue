@@ -68,10 +68,10 @@ __attribute__((renesas)) std::uint8_t *shenmue_s2_event_figpAssignModeFor(std::u
         reinterpret_cast<const shenmue::s2::MapControlData *>(shenmue::s2::HLib::GetTaskParameter(shenmue::s2::g_mapControlTask));
     return shenmue::s2::figpAssignModeForCharacter(shenmue::s2::scenFindChara(control->scenarioTask, shenmue::shen_name(name)), mode);
 }
-std::uint32_t __attribute__((renesas)) shenmue_s2_event_figpSetFlagsBlendForBlur(std::uint32_t name, std::uint8_t scale, std::uint8_t direction) {
+void __attribute__((renesas)) shenmue_s2_event_figpSetFlagsBlendForBlur(std::uint32_t name, std::uint8_t scale, std::uint8_t direction) {
     const shenmue::s2::MapControlData *const control =
         reinterpret_cast<const shenmue::s2::MapControlData *>(shenmue::s2::HLib::GetTaskParameter(shenmue::s2::g_mapControlTask));
-    return shenmue::s2::figpAssignMotScaleAndDirFor(shenmue::s2::scenFindChara(control->scenarioTask, shenmue::shen_name(name)), scale, direction);
+    shenmue::s2::figpAssignMotScaleAndDirFor(shenmue::s2::scenFindChara(control->scenarioTask, shenmue::shen_name(name)), scale, direction);
 }
 __attribute__((renesas)) shenmue::s2::FigurePoseControlPrefix *shenmue_s2_event_figpSetFlagModesFor(
     std::uint32_t name, std::uint8_t bitIndex, std::uint8_t enabled) {

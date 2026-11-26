@@ -162,18 +162,17 @@ std::uint32_t RegisterMotionBank(void *data) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 void ResetMotionBankEntry(MotionRegistryEntry *entry) {
-    std::size_t index = static_cast<std::uint8_t>(g_motionBankCount);
-    while (index < SHENMUE_MOTION_BANK_COUNT(g_motionRegistry) && entry != &g_motionRegistry[index])
+    std::int32_t index = static_cast<std::uint8_t>(g_motionBankCount);
+    while (index < static_cast<std::int32_t>(SHENMUE_MOTION_BANK_COUNT(g_motionRegistry)) && entry != &g_motionRegistry[index])
         ++index;
     if (index != SHENMUE_MOTION_BANK_COUNT(g_motionRegistry)) {
-        MotionRegistryEntry &bank = g_motionRegistry[index];
-        bank.handle = UINT32_MAX;
-        bank.data = SHENMUE_MOTION_BANK_NULL;
-        bank.firstAnimation = 0;
-        bank.endAnimation = 0;
-        bank.previous = SHENMUE_MOTION_BANK_NULL;
-        bank.next = SHENMUE_MOTION_BANK_NULL;
-        bank.dataSize = 0;
+        g_motionRegistry[index].handle = UINT32_MAX;
+        g_motionRegistry[index].data = SHENMUE_MOTION_BANK_NULL;
+        g_motionRegistry[index].firstAnimation = 0;
+        g_motionRegistry[index].endAnimation = 0;
+        g_motionRegistry[index].previous = SHENMUE_MOTION_BANK_NULL;
+        g_motionRegistry[index].next = SHENMUE_MOTION_BANK_NULL;
+        g_motionRegistry[index].dataSize = 0;
     }
 }
 

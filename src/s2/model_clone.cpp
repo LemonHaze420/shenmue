@@ -1701,7 +1701,7 @@ void DrawCharacterModelBranch(MT7Node *node, float) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-void charaApplyScale(const MT7Node *node, float) {
+void charaApplyScale(const MT7Node *node) {
     if (node) {
         matrix_stack::Matrix4x4_Push(0);
         matrix_stack::GetMatrix(&g_characterModelMatrix);

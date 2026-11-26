@@ -203,8 +203,6 @@ FightRuntimePrefix *vfmaGetTaskParam();
 
 FightRuntimePrefix *vfmaGetTaskParam();
 
-void PrepareBattleEventSprite(void *parameter);
-
 FightLoadSpriteRecord g_fightLoadSprites[6];
 
 std::int32_t g_fightLoadDigits[24];
@@ -233,7 +231,7 @@ void ControlFightLoadSprites(std::int32_t mode, std::int32_t index);
 void FreeFBQTE();
 void DrawBattleQteSprite(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha, std::int32_t rotation, std::int32_t flags, float depth);
 void vfDrawBattleGaugeIcon(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha);
-void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags);
+void EV_FBQTE_Util(std::int32_t mode, std::int32_t icon, float x, float y, float scale, float alpha, std::int32_t rotation, std::int32_t flags);
 void FreeVFGW(FightActorRuntimePrefix *actor);
 void vfMotnNibbleSet(std::uint8_t code, std::int32_t value);
 #else
@@ -614,22 +612,22 @@ void DrawBattleQteSprite(
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags) {
-    if (!mode)
-        DrawBattleQteSprite(static_cast<std::uint8_t>(icon), TruncateToInt32(x), TruncateToInt32(y), u32AsFloat(scaleBits), alpha, rotation, flags, 0.0f);
-    else if (mode == 1) {
-        battleEventSprite.x = x;
-        battleEventSprite.y = y;
-        battleEventSprite.scaleX = u32AsFloat(scaleBits);
-        battleEventSprite.scaleY = u32AsFloat(scaleBits);
-        battleEventSprite.depth = 3.0f;
-        battleEventSprite.flags = 0;
-        battleEventSprite.rotation = static_cast<std::uint32_t>(rotation);
-        battleEventSprite.icon = static_cast<std::uint16_t>(icon);
-        battleEventSprite.width = 32;
-        battleEventSprite.height = 32;
-        battleEventSprite.alignment = 5;
-        HLib::ExecuteCallbackNow(PrepareBattleEventSprite, &battleEventSprite);
+void EV_FBQTE_Util(std::int32_t mode, std::int32_t icon, float x, float y, float scale, float alpha, std::int32_t rotation, std::int32_t flags) {
+    if (mode) {
+        if (mode == 1) {
+            battleEventSprite.x = x;
+            battleEventSprite.y = y;
+            battleEventSprite.scaleX = battleEventSprite.scaleY = scale;
+            battleEventSprite.depth = 3.0f;
+            battleEventSprite.flags = 0;
+            battleEventSprite.rotation = static_cast<std::uint32_t>(rotation);
+            battleEventSprite.icon = static_cast<std::uint16_t>(icon);
+            battleEventSprite.width = battleEventSprite.height = 32;
+            battleEventSprite.alignment = 5;
+            HLib::ExecuteCallbackNow(reinterpret_cast<void (*)(void *)>(PrepareDrawWithMode), &battleEventSprite);
+        }
+    } else {
+        DrawBattleQteSprite(static_cast<std::uint8_t>(icon), static_cast<std::int32_t>(x), static_cast<std::int32_t>(y), scale, alpha, rotation, flags, 0.0f);
     }
 }
 

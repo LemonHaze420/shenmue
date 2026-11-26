@@ -68,7 +68,8 @@ std::uint32_t namedTextureNameText[3];
 
 NamedTextureCell *g_namedTextureCells = TX_NULL;
 NamedTextureCell *g_freeNamedTextureCells = TX_NULL;
-NamedTextureCell *g_namedTextureBanks[2] TX_ZERO;
+NamedTextureCell *g_namedTextureBank0 TX_ZERO;
+NamedTextureCell *g_namedTextureBank1 TX_ZERO;
 std::int32_t g_namedTextureBank;
 
 // @verified - d
@@ -85,13 +86,13 @@ void InitializeNamedTextureStorage(void *storage, std::int32_t count) {
     }
     g_namedTextureCells[count - 1].next = 0;
     g_freeNamedTextureCells = g_namedTextureCells;
-    g_namedTextureBanks[0] = 0;
-    g_namedTextureBanks[1] = 0;
+    g_namedTextureBank0 = 0;
+    g_namedTextureBank1 = 0;
 }
 
 // @verified - d
 NamedTextureCell *FindNamedTexture(std::uint32_t nameLow, std::uint32_t nameHigh) {
-    NamedTextureCell *cell = g_namedTextureBank ? *(g_namedTextureBanks + 1) : g_namedTextureBanks[0];
+    NamedTextureCell *cell = g_namedTextureBank ? g_namedTextureBank1 : g_namedTextureBank0;
     while (cell) {
         if (cell->nameLow == nameLow && cell->nameHigh == nameHigh)
             return cell;
@@ -102,7 +103,7 @@ NamedTextureCell *FindNamedTexture(std::uint32_t nameLow, std::uint32_t nameHigh
 
 // @verified - d
 std::int32_t FindNamedTexture(std::uint32_t nameLow, std::uint32_t nameHigh, NamedTextureCell **previous, NamedTextureCell **found) {
-    NamedTextureCell *cell = g_namedTextureBank ? *(g_namedTextureBanks + 1) : g_namedTextureBanks[0];
+    NamedTextureCell *cell = g_namedTextureBank ? g_namedTextureBank1 : g_namedTextureBank0;
     *previous = TX_NULL;
     *found = TX_NULL;
     while (cell) {
@@ -126,7 +127,7 @@ std::int32_t FindNamedTextureIndex(std::uint32_t nameLow, std::uint32_t nameHigh
 
 // @verified - d
 std::int32_t FindNamedTextureByIndex(std::int32_t index, NamedTextureCell **previous, NamedTextureCell **found) {
-    NamedTextureCell *cell = g_namedTextureBank ? *(g_namedTextureBanks + 1) : g_namedTextureBanks[0];
+    NamedTextureCell *cell = g_namedTextureBank ? g_namedTextureBank1 : g_namedTextureBank0;
     *previous = TX_NULL;
     *found = TX_NULL;
     while (cell) {
@@ -152,10 +153,10 @@ std::int32_t AllocateNamedTextureCell(std::uint32_t nameLow, std::uint32_t nameH
             g_freeNamedTextureCells = cell->next;
             NamedTextureCell **head;
             if (g_namedTextureBank) {
-                head = &g_namedTextureBanks[1];
+                head = &g_namedTextureBank1;
                 cell->next = *head;
             } else {
-                head = &g_namedTextureBanks[0];
+                head = &g_namedTextureBank0;
                 cell->next = *head;
             }
             *head = cell;
@@ -175,9 +176,9 @@ void ReleaseNamedTextureCell(NamedTextureCell *previous, NamedTextureCell *cell)
     if (previous)
         previous->next = cell->next;
     else if (g_namedTextureBank)
-        *(g_namedTextureBanks + 1) = cell->next;
+        g_namedTextureBank1 = cell->next;
     else
-        g_namedTextureBanks[0] = cell->next;
+        g_namedTextureBank0 = cell->next;
 
     cell->next = g_freeNamedTextureCells;
     g_freeNamedTextureCells = cell;
@@ -230,7 +231,7 @@ std::int32_t ReleaseNamedTexture(std::int32_t index) {
 }
 
 void DestroyEffectTextureReferences() {
-    NamedTextureCell *cell = g_namedTextureBanks[0];
+    NamedTextureCell *cell = g_namedTextureBank0;
     while (cell) {
         ReleaseTextureIndex(cell->index);
         NamedTextureCell *const next = cell->next;
@@ -239,7 +240,7 @@ void DestroyEffectTextureReferences() {
         cell->references = 0;
         cell = next;
     }
-    g_namedTextureBanks[0] = TX_NULL;
+    g_namedTextureBank0 = TX_NULL;
     ReleasePaletteReference(0);
 }
 
@@ -302,8 +303,10 @@ void FlushTextureImage(const std::uint32_t *image) {
     if (tag == SHEN_NAME(GBIX))
         image += 3;
     const std::uintptr_t address = reinterpret_cast<std::uintptr_t>(image + 4) & ~static_cast<std::uintptr_t>(31);
-    const std::int16_t *const dimensions = reinterpret_cast<const std::int16_t *>(image + 3);
-    const std::int32_t bytes = dimensions[0] * 2 * dimensions[1];
+    const std::int16_t *dimensions = reinterpret_cast<const std::int16_t *>(image + 3) + 1;
+    const std::int32_t height = *dimensions--;
+    const std::int32_t rowBytes = *dimensions * 2;
+    const std::int32_t bytes = height * rowBytes;
     dc::sdk::PurgeDataCache(reinterpret_cast<void *>(address), bytes / 32 + 1);
 }
 #endif
@@ -599,27 +602,31 @@ GeneratedTextureSurface *AllocateSHAD_SRUF(std::uint32_t width, std::uint32_t he
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetTextureStorageSize(std::uint32_t format, std::int32_t height, std::int32_t width) {
+    std::int32_t size = 0;
     switch (format & 0xff00U) {
-    case 0x300:
-        if (height != width)
-            return 0;
-        switch (height) {
-        case 64:
-            return 0xc00;
-        case 128:
-            return 0x1800;
-        case 256:
-            return 0x4800;
-        case 512:
-            return 0x10800;
-        default:
-            return 0;
-        }
     case 0x500:
-        return static_cast<std::int32_t>(static_cast<std::uint32_t>(height) * static_cast<std::uint32_t>(width)) / 2;
-    default:
-        return 0;
+        size = static_cast<std::int32_t>(static_cast<std::uint32_t>(width) * static_cast<std::uint32_t>(height)) / 2;
+        break;
+    case 0x300:
+        if (height == width) {
+            switch (height) {
+            case 64:
+                size = 0xc00;
+                break;
+            case 128:
+                size = 0x1800;
+                break;
+            case 256:
+                size = 0x4800;
+                break;
+            case 512:
+                size = 0x10800;
+                break;
+            }
+        }
+        break;
     }
+    return size;
 }
 #endif
 

@@ -43,8 +43,8 @@ extern SHENMUE_PLAYER_ARRAY(std::uint32_t, g_minigameScores, 26);
 std::uint32_t GetSavedMinigameScore(std::uint32_t index) SHENMUE_PLAYER_NOEXCEPT;
 void SetSavedMinigameScore(std::uint32_t index, std::uint32_t score) SHENMUE_PLAYER_NOEXCEPT;
 extern SHENMUE_PLAYER_ARRAY(std::uint8_t, g_playerRetainedResetWords, 16);
-extern SHENMUE_PLAYER_ARRAY(std::byte, g_playerRetainedResetStorage, 1024);
-extern std::uint16_t g_playerResetCounter;
+extern SHENMUE_PLAYER_ARRAY(std::int16_t, g_playerRetainedResetStorage, 512);
+extern std::int16_t g_playerResetCounter;
 extern ArcadeStatistics g_arcadeStatistics[4];
 extern std::int16_t g_playerSaveSelections[3];
 extern std::uint16_t g_playerSelectionCounter;
@@ -87,11 +87,21 @@ typedef char CombatStatisticsMemoOpenCountOffsetCheck[offsetof(CombatStatistics,
 typedef char CombatStatisticsStepElapsedOffsetCheck[offsetof(CombatStatistics, stepElapsedSeconds) == 0x3cc ? 1 : -1];
 extern CombatStatistics g_combatStatistics;
 void InitializeCombatStatistics(CombatStatistics *statistics);
-extern std::uint32_t g_stepElapsedFrames;
-extern std::uint32_t g_stepDebugFrames;
-extern std::int32_t g_stepElapsedSeconds;
-extern std::uint32_t g_stepRangeElapsedFrames;
-extern std::int32_t g_previousStoryStep, g_stepRangeStart, g_stepRangeEnd;
+struct StepDebugTiming {
+    std::uint32_t stepElapsedFrames;
+    std::uint32_t stepDebugFrames;
+    std::int32_t stepElapsedSeconds;
+    std::uint32_t stepRangeElapsedFrames;
+};
+struct StepDebugRange {
+    std::int32_t previousStoryStep;
+    std::int32_t stepRangeStart;
+    std::int32_t stepRangeEnd;
+};
+typedef char StepDebugTimingSizeCheck[sizeof(StepDebugTiming) == 0x10 ? 1 : -1];
+typedef char StepDebugRangeSizeCheck[sizeof(StepDebugRange) == 0xc ? 1 : -1];
+extern StepDebugTiming g_stepDebugTiming;
+extern StepDebugRange g_stepDebugRange;
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::int32_t GetStepCounterSlot(std::int32_t step);
 #else

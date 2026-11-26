@@ -204,7 +204,7 @@ void DrawLoadNumber(std::int32_t value, std::uint32_t mode, std::int32_t x, std:
     }
 }
 
-void ST_LoadTitleFadeIn_Main(void *) {
+void ST_LoadTitleFadeIn_Main() {
     LegacySpritePacket packet;
     INIT_LEGACY_SPRITE_PACKET(packet);
     packet.colour = (static_cast<std::uint32_t>(g_loadTitleAlpha) << 24) | 0xffffffU;

@@ -116,17 +116,28 @@ void ReadMotionKeyBlock(MotionRigChannel &channel) {
 
 // @verified - d
 void SkipMotionKeyBlock() {
-    if (!(g_motionInitFlags & motionInitStream))
-        return;
-    std::uint32_t count = g_motionAnimFlags & motionWideKeyCounts ? *g_motionWideKeyCounts++ : *g_motionKeyCounts++;
-    count += 2;
-    for (std::uint32_t index = 0; index < count; ++index) {
-        const std::uint16_t flags = *g_motionKeyData;
-        g_motionKeyData += 2;
+    if (g_motionInitFlags & motionInitStream) {
+        std::uint32_t count = (g_motionAnimFlags & motionWideKeyCounts ? *g_motionWideKeyCounts++ : *g_motionKeyCounts++) + 2;
+        std::uint16_t flags = *g_motionKeyData++;
+        ++g_motionKeyData;
         if (flags & 1U)
             ++g_motionKeyData;
-        if (index && index + 1U < count)
+        --count;
+        flags = *g_motionKeyData++;
+        ++g_motionKeyData;
+        if (flags & 1U)
             ++g_motionKeyData;
+        --count;
+        if (count)
+            ++g_motionKeyData;
+        while (count-- > 0U) {
+            flags = *g_motionKeyData++;
+            ++g_motionKeyData;
+            if (flags & 1U)
+                ++g_motionKeyData;
+            if (count)
+                ++g_motionKeyData;
+        }
     }
 }
 

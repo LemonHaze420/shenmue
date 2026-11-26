@@ -1046,13 +1046,17 @@ struct FightAiActorView {
     std::uint16_t retained28a;
     std::byte retained28c[4];
     std::int16_t impactFrame;
-    std::byte retained292[0x72c];
+    std::byte retained292[0x17];
+    std::uint8_t guardState;
+    std::byte retained2aa[0x714];
     std::int8_t focusTarget;
 };
 
 typedef char FightAiActorViewAnglesCheck[offsetof(FightAiActorView, targetAngles) == 0x16c ? 1 : -1];
 
 typedef char FightAiActorViewImpactCheck[offsetof(FightAiActorView, impactFrame) == 0x290 ? 1 : -1];
+
+typedef char FightAiActorViewGuardCheck[offsetof(FightAiActorView, guardState) == 0x2a9 ? 1 : -1];
 
 typedef char FightAiActorViewFocusCheck[offsetof(FightAiActorView, focusTarget) == 0x9be ? 1 : -1];
 
@@ -1500,8 +1504,8 @@ static const FightReactionCallback reactionCallbacks[104] = {VmCallback<0>, VmCa
     ReactTargetStyleDiffers, ReactTargetHasActiveMotionFlags, ReactTargetHasActiveMotionFlagsAgain, ReactTargetHasPreviousMotionFlags,
     ReactTargetHasPreviousMotionFlagsAgain, ReactTargetBeforeAnimationFrame, ReactSelectNearbyTarget};
 
-static const std::int32_t fightInputMap[2][17] = {
-    {0, 8, 1, 0, 0, 0, 0x4000, 0x4000, 0, 4, 2, 0, 0x20, 0x10, 0x80, 0x40, -1}, {0, 8, 1, 0, 0, 0, 0x4000, 0, 0, 4, 2, 0, 0x20, 0x10, 0x80, 0x40, -1}};
+static const std::int32_t fightInputMap[17] = {0, 8, 1, 0, 0, 0, 0x4000, 0x4000, 0, 4, 2, 0, 0x20, 0x10, 0x80, 0x40, -1};
+static const std::int32_t fightSecondaryInputMap[17] = {0, 8, 1, 0, 0, 0, 0x4000, 0, 0, 4, 2, 0, 0x20, 0x10, 0x80, 0x40, -1};
 
 } // namespace
 
@@ -3904,27 +3908,31 @@ namespace {
 
 // @verified - d
 std::int8_t AiGuardPhase(FightActorRuntimePrefix *self, FightAiSlot &slot) {
-    const std::uint8_t guard = SHENMUE_REACTION_VALUE(std::uint8_t, self->actor, 0x2a9);
-    std::uint8_t phase;
+    const std::uint8_t guard = reinterpret_cast<const FightAiActorView *>(self->actor)->guardState;
+    FightAiPhase *phase;
     switch (guard) {
     case 0:
     case 3:
-        phase = 0;
+        phase = &slot.phases[0];
         break;
     case 1:
-        phase = 1;
+        phase = &slot.phases[1];
         break;
     case 2:
     case 5:
     case 6:
-        phase = 2;
+        phase = &slot.phases[2];
         break;
     default:
-        return -1;
+        goto unavailable;
     }
     if ((self->savedMotionFlags & 0x8000U) && slot.random[0] <= 128)
         return 5;
-    return AiPhaseSelected(slot.phases[phase]) ? 5 : -1;
+    if (!AiPhaseSelected(*phase)) {
+unavailable:
+        return -1;
+    }
+    return 5;
 }
 
 } // namespace
@@ -6312,9 +6320,9 @@ std::uint16_t VmPlayerInput(FightActorRuntimePrefix *self, std::uint8_t secondar
     std::uint16_t input = ctrlGetPadInputBuffer0(static_cast<PadControlEntry *>(game->savedInput))->held;
     const std::int32_t *table;
     if (!secondary)
-        table = fightInputMap[0];
+        table = fightInputMap;
     else
-        table = fightInputMap[1];
+        table = fightSecondaryInputMap;
     for (; table[index] != -1; ++index, input >>= 1)
         if (input & 1)
             result |= table[index];
@@ -6343,7 +6351,7 @@ std::uint16_t VmMapPadInput(std::uint8_t pad) {
     std::uint16_t result = 0;
     std::uint8_t index = 0;
     std::uint16_t input = g_inputBuffer[pad].held;
-    const std::int32_t *table = fightInputMap[1];
+    const std::int32_t *table = fightSecondaryInputMap;
     for (; table[index] != -1; ++index, input >>= 1)
         if (input & 1)
             result |= table[index];

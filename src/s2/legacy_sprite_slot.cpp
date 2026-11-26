@@ -71,7 +71,12 @@ bool RegisterBorrowedLegacySpriteSlot(std::int16_t texture, std::int32_t width, 
 #endif
 
 // @verified - pd
-void ReleaseBorrowedLegacySpriteSlot(std::uint16_t slot) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+void ReleaseBorrowedLegacySpriteSlot(std::int32_t slot)
+#else
+void ReleaseBorrowedLegacySpriteSlot(std::uint16_t slot)
+#endif
+{
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     BorrowedLegacySpriteSlot *entry;
     for (std::int32_t index = 0; index < 8; ++index) {

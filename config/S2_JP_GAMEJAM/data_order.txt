@@ -26,9 +26,8 @@ bss	.bss._Q37shenmue2s*_GLOBAL_.N.*cpp??????.responseAverage
 bss	.bss._Q27shenmue2s2.dialogueCameras
 bss	.data._Q37shenmue2s24HLib.NextTask
 bss	.data._Q27shenmue2s2.g_characterNodeSavedTransform
-bss	.data._Q47shenmue2s24HLib*_GLOBAL_.N.*cpp??????.rootTask
+bss	.data._Q47shenmue2s24HLib*_GLOBAL_.N.*cpp??????.taskStorage
 bss	.data._Q47shenmue2s24HLib*_GLOBAL_.N.*cpp??????.moduleTaskQueue
-bss	.data._Q47shenmue2s24HLib*_GLOBAL_.N.*cpp??????.taskQueue
 bss	.data._Q47shenmue2s24HLib*_GLOBAL_.N.*cpp??????.postUpdateCount
 bss	.data._Q47shenmue2s24HLib*_GLOBAL_.N.*cpp??????.postUpdateTasks
 bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.adviceCurrentColour
@@ -521,9 +520,7 @@ bss	.bss._Q27shenmue2s2.helpIconDrawSelected
 bss	.bss._Q27shenmue2s2.helpIconPublishedVisible
 bss	.data._Q27shenmue2s2.npcLargestSceneBlock
 bss	.data._Q27shenmue2s2.npcHasCachedPak
-bss	.data._Q27shenmue2s2.npcScheduleArea
-bss	.data._Q27shenmue2s2.npcScheduleFlags
-bss	.data._Q27shenmue2s2.npcScheduleAct
+bss	.data._Q27shenmue2s2.g_npcFileState
 bss	.data._Q27shenmue2s2.npcEntryStorage
 bss	.data._Q27shenmue2s2.npcFrameCount
 bss	.data._Q27shenmue2s2.npcStreamThrottleWithBias
@@ -594,10 +591,8 @@ bss	.bss._Q37shenmue2s213player_detail.playerInputSnapshot
 bss	.data._Q37shenmue2s213player_detail.movingFrames
 bss	.data._Q37shenmue2s213player_detail.stationaryFrames
 bss	.data._Q37shenmue2s213player_detail.turningFrames
-bss	.data._Q27shenmue2s2.g_stepElapsedSeconds
-bss	.data._Q27shenmue2s2.g_stepRangeElapsedFrames
-bss	.data._Q27shenmue2s2.g_stepElapsedFrames
-bss	.data._Q27shenmue2s2.g_stepRangeEnd
+bss	.data._Q27shenmue2s2.g_stepDebugTiming
+bss	.data._Q27shenmue2s2.g_stepDebugRange
 bss	.data._Q27shenmue2s2.g_prePadConfirmPulse
 bss	.data._Q27shenmue2s2.g_qronFloorRuntime
 bss	.data._Q27shenmue2s2.g_quickIconState
@@ -617,7 +612,6 @@ bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.npcRouteSearchPath
 bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.npcRouteSearchConnections
 bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.npcRouteSearchPointCount
 bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.npcRouteSearchVisited
-bss	.data._Q27shenmue2s2.npcScheduleRouteCount
 bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.npcRouteSearchDepth
 bss	.data._Q27shenmue2s2.npcSceneRouteOwner
 bss	.data._Q27shenmue2s2.npcPreviewRouteContext
@@ -747,7 +741,8 @@ bss	.data._Q27shenmue2s2.nativeGuiActive
 bss	.data._Q27shenmue2s2.guiPtxBacking
 bss	.data._Q27shenmue2s2.g_telephoneCordTask
 bss	.data._Q27shenmue2s2.g_tempTextures
-bss	.data._Q27shenmue2s2.g_namedTextureBanks
+bss	.data._Q27shenmue2s2.g_namedTextureBank0
+bss	.data._Q27shenmue2s2.g_namedTextureBank1
 bss	.data._Q27shenmue2s2.g_namedTextureBank
 bss	.data._Q27shenmue2s2.g_freeNamedTextureCells
 bss	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.effectPaletteSlots
@@ -1136,7 +1131,6 @@ data	.data._Q27shenmue2s2.g_timeCompassAlpha
 data	.data._Q27shenmue2s2.g_smokeAlphaStep3
 data	.data._Q37shenmue2s*_GLOBAL_.N.*cpp??????.memoMotionStep
 data	.data._Q37shenmue2s239_GLOBAL_.N._Q27shenmue2s2.g_inputBuffer.peripheralPortMap
-data	.data._Q27shenmue2s2.g_stepRangeStart
 data	.data._Q27shenmue2s2.ctrlSpeakMarkerGlyphIndex
 data	.data._Q27shenmue2s2.g_weatherRainTimelineNodeCount
 data	.data._Q27shenmue2s2.g_weatherForecastTimelineNodes
@@ -1259,7 +1253,7 @@ data	.data._Q27shenmue2s2.helpIconItemEffectState
 data	.data._Q27shenmue2s2.helpDirectionBlinks
 data	.data._Q27shenmue2s2.npcScheduleRecordCount
 data	.data._Q27shenmue2s2.npcScheduleAreaPointCount
-data	.data._Q27shenmue2s2.npcScheduleVersion
+data	.data._Q27shenmue2s2.npcScheduleRouteCount
 data	.data._Q27shenmue2s2.npcLoadedArea
 data	.data._Q27shenmue2s2.npcRegistryTask
 data	.data._Q27shenmue2s2.npcRegistryRetainedTask
@@ -1267,6 +1261,8 @@ data	.data._Q27shenmue2s2.npcPendingRegistryTask
 data	.data._Q27shenmue2s2.npcHumansReady
 data	.data._Q27shenmue2s2.npcNewLoadState
 data	.data._Q27shenmue2s2.npcCurrentTimeSimState
+data	.data._Q27shenmue2s2.npcDefaultBinaryFilenames
+data	.data._Q27shenmue2s2.npcAreaBinaryFilenames
 data	.data._Q27shenmue2s2.npcHumansInUse
 data	.data._Q27shenmue2s2.npcHumansAfs
 data	.data._Q37shenmue2s238_GLOBAL_.N._Q27shenmue2s2.npcHumansAfs.npcHumanFilename
@@ -1592,7 +1588,6 @@ rodata	.rodata.yenZero.205
 rodata	.rodata.hongKongZero.206
 rodata	.rodata._Q27shenmue2s2.moneyIconIncrements
 rodata	.rodata._Q27shenmue2s2.nativeNaviMapConfigs
-rodata	.rodata._Q27shenmue2s2.kNpcBinaryFilenames
 rodata	.rodata.capacities.180
 rodata	.rodata._Q27shenmue2s2.mapObjectVisibilityTests
 rodata	.rodata.indices.240
@@ -1654,6 +1649,7 @@ rodata	.rodata.tokens.108
 rodata	.rodata._Q27shenmue2s2.sleepScheduleEntries
 rodata	.rodata.expressions.459
 rodata	.rodata._Q27shenmue2s2.mhndIdlePoseScript
+rodata	.rodata._Q27shenmue2s2.handcuffChainGravity
 rodata	.rodata._Q27shenmue2s2.handCommandJointIds
 rodata	.rodata._Q27shenmue2s2.handDefaultJointAngles
 rodata	.rodata._Q27shenmue2s2.handEndJointIds
@@ -1678,6 +1674,7 @@ rodata	.rodata._Q27shenmue2s2.FIGHT_GAUGE_ORB_POSITIONS
 rodata	.rodata.unknown.114
 rodata	.rodata._Q27shenmue2s2.wfScrollDefinitions
 rodata	.rodata._Q27shenmue2s2.wfSpecialScrollDefinitions
+rodata	.rodata._Q27shenmue2s2.weatherAccumulatedMonthDays	src/s2/lens_flare_dc.cpp
 rodata	.rodata._Q27shenmue2s2.characterShadowBlack
 rodata	.rodata._Q27shenmue2s2.characterNodeTokens
 rodata	.rodata._Q27shenmue2s2.magicRoomDefaultLightWords
@@ -1851,6 +1848,7 @@ rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.wazamakiGroups
 rodata	.rodata._Q27shenmue2s2.planetRotationDays
 rodata	.rodata._Q27shenmue2s2.weatherAirTextureScales
 rodata	.rodata._Q27shenmue2s2.weatherAirTextureIds
+rodata	.rodata._Q27shenmue2s2.weatherAccumulatedMonthDays	src/s2/weather_light_dc.cpp
 rodata	.rodata._Q27shenmue2s2.weatherRainPressureHigh
 rodata	.rodata._Q27shenmue2s2.weatherRainPressureLow
 rodata	.rodata._Q27shenmue2s2.windDirectionWeights
@@ -1871,8 +1869,7 @@ rodata	.rodata._Q27shenmue2s2.TIME_HUD_SCALES
 rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.dropEmitterSettings
 rodata	.rodata._Q27shenmue2s2.easyOptionDescriptions
 rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.flagSectors
-rodata	.rodata._Q27shenmue2s2.helpTopicText
-rodata	.rodata._Q27shenmue2s2.helpTextMacros
+rodata	.rodata._Q27shenmue2s2.helpStrings
 rodata	.rodata._Q27shenmue2s2.FIGHT_GAUGE_BASE_POSITIONS
 rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.authoredUnits
 rodata	.rodata._Q27shenmue2s2.conditionalMemoLines
@@ -1902,6 +1899,7 @@ rodata	.rodata._Q27shenmue2s2.kDefaultTextureImage
 rodata	.rodata.categories.118
 rodata	.rodata._Q27shenmue2s1.kEmptyMotionMarkerData
 rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.fightInputMap
+rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.fightSecondaryInputMap
 rodata	.rodata._Q27shenmue2s2.kRepeatMasks
 rodata	.rodata._Q37shenmue2s*_GLOBAL_.N.*cpp??????.instructionCommands10
 rodata	.rodata.alternatives.122
@@ -2089,7 +2087,6 @@ bss	.data._Q27shenmue2s2.g_playerRuntimeResetWord3
 bss	.data._Q27shenmue2s2.g_playerRuntimeResetWord4
 bss	.data._Q27shenmue2s2.g_playerRuntimeResetWord5
 bss	.data._Q27shenmue2s2.g_playerRuntimeResetWord6
-bss	.data._Q27shenmue2s2.g_previousStoryStep
 bss	.data._Q27shenmue2s2.g_propState
 bss	.data._Q27shenmue2s2.g_pvrTaIspBase
 bss	.data._Q27shenmue2s2.g_pvrTaIspLimit
@@ -2196,7 +2193,6 @@ bss	.data._Q27shenmue2s2.g_sleepActionPads
 bss	.data._Q27shenmue2s2.g_soundCallbackParity
 bss	.data._Q27shenmue2s2.g_soundDebugSecondarySelection
 bss	.data._Q27shenmue2s2.g_soundMusic
-bss	.data._Q27shenmue2s2.g_stepDebugFrames
 bss	.data._Q27shenmue2s2.g_systemTalkData
 bss	.data._Q27shenmue2s2.g_temporaryHNDL
 bss	.data._Q27shenmue2s2.g_temporaryHNDR
@@ -2255,16 +2251,11 @@ bss	.data._Q27shenmue2s2.naviTrailPacket
 bss	.data._Q27shenmue2s2.naviWindowHeadingSprite
 bss	.data._Q27shenmue2s2.naviWindowPosition
 bss	.data._Q27shenmue2s2.naviWindowPreviewTextures
-bss	.data._Q27shenmue2s2.npcBinaryStorage
-bss	.data._Q27shenmue2s2.npcBinaryStorageSize
 bss	.data._Q27shenmue2s2.npcPlayerCenter
 bss	.data._Q27shenmue2s2.npcRouteAvoidanceCandidates
 bss	.data._Q27shenmue2s2.npcRouteTableReady
 bss	.data._Q27shenmue2s2.npcRouteTarget
 bss	.data._Q27shenmue2s2.npcSavedDateTimeFlag
-bss	.data._Q27shenmue2s2.npcScheduleEntryData
-bss	.data._Q27shenmue2s2.npcScheduleFilename
-bss	.data._Q27shenmue2s2.npcScheduleOriginData
 bss	.data._Q27shenmue2s2.npcScheduleRecords
 bss	.data._Q27shenmue2s2.npcSimDeltaTime
 bss	.data._Q27shenmue2s2.npcTimedMotionCount

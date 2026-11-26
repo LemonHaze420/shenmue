@@ -2147,9 +2147,10 @@ void PrepareMemoPreviousPage() {
 namespace {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
+// @verified - d
 void FinishMemoTexturePage(std::int32_t previous) {
     MemoTextureName *destination, *source;
-    MemoTextureName *const names = memoTextureNames[0];
+    MemoTextureName *names = memoTextureNames[0];
     if (previous == 1) {
         destination = names + 21;
         source = names + 20;

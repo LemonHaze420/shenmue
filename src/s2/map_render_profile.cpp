@@ -23,6 +23,24 @@ const MapRenderProfile& MatchMapRenderProfile(shen_name area) {
     const MapRenderProfile* profile = mapRenderProfiles.data();
 #endif
     while (profile->areaPattern != 0) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+        std::uint32_t pattern = profile->areaPattern;
+        std::uint32_t name = area;
+        if (static_cast<std::uint8_t>(pattern) == '*' || static_cast<std::uint8_t>(pattern) == static_cast<std::uint8_t>(name)) {
+            pattern >>= 8;
+            name >>= 8;
+            if (static_cast<std::uint8_t>(pattern) == '*' || static_cast<std::uint8_t>(pattern) == static_cast<std::uint8_t>(name)) {
+                pattern >>= 8;
+                name >>= 8;
+                if (static_cast<std::uint8_t>(pattern) == '*' || static_cast<std::uint8_t>(pattern) == static_cast<std::uint8_t>(name)) {
+                    pattern >>= 8;
+                    name >>= 8;
+                    if (static_cast<std::uint8_t>(pattern) == '*' || static_cast<std::uint8_t>(pattern) == static_cast<std::uint8_t>(name))
+                        return *profile;
+                }
+            }
+        }
+#else
         bool matches = true;
         for (std::uint32_t shift = 0; shift != 32; shift += 8) {
             const std::uint8_t pattern = static_cast<std::uint8_t>(profile->areaPattern >> shift);
@@ -33,6 +51,7 @@ const MapRenderProfile& MatchMapRenderProfile(shen_name area) {
         }
         if (matches)
             return *profile;
+#endif
         ++profile;
     }
     return *profile;

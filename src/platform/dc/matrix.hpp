@@ -43,6 +43,10 @@ void TransformPosition(const Vector3 *input, Vector4 *output);
 #if SHENMUE_IS_S2
 void TransformVector4(const Vector4 *input, Vector4 *output);
 #endif
+#if SHENMUE_IS_S2
+void RotateXRadians(float angle);
+void RotateYRadians(float angle);
+#endif
 void RotateXSinCos(float sine, float cosine);
 void RotateYSinCos(float sine, float cosine);
 void RotateZSinCos(float sine, float cosine);

@@ -19,7 +19,7 @@ extern BattleQteSpriteDimensions battleQteSpriteDimensions[13];
 extern std::uint32_t battleQteSpriteColours[11];
 void vfDrawBattleGaugeIcon(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha);
 void DrawBattleQteSprite(std::uint8_t icon, std::int32_t x, std::int32_t y, float scale, float alpha, std::int32_t rotation, std::int32_t flags, float depth);
-void EV_FBQTE_Util(std::int32_t mode, std::int16_t icon, float x, float y, std::int32_t scaleBits, float alpha, std::int32_t rotation, std::int32_t flags);
+void EV_FBQTE_Util(std::int32_t mode, std::int32_t icon, float x, float y, float scale, float alpha, std::int32_t rotation, std::int32_t flags);
 void LoadFBQTE();
 void fbLoadGauge();
 void FreeFBQTE();

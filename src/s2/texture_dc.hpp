@@ -58,7 +58,8 @@ TX_DATA PaletteData kDefaultEffectPalette TX_INIT{
 
 extern NamedTextureCell *g_namedTextureCells;
 extern NamedTextureCell *g_freeNamedTextureCells;
-extern NamedTextureCell *g_namedTextureBanks[2];
+extern NamedTextureCell *g_namedTextureBank0;
+extern NamedTextureCell *g_namedTextureBank1;
 extern std::int32_t g_namedTextureBank;
 
 std::int32_t LoadNamedTexture(const TextureImage *image, const std::uint32_t *name);

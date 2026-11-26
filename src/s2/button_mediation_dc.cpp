@@ -284,22 +284,29 @@ std::uint32_t IsButtonMediationField124Set() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
 std::int32_t GetBattleDataConfig(std::int32_t mode, shen_name name) {
-    if (mode == 1)
-        return GetMediatedButtonBindings(name);
-    if (mode == 2)
-        return btnCheck(name);
-    if (mode != 0)
-        return 0;
-    std::uint32_t flags = 1U << (kMediatedBindingShift + 2U);
-    if (name == BUTTON_BTBT)
-        flags |= kMediatedButtonHint;
-    if (name == BUTTON_BTAD)
-        flags = kMediatedButtonHint | (1U << kMediatedBindingShift);
-    if (name == BUTTON_BTIL)
-        flags = kMediatedButtonHint | (1U << (kMediatedBindingShift + 3U));
-    if (name == BUTTON_BTSP)
-        flags = kMediatedButtonHint | (1U << kMediatedBindingShift);
-    return RegisterButtonMediation(name, 0, flags);
+    std::int32_t result = 0;
+    switch (mode) {
+    case 0: {
+        std::uint32_t flags = 1U << (kMediatedBindingShift + 2U);
+        if (name == BUTTON_BTBT)
+            flags += kMediatedButtonHint;
+        if (name == BUTTON_BTAD)
+            flags = kMediatedButtonHint | (1U << kMediatedBindingShift);
+        if (name == BUTTON_BTIL)
+            flags = kMediatedButtonHint | (1U << (kMediatedBindingShift + 3U));
+        if (name == BUTTON_BTSP)
+            flags = kMediatedButtonHint | (1U << kMediatedBindingShift);
+        result = RegisterButtonMediation(name, 0, flags);
+        break;
+    }
+    case 1:
+        result = GetMediatedButtonBindings(name);
+        break;
+    case 2:
+        result = btnCheck(name);
+        break;
+    }
+    return result;
 }
 #endif
 

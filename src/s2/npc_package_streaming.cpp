@@ -605,7 +605,7 @@ void ClearNpcMotionAttachment(NpcRouteLiveEntry *entry, std::int32_t slot);
 void CaptureNpcMotionAttachmentFrame(NpcRouteLiveEntry *entry, NpcMotionAttachment *attachment);
 void RequestNpcMotionAttachmentRegion(NpcRouteLiveEntry *entry, const NpcMotionAttachment *attachment, std::uint32_t region);
 void EvaluateNpcMotionAttachments(NpcRouteLiveEntry *entry);
-std::uint32_t SelectNpcRandomMotionAttachment();
+std::uint32_t SelectNpcRandomMotionAttachment(NpcRouteLiveEntry *entry);
 void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry);
 NpcRouteStateContextPrefix *FindNpcRouteStateContext(shen_name name);
 std::int32_t BranchNpcIfWeekday(NpcRouteLiveEntry *entry);
@@ -4911,7 +4911,7 @@ void ClearNpcMotionAttachment(NpcRouteLiveEntry *entry, std::int32_t slot) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-std::uint32_t SelectNpcRandomMotionAttachment() {
+std::uint32_t SelectNpcRandomMotionAttachment(NpcRouteLiveEntry *) {
     if (dc::sdk::RandomFloat() * 3.0f > 1.0f)
         return 0;
     return 0x148075U;
@@ -4922,6 +4922,7 @@ std::uint32_t SelectNpcRandomMotionAttachment() {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
+    std::uint32_t motion;
     if (entry->controlFlags & 0x20U)
         return;
     if (!entry->node) {
@@ -4933,7 +4934,6 @@ void UpdateNpcMotionAttachments(NpcRouteLiveEntry *entry) {
     if (entry->controlFlags & 0x10U)
         entry->motionAttachments[0].flags |= 0x40U;
     if (npcCloudyState) {
-        std::uint32_t motion;
         if (entry->flags & 0x10U)
             motion = RemapNpcMotionForRig(charGetMotionRigType(entry->node), 0xe364);
         else
@@ -4965,7 +4965,7 @@ updateAttachmentRegions:
         if ((entry->controlFlags & 4U) && !entry->motionAttachments[2].motion) {
             if (++entry->attachmentFrameCounter <= 90U)
                 return;
-            const std::uint32_t motion = SelectNpcRandomMotionAttachment();
+            motion = SelectNpcRandomMotionAttachment(entry);
             if (motion && !QueueNpcMotionAttachment(entry, static_cast<std::uint16_t>(motion), motion >> 16U, 2)) {
                 entry->motionAttachments[2].motion = 0;
                 entry->motionAttachments[2].flags = 0;

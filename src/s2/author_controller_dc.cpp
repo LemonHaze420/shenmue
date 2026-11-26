@@ -253,7 +253,7 @@ static void InitializeAuthorRuntime(const MapInfoChunk *data);
 
 static const std::byte *FindAuthorChunk(const MapInfoChunk *bundle, std::uint32_t token);
 
-void RegisterAuthorTracks(const MapInfoChunk *bundle, AuthorTrackSlots *tracks);
+void RegisterAuthorTracks(const MapInfoChunk *bundle, std::uint8_t *slot);
 
 void ClearAuthorTableEntry(std::int32_t index);
 
@@ -1319,7 +1319,7 @@ std::int32_t ReadAUTH(const std::byte *bundle, const void *package) {
     if (index == 6)
         return 0;
     authorPackageRecords[index].package = package;
-    RegisterAuthorTracks(reinterpret_cast<const MapInfoChunk *>(bundle), &authorPackageRecords[index].tracks);
+    RegisterAuthorTracks(reinterpret_cast<const MapInfoChunk *>(bundle), authorPackageRecords[index].tracks.slots);
     return 1;
 }
 
@@ -1333,8 +1333,8 @@ std::int32_t FreeAUTH(const void *package) {
             break;
     if (index == 6)
         return 0;
-    for (slot = 0; slot < authorPackageRecords[index].tracks.count; ++slot)
-        ClearAuthorTableEntry(authorPackageRecords[index].tracks.indices[slot]);
+    for (slot = 0; slot < authorPackageRecords[index].tracks.slots[AUTHOR_TRACK_COUNT]; ++slot)
+        ClearAuthorTableEntry(authorPackageRecords[index].tracks.slots[slot + AUTHOR_TRACK_FIRST]);
     ClearAuthorPackageRecord(index);
     return 1;
 }
@@ -2251,13 +2251,13 @@ static const std::byte *FindAuthorChunk(const MapInfoChunk *bundle, std::uint32_
 #endif
 
 // @verified - d
-void RegisterAuthorTracks(const MapInfoChunk *bundle, AuthorTrackSlots *tracks) {
-    std::uint8_t *slot;
+void RegisterAuthorTracks(const MapInfoChunk *bundle, std::uint8_t *slot) {
+    std::uint8_t *tracks = slot;
     const std::byte *end;
     std::int32_t index;
     if (!bundle)
         return;
-    slot = tracks->indices;
+    ++slot;
     end = reinterpret_cast<const std::byte *>(bundle) + bundle->nextByteOffset;
     ++bundle;
     if (bundle->name == AUTH_TRCK) {
@@ -2283,7 +2283,7 @@ void RegisterAuthorTracks(const MapInfoChunk *bundle, AuthorTrackSlots *tracks) 
             authorTable[index].name = bundle->name;
             ++bundle;
             if (tracks) {
-                ++tracks->count;
+                ++*tracks;
                 *slot++ = static_cast<std::uint8_t>(index);
             }
             authorTable[index].track = bundle;
@@ -2316,7 +2316,7 @@ void ClearAuthorTable() {
 // @verified - d
 void ClearAuthorPackageRecord(std::int32_t index) {
     authorPackageRecords[index].package = 0;
-    authorPackageRecords[index].tracks.count = 0;
+    authorPackageRecords[index].tracks.slots[AUTHOR_TRACK_COUNT] = 0;
 }
 
 // @verified - d

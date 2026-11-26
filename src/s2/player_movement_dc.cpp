@@ -32,25 +32,34 @@ void InitializePlayerMovementController(PlayerMovementState *state) {
 // @verified - d
 std::uint32_t ChooseRestingPlayerMotion(PlayerMovementState *state, PlayerMotionSelection *selection) {
     MotionWork *const work = state->motion;
-    std::uint32_t animation = mtwkGetAnimationId(work, static_cast<MotionRegion>(0));
+    const std::int32_t current = mtwkGetAnimationId(work, static_cast<MotionRegion>(0));
+    std::int32_t animation;
     std::uint32_t mirrored = 0;
-    if (animation != 0xf003U) {
-        if (animation == 0xf002U) {
-            mirrored = mtwkSetRegionFlag(work, 70, 1, static_cast<MotionRegion>(0)) ? 1U : 0U;
-            if (!(g_playerRuntimePointer->flags & 0x80000U)) {
-                const std::int32_t count = state->idleVariationCounter;
-                const std::int32_t random = static_cast<std::int32_t>(dc::sdk::RandomInt());
-                animation = random % 4 + 2 < count ? 0xf004U : 0xf002U;
-            } else {
-                animation = 0xf002U;
-            }
-        } else if (animation == 0xf004U) {
-            mirrored = mtwkSetRegionFlag(work, 70, 1, static_cast<MotionRegion>(0)) ? 0U : 1U;
-            animation = 0xf002U;
+    switch (current) {
+    case 0xf002:
+        if (mtwkSetRegionFlag(work, 70, 1, static_cast<MotionRegion>(0)))
+            mirrored = 1;
+        if (g_playerRuntimePointer->flags & 0x80000U) {
+            animation = 0xf002;
         } else {
-            animation = 0xf002U;
-            mirrored = mtwkIsRightFootTargetAhead(work) ? 0U : 1U;
+            const std::int32_t count = state->idleVariationCounter;
+            const std::int32_t random = static_cast<std::int32_t>(dc::sdk::RandomInt());
+            animation = count > random % 4 + 2 ? 0xf004 : 0xf002;
         }
+        break;
+    case 0xf004:
+        if (!mtwkSetRegionFlag(work, 70, 1, static_cast<MotionRegion>(0)))
+            mirrored = 1;
+        animation = 0xf002;
+        break;
+    case 0xf003:
+        animation = 0xf003;
+        break;
+    default:
+        animation = 0xf002;
+        if (!mtwkIsRightFootTargetAhead(work))
+            mirrored = 1;
+        break;
     }
     if (!(g_playerRuntimePointer->flags & 0x80000U))
         state->idleVariationCounter = static_cast<std::int8_t>(static_cast<std::uint8_t>(static_cast<std::uint8_t>(state->idleVariationCounter) + 1U));

@@ -434,6 +434,14 @@ void SetModelScale(float scale) {
 
 // @verified - d
 void SetAmbientLight(const Vector4 *colour) {
+#if SHENMUE_IS_S2
+    const float *channels = &colour->x;
+    g_ambientLight.x = *channels++;
+    g_ambientLight.y = *channels++;
+    g_ambientLight.z = *channels++;
+    g_ambientLight.w = *channels;
+    g_ambientLight.x = (0.3f * g_ambientLight.y + g_ambientLight.z * 0.5899999737739563f) + 0.10999999940395355f * g_ambientLight.w;
+#else
     g_ambientLight = *colour;
     float intensity = g_ambientLight.z * 0.5899999737739563f;
     const float red = 0.29999998211860657f;
@@ -441,6 +449,7 @@ void SetAmbientLight(const Vector4 *colour) {
     intensity = MultiplyAdd(red, g_ambientLight.y, intensity);
     intensity = MultiplyAdd(blue, g_ambientLight.w, intensity);
     g_ambientLight.x = intensity;
+#endif
 }
 
 // @verified - d

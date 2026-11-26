@@ -983,24 +983,24 @@ void OsageTranslate(float x, float y, float z) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 void GetFacialOsageDisplacement(void *face, Vector3 *output) {
-    const std::byte *bytes = static_cast<std::byte *>(face);
-    const std::int32_t count = *reinterpret_cast<const std::int32_t *>(bytes + 0x130);
-    const std::byte *control = *reinterpret_cast<std::byte *const *>(bytes + 0x134);
-    float first = 0.0f, second = 0.0f;
-    if (count > 0) {
-        const Vector3 *position = *reinterpret_cast<Vector3 *const *>(control + 0x2c);
-        const Vector3 *neutral = reinterpret_cast<const Vector3 *>(control);
-        const float x = position->x - neutral->x, z = position->z - neutral->z;
+    if (output) {
+        const std::byte *bytes = static_cast<std::byte *>(face);
+        const std::byte *control = *reinterpret_cast<std::byte *const *>(bytes + 0x134);
+        const std::int32_t count = *reinterpret_cast<const std::int32_t *>(bytes + 0x130);
+        float first = 0.0f, second = 0.0f;
         for (std::int32_t i = 0; i < count; ++i) {
+            const Vector3 *position = *reinterpret_cast<Vector3 *const *>(control + 0x2c);
+            const Vector3 *neutral = reinterpret_cast<const Vector3 *>(control);
+            const float x = position->x - neutral->x, z = position->z - neutral->z;
             if (x < first)
                 first = x;
             if (z < second)
                 second = z;
         }
+        output->x = 0.0f;
+        output->y = second;
+        output->z = -first;
     }
-    output->x = 0.0f;
-    output->y = second;
-    output->z = -first;
 }
 
 #endif

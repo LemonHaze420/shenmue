@@ -303,7 +303,7 @@ std::int32_t GetCharacterDrawControlEnabled(Character *character);
 float GetShadowRangeInverse();
 void charaCore(Character *character);
 void charaCollisionDistanceChecks(void *character);
-void charaApplyScale(const MT7Node *node, float alpha);
+void charaApplyScale(const MT7Node *node);
 void charaPrepareNodesForDraw(const MT7Node *node, float alpha);
 
 } // namespace s2

@@ -132,7 +132,6 @@ std::int32_t GetShenmueFlag(std::int32_t flag);
 
 std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode);
 
-std::int32_t EV_GetPlayerFlag(PlayerFlagReadMode mode, std::int16_t flag);
 
 ScenarioPersistentFlagBanks g_scenarioPersistentFlags;
 

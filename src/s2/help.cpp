@@ -1722,9 +1722,9 @@ static void FormatNativeHelpText(const char *text) {
         } else if (value >= '1' && value <= '8') {
             *helpLineCursor++ = static_cast<char>(value - '0');
         } else if (value >= 'A' && value <= 'Z') {
-            FormatNativeHelpText(helpTextMacros[value - 'A']);
+            FormatNativeHelpText(helpStrings[value - 'A']);
         } else if (value >= 'a' && value <= 'z') {
-            FormatNativeHelpText(helpTopicText[value - 'a']);
+            FormatNativeHelpText(helpStrings[value - 'a' + 26]);
         } else {
             *helpLineCursor++ = static_cast<char>(value);
             *helpLineCursor++ = *text++;
@@ -1904,7 +1904,8 @@ static void HelpPanelCallback(void *) {
     case 1: {
         helpLineCursor = helpLine;
         helpLegacyRow = 0;
-        FormatNativeHelpText(helpTopicText[helpStringIndex]);
+        const char *const *topics = helpStrings + 26;
+        FormatNativeHelpText(topics[helpStringIndex]);
         while (helpLegacyRow < 20) {
             WRN_UploadWarningLine(helpLegacyRow, "");
             helpLegacyRow += 2;

@@ -858,11 +858,11 @@ void UpdateCelestialPosition() {
 }
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-void UpdateCelestialRotation(const Vector3i &angles, const Vector3 &input, Vector3 &output) {
+// @verified - d
+void UpdateCelestialRotation(const std::int32_t *angle, const Vector3 &input, Vector3 &output) {
     Vector3i savedAngles;
     Vector3 initial, transformed;
     float sine, cosine;
-    const std::int32_t *angle = &angles.x;
     const float *position = &input.x;
     savedAngles.x = *angle++;
     savedAngles.y = *angle;
@@ -913,7 +913,7 @@ void UpdateCelestialRotation(const Vector3i &angles, const Vector3 &input, Vecto
 void UpdateCelestialCoordinates() {
     const float phase = GetAirTimeOfDay() * 0.2730666697025299f;
     g_airPlanet[0].timeRotation.x = static_cast<std::int32_t>(phase) + 16384;
-    UpdateCelestialRotation(*reinterpret_cast<const Vector3i *>(&g_airPlanet[0].tilt), g_airPlanet[0].orbitInput, g_airPlanet[0].position);
+    UpdateCelestialRotation(&g_airPlanet[0].tilt, g_airPlanet[0].orbitInput, g_airPlanet[0].position);
     g_airPlanet[0].rotation.x = g_airPlanet[0].intermediateRotation.x;
     std::int32_t yaw = g_airPlanet[0].intermediateRotation.y + 16384;
     yaw -= g_airPlanet[0].timeRotation.x;

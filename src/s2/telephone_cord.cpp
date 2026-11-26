@@ -109,8 +109,12 @@ HLib::Task *g_telephoneCordTask;
 
 // @verified - d
 void SetTelephoneCordAttachments(TelephoneCordGeometry *geometry, const Vector3 *receiver, const Vector3 *base) {
-    geometry->receiverAttachment = *receiver;
-    geometry->baseAttachment = *base;
+    geometry->receiverAttachment.x = receiver->x;
+    geometry->receiverAttachment.y = receiver->y;
+    geometry->receiverAttachment.z = receiver->z;
+    geometry->baseAttachment.x = base->x;
+    geometry->baseAttachment.y = base->y;
+    geometry->baseAttachment.z = base->z;
 }
 
 #else

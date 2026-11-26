@@ -31,7 +31,7 @@ extern std::int16_t g_loadFloorWidth, g_loadTitleWidth;
 extern std::int8_t g_loadTitleYearTens, g_loadTitleYearUnits, g_loadTitleMonthTens, g_loadTitleMonthUnits, g_loadTitleDayTens, g_loadTitleDayUnits;
 extern std::int8_t g_loadTitleMeridiemSprite, g_loadTitleHourTens, g_loadTitleHourUnits, g_loadTitleMinuteTens, g_loadTitleMinuteUnits, g_loadTitleWeek;
 void InitST_TitleFunc();
-void ST_LoadTitleFadeIn_Main(void *parameter);
+void ST_LoadTitleFadeIn_Main();
 void DrawFloorTitle(std::int16_t centreY);
 void DrawFloorNumber(std::int32_t value, std::int32_t special);
 void DrawLoadNumber(std::int32_t value, std::uint32_t mode, std::int32_t x, std::int32_t y, std::int32_t digits);

@@ -2907,9 +2907,13 @@ void UpdateFightTimers(FightRuntimePrefix *game) {
         --game->elapsedFrames;
     vfDecrementSfxSlotTimers(game);
     UpdateFightSmokeEffects();
-    for (std::uint8_t index = 0; index < 6; ++index)
-        if (game->characters[index] && FightValue<std::uint16_t>(game->actors[index], 0x432) <= 64999)
-            ++FightValue<std::uint16_t>(game->actors[index], 0x432);
+    for (std::uint8_t index = 0; index < 6; ++index) {
+        if (game->characters[index]) {
+            FightActorRuntimePrefix *actor = game->actors[index];
+            if (FightValue<std::uint16_t>(actor, 0x432) <= 64999)
+                ++FightValue<std::uint16_t>(actor, 0x432);
+        }
+    }
     if (cvsHasValidConverseData(0) || FightValue<std::int16_t>(game, 0x22e) != -1)
         FightValue<std::uint16_t>(game, 0x232) = 240;
     else if (FightValue<std::uint16_t>(game, 0x232))

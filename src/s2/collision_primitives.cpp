@@ -89,10 +89,16 @@ std::int32_t collRaySphereSolve(CollisionRay *ray, float offsetSquared, const Ve
         return 0;
     root = sqrtf(discriminant);
     time = (-projection - root) / length;
-    if ((ray->hitState == 1 && !(0.0f > time) && ray->hitTime > time) || (ray->hitState == 0 && !(0.0f > time))) {
+    do {
+        if (!(ray->hitState == 1 && !(0.0f > time) && ray->hitTime > time)) {
+            if (ray->hitState != 0)
+                break;
+            if (0.0f > time)
+                break;
+        }
         ray->hitState = 1;
         ray->hitTime = time;
-    }
+    } while (0);
     return 0;
 }
 

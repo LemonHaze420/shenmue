@@ -171,9 +171,9 @@ void SetScenarioCharacterInversePlacement(shen_name name, const Vector3 *positio
 }
 
 // @verified - d
-std::int32_t SetScenarioCharacterInverseChildPlacement(shen_name name, std::int16_t childId) {
+std::int32_t SetScenarioCharacterInverseChildPlacement(shen_name name, std::int32_t childId) {
     MapControlData *const control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    return static_cast<std::int32_t>(SetFixoInverseChildPlacement(scenFindChara(control->scenarioTask, name), static_cast<std::uint16_t>(childId)));
+    return SetFixoInverseChildPlacement(scenFindChara(control->scenarioTask, name), childId);
 }
 
 // @verified - d
@@ -529,7 +529,7 @@ void DrawPIN(shen_name name, std::int32_t, const Vector3 *position, const Vector
     if (scale)
         Matrix4x4::Scale(scale->x, scale->y, scale->z);
     control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    charaApplyScale(scenFindChara(control->scenarioTask, name)->model, 0.0f);
+    charaApplyScale(scenFindChara(control->scenarioTask, name)->model);
     PopCurrentMatrix(1);
 }
 #endif
@@ -554,7 +554,7 @@ void ApplyTranslationRotationScaleXYZToCharaByID(shen_name name, std::int32_t, c
     if (scale)
         Matrix4x4::Scale(scale->x, scale->y, scale->z);
     control = static_cast<MapControlData *>(HLib::GetTaskParameter(g_mapControlTask));
-    charaApplyScale(scenFindChara(control->scenarioTask, name)->model, 0.0f);
+    charaApplyScale(scenFindChara(control->scenarioTask, name)->model);
     PopCurrentMatrix(1);
 }
 #endif

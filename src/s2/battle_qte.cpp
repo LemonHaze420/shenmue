@@ -1135,29 +1135,35 @@ void EnableQteUi(BattleQteTaskData &data) {
 
 // @verified - d
 void vfqSetBattleQteIcons(BattleQteTaskData &data, std::uint8_t mode, std::uint16_t mask, std::uint16_t frames) {
-    data.shownFrames = frames;
     data.shownMask = mask;
-    for (std::size_t i = 0; i < 5; ++i)
-        if ((mask & battleQteIconMasks[i]) != 0) {
-            if (i == 0) {
+    data.shownFrames = frames;
+    for (std::int32_t i = 0; i < 5; ++i)
+        if ((static_cast<std::int16_t>(battleQteIconMasks[i]) & mask) != 0) {
+            if (i > 0)
+                data.iconFrames[i] = 6;
+            else {
                 data.age = 0;
                 data.directionFrames = 6;
-            } else
-                data.iconFrames[i] = 6;
+            }
         }
-    if (mode == 0) {
+    switch (mode) {
+    case 0:
+        data.departureFrames = 0;
         data.resultIcon = 0;
+        break;
+    case 1:
         data.departureFrames = 0;
-    } else if (mode == 1) {
         data.resultIcon = 1;
-        data.departureFrames = 0;
-    } else if (mode == 2) {
-        data.resultIcon = 1;
+        break;
+    case 2:
         data.departureFrames = 30;
-    } else if (mode == 3) {
         data.resultIcon = 1;
+        break;
+    case 3:
         data.departureFrames = 30;
         data.directionFlashFrames = data.shownFrames;
+        data.resultIcon = 1;
+        break;
     }
 }
 

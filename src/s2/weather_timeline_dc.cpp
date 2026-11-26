@@ -96,7 +96,7 @@ void BindWeatherDefinitionChunks(std::byte *data) {
 }
 
 // @verified - d
-bool InitializeWeatherParameters() {
+void InitializeWeatherParameters() {
     g_weatherDefinitionFile.original = 0;
     g_weatherDefinitionFile.data = 0;
     g_weatherDefinitionFile.cloudNodes = 0;
@@ -108,7 +108,6 @@ bool InitializeWeatherParameters() {
     g_weatherDefinitionFile.forecastNodes = 0;
     g_weatherDefinitionFile.forecastCount = 0;
     LoadWeatherDefinitionFile();
-    return g_weatherDefinitionFile.data != 0;
 }
 
 // @verified - d
@@ -134,19 +133,6 @@ void SelectWeatherDefinitionFile(std::uint32_t original) {
     g_weatherDefinitionFile.original = original;
 }
 
-void ResetWeatherDefinitions() {
-    g_weatherDefinitionFile.original = 0;
-    g_weatherDefinitionFile.data = 0;
-    g_weatherDefinitionFile.cloudNodes = 0;
-    g_weatherDefinitionFile.rainNodes = 0;
-    g_weatherDefinitionFile.snowNodes = 0;
-    g_weatherDefinitionFile.cloudCount = 0;
-    g_weatherDefinitionFile.rainCount = 0;
-    g_weatherDefinitionFile.snowCount = 0;
-    g_weatherDefinitionFile.forecastNodes = 0;
-    g_weatherDefinitionFile.forecastCount = 0;
-    LoadWeatherDefinitionFile();
-}
 
 WeatherData *SetupWeatherData(std::int32_t baseYear) {
     WeatherData *const data = static_cast<WeatherData *>(HLib::AllocateTaskData(sizeof(WeatherData), shen_name(SHEN_NAME4('W', 'D', 'T', 'A'))));

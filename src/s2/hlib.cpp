@@ -4,6 +4,7 @@
 #endif
 #include "s2/pause.hpp"
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
+#include "s2/startup_dc.hpp"
 #include "s2/texture_dc.hpp"
 #include "s2/debug_screen_dc.hpp"
 #include "s2/input_dc.hpp"
@@ -92,8 +93,7 @@ alignas(32) std::array<std::byte, DYNAMIC_HEAP_SIZE> dynamicHeap{};
 #if SHENMUE_S2_GCC295
 SHENMUE_HLIB_ALIGN StaticStorageEntry staticStorage[kStaticStorageCount];
 SHENMUE_HLIB_ALIGN StaticStorageEntry zeroEntry;
-Task rootTask;
-Task taskQueue[kTaskCount - 1];
+Task taskStorage[kTaskCount];
 Task *moduleTaskQueue[16];
 #else
 alignas(32) std::array<StaticStorageEntry, kStaticStorageCount> staticStorage{};
@@ -210,7 +210,11 @@ void setEntry(TaskData *entry, std::uint32_t name, std::size_t size, std::uint32
 }
 
 Task *taskAt(std::size_t index) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    return &taskStorage[index];
+#else
     return index == 0 ? &rootTask : &taskQueue[index - 1];
+#endif
 }
 
 void destroyCurrentTaskCallback(void *) {
@@ -1032,15 +1036,20 @@ bool ShrinkTaskData(void *taskData, std::size_t size) {
     return true;
 }
 
-Task *InitializeTasks(TaskCallback callback) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-    SHENMUE_HLIB_MEMSET(&rootTask, 0, sizeof(Task));
-    for (std::size_t index = 0; index < kTaskCount - 1; ++index) {
-        SHENMUE_HLIB_MEMSET(&taskQueue[index], 0, sizeof(Task));
-        taskQueue[index].taskToken = static_cast<std::int32_t>(kNone);
-        if (index + 1 < kTaskCount - 1)
-            taskQueue[index].next = &taskQueue[index + 1];
-    }
+void InitializeTasks(TaskCallback callback) {
+#else
+Task *InitializeTasks(TaskCallback callback) {
+#endif
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    std::int32_t index = 0;
+    do {
+        const std::int32_t nextIndex = index + 1;
+        SHENMUE_HLIB_MEMSET(&taskStorage[index], 0, sizeof(Task));
+        taskStorage[index].taskToken = static_cast<std::int32_t>(kNone);
+        taskStorage[index].next = &taskStorage[nextIndex];
+        index = nextIndex;
+    } while (index < static_cast<std::int32_t>(kTaskCount));
 #else
     for (std::size_t index = 0; index < kTaskCount; ++index) {
         Task *const task = taskAt(index);
@@ -1050,20 +1059,26 @@ Task *InitializeTasks(TaskCallback callback) {
     }
 #endif
 
-    rootTask.taskToken = static_cast<std::int32_t>(kRoot);
-    rootTask.activeCallback = callback;
-    rootTask.taskIndex = 0;
-    rootTask.nextTaskIndex = 1;
-    rootTask.next = &rootTask;
-    rootTask.nextInQueue = &rootTask;
-    NextTask = &taskQueue[0];
+    {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+        Task &rootTask = taskStorage[0];
+        Task *const taskQueue = taskStorage + 1;
+#endif
+        rootTask.taskToken = static_cast<std::int32_t>(kRoot);
+        rootTask.activeCallback = callback;
+        rootTask.taskIndex = 0;
+        rootTask.nextTaskIndex = 1;
+        rootTask.next = &rootTask;
+        rootTask.nextInQueue = &rootTask;
+        NextTask = &taskQueue[0];
+    }
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     taskQueuePause.paused = 0;
 #endif
 #if SHENMUE_S2_GCC295
-    for (std::size_t index = 0; index < SHENMUE_HLIB_COUNT(moduleTaskQueue); ++index)
-        moduleTaskQueue[index] = &rootTask;
-    for (std::size_t index = 0; index < SHENMUE_HLIB_COUNT(postUpdateTasks); ++index)
+    for (index = 0; index < static_cast<std::int32_t>(SHENMUE_HLIB_COUNT(moduleTaskQueue)); ++index)
+        moduleTaskQueue[index] = &taskStorage[0];
+    for (index = 0; index < static_cast<std::int32_t>(SHENMUE_HLIB_COUNT(postUpdateTasks)); ++index)
         postUpdateTasks[index] = 0;
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     for (std::size_t index = 0; index < SHENMUE_HLIB_COUNT(postUpdateData); ++index)
@@ -1086,12 +1101,14 @@ Task *InitializeTasks(TaskCallback callback) {
     preservedCallbacks.fill({});
 #endif
 #endif
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    CurrentTask = &taskStorage[0];
+#else
     preservedCallbackCount = 0;
-#if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     taskQueuePaused = false;
-#endif
     CurrentTask = &rootTask;
     return &rootTask;
+#endif
 }
 
 void MainLoop() {
@@ -1657,6 +1674,9 @@ std::int8_t GetTaskNextTaskIndex(const Task *task) {
 }
 
 Task *GetFirstTaskAtIndex(std::int8_t taskIndex) {
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+    Task &rootTask = taskStorage[0];
+#endif
     if (taskIndex == 0)
         return &rootTask;
     const int previousIndex = taskIndex - 1;
@@ -1792,12 +1812,12 @@ void ResetPreservedCallbacks() {
 Task *FindNextTaskInQueueByIndexWithDepth(std::uint8_t nextTaskIndex, std::int32_t searchDepth) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     const std::int8_t index = static_cast<std::int8_t>(nextTaskIndex);
-    Task *task = &rootTask;
+    Task *task = &taskStorage[0];
     do {
         if (static_cast<std::int8_t>(task->nextTaskIndex) == index && --searchDepth <= 0)
             return task;
         task = task->nextInQueue;
-    } while (task != &rootTask);
+    } while (task != &taskStorage[0]);
     return SHENMUE_HLIB_NULL;
 #else
     Task *task = &rootTask;
@@ -2208,6 +2228,18 @@ namespace s2 {
 } // namespace shenmue::s2::HLib
 
 namespace shenmue::s2 {
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+// @verified - d
+void ExecuteTasks() {
+    HLib::CurrentTask = &HLib::taskStorage[0];
+    for (;;) {
+        g_currentTaskName = static_cast<std::uint32_t>(HLib::CurrentTask->taskToken);
+        HLib::CurrentTask->activeCallback(HLib::CurrentTask->taskData);
+        HLib::CurrentTask = HLib::CurrentTask->nextInQueue;
+    }
+}
 #endif
 
 #if SHENMUE_IS_DC

@@ -938,7 +938,7 @@ bool ResolveCharacterCylinderOverlap(Vector3 *result, const Vector3 *position, f
     bool corrected = false;
 #endif
     *result = *position;
-    CharacterControlModel *controls[kMaximumCharacterCollisionCount + 1];
+    CharacterControlModel *controls[kMaximumCharacterCollisionCount];
     if (!GatherCharacterControls(controls))
         return false;
     CharacterControlModel **entry = controls;

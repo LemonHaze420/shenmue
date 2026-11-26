@@ -145,7 +145,7 @@ static const std::int16_t blurBranchNodes[10][2] = {{0, 0}, {1, -1}, {1, 14}, {1
 void AssignBlurCallbacks(Character *character);
 void ApplyFightCharacterDefinition(Character *character, const CharacterTableArgument *arguments, std::int32_t count);
 std::uint8_t *figpAssignModeForCharacter(Character *character, std::uint8_t mode);
-std::uint32_t figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction);
+void figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction);
 FigurePoseControlPrefix *EV_figpAssignFlagsFor(Character *character, std::uint8_t bitIndex, std::uint8_t enabled);
 std::uint32_t figpGetFlagMask(Character *character, std::uint8_t bitIndex);
 void SetBlurModel(Character *character, const char *filename, float time);
@@ -270,10 +270,10 @@ FigurePose *figpAssignModeForCharacter(Character *character, std::int8_t mode) {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
-std::uint32_t figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction) {
+void figpAssignMotScaleAndDirFor(Character *character, std::uint8_t scale, std::uint8_t direction) {
     FigurePoseControlPrefix *const figure = static_cast<FigurePoseControlPrefix *>(charFindComp(character, MODEL_FIGURE_POSE));
     if (!figure)
-        return 0;
+        return;
     const std::int8_t signedDirection = static_cast<std::int8_t>(direction);
     if (signedDirection < 0) {
         figure->startTime = 1;
@@ -285,7 +285,6 @@ std::uint32_t figpAssignMotScaleAndDirFor(Character *character, std::uint8_t sca
     figure->motionScale = scale;
     if (scale == 1)
         figure->direction = 0;
-    return scale;
 }
 #endif
 

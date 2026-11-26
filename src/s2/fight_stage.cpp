@@ -4166,20 +4166,19 @@ void AdjustCooldownGroundTarget(std::uint32_t controller, Vector3 *position, Mot
     if (!slot->groundCorrectionEnabled[index])
         return;
     const float base = slot->stackLayerOffsets[index];
-    const float bodyLimit = cooldownGroundTargetHeights[index] + slot->position.y;
+    const float bodyLimit = slot->position.y + cooldownGroundTargetHeights[index];
     const float target = base + cooldownGroundTargetHeights[index];
-    float &previous = slot->groundSamples[index];
-    if (position->y <= bodyLimit && position->y > target) {
-        if (previous < -9999.9f)
-            previous = position->y - target;
-        previous *= 0.5f;
-        position->y = previous + base;
+    if (!(position->y > bodyLimit) && position->y > target) {
+        if (slot->groundSamples[index] < -9999.9f)
+            slot->groundSamples[index] = position->y - target;
+        slot->groundSamples[index] *= 0.5f;
+        position->y = slot->groundSamples[index] + base;
     } else {
         if (target > position->y) {
-            previous = target - position->y;
-            position->y += previous;
+            slot->groundSamples[index] = target - position->y;
+            position->y += slot->groundSamples[index];
         } else
-            previous = -10000.0f;
+            slot->groundSamples[index] = -10000.0f;
     }
 }
 
@@ -4730,26 +4729,26 @@ void vfPrepareEnemySlotMotion(FCMG_t *slot) {
         flags |= 0x20U;
     if (shenCheckCharaHasAlphaManager(character))
         flags |= 0x80U;
-    StageValue<std::uint32_t>(slot, 0x24) = flags;
-    StageValue<float>(slot, 0x28) = mtwkGetSpeed(motion, static_cast<MotionRegion>(0));
+    slot->savedControlFlags = flags;
+    slot->savedMotionScale = mtwkGetSpeed(motion, static_cast<MotionRegion>(0));
     mtwkSetSpeed(motion, 1, static_cast<MotionRegion>(0));
-    StageValue<std::uint32_t>(slot, 0xd4) = mtwkGetTrackedRootMode(motion);
+    slot->savedRootMode = mtwkGetTrackedRootMode(motion);
     mtwkSetRequestedRootMode(motion, 2);
-    StageValue<std::uint32_t>(slot, 0xd8) = mtwkGetConstraintAngle(motion);
+    slot->savedConstraintAngle = mtwkGetConstraintAngle(motion);
     mtwkSetConstraintAngle(motion, 0x1000);
-    StageValue<std::uint32_t>(slot, 0xdc) = mtwkGetProjectionAngle(motion, 0);
+    slot->savedProjectionAngle = mtwkGetProjectionAngle(motion, 0);
     mtwkSetProjectionAngle(motion, 0xb8d8, 0);
     for (std::int32_t index = 0; index < 7; ++index) {
         const std::int32_t selector = fightMotionSelectors[index];
-        StageValue<MotionTargetCallback>(slot, 0xe0 + index * 4) = mtwkGetTargetCallback(motion, selector);
-        StageValue<void *>(slot, 0xfc + index * 4) = mtwkGetTargetParameter(motion, selector);
+        slot->savedMotionCallbacks[index] = mtwkGetTargetCallback(motion, selector);
+        slot->savedMotionParameters[index] = mtwkGetTargetParameter(motion, selector);
     }
 }
 
 void vfRestoreEnemySlotMotion(FCMG_t *slot) {
     Character *const character = slot->character;
     MotionWork *const motion = slot->motion;
-    const std::uint32_t flags = StageValue<std::uint32_t>(slot, 0x24);
+    const std::uint32_t flags = slot->savedControlFlags;
     mtwkSetClipMode(motion, flags & 3U);
     if (flags & 4U)
         SetCharacterCollisionEnabled(character, 1);
@@ -4761,14 +4760,14 @@ void vfRestoreEnemySlotMotion(FCMG_t *slot) {
         cpamSetFlag(character, 1);
     else
         cpamSetFlag(character, 0);
-    mtwkSetSpeed(motion, StageValue<float>(slot, 0x28), static_cast<MotionRegion>(0));
-    mtwkSetRequestedRootMode(motion, StageValue<std::uint32_t>(slot, 0xd4));
-    mtwkSetConstraintAngle(motion, StageValue<std::int32_t>(slot, 0xd8));
-    mtwkSetProjectionAngle(motion, StageValue<std::uint32_t>(slot, 0xdc), 0);
+    mtwkSetSpeed(motion, slot->savedMotionScale, static_cast<MotionRegion>(0));
+    mtwkSetRequestedRootMode(motion, slot->savedRootMode);
+    mtwkSetConstraintAngle(motion, slot->savedConstraintAngle);
+    mtwkSetProjectionAngle(motion, slot->savedProjectionAngle, 0);
     for (std::int32_t index = 0; index < 7; ++index) {
         const std::int32_t selector = fightMotionSelectors[index];
-        mtwkAssignTargetCallback(motion, reinterpret_cast<MotionTargetCallback *>(reinterpret_cast<std::byte *>(slot) + 0xe0)[index], selector);
-        mtwkAssignTargetParameter(motion, reinterpret_cast<void **>(reinterpret_cast<std::byte *>(slot) + 0xfc)[index], selector);
+        mtwkAssignTargetCallback(motion, slot->savedMotionCallbacks[index], selector);
+        mtwkAssignTargetParameter(motion, slot->savedMotionParameters[index], selector);
     }
 }
 
@@ -4966,7 +4965,7 @@ bool vfEnemySlotResetAndRestartCycle(FightRuntimePrefix *game, FCMG_t *slot) {
     default:
         break;
     }
-    slot->quadrant = vfUpdatePredicate_40_41_44_50_51_54(slot->position.x, slot->position.z, -1);
+    slot->quadrant = vfUpdatePredicate_40_41_44_50_51_54(slot->position.x, slot->position.z, slot->quadrant);
     slot->state = 1;
     slot->runningTicks = 0;
     ++g_pFightStage->readyEnemySlots[team];

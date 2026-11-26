@@ -193,11 +193,11 @@ bool ModelImageReadComesAfter(const ModelImageFileRead *first, const ModelImageF
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     std::int8_t a, b;
     const char *left = first->directory, *right = second->directory;
-    a = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*left++)));
-    b = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*right++)));
+    a = static_cast<std::int8_t>(toupper(*left++));
+    b = static_cast<std::int8_t>(toupper(*right++));
     while (a && b && a == b) {
-        a = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*left++)));
-        b = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*right++)));
+        a = static_cast<std::int8_t>(toupper(*left++));
+        b = static_cast<std::int8_t>(toupper(*right++));
     }
     if (a > b)
         return true;
@@ -205,18 +205,20 @@ bool ModelImageReadComesAfter(const ModelImageFileRead *first, const ModelImageF
         return false;
     left = first->filename;
     right = second->filename;
-    a = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*left)));
-    b = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*right)));
+    a = static_cast<std::int8_t>(toupper(*left));
     ++left;
+    b = static_cast<std::int8_t>(toupper(*right));
     ++right;
     while (a && b && a == b) {
-        a = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*left)));
-        b = static_cast<std::int8_t>(toupper(static_cast<unsigned char>(*right)));
+        a = static_cast<std::int8_t>(toupper(*left));
         ++left;
+        b = static_cast<std::int8_t>(toupper(*right));
         ++right;
     }
     if (a > b)
         return true;
+    if (a < b)
+        return false;
     return false;
 #else
     const std::int32_t order = CompareCharacterTableTokens(first->directory, second->directory);

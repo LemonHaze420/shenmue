@@ -20,9 +20,9 @@ typedef char Layout_author_table_dc_0[(sizeof(AuthorTableEntry) == 0x14) ? 1 : -
 typedef char Layout_author_table_dc_1[(offsetof(AuthorTableEntry, track) == 4) ? 1 : -1];
 typedef char Layout_author_table_dc_2[(offsetof(AuthorTableEntry, name) == 0x10) ? 1 : -1];
 
+enum { AUTHOR_TRACK_COUNT = 0, AUTHOR_TRACK_FIRST = 1 };
 struct AuthorTrackSlots {
-    std::uint8_t count;
-    std::uint8_t indices[27];
+    std::uint8_t slots[28];
 };
 struct AuthorPackageRecord {
     const void *package;
@@ -33,7 +33,7 @@ typedef char Layout_author_table_dc_4[(offsetof(AuthorPackageRecord, tracks) == 
 
 extern AuthorTableEntry authorTable[70];
 extern AuthorPackageRecord authorPackageRecords[6];
-void RegisterAuthorTracks(const MapInfoChunk *bundle, AuthorTrackSlots *tracks);
+void RegisterAuthorTracks(const MapInfoChunk *bundle, std::uint8_t *slot);
 void ClearAuthorTableEntry(std::int32_t index);
 void ClearAuthorTable();
 void ClearAuthorPackageRecord(std::int32_t index);

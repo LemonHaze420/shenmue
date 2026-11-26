@@ -122,11 +122,18 @@ def main():
             if lines and lines[0].startswith("before "):
                 function_before, function_sections = lines[0][len("before "):], lines[1:]
         data_sections = {}
+        object_paths = {name: path for name, path, _ in objects}
         if config.get("data_order"):
             for line in (config_dir / config["data_order"]).read_text().splitlines():
                 if "\t" in line:
-                    group_name, section = line.split("\t", 1)
-                    data_sections.setdefault(group_name, []).append(section)
+                    columns = line.split("\t")
+                    if len(columns) not in (2, 3):
+                        raise ValueError(f"Invalid data order: {line}")
+                    group_name, section = columns[:2]
+                    owner = columns[2] if len(columns) == 3 else "*"
+                    if owner != "*" and owner not in object_paths:
+                        raise ValueError(f"Unknown data owner: {owner}")
+                    data_sections.setdefault(group_name, []).append((section, owner))
         constructors = (config_dir / config["constructors"]).read_text().splitlines()
         ranks = {name: index for index, name in enumerate(constructors)}
         if set(constructors) - set(order):
@@ -155,7 +162,7 @@ def main():
                 group["follows_vram"] = patterns[index - 1][0]
             ordered = sorted(objects, key=lambda obj: ranks.get(obj[0], len(ranks))) if name == "ctors" else objects
             # globals placed in .bss by data_order must not be claimed by an object's .data wildcard first
-            bss_patterns = [s for s in data_sections.get("bss", []) if s.startswith(".data.")]
+            bss_patterns = [section for section, _ in data_sections.get("bss", []) if section.startswith(".data.")]
             for number, (object_name, path, keep) in enumerate(ordered):
                 if name == "data" and bss_patterns and object_name.startswith("src/"):
                     names = elf_section_names(build / path)
@@ -171,8 +178,9 @@ def main():
                                                      "section": section, "linker_section_order": ".text", "keep": True})
                 # GameJam data order: each paired global's section, grouped by our output section
                 if name in data_sections and object_name == function_before:
-                    for data_index, section in enumerate(data_sections[name]):
-                        group["subsegments"].append({"start": "auto", "type": "object", "name": f"{name}_data_{data_index}", "object": "*",
+                    for data_index, (section, owner) in enumerate(data_sections[name]):
+                        group["subsegments"].append({"start": "auto", "type": "object", "name": f"{name}_data_{data_index}",
+                                                     "object": "*" if owner == "*" else object_paths[owner],
                                                      "section": section, "linker_section_order": "." + name, "keep": True})
                 group["subsegments"].append({"start": "auto", "type": "object", "name": f"{name}_{number}",
                                              "object": path, "section": pattern, "linker_section_order": "." + name, "keep": keep})

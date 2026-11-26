@@ -1254,7 +1254,7 @@ static void ReleaseNaviWindowStrips(std::uint32_t flags) {
     if ((flags & 3U) == 0)
         return;
     for (std::int32_t index = 0; index < 6; ++index) {
-        if (flags & 1U) {
+        if (flags % 2 != 0) {
             const std::int32_t label = naviWindowLabelTextures[index];
             if (label >= 0)
                 ReleaseNamedTexture_Wrapper(label);
@@ -1535,14 +1535,20 @@ static void RefreshNaviWindowPreview(NativeNaviWindowState *work) {
     }
     if (!cursor)
         return;
+    if (!cursor->name)
+        return;
     std::uint32_t texture = 0;
-    while (cursor->name) {
-        if (cursor->name == SHEN_NAME(TEXN)) {
+    std::uint32_t chunkType = SHEN_NAME(TEXN);
+    std::int32_t width = 128;
+    std::int32_t *textures = naviWindowPreviewTextures;
+    std::int32_t *preview = &naviWindowPreviewTexture;
+    do {
+        if (cursor->name == chunkType) {
             if (texture == selected) {
                 TextureChunk *const chunk = cursor;
-                const std::int32_t slot = chunk->width != 128;
-                ReplacePtxTexture(naviWindowPreviewTextures[slot], chunk);
-                naviWindowPreviewTexture = naviWindowPreviewTextures[slot];
+                const std::int32_t slot = chunk->width != width;
+                ReplacePtxTexture(textures[slot], chunk);
+                *preview = textures[slot];
                 if (dummySize) {
                     work->mapWidth = dummySize;
                     work->mapHeight = dummySize;
@@ -1555,7 +1561,7 @@ static void RefreshNaviWindowPreview(NativeNaviWindowState *work) {
             ++texture;
         }
         cursor = reinterpret_cast<TextureChunk *>(reinterpret_cast<std::byte *>(cursor) + cursor->size);
-    }
+    } while (cursor->name);
 }
 
 #else

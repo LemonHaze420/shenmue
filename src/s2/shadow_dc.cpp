@@ -1070,33 +1070,38 @@ namespace {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 // @verified - d
-void FillWaveSpectrum(float *real, float *imaginary, const WaveBin *bins) {
+void FillWaveSpectrum(float (*real)[17], float (*imaginary)[17], const WaveBin *bins) {
+    register float sine asm("fr4");
+    register float cosine asm("fr5");
     for (std::int32_t row = 0; row < 8; ++row) {
-        for (std::int32_t column = 0; column < 8; ++column) {
-            const WaveBin *const bin = &bins[row * 8 + column];
-            const std::int32_t firstAngle = static_cast<std::int32_t>((bin->phaseA * 65536.0f) / 6.2831854820251465f);
-            Vector2 rotation;
-            CalculateFixedSinCos(static_cast<std::uint32_t>(firstAngle), &rotation);
-            const float firstReal = rotation.y * bin->amplitude;
-            const float firstImaginary = rotation.x * bin->amplitude;
-            real[row * 17 + column] = firstReal;
-            imaginary[row * 17 + column] = firstImaginary;
-            real[(16 - row) * 17 + 16 - column] = firstReal;
-            imaginary[(16 - row) * 17 + 16 - column] = -firstImaginary;
-            const std::int32_t secondAngle = static_cast<std::int32_t>((bin->phaseB * 65536.0f) / 6.2831854820251465f);
-            CalculateFixedSinCos(static_cast<std::uint32_t>(secondAngle), &rotation);
-            const float secondReal = rotation.y * bin->amplitude;
-            const float secondImaginary = rotation.x * bin->amplitude;
-            real[row * 17 + 16 - column] = secondReal;
-            imaginary[row * 17 + 16 - column] = secondImaginary;
-            real[(16 - row) * 17 + column] = secondReal;
-            imaginary[(16 - row) * 17 + column] = -secondImaginary;
+        for (std::int32_t column = 0; column < 8; ++column, ++bins) {
+            float amplitude = bins->amplitude;
+            float first = bins->phaseA;
+            float second = bins->phaseB;
+            SHENMUE_DC_FFT_SINCOS(first, sine, cosine);
+            cosine *= amplitude;
+            float value = sine * amplitude;
+            real[row][column] = cosine;
+            imaginary[row][column] = value;
+            real[16 - row][16 - column] = cosine;
+            imaginary[16 - row][16 - column] = -value;
+            SHENMUE_DC_FFT_SINCOS(second, sine, cosine);
+            cosine *= amplitude;
+            value = sine * amplitude;
+            real[row][16 - column] = cosine;
+            imaginary[row][16 - column] = value;
+            real[16 - row][column] = cosine;
+            imaginary[16 - row][column] = -value;
         }
     }
-    real[0] = imaginary[0] = 0;
-    real[16] = imaginary[16] = 0;
-    real[272] = imaginary[272] = 0;
-    real[288] = imaginary[288] = 0;
+    real[0][0] = 0;
+    imaginary[0][0] = 0;
+    real[0][16] = 0;
+    imaginary[0][16] = 0;
+    real[16][0] = 0;
+    imaginary[16][0] = 0;
+    real[16][16] = 0;
+    imaginary[16][16] = 0;
 }
 #endif
 
@@ -1299,7 +1304,7 @@ void UpdateWaveSpectrum(WaveState *state) {
     }
     float (*const real)[17] = state->real;
     float (*const imaginary)[17] = state->imaginary;
-    FillWaveSpectrum(real[0], imaginary[0], state->bins);
+    FillWaveSpectrum(real, imaginary, state->bins);
     for (i = 0; i < 16; ++i) {
         for (j = 0; j < 16; ++j) {
             line[j].x = real[i][j];

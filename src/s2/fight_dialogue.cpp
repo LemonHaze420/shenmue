@@ -63,7 +63,7 @@ namespace shenmue {
 namespace s2 {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
-std::uint32_t InstructionAssignMotScaleAndDir(Character *character, std::uint8_t scale, std::uint8_t direction);
+void InstructionAssignMotScaleAndDir(Character *character, std::uint8_t scale, std::uint8_t direction);
 std::uint8_t *InstructionAssignFigureMode(Character *character, std::uint8_t mode);
 void InstructionSetRegionEvalTime(float frame, Character *character);
 void InstructionSetLayerEndFrame(float frame, Character *character);

@@ -109,7 +109,7 @@ ObjectXFormsParams *SetFixoLocalPosition(Character *character, const Vector3 *po
 ObjectXFormsParams *SetFixoLocalRotation(Character *character, const Vector3i *rotation);
 ObjectXFormsParams *ResetCharaFixo(Character *character);
 void SetFixoInversePositionRotation(Character *character, const Vector3 *position, const Vector3i *rotation);
-std::int64_t SetFixoInverseChildPlacement(Character *character, std::uint16_t childId);
+std::int32_t SetFixoInverseChildPlacement(Character *character, std::int32_t childId);
 ObjectXFormsParams *SetFixoAlphaPropagation(Character *character, std::int32_t enabled);
 void SetupObjectXForms(Character *character, void *payload);
 void AllocateFIXO(Character *character);
@@ -673,7 +673,7 @@ void SetFixoInversePositionRotation(Character *character, const Vector3 *positio
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 // @verified - d
-std::int64_t SetFixoInverseChildPlacement(Character *character, std::uint16_t childId) {
+std::int32_t SetFixoInverseChildPlacement(Character *character, std::int32_t childId) {
     MT7Node *const root = character->model;
     MT7Node *const child = FindMT7Node(root, static_cast<std::int16_t>(childId));
     if (!child)

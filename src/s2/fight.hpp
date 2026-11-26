@@ -85,7 +85,10 @@ struct FCMG_t {
         std::uint16_t runningTicks;
     };
     std::uint8_t counterGroup, retained21;
-    std::byte retained22[0x1a];
+    std::byte retained22[2];
+    std::uint32_t savedControlFlags;
+    float savedMotionScale;
+    std::byte retained2c[0x10];
     std::uint8_t fightEntryIndex, retained3d, actorIndex, retained3f;
     FightActorRuntimePrefix *fighter;
     std::byte retained44[4];
@@ -100,7 +103,11 @@ struct FCMG_t {
     std::int8_t savedPositionState;
     std::byte retainedce[2];
     std::uint32_t positionState;
-    std::byte retainedd4[0x44];
+    std::uint32_t savedRootMode;
+    std::int32_t savedConstraintAngle;
+    std::uint32_t savedProjectionAngle;
+    void (*savedMotionCallbacks[7])(std::uint32_t, Vector3 *, MotionWork *, void *);
+    void *savedMotionParameters[7];
 };
 struct FRMG_t {
     Character *character;
@@ -167,6 +174,13 @@ struct FGST_t {
 typedef char FightContactSlotSizeCheck[sizeof(FCMG_t) == 0x118 ? 1 : -1];
 typedef char FightContactSlotActorCheck[offsetof(FCMG_t, fighter) == 0x40 ? 1 : -1];
 typedef char FightContactSlotFadeCheck[offsetof(FCMG_t, fadeAlpha) == 0xb0 ? 1 : -1];
+typedef char FightContactSavedFlagsCheck[offsetof(FCMG_t, savedControlFlags) == 0x24 ? 1 : -1];
+typedef char FightContactSavedSpeedCheck[offsetof(FCMG_t, savedMotionScale) == 0x28 ? 1 : -1];
+typedef char FightContactSavedRootModeCheck[offsetof(FCMG_t, savedRootMode) == 0xd4 ? 1 : -1];
+typedef char FightContactSavedConstraintCheck[offsetof(FCMG_t, savedConstraintAngle) == 0xd8 ? 1 : -1];
+typedef char FightContactSavedProjectionCheck[offsetof(FCMG_t, savedProjectionAngle) == 0xdc ? 1 : -1];
+typedef char FightContactSavedCallbacksCheck[offsetof(FCMG_t, savedMotionCallbacks) == 0xe0 ? 1 : -1];
+typedef char FightContactSavedParametersCheck[offsetof(FCMG_t, savedMotionParameters) == 0xfc ? 1 : -1];
 typedef char FightFormationSizeCheck[sizeof(FRMG_t) == 0x4c ? 1 : -1];
 typedef char FightFormationFlagsCheck[offsetof(FRMG_t, formationFlags) == 0x1c ? 1 : -1];
 typedef char FightFormationActivationCheck[offsetof(FRMG_t, activationState) == 0x44 ? 1 : -1];

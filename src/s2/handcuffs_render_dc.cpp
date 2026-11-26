@@ -21,6 +21,8 @@ float g_handcuffChainVelocity;
 HandcuffChainArc g_handcuffChainArc;
 std::uint32_t g_handcuffWristAngle;
 
+const Vector3 handcuffChainGravity = {0.0f, 100.0f, 0.0f};
+
 std::int32_t GetHandcuffsWristBone(std::int32_t bone);
 
 void Handcuffs_UpdateChainArc(float distance, HandcuffChainArc *arc) {
@@ -41,42 +43,22 @@ void Handcuffs_UpdateChainArc(float distance, HandcuffChainArc *arc) {
 }
 
 void Handcuffs_BuildChainTransform(const Vector3 &first, const Vector3 &second, Matrix4x4 &transform) {
-    Vector3 midpoint;
-    const volatile float firstWeightedX = first.x * 0.5f;
-    const volatile float firstWeightedY = first.y * 0.5f;
-    const volatile float firstWeightedZ = first.z * 0.5f;
-    midpoint.x = second.x * 0.5f + firstWeightedX;
-    midpoint.y = second.y * 0.5f + firstWeightedY;
-    midpoint.z = second.z * 0.5f + firstWeightedZ;
-    Vector3 along, sag;
-    along.x = first.x - second.x;
-    along.y = first.y - second.y;
-    along.z = first.z - second.z;
-    sag.x = midpoint.x - g_handcuffChainAnchor.x;
-    sag.y = midpoint.y - g_handcuffChainAnchor.y;
-    sag.z = midpoint.z - g_handcuffChainAnchor.z;
-    Vector3 perpendicular;
-    dc::sdk::njOuterProduct(&along, &sag, &perpendicular);
-    dc::sdk::njOuterProduct(&perpendicular, &along, &sag);
-    const float distance = CalculateDistanceBetweenPoints(&first, &second);
+    Vector3 along, sag, perpendicular, midpoint, force;
+    am2Vector3Combine(&first, &second, 0.5f, 0.5f, &midpoint);
+    am2Vector3Subtract(&along, &first, &second);
+    am2Vector3Subtract(&sag, &midpoint, &g_handcuffChainAnchor);
+    am2Vector3Cross(&along, &sag, &perpendicular);
+    am2Vector3Cross(&perpendicular, &along, &sag);
+    const float distance = am2Vector3Distance(&first, &second);
     Handcuffs_UpdateChainArc(distance, &g_handcuffChainArc);
-    dc::sdk::njUnitVector(&along);
-    dc::sdk::njUnitVector(&sag);
-    dc::sdk::njUnitVector(&perpendicular);
-    Vector3 force;
-    force.x = midpoint.x - g_handcuffChainAnchor.x;
-    force.y = midpoint.y - g_handcuffChainAnchor.y;
-    force.z = midpoint.z - g_handcuffChainAnchor.z;
-    force.x += 0.0f;
-    force.y += 100.0f;
-    force.z += 0.0f;
-    g_handcuffChainVelocity += dc::sdk::njInnerProduct(&perpendicular, &force);
-    force.x = perpendicular.x * g_handcuffChainVelocity;
-    force.y = perpendicular.y * g_handcuffChainVelocity;
-    force.z = perpendicular.z * g_handcuffChainVelocity;
-    g_handcuffChainAnchor.x += force.x;
-    g_handcuffChainAnchor.y += force.y;
-    g_handcuffChainAnchor.z += force.z;
+    am2Vector3NormalizeInPlace(&along);
+    am2Vector3NormalizeInPlace(&sag);
+    am2Vector3NormalizeInPlace(&perpendicular);
+    am2Vector3Subtract(&force, &midpoint, &g_handcuffChainAnchor);
+    am2Vector3AddInPlace(&force, &handcuffChainGravity);
+    g_handcuffChainVelocity += am2Vector3Dot(&perpendicular, &force);
+    am2Vector3Scale(&force, &perpendicular, g_handcuffChainVelocity);
+    am2Vector3AddInPlace(&g_handcuffChainAnchor, &force);
     g_handcuffChainMidpoint = midpoint;
     transform.rows[0].x = along.x;
     transform.rows[1].x = sag.x;

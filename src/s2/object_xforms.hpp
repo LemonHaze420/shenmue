@@ -96,11 +96,12 @@ void CaptureFixoRelativePlacement(Character *character, ObjectXFormsParams *atta
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 ObjectXFormsParams *SetFixoLocalRotation(Character *character, const Vector3i *rotation);
 ObjectXFormsParams *SetFixoLocalPosition(Character *character, const Vector3 *position);
+std::int32_t SetFixoInverseChildPlacement(Character *character, std::int32_t childId);
 #else
 std::uint64_t SetFixoLocalRotation(Character *character, const Vector3i *rotation);
 std::uint64_t SetFixoLocalPosition(Character *character, const Vector3 *position);
-#endif
 std::int64_t SetFixoInverseChildPlacement(Character *character, std::uint16_t childId);
+#endif
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 void RefreshFixoRelativePlacement(Character *character, const Matrix4x4 *transform);
 #endif

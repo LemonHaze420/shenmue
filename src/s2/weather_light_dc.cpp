@@ -4,6 +4,7 @@
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 
 #include "platform/dc/matrix.hpp"
+#include "platform/dc/sdk.hpp"
 #include "s2/fog_dc.hpp"
 #include "s2/lighting_dc.hpp"
 #include "s2/map_control_dc.hpp"
@@ -23,26 +24,29 @@ void SetReservedWeatherOverride1(float value);
 // @verified - d
 void BuildWeatherSunDirection(
     std::int32_t month, std::int32_t day, std::int32_t hour, std::int32_t minute, float latitude, std::int32_t second, Vector3 *direction) {
-    const std::int32_t days = weatherAccumulatedMonthDays[5] - (day + weatherAccumulatedMonthDays[month - 1] - 21);
-    const float seasonalAngle = ((static_cast<float>(days) / 365.0f) * 360.0f) / 180.0f;
+    const std::int32_t elapsedDays = day + weatherAccumulatedMonthDays[month - 1] - 21;
+    const std::int32_t days = weatherAccumulatedMonthDays[5] - elapsedDays;
+    const float seasonalAngle = (((static_cast<float>(days) / 365.0f) * 360.0f) / 180.0f) * 3.14f;
     float time = static_cast<float>(hour) + static_cast<float>(minute) / 60.0f;
     time += static_cast<float>(second) / 3600.0f;
-    const float sunAngle = ((-(time - 12.0f) * 15.0f) * 3.14f) / 180.0f;
-    const float seasonal = std::sin(1.5707964f - std::fabs(seasonalAngle * 3.14f));
-    const float daily = std::sin(1.5707964f - std::fabs(sunAngle));
+    float sunAngle = time - 12.0f;
+    sunAngle = -sunAngle;
+    sunAngle *= 15.0f;
+    sunAngle *= 3.14f;
+    sunAngle /= 180.0f;
+    const float seasonal = dc::sdk::CosRadians(seasonalAngle);
+    const float daily = dc::sdk::CosRadians(sunAngle);
     float elevation = std::fabs(((90.0f - (latitude - 23.5f * seasonal)) * daily) * 1.2f);
     if (elevation < 25.0f)
         elevation = 25.0f;
     elevation = (elevation * 3.14f) / 180.0f;
-    *direction = (__typeof__(*direction)){SHEN_FIELD(x) 0.0f, SHEN_FIELD(y) 0.0f, SHEN_FIELD(z) - 1.0f};
+    direction->y = 0.0f;
+    direction->x = 0.0f;
+    direction->z = -1.0f;
     matrix_stack::PushUnitMatrix();
-    matrix_stack::RotateYSinCos(std::sin(sunAngle), std::cos(sunAngle));
-    matrix_stack::RotateXSinCos(std::sin(-elevation), std::cos(-elevation));
-    Vector4 transformed;
-    matrix_stack::TransformPosition(direction, &transformed);
-    direction->x = transformed.x;
-    direction->y = transformed.y;
-    direction->z = transformed.z;
+    matrix_stack::RotateYRadians(sunAngle);
+    matrix_stack::RotateXRadians(-elevation);
+    Matrix4x4::Transform(*direction, *direction);
     PopCurrentMatrix(1);
 }
 

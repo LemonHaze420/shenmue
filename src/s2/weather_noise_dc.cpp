@@ -146,19 +146,23 @@ float SampleWindFromProfile(float baseSpeed, const float *profile) {
     impulse += impulse;
     if (impulse > 1.0f)
         impulse = 1.0f;
-    const float range = totalWindProfileWeight + 1.0f;
-    const float threshold = impulse * range;
+    const float threshold = impulse * (totalWindProfileWeight + 1.0f);
     std::int32_t band = 0;
-    float cumulative = 0.0f + profile[0];
-    while (!(cumulative > threshold)) {
-        if (++band > 47)
-            break;
+    float cumulative = 0.0f;
+    for (band = 0; band < 48; ++band) {
         cumulative += profile[band];
+        if (cumulative > threshold)
+            break;
     }
-    if (band < 48)
-        return static_cast<float>(band - 1) * baseSpeed * 0.1f;
-    const float overflow = (((threshold - totalWindProfileWeight) / (range - totalWindProfileWeight)) * 80.0f) * baseSpeed * 0.1f;
-    return 0.6666667f > overflow ? overflow : 0.6666667f;
+    if (band >= 48) {
+        const float overflow =
+            (((threshold - totalWindProfileWeight) / ((totalWindProfileWeight + 1.0f) - totalWindProfileWeight)) * 80.0f) * baseSpeed * 0.1f;
+        float limit = 0.6666667f;
+        if (limit > overflow)
+            return overflow;
+        return limit;
+    }
+    return static_cast<float>(band - 1) * baseSpeed * 0.1f;
 }
 
 } // namespace s2

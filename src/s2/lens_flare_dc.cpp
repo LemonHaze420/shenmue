@@ -315,8 +315,7 @@ void UpdateSunForDateTime(const DateTime &date, float latitude, Vector3 &directi
     volatile float intensity = scale;
     const std::int32_t *monthEnds = weatherAccumulatedMonthDays;
     const std::int32_t month = date.month - 1;
-    std::int32_t days = date.day;
-    days += monthEnds[month];
+    std::int32_t days = monthEnds[month] + date.day;
     days -= 21;
     const std::int32_t seasonalDays = monthEnds[5] - days;
     const float seasonalAngle = (((static_cast<float>(seasonalDays) / 365.0f) * 360.0f) / 180.0f) * 3.14f;
