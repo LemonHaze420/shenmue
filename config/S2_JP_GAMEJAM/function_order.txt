@@ -1759,6 +1759,8 @@ before src/common/math.cpp
 .text.DisplaySystemMetrics__Q37shenmue2s258_GLOBAL_.N._Q27shenmue2s2.g_scenarioFlagNotificationFramesv
 .text.DisplayFlagInfo__Q37shenmue2s258_GLOBAL_.N._Q27shenmue2s2.g_scenarioFlagNotificationFramesPQ37shenmue2s215SupportTaskData
 .text.SUPP_Callback__Q27shenmue2s2Pv
+.text.GetDebugMenuPage__Q27shenmue2s2v
+.text.SetDebugMenuPage__Q27shenmue2s2l
 .text.ResetGameSysActivity__Q27shenmue2s2v
 .text.SetGameSysActivityFlag__Q27shenmue2s2l
 .text.ClearGameSysActivityFlag__Q27shenmue2s2l
@@ -4578,7 +4580,7 @@ before src/common/math.cpp
 .text.EV_ApplyTranslationClockVisibility__Q27shenmue2s2Ul
 .text.SetUnusedCtrlFlag__Q27shenmue2s2Uc
 .text.SetUnusedFlag__Q27shenmue2s2v
-.text.RestoreSavedAreaJumpLocation__Q27shenmue2s2PCQ37shenmue2s221SavedAreaJumpLocationPCUc
+.text.RestoreSavedAreaJumpLocation__Q27shenmue2s2PCvPCUc
 .text.ActivateSavedAreaJumpLocation__Q27shenmue2s2v
 .text.ResetGlobalStateFlags__Q27shenmue2s2v
 .text.ConsumeSavedAreaJumpRequest__Q27shenmue2s2v

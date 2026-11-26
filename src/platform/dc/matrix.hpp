@@ -14,6 +14,8 @@ Matrix4x4 *GetMatrix(Matrix4x4 *memory = nullptr);
 #endif
 #if SHENMUE_IS_S2
 void CopyMatrix(Matrix4x4 *destination, const Matrix4x4 *source);
+void TransformPoints(const Vector3 *input, Vector3 *output, std::int32_t count);
+void TransformVectors(const Vector3 *input, Vector3 *output, std::int32_t count);
 #endif
 void GetPreviousMatrix(Matrix4x4 *memory) asm("_shenmue_dc_get_previous_particle_matrix");
 #if SHENMUE_S2_GCC295

@@ -27,6 +27,25 @@ void SetFftEffectActive(FftEffectHandle handle, std::int32_t active) {
 #if !SHENMUE_IS_S2 || (SHENMUE_IS_DC && SHENMUE_IS_S2)
 // @verified - d
 void InitializeFftPhaseSteps(float *steps, float scale) {
+#if SHENMUE_IS_S2
+    const float kFftPhasePi = 3.1415927410125732f;
+    float (*grid)[16] = reinterpret_cast<float (*)[16]>(steps);
+    const float amplitude = scale;
+    for (std::int32_t row = 0; row < 8; ++row) {
+        for (std::int32_t column = 0; column < 8; ++column) {
+            grid[row][column] = amplitude * RandomFloat();
+            grid[row][16 - column] = amplitude * RandomFloat();
+            if (grid[row][column] < kFftDenormalEpsilon && grid[row][column] > -kFftDenormalEpsilon)
+                grid[row][column] = 0.0f;
+            if (grid[row][16 - column] < kFftDenormalEpsilon && grid[row][16 - column] > -kFftDenormalEpsilon)
+                grid[row][16 - column] = 0.0f;
+            if (grid[row][column] > kFftPhasePi || grid[row][column] < -kFftPhasePi)
+                asm volatile("trapa #0x42");
+            if (grid[row][16 - column] > kFftPhasePi || grid[row][16 - column] < -kFftPhasePi)
+                asm volatile("trapa #0x42");
+        }
+    }
+#else
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     const float kFftPhasePi = 3.1415927410125732f;
 #endif
@@ -48,6 +67,7 @@ void InitializeFftPhaseSteps(float *steps, float scale) {
 #endif
         }
     }
+#endif
 }
 
 // @verified - d

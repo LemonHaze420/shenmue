@@ -125,7 +125,7 @@ void ImportSelectedTitleSaveData(std::int32_t inherited, const void *bank, std::
         moves.count = ReadSaveValue<std::int8_t>(payload + 0x82 + category * 0x52);
         moves.selected = ReadSaveValue<std::uint8_t>(payload + 0x83 + category * 0x52);
     }
-    std::memcpy(g_scenarioPersistentFlags.scratch, payload + 0x130, 0x80);
+    std::memcpy(g_scenarioPersistentScratch, payload + 0x130, 0x80);
     const std::uint8_t *const inheritedItems = reinterpret_cast<const std::uint8_t *>(payload + 0x250);
     for (std::int32_t index = 0; index < 12; ++index) {
         const std::uint8_t count = inheritedItems[inheritedInventoryMappings[index][0]];
@@ -412,7 +412,7 @@ void RestoreSavedGamePayload(const std::byte *metadata, const std::byte *payload
     SetDoorQueuedAuthor(shen_name(*reinterpret_cast<const std::uint32_t *>(save + 0xc5c)));
     InitializeMemoPageState(reinterpret_cast<const SavedGamePayload *>(save)->memoPages[0], reinterpret_cast<const SavedGamePayload *>(save)->memoPages[1]);
     plymImportPersistentState(reinterpret_cast<const PlayerPersistentState *>(save + 0xd88));
-    RestoreSavedAreaJumpLocation(reinterpret_cast<const SavedAreaJumpLocation *>(save + 0xbf4), save + 0x4a0);
+    RestoreSavedAreaJumpLocation(save + 0xbf4, save + 0x4a0);
     streetFightProgress = static_cast<std::uint8_t>(save[0xc54]);
     g_transferredYen = *reinterpret_cast<const std::int32_t *>(save + 0xc58);
     for (i = 0; i < 16; ++i)

@@ -133,7 +133,10 @@ std::int32_t GetShenmueFlag(std::int32_t flag);
 std::int32_t stepEvaluateFlagStepRange(std::int32_t flag, std::uint32_t mode);
 
 
-ScenarioPersistentFlagBanks g_scenarioPersistentFlags;
+std::uint8_t g_scenarioStoryFlags[8];
+std::uint8_t g_scenarioInternalFlags[512];
+std::uint8_t g_scenarioByteStats[64];
+std::byte g_scenarioPersistentScratch[128];
 
 extern std::byte *g_flagDescriptorData;
 
@@ -394,7 +397,7 @@ static std::int32_t stepRandomizeStats(const std::int32_t *arguments) {
 bool GetInternalFlag(std::int32_t flag) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (flag <= 4095) {
-        const std::uint8_t *data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, internal);
+        const std::uint8_t *data = g_scenarioInternalFlags;
         data += flag >> 3;
         if (*data & scenarioFlagBitMasks[flag & 7])
             return true;
@@ -402,7 +405,7 @@ bool GetInternalFlag(std::int32_t flag) {
     }
     return false;
 #else
-    const std::uint8_t *const data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, internal);
+    const std::uint8_t *const data = g_scenarioInternalFlags;
     return flag < 4096 && (data[flag >> 3] & static_cast<std::uint8_t>(1U << (flag & 7))) != 0;
 #endif
 }
@@ -474,7 +477,7 @@ std::int64_t SetScenarioByteStat(std::int32_t index, std::int32_t value) {
 bool GetStoryFlag(std::int32_t flag) {
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
     if (flag <= 63) {
-        const std::uint8_t *data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, story);
+        const std::uint8_t *data = g_scenarioStoryFlags;
         data += flag >> 3;
         if (*data & scenarioFlagBitMasks[flag & 7])
             return true;
@@ -482,7 +485,7 @@ bool GetStoryFlag(std::int32_t flag) {
     }
     return false;
 #else
-    const std::uint8_t *const data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, story);
+    const std::uint8_t *const data = g_scenarioStoryFlags;
     return flag < 64 && (data[flag >> 3] & static_cast<std::uint8_t>(1U << (flag & 7))) != 0;
 #endif
 }
@@ -494,7 +497,7 @@ bool GetStoryFlag(std::int32_t flag) {
 // @verified - d
 std::uint8_t GetScenarioByteStat(std::int32_t index) {
     if (index < 64)
-        return g_scenarioPersistentFlags.stats[index];
+        return g_scenarioByteStats[index];
     return 0;
 }
 
@@ -508,12 +511,12 @@ void ResetScenarioPersistentFlags() {
 #else
 std::int64_t ResetScenarioPersistentFlags() {
 #endif
-    for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioPersistentFlags.story)); ++index)
-        g_scenarioPersistentFlags.story[index] = 0;
-    for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioPersistentFlags.internal)); ++index)
-        g_scenarioPersistentFlags.internal[index] = 0;
-    for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioPersistentFlags.stats)); ++index)
-        g_scenarioPersistentFlags.stats[index] = 0;
+    for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioStoryFlags)); ++index)
+        g_scenarioStoryFlags[index] = 0;
+    for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioInternalFlags)); ++index)
+        g_scenarioInternalFlags[index] = 0;
+    for (std::int32_t index = 0; index < static_cast<std::int32_t>(sizeof(g_scenarioByteStats)); ++index)
+        g_scenarioByteStats[index] = 0;
 #if !(SHENMUE_IS_DC && SHENMUE_IS_S2)
     return 0;
 #endif

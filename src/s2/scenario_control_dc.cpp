@@ -988,10 +988,10 @@ void PauseScenarioLineClock(std::int32_t paused) {
 // @verified - d
 const std::byte *FindScenarioConversationRoot(ScenarioFreeTalkCharacter *record, std::int32_t step) {
     const std::byte *cursor, *returnCursor, *result;
-    std::int32_t hasDefault, operand, low;
+    std::int32_t hasDefault = step, operand, low;
     std::uint8_t opcode;
     std::int32_t previousStep = GetCurrentStep();
-    SetSTEP(step);
+    SetSTEP(hasDefault);
     ResetScntBranchHistory();
     cursor = record->localState.defaultRoot;
     if (!cursor)
@@ -1143,7 +1143,7 @@ bool IsScenarioFollowPromptAvailable() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 std::byte *GetScenarioPersistentScratch() {
-    return g_scenarioPersistentFlags.scratch;
+    return g_scenarioPersistentScratch;
 }
 #endif
 
@@ -1397,10 +1397,10 @@ void ClearOrSetShenmueFlags(std::int32_t flag, std::int32_t enabled) {
         return;
     if (enabled) {
         NotifyScenarioMemoFlag(flag);
-        std::uint8_t *bank = g_scenarioPersistentFlags.internal;
+        std::uint8_t *bank = g_scenarioInternalFlags;
         bank[flag >> 3] |= scenarioFlagBitMasks[flag & 7];
     } else {
-        std::uint8_t *bank = g_scenarioPersistentFlags.internal;
+        std::uint8_t *bank = g_scenarioInternalFlags;
         bank[flag >> 3] &= ~scenarioFlagBitMasks[flag & 7];
     }
 }
@@ -1409,7 +1409,7 @@ void ClearOrSetShenmueFlags(std::int32_t flag, std::int32_t enabled) {
 
 std::int32_t GetScenarioScratchFlag(std::int32_t flag) {
     if (flag <= 1023) {
-        const std::uint8_t *data = reinterpret_cast<const std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, scratch);
+        const std::uint8_t *data = reinterpret_cast<const std::uint8_t *>(g_scenarioPersistentScratch);
         data += flag >> 3;
         if (*data & scenarioFlagBitMasks[flag & 7])
             return 1;
@@ -1424,15 +1424,15 @@ void SetStoryFlag(std::int32_t flag, std::int32_t enabled) {
     if (flag >= 64)
         return;
     if (enabled)
-        g_scenarioPersistentFlags.story[flag >> 3] |= scenarioFlagBitMasks[flag & 7];
+        g_scenarioStoryFlags[flag >> 3] |= scenarioFlagBitMasks[flag & 7];
     else
-        g_scenarioPersistentFlags.story[flag >> 3] &= ~scenarioFlagBitMasks[flag & 7];
+        g_scenarioStoryFlags[flag >> 3] &= ~scenarioFlagBitMasks[flag & 7];
 }
 
 // @verified - d
 void SetScenarioByteStat(std::int32_t index, std::int32_t value) {
     if (index < 64) {
-        std::uint8_t *const data = reinterpret_cast<std::uint8_t *>(&g_scenarioPersistentFlags) + offsetof(ScenarioPersistentFlagBanks, stats);
+        std::uint8_t *const data = g_scenarioByteStats;
         data[index] = static_cast<std::uint8_t>(value);
     }
 }
@@ -2089,9 +2089,9 @@ void FlushScenarioActionQueue() {
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 void GetScenarioFlagBanks(std::uint8_t **banks) {
-    banks[0] = g_scenarioPersistentFlags.story;
-    banks[1] = g_scenarioPersistentFlags.internal;
-    banks[2] = g_scenarioPersistentFlags.stats;
+    banks[0] = g_scenarioStoryFlags;
+    banks[1] = g_scenarioInternalFlags;
+    banks[2] = g_scenarioByteStats;
 }
 #endif
 
@@ -5947,6 +5947,20 @@ void SUPP_Callback(void *parameter) {
     }
     if (g_inputBuffer[3].pressedPriority & 0x800U)
         currentDebugMenuPage = 0;
+}
+#endif
+
+#if SHENMUE_IS_DC && SHENMUE_IS_S2
+// @verified - d
+std::int32_t GetDebugMenuPage() {
+    return currentDebugMenuPage;
+}
+
+// @verified - d
+std::int32_t SetDebugMenuPage(std::int32_t page) {
+    const std::int32_t previous = currentDebugMenuPage;
+    currentDebugMenuPage = page;
+    return previous;
 }
 #endif
 

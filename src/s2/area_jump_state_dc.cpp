@@ -109,8 +109,9 @@ void SetUnusedFlag() {
 #endif
 
 // @verified - d
-void RestoreSavedAreaJumpLocation(const SavedAreaJumpLocation *location, const std::byte *placement) {
-    std::memcpy(&g_savedAreaJumpLocation, location, 0x30);
+void RestoreSavedAreaJumpLocation(const void *location, const std::byte *placement) {
+    std::size_t locationBytes = sizeof(g_savedAreaJumpLocation);
+    std::memcpy(&g_savedAreaJumpLocation, location, locationBytes);
     std::memcpy(g_areaJumpPlacement, placement, 0x20);
 }
 

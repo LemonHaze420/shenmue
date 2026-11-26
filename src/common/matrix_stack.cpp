@@ -155,6 +155,20 @@ void TransformVector4(const Vector4 *input, Vector4 *output) {
 }
 
 
+// @verified - d
+void TransformPoints(const Vector3 *input, Vector3 *output, std::int32_t count) {
+    while (--count >= 0) {
+        Matrix4x4::TransformPoint(*input++, *output++);
+    }
+}
+
+// @verified - d
+void TransformVectors(const Vector3 *input, Vector3 *output, std::int32_t count) {
+    while (--count >= 0) {
+        Matrix4x4::Transform(*input++, *output++);
+    }
+}
+
 void CopyMatrix(Matrix4x4 *destination, const Matrix4x4 *source) {
     if (!destination) {
         if (source)

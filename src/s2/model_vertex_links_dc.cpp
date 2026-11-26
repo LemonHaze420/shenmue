@@ -312,10 +312,12 @@ void ApplyMT7ClothDeformation(const MT7Node *node) {
     PopCurrentMatrix(1);
 }
 
+// @verified - d
 bool IsMT7ClothNode(const MT7Node *node) {
-    if (reinterpret_cast<const MT7ClothNodeData *>(node + 1)->header.type != MODEL_CLOTH_CHUNK)
+    const std::uint32_t *cursor = reinterpret_cast<const std::uint32_t *>(node + 1);
+    if (*cursor != MODEL_CLOTH_CHUNK)
         return false;
-    const std::uint32_t *cursor = reinterpret_cast<const std::uint32_t *>(node);
+    cursor = reinterpret_cast<const std::uint32_t *>(node);
     cursor += offsetof(MT7ClothNodeData, linkCount) / sizeof(std::uint32_t);
     cursor += sizeof(MT7Node) / sizeof(std::uint32_t);
     const std::uint32_t count = *cursor++;

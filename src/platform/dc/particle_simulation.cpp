@@ -183,6 +183,19 @@ void SetParticleChannelDrawingEnabled(std::int32_t index, std::int32_t enabled) 
 
 // @verified - d
 void SetParticleChannelBlendMode(std::int32_t index, std::int32_t mode) {
+#if SHENMUE_IS_S2
+    if (mode) {
+        g_particleChannels[index].context.flags |= 0x02000000U;
+        g_particleChannels[index].context.tsp |= 0x00100000U;
+        g_particleChannels[index].context.tsp = (g_particleChannels[index].context.tsp & 0x00ffffffU) | 0x94000000U;
+        g_particleChannels[index].flags |= 0x40000000U;
+    } else {
+        g_particleChannels[index].context.flags &= ~0x02000000U;
+        g_particleChannels[index].context.tsp &= 0xffefffffU;
+        g_particleChannels[index].context.tsp = (g_particleChannels[index].context.tsp & 0x00ffffffU) | 0x20000000U;
+        g_particleChannels[index].flags &= ~0x40000000U;
+    }
+#else
     ParticleChannel &channel =
         g_particleChannels[index];
     if (mode) {
@@ -191,15 +204,11 @@ void SetParticleChannelBlendMode(std::int32_t index, std::int32_t mode) {
         channel.flags |= 0x40000000U;
     } else {
         channel.context.flags &= ~0x02000000U;
-#if SHENMUE_IS_S2
-        channel.context.tsp = ((channel.context.tsp & 0xffefffffU) & 0x00ffffffU) | 0x20000000U;
-#else
         channel.context.tsp = (channel.context.tsp & 0x00efffffU) | 0x20000000U;
-#endif
         channel.flags &= ~0x40000000U;
     }
+#endif
 }
-
 // @verified - d
 void SetParticleChannelDepthMode(std::int32_t index, std::int32_t enabled) {
     if (enabled)

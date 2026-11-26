@@ -4578,7 +4578,7 @@ before src/common/math.cpp
 .text.EV_ApplyTranslationClockVisibility__Q27shenmue2s2Ul
 .text.SetUnusedCtrlFlag__Q27shenmue2s2Uc
 .text.SetUnusedFlag__Q27shenmue2s2v
-.text.RestoreSavedAreaJumpLocation__Q27shenmue2s2PCQ37shenmue2s221SavedAreaJumpLocationPCUc
+.text.RestoreSavedAreaJumpLocation__Q27shenmue2s2PCvPCUc
 .text.ActivateSavedAreaJumpLocation__Q27shenmue2s2v
 .text.ResetGlobalStateFlags__Q27shenmue2s2v
 .text.ConsumeSavedAreaJumpRequest__Q27shenmue2s2v

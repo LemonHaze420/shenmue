@@ -246,7 +246,10 @@ bss	.data._Q27shenmue2s2.g_freeTalkFreeRegistrations
 bss	.data._Q27shenmue2s2.g_freeTalkRegistrations
 bss	.data._Q27shenmue2s2.g_scenarioEventContext
 bss	.data._Q27shenmue2s2.g_scntExpressionResult
-bss	.data._Q27shenmue2s2.g_scenarioPersistentFlags
+bss	.data._Q27shenmue2s2.g_scenarioStoryFlags
+bss	.data._Q27shenmue2s2.g_scenarioInternalFlags
+bss	.data._Q27shenmue2s2.g_scenarioByteStats
+bss	.data._Q27shenmue2s2.g_scenarioPersistentScratch
 bss	.data._Q27shenmue2s2.g_scenarioFreeTalkPhase
 bss	.data._Q27shenmue2s2.g_externalFreeTalkRecords
 bss	.data._Q27shenmue2s2.g_extraFreeTalkRecord

@@ -353,22 +353,17 @@ void plymAdvanceTime(std::uint8_t hours, std::uint8_t minutes) {
 // @verified - d
 std::int32_t shenToggleAreaFlags(std::int32_t mode) {
     PlayerRuntimeState *const runtime = g_playerRuntimePointer;
-    std::uint8_t *const model = reinterpret_cast<std::uint8_t *>(runtime->model);
+    PlayerModelState *const model = runtime->model;
     if (!model)
         return -1;
-    std::uint32_t flags;
-    if (!mode) {
-        runtime->flags &= ~0x4000U;
-        std::memcpy(&flags, model + kPlayerModelPadFlagsOffset, sizeof(flags));
-        flags |= 0x20U;
-        std::memcpy(model + kPlayerModelPadFlagsOffset, &flags, sizeof(flags));
-        model[kPlayerHoldRequestModeOffset] = 0;
-    } else {
+    if (mode) {
         runtime->flags |= 0x4000U;
-        model[kPlayerHoldRequestModeOffset] = static_cast<std::uint8_t>(mode);
-        std::memcpy(&flags, model + kPlayerModelPadFlagsOffset, sizeof(flags));
-        flags = (flags | 0x40U) & ~0x20U;
-        std::memcpy(model + kPlayerModelPadFlagsOffset, &flags, sizeof(flags));
+        model->motionInputState = static_cast<std::uint8_t>(mode);
+        model->padFlags = (model->padFlags | 0x40U) & ~0x20U;
+    } else {
+        runtime->flags &= ~0x4000U;
+        model->padFlags |= 0x20U;
+        model->motionInputState = static_cast<std::uint8_t>(mode);
     }
     return 0;
 }

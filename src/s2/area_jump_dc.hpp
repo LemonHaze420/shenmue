@@ -90,7 +90,7 @@ bool FindMapEventEntryLocation(shen_name areaId, std::int32_t entryId, Vector3 *
 void AdvanceTimeForDistance(const Vector3 *position);
 void CaptureCurrentAreaJumpState();
 void CaptureCurrentPlayerState(SavedAreaJumpLocation *location, std::byte *placement);
-void RestoreSavedAreaJumpLocation(const SavedAreaJumpLocation *location, const std::byte *placement);
+void RestoreSavedAreaJumpLocation(const void *location, const std::byte *placement);
 void ActivateSavedAreaJumpLocation();
 void ResetGlobalStateFlags();
 #if SHENMUE_IS_DC && SHENMUE_IS_S2

@@ -53,42 +53,64 @@ void SetParticleChannelSpawnProbability(std::int32_t index, float probability) {
 
 // @verified - d
 void SetParticleChannelPositionRange(std::int32_t index, float x, float y, float z, float rangeX, float rangeY, float rangeZ) {
+#if SHENMUE_IS_S2
+    g_particleChannels[index].position.x = x;
+    g_particleChannels[index].position.y = y;
+    g_particleChannels[index].position.z = z;
+    g_particleChannels[index].range.x = rangeX;
+    g_particleChannels[index].range.y = rangeY;
+    g_particleChannels[index].range.z = rangeZ;
+#else
 
     ParticleChannel &channel =
         g_particleChannels[index]
         ;
     channel.position = (Vector3){x, y, z};
     channel.range = (Vector3){rangeX, rangeY, rangeZ};
+#endif
 }
 
 // @verified - d
 void SetParticleChannelVelocityRange(std::int32_t index, float x, float y, float z, float rangeX, float rangeY, float rangeZ) {
+#if SHENMUE_IS_S2
+    g_particleChannels[index].velocity.x = x;
+    g_particleChannels[index].velocity.y = y;
+    g_particleChannels[index].velocity.z = z;
+    g_particleChannels[index].velocityRange.x = rangeX;
+    g_particleChannels[index].velocityRange.y = rangeY;
+    g_particleChannels[index].velocityRange.z = rangeZ;
+#else
 
     ParticleChannel &channel =
         g_particleChannels[index]
         ;
     channel.velocity = (Vector3){x, y, z};
     channel.velocityRange = (Vector3){rangeX, rangeY, rangeZ};
+#endif
 }
 
 // @verified - d
 void SetParticleChannelSize(std::int32_t index, float width, float height) {
+#if SHENMUE_IS_S2
+    if (g_particleChannels[index].flags & 0x20000000U) {
+        g_particleChannels[index].scaleX = width;
+        g_particleChannels[index].scaleY = height;
+    } else {
+        g_particleChannels[index].scaleX = width * 0.5f;
+        g_particleChannels[index].scaleY = height * 0.5f;
+    }
+#else
     ParticleChannel &channel =
         g_particleChannels[index]
         ;
     if (!(channel.flags & 0x20000000U)) {
-#if SHENMUE_IS_S2
-        width *= 0.5f;
-        height *= 0.5f;
-#else
         width /= 2.0f;
         height /= 2.0f;
-#endif
     }
     channel.scaleX = width;
     channel.scaleY = height;
+#endif
 }
-
 #if SHENMUE_IS_S2
 void SetParticleChannelEnabled(std::int32_t index, std::int32_t enabled) {
     if (enabled)

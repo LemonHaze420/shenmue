@@ -10,17 +10,6 @@
 namespace shenmue {
 namespace s2 {
 
-struct ScenarioPersistentFlagBanks {
-    std::uint8_t story[8];
-    std::uint8_t internal[512];
-    std::uint8_t stats[64];
-    std::byte scratch[128];
-};
-typedef char ScenarioFlagLayoutCheck0[(offsetof(ScenarioPersistentFlagBanks, story) == 0x00) ? 1 : -1];
-typedef char ScenarioFlagLayoutCheck1[(offsetof(ScenarioPersistentFlagBanks, internal) == 0x08) ? 1 : -1];
-typedef char ScenarioFlagLayoutCheck2[(offsetof(ScenarioPersistentFlagBanks, stats) == 0x208) ? 1 : -1];
-typedef char ScenarioFlagLayoutCheck3[(offsetof(ScenarioPersistentFlagBanks, scratch) == 0x248) ? 1 : -1];
-typedef char ScenarioFlagLayoutCheck4[(sizeof(ScenarioPersistentFlagBanks) == 0x2c8) ? 1 : -1];
 typedef std::int32_t PlayerFlagReadMode;
 enum { PlayerFlagReadMode_Internal = 0x0b, PlayerFlagReadMode_Story = 0x0d, PlayerFlagReadMode_Stat = 0x0f };
 typedef std::int32_t PlayerFlagWriteMode;
@@ -42,7 +31,10 @@ enum {
     ShenFlagOp_RequireStatAtLeast = 0x10,
     ShenFlagOp_RequireStatBelow = 0x11
 };
-extern ScenarioPersistentFlagBanks g_scenarioPersistentFlags;
+extern std::uint8_t g_scenarioStoryFlags[8];
+extern std::uint8_t g_scenarioInternalFlags[512];
+extern std::uint8_t g_scenarioByteStats[64];
+extern std::byte g_scenarioPersistentScratch[128];
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
 extern const std::int8_t scenarioFlagBitMasks[8];
 #endif

@@ -1529,6 +1529,7 @@ void FitConversationEyeDistance(ConversationCameraState *state) {
 #endif
 
 #if SHENMUE_IS_DC && SHENMUE_IS_S2
+// @verified - d
 void FitConversationFieldOfView(ConversationCameraState *state) {
     if (!state->shotType)
         return;
@@ -1559,8 +1560,8 @@ void FitConversationFieldOfView(ConversationCameraState *state) {
     float screenX = 320.0f / dc::sdk::TanFixed(static_cast<std::int16_t>(state->fieldOfView) / 2) * extent.x / extent.z;
     float limit = 304.0f;
     if (CONVERSATION_ABS(screenX) > limit) {
-        const float ratio = CONVERSATION_ABS(limit * extent.z / extent.x);
-        const std::uint32_t fieldOfView = dc::sdk::ArcTanFixed(320.0f / ratio) * 2;
+        screenX = CONVERSATION_ABS(limit * extent.z / extent.x);
+        const std::uint32_t fieldOfView = dc::sdk::ArcTanFixed(320.0f / screenX) * 2;
         state->fieldOfView = static_cast<std::uint16_t>(fieldOfView);
     }
 }

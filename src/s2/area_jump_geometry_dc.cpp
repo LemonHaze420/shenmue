@@ -49,7 +49,7 @@ namespace s2 {
 
 shen_name drGetCurrentAuthorId();
 
-void RestoreSavedAreaJumpLocation(const SavedAreaJumpLocation *location, const std::byte *placement);
+void RestoreSavedAreaJumpLocation(const void *location, const std::byte *placement);
 void ActivateSavedAreaJumpLocation();
 void SetTemporaryAreaJumpAuthor(shen_name author);
 std::int32_t EV_CanDoAreaJump();

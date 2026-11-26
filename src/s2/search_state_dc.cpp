@@ -303,34 +303,35 @@ bool srchSavePlayerState(SearchTaskData &search) {
 
 // @verified - d
 std::uint32_t srchRegisterStaticObject(MT7Node *node, std::uint32_t marker) {
+    MT7Node *const model = node;
     SearchTarget *target = staticTargets;
-    if (node->kind)
+    if (model->kind)
         return 0;
     std::int32_t index = 0;
     do {
         std::uint32_t name = marker;
         if (target->name == name)
             return 0;
-        if (static_cast<std::int8_t>(name) == 'M' && static_cast<std::int8_t>(name >> 8) != 'A' && !node->child)
+        if (static_cast<std::int8_t>(name) == 'M' && static_cast<std::int8_t>(name >> 8) != 'A' && !model->child)
             return 0;
         ++index;
         if (!target->name) {
             Vector3 position;
             std::uint32_t yaw;
             GetPropVector4(&position);
-            target->name = name;
+            target->name = marker;
             const SearchConfiguration *const configuration = FindSearchConfiguration(*searchControl, marker);
             if (static_cast<std::int8_t>(name) == 'K') {
                 yaw = 0;
                 matrix_stack::PushUnitMatrix();
                 matrix_stack::TranslateVector(&position);
-                srchApplyObjectTransform(node, &yaw);
+                srchApplyObjectTransform(model, &yaw);
                 matrix_stack::GetTranslation(&target->position);
                 PopCurrentMatrix(1);
                 MT7Node *child = 0;
                 name = (name & 0xffffff00U) | 'k';
-                if (node->child)
-                    child = FindModelCharacterRecursive(node->child, shen_name(name));
+                if (model->child)
+                    child = FindModelCharacterRecursive(model->child, shen_name(name));
                 if (!child)
                     target->lockonAngle = 0.600000024f;
                 else {
