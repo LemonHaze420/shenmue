@@ -781,7 +781,7 @@ void PresentLatestFrame() {
     UpdateMipMaps();
     std::int32_t renderMode = g_NumFramesProcessed == 0 ? 1 : 0;
     if (b60fps) {
-#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
         renderMode = mods::Get(mods::Id::FrameRate) > 60 ? 3 : 2;
 #else
         renderMode = 2;

@@ -348,7 +348,7 @@ void InitialiseGraphicsConfig(const D3TSettings &previous) {
 
 
 void ReadConfigFromSave() {
-#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
     g_bEnableFrameTimeSmoothing = mods::Get(mods::Id::FrameRate) > 30;
 #endif
     const D3TSettings previous = g_currentSettings;
@@ -360,7 +360,7 @@ void ReadConfigFromSave() {
 
 
 void ReadSettingsFile() {
-#if SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
+#if SHENMUE_MODS_ENABLED && SHENMUE_ENHANCEMENT_MISC_MODS_FRAMERATE
     g_bEnableFrameTimeSmoothing = mods::Get(mods::Id::FrameRate) > 30;
 #endif
     const D3TSettings previous = g_currentSettings;
