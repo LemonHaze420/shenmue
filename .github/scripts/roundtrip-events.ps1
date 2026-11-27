@@ -53,7 +53,7 @@ try {
         $inputs = @(1..4 | ForEach-Object {
           $disc = $_
           $archives = @(Get-ChildItem -LiteralPath $edition -File -Filter '*.zip' |
-            Where-Object { $_.Name -match "Shenmue II v1[.]003 .*[(]Disc $disc of 4[)]" })
+            Where-Object { $_.Name -match "^Shenmue II v1[.]003 [(]2001[)][(]Sega[)][(]JP[)][(]Disc $disc of 4[)]" })
           if ($archives.Count -ne 1) { throw "Expected one JP V1.003 archive for disc $disc" }
           $archives[0].FullName
         })
