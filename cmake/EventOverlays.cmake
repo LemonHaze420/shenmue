@@ -202,7 +202,7 @@ list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/scripts/cwon/area_cwon.
 file(GLOB_RECURSE _event_common_headers CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/src/s2/areas/*.h" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.hpp"
   "${PROJECT_SOURCE_DIR}/src/s2/areas/*.inl" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.inc" "${PROJECT_SOURCE_DIR}/src/s2/areas/*.def")
 list(APPEND _event_headers ${_event_common_headers})
-foreach(header anbd_event dai2_event event_movement event_smoke geto_event hide_event krht_event qkqb_event qt_nj_event qt_nj_obstacles step_event wnpc_event)
+foreach(header anbd_event dai2_event event_movement event_smoke geto_event hide_event krht_event qkqb_event qt_nj_event qt_nj_obstacles sap_event step_event wnpc_event)
   list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/${header}.hpp")
 endforeach()
 list(APPEND _event_headers "${PROJECT_SOURCE_DIR}/src/s2/qte_game_entry.hpp"
@@ -922,6 +922,12 @@ endif()
 
 # EVs stored inside scene packages.
 if(SHENMUE_DC_EVENT_TARGET STREQUAL "S2_EU" OR SHENMUE_DC_EVENT_TARGET STREQUAL "S2_JP_1003" OR SHENMUE_DC_EVENT_TARGET STREQUAL "S2_US")
+  shenmue_add_event_overlay(PACK_WBBR C OPTIONAL TYPE EV3
+    REFERENCE SCENE/01/WB00/WBBR.PKF/WBBR.EV3
+    ENTRY s2/areas/area_wbbr.cpp
+    SOURCES s2/areas/area_wbbr.cpp s2/sap_event.cpp
+    RUNTIME sdivsi3_i4)
+
   shenmue_add_event_overlay(PACK_QF01 C OPTIONAL TYPE EV1
     REFERENCE SCENE/03/QF01/MPK00.PKF/QF01.EV1
     ENTRY s2/areas/common/src/et_areabase.c

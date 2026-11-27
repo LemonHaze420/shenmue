@@ -261,6 +261,9 @@ struct EventFunctionBindings {
     }
     static constexpr auto hsFadeVoice = s2::hsFadeVoice;
     static constexpr auto mtwkSetExtraFlag = s2::mtwkSetExtraFlag;
+    static SHENMUE_EVENT_INLINE void EV_SetCharaControllerFlags(const shen_name &character, std::uint32_t flags, std::int32_t enabled) {
+        s2::EV_SetCharaControllerFlags(character, flags, static_cast<NpcCharacterControllerState>(enabled));
+    }
     static constexpr auto shenGetCurrentSbt = s2::shenGetCurrentSbt;
     static constexpr auto shenPlayAudioWithFlags = s2::shenPlayAudioWithFlags;
 

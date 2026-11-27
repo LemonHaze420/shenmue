@@ -1,4 +1,25 @@
 #pragma once
+#if defined(SHENMUE_EVENT_OVERLAY)
+#include "s2/events/event_dc.h"
+#define SAP_PLAYER SHEN_NAME4('R', 'Y', 'O', '_')
+#define SAP_TASK SHEN_NAME4('s', 'a', 'p', '_')
+typedef struct SapEventData {
+    char packageName[9], authorBank[11];
+    shen_name characters[10];
+    HLibTaskCallback nextCallback;
+    unsigned int reserved40[2], pendingMask, reserved4c, authorFlags;
+    shen_name nextArea;
+    int nextEntry, savedFilmBars;
+} SapEventData;
+extern SapEventData sapEventData;
+void InitializeSapAuthorEvent(const char *authorBank, const char *package, const shen_name *characters, HLibTaskCallback next);
+void SelectSapAuthor(const shen_name *authors, int count, HLibTaskCallback next, unsigned int flags);
+void SapPackageLoadCallback(void *taskData);
+void SapPackageWaitCallback(void *taskData);
+void SapAuthorWaitCallback(void *taskData);
+void SapSceneLoadCallback(void *taskData);
+void ResetSapAuthorCharacter(shen_name character);
+#else
 #include "s2/hlib.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -31,3 +52,5 @@ void SapPackageWaitCallback(void *);
 void SapAuthorWaitCallback(void *);
 void ResetSapAuthorCharacter(shen_name character);
 } // namespace shenmue::s2
+
+#endif
