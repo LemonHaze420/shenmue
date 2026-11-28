@@ -106,6 +106,18 @@ jobs:
         run: |
           [string[]]$targets = if ('${{ matrix.game }}' -eq 'WS') { @('shenmue1') } else { @('shenmue${{ matrix.game }}_asi', 'shenmue${{ matrix.game }}') }
           cmake --build build/windows-asi --config Release --target @targets --parallel 4
+      - name: Prepare third-party notices
+        run: |
+          $licenses = @('third_party/cjson/LICENSE', 'third_party/imgui/LICENSE.txt', 'libs/ShenmueDK/LICENSE')
+          $licenses += @(Get-ChildItem 'build/windows-asi/vcpkg_installed/x64-windows-static/share/*/copyright' -File -ErrorAction SilentlyContinue).FullName
+          $licenses += @(Get-ChildItem 'build/windows-asi/_deps/*-src/LICENSE*' -File -ErrorAction SilentlyContinue).FullName
+          $notices = foreach ($license in $licenses) {
+            if (!$license) { continue }
+            "$(Split-Path (Split-Path $license) -Leaf)/$(Split-Path $license -Leaf)"
+            Get-Content -LiteralPath $license -Raw
+            ''
+          }
+          $notices | Set-Content build/windows-asi/Release/THIRD_PARTY_NOTICES.txt -Encoding utf8
       - name: Sign CI executables
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         env:
@@ -116,18 +128,69 @@ jobs:
             @('build/windows-asi/Release/shenmue${{ matrix.game }}e.asi', 'build/windows-asi/Release/shenmue${{ matrix.game }}.exe')
           }
           ./.github/scripts/sign-executables.ps1 -Files $files
+      - name: Upload PC binaries
+        if: matrix.game != 'WS'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: Shenmue-PC-${{ matrix.game }}
+          path: |
+            build/windows-asi/Release/shenmue${{ matrix.game }}.exe
+            build/windows-asi/Release/shenmue${{ matrix.game }}e.asi
+            build/windows-asi/Release/THIRD_PARTY_NOTICES.txt
+          if-no-files-found: error
       - name: Prepare WS executable
         if: matrix.game == 'WS'
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item build/windows-asi/Release/shenmue1.exe dist/WhatsShenmue.exe
+          Copy-Item build/windows-asi/Release/THIRD_PARTY_NOTICES.txt dist/THIRD_PARTY_NOTICES.txt
       - name: Upload WS executable
         if: matrix.game == 'WS'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: WhatsShenmue
-          path: dist/WhatsShenmue.exe
+          path: |
+            dist/WhatsShenmue.exe
+            dist/THIRD_PARTY_NOTICES.txt
           if-no-files-found: error
+
+  release-pc:
+    name: Release PC binaries
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: windows-2022
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout Shenmue
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Package and release PC binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          gh run download $env:GITHUB_RUN_ID --name Shenmue-PC-1 --name Shenmue-PC-2 --name WhatsShenmue --dir dist/pc
+          if ($LASTEXITCODE -ne 0) { throw 'PC artifact download failed' }
+          ./.github/scripts/package-pc.ps1 -InputDirectory dist/pc -OutputDirectory dist -Commit $env:GITHUB_SHA
+          $tag = "pc-$env:GITHUB_SHA"
+          gh release view $tag --json tagName 2>$null | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host 'This PC build is already released.'
+            exit 0
+          }
+          gh release create $tag dist/shenmue-pc.zip dist/shenmue-steam-pc.zip dist/whats-shenmue-pc.zip `
+            --title "Shenmue PC ($($env:GITHUB_SHA.Substring(0, 7)))" `
+            --notes-file dist/release-notes.txt `
+            --target $env:GITHUB_SHA --prerelease --latest=false
+          if ($LASTEXITCODE -ne 0) { throw 'PC release failed' }
 
   data:
     needs: build

@@ -51,6 +51,8 @@ if ($Capture) {
     "-DSHENMUE_BUILD_SCENARIOS=$(if ($Game -eq 'S1') { 'ON' } else { 'OFF' })"
 } else {
   $arguments += "-DSHENMUE_STEAM=$(if ($Game -eq 'WHATS') { 'OFF' } else { 'ON' })", '-DSHEN_AUTO_TEST_ENABLED=OFF', '-DSHENMUE_BUILD_SCENARIOS=OFF'
+  if ($Game -eq 'S1') { $arguments += '-DSHENMUE_ENHANCEMENT_S2_TAI_CHI=ON' }
+  if ($Game -eq 'WHATS') { $arguments += '-DSHENMUE_WS_STANDALONE=ON' }
 }
 & cmake @arguments
 if ($LASTEXITCODE -ne 0) { throw 'Game configuration failed' }

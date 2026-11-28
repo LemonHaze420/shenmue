@@ -1,0 +1,10 @@
+Copyright (c) 2026 LemonHaze / Team Wulinshu. All rights reserved.
+
+This distribution is provided "as is", without warranty of any kind. The authors accept no liability for its use.
+
+Do not rehost or redistribute this package. Link to the official repository instead:
+https://github.com/LemonHaze420/shenmue
+
+Give proper attribution to LemonHaze / Team Wulinshu and link to the repository when referencing or showcasing this work.
+
+Third-party components retain their respective licences. See THIRD_PARTY_NOTICES.txt and, where included, LICENSE-ASI-Loader.txt.
