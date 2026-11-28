@@ -3135,7 +3135,7 @@ void OptionsGraphics_Render() {
     const std::int32_t count = Options_GraphicsCount();
     Options_AskAvailability(table, count);
     Options_ReadSettings(table, count);
-    Options_RecordRows(table, count, g_optionsGraphicsRecordedRows.data());
+    Options_RecordRows(table, (std::min)(count, static_cast<std::int32_t>(g_optionsGraphicsRecordedRows.size())), g_optionsGraphicsRecordedRows.data());
     UIGrid &grid = g_optionsGraphicsGrid;
     grid.elements = table;
     grid.elementCount = 0;
@@ -3145,7 +3145,7 @@ void OptionsGraphics_Render() {
     }
     grid.rows = grid.elementCount;
     UIGrid_ResetRuntime(grid);
-    Collection_ShowSelectedCell(g_optionsGraphicsGrid, kUiSubMenuOptionsGraphics, table[0].text(table[0].current));
+    Collection_ShowSelectedCell(g_optionsGraphicsGrid, kUiSubMenuOptionsGraphics, table[0].text ? table[0].text(table[0].current) : "");
 }
 } // namespace shenmue::s1
 
